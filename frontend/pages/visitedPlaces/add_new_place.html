@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Place</title>
+</head>
+<body>
+    <h1>Add a New Place</h1>
+    <p>Fill in the details below to add a new place to your visited places.</p>
+    <form>
+        <label for="placeName">Place Name:</label><br>
+        <input type="text" id="placeName" name="placeName" required><br><br>
+
+        <label for="country">Country:</label><br>
+        <input type="text" id="country" name="country" required><br><br>
+
+        <label for="visitedDate">Date Visited:</label><br>
+        <input type="date" id="visitedDate" name="visitedDate" required><br><br>
+
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+        
+        <input type="submit" value="Add Place">
+    </form>
+
+    <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
+</body> 
+</html>
