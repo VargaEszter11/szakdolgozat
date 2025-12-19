@@ -1,0 +1,2 @@
+# szakdolgozat
+Mérnökinformatikus BSc szakdolgozat
