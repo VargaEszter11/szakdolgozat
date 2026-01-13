@@ -2,14 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visited Places Map</title>
 
   <link rel="stylesheet" href="../../styles/styles.css">
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
     html, body {
@@ -26,7 +23,7 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      z-index: 1000;
+      z-index: 1000; /* higher than Leaflet */
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -50,15 +47,16 @@
     <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
     <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
     <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
-    <button id="planNewRoute" onclick="location.href='../routePlanner/plan_new_route.html'">Plan New Route</button>
+    <button id="planNewTrip" onclick="location.href='../routePlanner/plan_new_trip.html'">Plan New Trip</button>
     <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
-    <button id="plannedRoutes" onclick="location.href='../routePlanner/planned_routes.html'">Planned Routes</button>
+    <button id="plannedRoutes" onclick="location.href='../routePlanner/planned_trips.html'">Planned Trips</button>
   </header>
 
   <div id="map"></div>
 
   <div class="map-controls">
     <button onclick="location.href='visited_places.html'">List View</button>
+    <button onclick="location.href='../main_page.html'">Back to Main Page</button>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

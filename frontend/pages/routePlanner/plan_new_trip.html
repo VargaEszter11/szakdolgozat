@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="../../styles/styles.css">
-	<title>Surprise Me</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
+    <title>Plan New Trip</title>
 </head>
+
 <body>
-    <header>
+        <header>
         <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
         <button id="visitedPlaces" onclick="location.href='../visitedPlaces/visited_places.html'">Visited Places</button>
         <button id="addNewPlace" onclick="location.href='../visitedPlaces/add_new_place.html'">Add New Place</button>
         <button id="planNewTrip" onclick="location.href='plan_new_trip.html'">Plan New Trip</button>
         <button id="surpriseMe" onclick="location.href='surprise_me.html'">Surprise Me!</button>
         <button id="plannedTrips" onclick="location.href='planned_trips.html'">Planned Trips</button>
-  </header>
-	<h1>Surprise Me</h1>
-	<p class="small">Generate a random travel suggestion.</p>
-	<button onclick="location.href='plan_new_trip.html'">Plan From Options</button>
+    </header>
+    <h1>Plan a New Trip</h1>
+    <p>Choose from the options listed below, then you can start planning your next travel.</p>
+
+    <button id="planNewTripVisited" onclick="location.href='plan_new_trip_visited_places.html'">From Visited Places</button>
+    <button id="planNewTripUnvisited" onclick="location.href='plan_new_trip_unvisited_places.html'">From Unvisited Places</button>
 </body>
 </html>
