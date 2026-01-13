@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
     <title>Add New Place</title>
 </head>
 <body>
+    <header>
+        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
+        <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
+        <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
+        <button id="planNewRoute" onclick="location.href='../routePlanner/plan_new_route.html'">Plan New Route</button>
+        <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
+        <button id="plannedRoutes" onclick="location.href='../routePlanner/planned_routes.html'">Planned Routes</button>
+    </header>
     <h1>Add a New Place</h1>
     <p>Fill in the details below to add a new place to your visited places.</p>
-    <form>
+    <form id="addPlaceForm">
         <label for="placeName">Place Name:</label><br>
         <input type="text" id="placeName" name="placeName" required><br><br>
 
@@ -24,6 +33,6 @@
         <input type="submit" value="Add Place">
     </form>
 
-    <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-</body> 
+    <script src="../../scripts/visitedPlaces/addNewPlace.js"></script>
+</body>
 </html>

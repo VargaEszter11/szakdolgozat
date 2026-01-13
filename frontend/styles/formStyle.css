@@ -1,0 +1,17 @@
+.form {
+	max-width: 480px;
+	margin: 0 auto;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	padding: 20px;
+	border-radius: 8px;
+	box-shadow: var(--shadow);
+}
+.form .field { margin-bottom: 14px; }
+.form label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 0.95rem; }
+.form input, .form textarea, .form select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+.form .actions { display: flex; gap: 8px; justify-content: flex-end; }
+.form .actions .btn-primary { padding: 10px 16px; }
+.form .help { font-size: 0.9rem; color: var(--muted); }
+.form .error { color: #7a0000; background: rgba(122,0,0,0.06); padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(122,0,0,0.12); }
+

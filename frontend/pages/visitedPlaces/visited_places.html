@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
+    <title>Visited Places</title>
+</head>
+<body>
+    <header>
+        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
+        <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
+        <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
+        <button id="planNewRoute" onclick="location.href='../routePlanner/plan_new_route.html'">Plan New Route</button>
+        <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
+        <button id="plannedRoutes" onclick="location.href='../routePlanner/planned_routes.html'">Planned Routes</button>
+    </header>
+     <h2>Visited Places</h2>
+    <table id="visitedPlacesTable">
+        <thead>
+            <tr>
+                <th>Place Name</th>
+                <th>Country</th>
+                <th>Date Visited</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="4">No places yet.</td>
+            </tr>
+        </tbody>
+    </table>
+    <button id="mapView" onclick="location.href='places_map_view.html'">Map View</button>
+    <script src="../../scripts/visitedPlaces/loadPlaces.js"></script>
+</body>
+</html>

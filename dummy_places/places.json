@@ -1,0 +1,148 @@
+{
+  "places": [
+    {
+      "name": "Budapest",
+      "country": "Hungary",
+      "dateVisited": "2022-10-03",
+      "description": "Capital of Hungary, rich in thermal baths and historical landmarks."
+    },
+    {
+      "name": "Tallinn",
+      "country": "Estonia",
+      "dateVisited": "2026-01-07",
+      "description": "Capital of Estonia, featuring a beautifully preserved medieval old town."
+    },
+    {
+      "name": "Sofia",
+      "country": "Bulgaria",
+      "dateVisited": "2013-06-20",
+      "description": "Capital of Bulgaria, known for Alexander Nevsky Cathedral and historic neighborhoods."
+    },
+    {
+      "name": "Podgorica",
+      "country": "Montenegro",
+      "dateVisited": "2021-08-20",
+      "description": "Capital of Montenegro, located near rivers and surrounded by mountains."
+    },
+    {
+      "name": "Skopje",
+      "country": "North Macedonia",
+      "dateVisited": "2018-07-20",
+      "description": "Capital of North Macedonia, featuring the old bazaar and city monuments."
+    },
+    {
+      "name": "Athens",
+      "country": "Greece",
+      "dateVisited": "2018-07-15",
+      "description": "Capital of Greece, home to the Acropolis and ancient historical sites."
+    },
+    {
+      "name": "Belgrade",
+      "country": "Serbia",
+      "dateVisited": "2013-06-25",
+      "description": "Capital of Serbia, known for Kalemegdan Fortress and vibrant old town."
+    },
+    {
+      "name": "Bratislava",
+      "country": "Slovakia",
+      "dateVisited": "2012-05-19",
+      "description": "Capital of Slovakia, featuring the historic old town and the Danube riverfront."
+    },
+    {
+      "name": "Ljubljana",
+      "country": "Slovenia",
+      "dateVisited": "2022-04-12",
+      "description": "Capital of Slovenia, charming old town with the Ljubljanica River running through it."
+    },
+    {
+      "name": "Zagreb",
+      "country": "Croatia",
+      "dateVisited": "2020-08-10",
+      "description": "Capital of Croatia, known for historic city center and cultural landmarks."
+    },
+    {
+      "name": "Berlin",
+      "country": "Germany",
+      "dateVisited": "2018-06-30",
+      "description": "Capital of Germany, full of history from the Brandenburg Gate to the Berlin Wall memorial."
+    },
+    {
+      "name": "Bern",
+      "country": "Switzerland",
+      "dateVisited": "2025-08-12",
+      "description": "Capital of Switzerland, historic old town and federal buildings."
+    },
+    {
+      "name": "Vienna",
+      "country": "Austria",
+      "dateVisited": "2022-11-05",
+      "description": "Capital of Austria, known for classical music, palaces, and coffee houses."
+    },
+    {
+      "name": "Bucharest",
+      "country": "Romania",
+      "dateVisited": "2023-07-15",
+      "description": "Capital of Romania, with the Palace of Parliament and historic city streets."
+    },
+    {
+      "name": "Warsaw",
+      "country": "Poland",
+      "dateVisited": "2023-06-09",
+      "description": "Capital of Poland, rebuilt Old Town and modern city landmarks."
+    },
+    {
+      "name": "Prague",
+      "country": "Czechia",
+      "dateVisited": "2021-08-14",
+      "description": "Capital of Czechia, famous for Prague Castle, Charles Bridge, and Old Town Square."
+    },
+    {
+      "name": "Monaco",
+      "country": "Monaco",
+      "dateVisited": "2015-06-15",
+      "description": "Principality capital, famous for the harbor, palace, and casino."
+    },
+    {
+      "name": "Rome",
+      "country": "Italy",
+      "dateVisited": "2025-10-22",
+      "description": "Capital of Italy, home to the Colosseum, Roman Forum, and Vatican City."
+    },
+    {
+      "name": "Stockholm",
+      "country": "Sweden",
+      "dateVisited": "2017-10-10",
+      "description": "Capital of Sweden, with Gamla Stan, Vasa Museum, and archipelago views."
+    },
+    {
+      "name": "Copenhagen",
+      "country": "Denmark",
+      "dateVisited": "2017-10-11",
+      "description": "Capital of Denmark, featuring Nyhavn, Tivoli Gardens, and historic canals."
+    },
+    {
+      "name": "Vaduz",
+      "country": "Liechtenstein",
+      "dateVisited": "2025-08-10",
+      "description": "Capital of Liechtenstein, small but charming with nearby alpine scenery."
+    },
+    {
+      "name": "Paris",
+      "country": "France",
+      "dateVisited": "2025-08-15",
+      "description": "Capital of France, Eiffel Tower, Louvre Museum, and historic streets."
+    },
+    {
+      "name": "Brussels",
+      "country": "Belgium",
+      "dateVisited": "2012-10-22",
+      "description": "Capital of Belgium, Grand Place, Atomium, and chocolate delights."
+    },
+    {
+      "name": "San Marino",
+      "country": "San Marino",
+      "dateVisited": "2016-07-18",
+      "description": "One of the world's smallest countries, known for its medieval architecture and hilltop views."
+    }
+  ]
+}

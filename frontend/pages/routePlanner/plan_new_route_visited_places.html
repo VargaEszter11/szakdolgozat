@@ -3,9 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
     <title>Plan New Route</title>
 </head>
 <body>
+        <header>
+        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
+        <button id="visitedPlaces" onclick="location.href='../visitedPlaces/visited_places.html'">Visited Places</button>
+        <button id="addNewPlace" onclick="location.href='../visitedPlaces/add_new_place.html'">Add New Place</button>
+        <button id="planNewRoute" onclick="location.href='plan_new_route.html'">Plan New Route</button>
+        <button id="surpriseMe" onclick="location.href='surprise_me.html'">Surprise Me!</button>
+        <button id="plannedRoutes" onclick="location.href='planned_routes.html'">Planned Routes</button>
+    </header>
     <h1>Plan New Route from Visited Places</h1>
     <p>Select where you want to travel next, the default selected will be your visited countries.</p>
 
@@ -22,7 +31,5 @@
             <button type="submit">Create Plan</button>
         </div>
     </form>
-
-    <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
 </body>
 </html>
