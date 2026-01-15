@@ -25,7 +25,15 @@
         </div>
         <div style="margin-top:0.5rem;">
             <label for="travelLength">Preferred Travel Length in Days:</label><br>
-            <input type="number" id="travelLength" name="travelLength" required>
+            <input type="number" id="travelLength" name="travelLength" placeholder="e.g.10" required>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <label for="budget">Budget in Euros:</label><br>
+            <input type="number" id="budget" name="budget" placeholder="e.g. 1000" required>
+        </div>
+        <div style="margin-top:0.5rem;">
+            <label for="preferences">Preferences (separated by commas):</label><br>
+            <input type="text" id="preferences" name="preferences" placeholder="e.g. museums, hiking, etc." required>
         </div>
         <div style="margin-top:1rem;">
             <button type="submit">Create Plan</button>
