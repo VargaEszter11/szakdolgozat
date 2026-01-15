@@ -12,7 +12,7 @@ app = FastAPI()
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
 # Using gemma3:27b - good for travel planning, fits in memory
 # Other options: "llama3.2" (smaller, faster) or "gemma3" (4B model, very fast)
-MODEL_NAME = "gemma3"
+MODEL_NAME = "llama3.2"
 
 class GenerationRequest(BaseModel):
     visitedPlaces: list[str]
@@ -62,37 +62,59 @@ async def call_ollama_api(prompt: str) -> str:
 # Generate travel plan based on visited places
 async def generate_travel_plan_visited(startingPoint: str, budget: int, travelLength: int, preferences: list[str], visitedPlaces: list[str]) -> str:
     prompt = f"""
+You are a travel planner AI. 
 
-You are a professional travel planner. Create a trip in Europe based on the following criteria:
+I want you to generate a detailed **travel plan** for a trip in Europe (or [continent/country]). Please follow these rules:
 
--Starting point: {startingPoint}
+1. **Starting point:** {startingPoint}, use it only as a starting hub.
+2. **Budget:** {budget} EUR (specify if the budget includes flights or only local transport + accommodation)  
+3. **Trip duration:** {travelLength} days  
+4. **Preferences:** {preferences} (e.g., history, food, nightlife, nature, hiking)  
+5. **Only choose cities or countries from the list:** {visitedPlaces}  
+6. **Transport types:** Suggest realistic transport between locations (train, bus, flight, ferry) with approximate costs.  
+7. **Accommodation:** Suggest budget-friendly options (hostel, Airbnb, hotel) with approximate costs.  
+8. **Activities:** Give brief activity suggestions per day. Include cost estimates where possible.  
+9. **Output format:** Return the plan as **JSON** with the following structure:
 
--Budget: {budget} EUR
+{{
+  "tripName": string,
+  "startingPoint": string,
+  "totalBudgetEUR": number,
+  "tripLengthDays": number,
+  "preferences": string[],
+  "trip": [
+    {{
+      "day": number,
+      "city": string,
+      "country": string,
+      "transportFromPreviousCity": {{
+        "type": "train | bus | flight | ferry",
+        "estimatedCostEUR": number,
+        "estimatedDurationHours": number
+      }},
+      "accommodation": {{
+        "type": "hostel | budget hotel | mid-range hotel",
+        "estimatedCostEUR": number
+      }},
+      "activities": [
+        {{
+          "name": string,
+          "estimatedCostEUR": number
+        }}
+      ],
+      "estimatedDailyTotalEUR": number
+    }}
+  ],
+  "estimatedTripTotalEUR": number
+}}
 
--Travel length: {travelLength} days
+10. Keep the prices **realistic and approximate**. Consider typical budget travel costs in Europe (e.g., €20-€60 per night for hostels, €5-€15 for meals, €10-€50 for trains/buses, flights €50-€150).  
+11. Make it **realistic** in the given budget and travel length.
+12. Choose the most reasonable transport options.
+13. On the last day, the transport to the starting point should be included.
+14. The duration should be exactly the same as the travel length.
 
--Preferences: {preferences}
-
-Only choose from these places: {visitedPlaces}
-
-Requirements:
-
--Do not plan any activities, sightseeing, or overnight stays in the starting city. The starting point is only used as a transportation hub.
-
--Suggest different cities for the trip to maximize variety.
-
--Include accommodation, transportation between cities, activities, and approximate daily costs.
-
--On the last day, return to the starting point.
-
--Only suggest possible cities and travel options, don't make up any cities or travel options.
-
--Where flight is the only option, don't suggest any other travel options.
-
--Don't make it too complex, keep it simple and easy to understand.
-
-Return the itinerary in JSON format.
-
+Generate the JSON **only**, without extra explanations. Make the plan practical and feasible.
 """
     return await call_ollama_api(prompt)
     
@@ -107,36 +129,59 @@ async def travel_plans_visited(request: GenerationRequest):
 # Generate travel plan based on unvisited places
 async def generate_travel_plan_unvisited(startingPoint: str, budget: int, travelLength: int, preferences: list[str], visitedPlaces: list[str]) -> str:
     prompt = f"""
-You are a professional travel planner. Create a trip in Europe based on the following criteria:
+You are a travel planner AI. 
 
--Starting point: {startingPoint}
+I want you to generate a detailed **travel plan** for a trip in Europe (or [continent/country]). Please follow these rules:
 
--Budget: {budget} EUR
+1. **Starting point:** {startingPoint}, use it only as a starting hub.
+2. **Budget:** {budget} EUR (specify if the budget includes flights or only local transport + accommodation)  
+3. **Trip duration:** {travelLength} days  
+4. **Preferences:** {preferences} (e.g., history, food, nightlife, nature, hiking)  
+5. **Exclude cities or countries:** {visitedPlaces}  
+6. **Transport types:** Suggest realistic transport between locations (train, bus, flight, ferry) with approximate costs.  
+7. **Accommodation:** Suggest budget-friendly options (hostel, Airbnb, hotel) with approximate costs.  
+8. **Activities:** Give brief activity suggestions per day. Include cost estimates where possible.  
+9. **Output format:** Return the plan as **JSON** with the following structure:
 
--Travel length: {travelLength} days
+{{
+  "tripName": string,
+  "startingPoint": string,
+  "totalBudgetEUR": number,
+  "tripLengthDays": number,
+  "preferences": string[],
+  "trip": [
+    {{
+      "day": number,
+      "city": string,
+      "country": string,
+      "transportFromPreviousCity": {{
+        "type": "train | bus | flight | ferry",
+        "estimatedCostEUR": number,
+        "estimatedDurationHours": number
+      }},
+      "accommodation": {{
+        "type": "hostel | budget hotel | mid-range hotel",
+        "estimatedCostEUR": number
+      }},
+      "activities": [
+        {{
+          "name": string,
+          "estimatedCostEUR": number
+        }}
+      ],
+      "estimatedDailyTotalEUR": number
+    }}
+  ],
+  "estimatedTripTotalEUR": number
+}}
 
--Preferences: {preferences}
+10. Keep the prices **realistic and approximate**. Consider typical budget travel costs in Europe (e.g., €20-€60 per night for hostels, €5-€15 for meals, €10-€50 for trains/buses, flights €50-€150).  
+11. Make it **realistic** in the given budget and travel length.
+12. Choose the most reasonable transport options.
+13. On the last day, the transport to the starting point should be included.
+14. The duration should be exactly the same as the travel length.
 
-Exclude these places from the trip: {visitedPlaces}
-
-Requirements:
-
--Do not plan any activities, sightseeing, or overnight stays in the starting city. The starting point is only used as a transportation hub.
-
--Suggest different cities for the trip to maximize variety.
-
--Include accommodation, transportation between cities, activities, and approximate daily costs.
-
--On the last day, return to the starting point.
-
--Only suggest possible cities and travel options, don't make up any cities or travel options.
-
--Where flight is the only option, don't suggest any other travel options.
-
--Don't make it too complex, keep it simple and easy to understand.
-
-Return the itinerary in JSON format.
-
+Generate the JSON **only**, without extra explanations. Make the plan practical and feasible.
 """
     return await call_ollama_api(prompt)
     
@@ -151,29 +196,59 @@ async def travel_plans_unvisited(request: GenerationRequest):
 # Generate random travel plan
 async def generate_travel_plan_random(startingPoint: str, budget: int, travelLength: int, preferences: list[str]) -> str:
     prompt = f"""
-You are a professional travel planner. Create a trip in Europe based on the following criteria:
+You are a travel planner AI. 
 
--Starting point: {startingPoint}
+I want you to generate a detailed **travel plan** for a trip in Europe (or [continent/country]). Please follow these rules:
 
--Budget: {budget} EUR
+1. **Starting point:** {startingPoint}, use it only as a starting hub.
+2. **Budget:** {budget} EUR (specify if the budget includes flights or only local transport + accommodation)  
+3. **Trip duration:** {travelLength} days  
+4. **Preferences:** {preferences} (e.g., history, food, nightlife, nature, hiking)  
+5. **You choose the cities and countries to visit, it can be different from the starting point.**  
+6. **Transport types:** Suggest realistic transport between locations (train, bus, flight, ferry) with approximate costs and durations.  
+7. **Accommodation:** Suggest budget-friendly options (hostel, Airbnb, hotel) with approximate costs.  
+8. **Activities:** Give brief activity suggestions per day. Include cost estimates where possible.  
+9. **Output format:** Return the plan as **JSON** with the following structure:
 
--Travel length: {travelLength} days
+{{
+  "tripName": string,
+  "startingPoint": string,
+  "totalBudgetEUR": number,
+  "tripLengthDays": number,
+  "preferences": string[],
+  "trip": [
+    {{
+      "day": number,
+      "city": string,
+      "country": string,
+      "transportFromPreviousCity": {{
+        "type": "train | bus | flight | ferry",
+        "estimatedCostEUR": number,
+        "estimatedDurationHours": number
+      }},
+      "accommodation": {{
+        "type": "hostel | budget hotel | mid-range hotel",
+        "estimatedCostEUR": number
+      }},
+      "activities": [
+        {{
+          "name": string,
+          "estimatedCostEUR": number
+        }}
+      ],
+      "estimatedDailyTotalEUR": number
+    }}
+  ],
+  "estimatedTripTotalEUR": number
+}}
 
--Preferences: {preferences}
+10. Keep the prices **realistic and approximate**. Consider typical budget travel costs in Europe (e.g., €20-€60 per night for hostels, €5-€15 for meals, €10-€50 for trains/buses, flights €50-€150).  
+11. Make it **realistic** in the given budget and travel length.
+12. Choose the most **reasonable** transport options.
+13. On the last day, the transport to the starting point should be included.
+14. The duration should be exactly the same as the travel length.
 
-Requirements:
-
--Do not plan any activities, sightseeing, or overnight stays in the starting city. The starting point is only used as a transportation hub.
-
--Suggest different cities for the trip to maximize variety.
-
--Include accommodation, transportation between cities, activities, and approximate daily costs.
-
--Only suggest possible cities and travel options, don't make up any cities or travel options.
-
--Where flight is the only option, don't suggest any other travel options.
-
-Return the itinerary in JSON format
+Generate the JSON **only**, without extra explanations. Make the plan practical and feasible.
 """
     return await call_ollama_api(prompt)
     
