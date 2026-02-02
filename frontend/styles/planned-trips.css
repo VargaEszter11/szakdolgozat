@@ -1,0 +1,247 @@
+/* Planned Trips page */
+.planned-trips-page {
+    padding: 2rem 1rem;
+}
+
+.planned-trips-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.planned-trips-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.planned-trips-title {
+    font-size: 2.25rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.planned-trips-subtitle {
+    color: var(--muted);
+    margin: 0;
+}
+
+.planned-trips-header .btn-add {
+    display: inline-flex;
+    align-items: center;
+}
+
+.trip-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.trip-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.trip-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    min-height: 200px;
+}
+
+@media (max-width: 768px) {
+    .trip-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-card-image-wrap {
+        min-height: 192px;
+    }
+}
+
+.trip-card-image-wrap {
+    position: relative;
+    background: var(--bg);
+}
+
+.trip-card-image {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.trip-status {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.trip-status-confirmed {
+    background: var(--accent);
+    color: var(--surface);
+}
+
+.trip-status-planning {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.trip-card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.trip-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.trip-card-dest {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.trip-card-dest .icon-pin {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.trip-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.trip-card-dates {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.trip-card-dates .icon-cal {
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+.trip-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.trip-btn-icon {
+    padding: 0.5rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+}
+
+.trip-btn-icon:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.trip-card-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.trip-meta-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.trip-meta-icon {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--muted);
+}
+
+.trip-meta-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+}
+
+.trip-meta-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.trip-card-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.btn-trip {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    display: inline-block;
+}
+
+.btn-trip-primary {
+    background: var(--accent);
+    color: var(--surface);
+}
+
+.btn-trip-primary:hover {
+    filter: brightness(0.9);
+    color: var(--surface);
+    text-decoration: none;
+}
+
+.btn-trip-secondary {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.btn-trip-secondary:hover {
+    background: var(--bg);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.empty-state-text {
+    color: var(--muted);
+    margin: 0 0 1rem 0;
+}
+
+.empty-state .btn-submit {
+    display: inline-block;
+    flex: none;
+}

@@ -1,37 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/styles.css">
-    <title>Visited Places</title>
+    <title>Visited Places – TravelApp</title>
 </head>
 <body>
-    <header>
-        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-        <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
-        <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
-        <button id="planNewTrip" onclick="location.href='../routePlanner/plan_new_trip.html'">Plan New Trip</button>
-        <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
-        <button id="plannedTrips" onclick="location.href='../routePlanner/planned_trips.html'">Planned Trips</button>
-    </header>
-     <h2>Visited Places</h2>
-    <table id="visitedPlacesTable">
-        <thead>
-            <tr>
-                <th>Place Name</th>
-                <th>Country</th>
-                <th>Date Visited</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td colspan="4">No places yet.</td>
-            </tr>
-        </tbody>
-    </table>
-    <button id="mapView" onclick="location.href='places_map_view.html'">Map View</button>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="visited_places.html" class="nav-link nav-link-active">Visited Places</a>
+                <a href="add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
+
+        <main class="main-content visited-places-page">
+            <div class="visited-places-inner">
+                <div class="visited-places-header">
+                    <h1 class="visited-places-title">Visited Places</h1>
+                    <p class="visited-places-subtitle">Your travel memories and experiences</p>
+                </div>
+
+                <div id="placeCards" class="place-cards">
+                    <!-- Place cards rendered by loadPlaces.js -->
+                </div>
+
+                <div class="visited-places-footer card">
+                    <p class="visited-places-count">
+                        <span id="placeCount" class="font-semibold">0</span> places visited so far. Keep exploring!
+                    </p>
+                </div>
+
+                <div class="visited-places-actions">
+                    <a href="places_map_view.html" class="btn-trip btn-trip-secondary">Map View</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <script src="../../scripts/visitedPlaces/loadPlaces.js"></script>
 </body>
 </html>

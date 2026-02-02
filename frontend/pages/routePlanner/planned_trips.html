@@ -1,23 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="../../styles/styles.css">
-	<title>Planned Trips</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
+    <title>Planned Trips – TravelApp</title>
 </head>
 <body>
-    <header>
-    <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-    <button id="visitedPlaces" onclick="location.href='../visitedPlaces/visited_places.html'">Visited Places</button>
-    <button id="addNewPlace" onclick="location.href='../visitedPlaces/add_new_place.html'">Add New Place</button>
-    <button id="planNewTrip" onclick="location.href='plan_new_trip.html'">Plan New Trip</button>
-    <button id="surpriseMe" onclick="location.href='surprise_me.html'">Surprise Me!</button>
-    <button id="plannedTrips" onclick="location.href='planned_trips.html'">Planned Trips</button>
-  </header>
-	<h1>Planned Trips</h1>
-	<p class="small">No planned trips yet.</p>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="planned_trips.html" class="nav-link nav-link-active">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
 
-  <!-- planned trips could have a map view? -->
+        <main class="main-content planned-trips-page">
+            <div class="planned-trips-inner">
+                <div class="planned-trips-header">
+                    <div>
+                        <h1 class="planned-trips-title">Planned Trips</h1>
+                        <p class="planned-trips-subtitle">Your upcoming adventures</p>
+                    </div>
+                    <a href="plan_new_trip.html" class="btn-add">+ New Trip</a>
+                </div>
+
+                <div id="tripCards" class="trip-cards">
+                    <!-- Trip cards rendered by loadPlans.js -->
+                </div>
+
+                <div id="emptyState" class="empty-state hidden">
+                    <p class="empty-state-text">No trips planned yet</p>
+                    <a href="plan_new_trip.html" class="btn-submit">Plan Your First Trip</a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../scripts/routePlanner/loadPlans.js"></script>
 </body>
 </html>

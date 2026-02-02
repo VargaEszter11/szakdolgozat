@@ -1,0 +1,160 @@
+/* Visited Places page */
+.visited-places-page {
+    padding: 2rem 1rem;
+}
+
+.visited-places-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.visited-places-header {
+    margin-bottom: 2rem;
+}
+
+.visited-places-title {
+    font-size: 2.25rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.visited-places-subtitle {
+    color: var(--muted);
+    margin: 0;
+}
+
+.place-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .place-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.place-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.place-card-image-wrap {
+    position: relative;
+    height: 192px;
+    background: var(--bg);
+}
+
+.place-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.place-card-content {
+    padding: 1.5rem;
+}
+
+.place-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.place-card-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.place-card-name .icon-pin {
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.place-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.place-stars {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    flex-shrink: 0;
+}
+
+.place-star {
+    color: var(--border);
+}
+
+.place-star svg {
+    display: block;
+    fill: none;
+}
+
+.place-star-filled svg {
+    fill: var(--text);
+    color: var(--text);
+}
+
+.place-card-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.place-card-date .icon-cal {
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+.place-card-description {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.visited-places-footer {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.visited-places-count {
+    margin: 0;
+    color: var(--muted);
+}
+
+.font-semibold {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.visited-places-actions {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.place-cards-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+}
+
+.place-cards-empty a {
+    color: var(--accent);
+}

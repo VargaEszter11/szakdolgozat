@@ -4,24 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/styles.css">
-    <title>Plan New Trip</title>
+    <title>Plan New Trip – TravelApp</title>
 </head>
-
 <body>
-        <header>
-        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-        <button id="visitedPlaces" onclick="location.href='../visitedPlaces/visited_places.html'">Visited Places</button>
-        <button id="addNewPlace" onclick="location.href='../visitedPlaces/add_new_place.html'">Add New Place</button>
-        <button id="planNewTrip" onclick="location.href='plan_new_trip.html'">Plan New Trip</button>
-        <button id="surpriseMe" onclick="location.href='surprise_me.html'">Surprise Me!</button>
-        <button id="plannedTrips" onclick="location.href='planned_trips.html'">Planned Trips</button>
-    </header>
-    <h1>Plan a New Trip</h1>
-    <p>Choose from the options listed below, then you can start planning your next travel.</p>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="plan_new_trip.html" class="nav-link nav-link-active">Plan New Trip</a>
+                <a href="surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
 
-    <!-- params needed for trip: countries, duration, budget, other (preferences) -->
+        <main class="main-content route-planner-page">
+            <div class="route-planner-inner">
+                <div class="route-planner-header">
+                    <h1 class="route-planner-title">Plan a New Trip</h1>
+                    <p class="route-planner-subtitle">Choose from the options below, then start planning your next travel.</p>
+                </div>
 
-    <button id="planNewTripVisited" onclick="location.href='plan_new_trip_visited_places.html'">From Visited Places</button>
-    <button id="planNewTripUnvisited" onclick="location.href='plan_new_trip_unvisited_places.html'">From Unvisited Places</button>
+                <div class="route-planner-options">
+                    <a href="plan_new_trip_visited_places.html" class="card route-option-card">
+                        <h3 class="route-option-title">From Visited Places</h3>
+                        <p class="route-option-desc">Plan a trip starting from places you've already been. Build on your travel history.</p>
+                        <span class="route-option-link">Get started →</span>
+                    </a>
+                    <a href="plan_new_trip_unvisited_places.html" class="card route-option-card">
+                        <h3 class="route-option-title">From Unvisited Places</h3>
+                        <p class="route-option-desc">Discover new destinations. Plan a trip to places you haven't visited yet.</p>
+                        <span class="route-option-link">Get started →</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
 </body>
 </html>

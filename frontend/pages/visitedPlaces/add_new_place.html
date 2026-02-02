@@ -4,34 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/styles.css">
-    <title>Add New Place</title>
+    <title>Add New Place – TravelApp</title>
 </head>
 <body>
-    <header>
-        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-        <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
-        <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
-        <button id="planNewTrip" onclick="location.href='../routePlanner/plan_new_trip.html'">Plan New Trip</button>
-        <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
-        <button id="plannedTrips" onclick="location.href='../routePlanner/planned_trips.html'">Planned Trips</button>
-    </header>
-    <h1>Add a New Place</h1>
-    <p>Fill in the details below to add a new place to your visited places.</p>
-    <form id="addPlaceForm">
-        <label for="placeName">Place Name:</label><br>
-        <input type="text" id="placeName" name="placeName" required><br><br>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="visited_places.html" class="nav-link">Visited Places</a>
+                <a href="add_new_place.html" class="nav-link nav-link-active">Add New Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
 
-        <label for="country">Country:</label><br>
-        <input type="text" id="country" name="country" required><br><br>
+        <main class="add-place-page">
+            <div class="add-place-inner">
+                <div class="add-place-header">
+                    <h1 class="add-place-title">Add New Place</h1>
+                    <p class="add-place-subtitle">Document your latest travel adventure</p>
+                </div>
 
-        <label for="visitedDate">Date Visited:</label><br>
-        <input type="date" id="visitedDate" name="visitedDate" required><br><br>
+                <div class="card add-place-card">
+                    <form id="addPlaceForm" class="add-place-form">
+                        <!-- Place Name -->
+                        <div class="form-group">
+                            <label for="placeName" class="form-label">Place Name *</label>
+                            <div class="input-with-icon">
+                                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <input type="text" id="placeName" name="placeName" required placeholder="e.g., Paris, France" class="form-input">
+                            </div>
+                        </div>
 
-        <label for="description">Description:</label><br>
-        <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
-        
-        <input type="submit" value="Add Place">
-    </form>
+                        <!-- Country -->
+                        <div class="form-group">
+                            <label for="country" class="form-label">Country *</label>
+                            <input type="text" id="country" name="country" required placeholder="e.g., France" class="form-input">
+                        </div>
+
+                        <!-- Date Visited -->
+                        <div class="form-group">
+                            <label for="visitedDate" class="form-label">Date Visited *</label>
+                            <div class="input-with-icon">
+                                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                <input type="date" id="visitedDate" name="visitedDate" required class="form-input">
+                            </div>
+                        </div>
+
+                        <!-- Rating -->
+                        <div class="form-group">
+                            <span class="form-label">Rating *</span>
+                            <div class="star-rating" role="group" aria-label="Rating">
+                                <button type="button" class="star-btn" data-rating="1" aria-label="1 star">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                                <button type="button" class="star-btn" data-rating="2" aria-label="2 stars">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                                <button type="button" class="star-btn" data-rating="3" aria-label="3 stars">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                                <button type="button" class="star-btn" data-rating="4" aria-label="4 stars">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                                <button type="button" class="star-btn" data-rating="5" aria-label="5 stars">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </button>
+                            </div>
+                            <input type="hidden" id="rating" name="rating" value="5">
+                        </div>
+
+                        <!-- Short Description -->
+                        <div class="form-group">
+                            <label for="description" class="form-label">Short Description</label>
+                            <input type="text" id="description" name="description" placeholder="Brief highlight of your visit" class="form-input">
+                        </div>
+
+                        <!-- Notes & Memories -->
+                        <div class="form-group">
+                            <label for="notes" class="form-label">Notes & Memories</label>
+                            <textarea id="notes" name="notes" rows="4" placeholder="Share your experiences, recommendations, and favorite moments..." class="form-input form-textarea"></textarea>
+                        </div>
+
+                        <!-- Photos -->
+                        <div class="form-group">
+                            <span class="form-label">Photos</span>
+                            <label class="upload-zone" for="photos">
+                                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                <p class="upload-text">Click to upload photos</p>
+                                <p class="upload-hint">PNG, JPG up to 10MB</p>
+                                <input type="file" id="photos" name="photos" accept="image/png,image/jpeg,image/jpg" multiple class="upload-input">
+                            </label>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Add Place</button>
+                            <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script src="../../scripts/visitedPlaces/addNewPlace.js"></script>
 </body>

@@ -3,64 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visited Places Map</title>
-
-  <link rel="stylesheet" href="../../styles/styles.css">
+  <title>Map View – TravelApp</title>
+  <link rel="stylesheet" href="../../styles/styles.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
-
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-
-    .map-controls {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      z-index: 1000; /* higher than Leaflet */
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .map-controls button {
-      padding: 8px 12px;
-      background: white;
-      border: 1px solid #ccc;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    .map-controls button:hover {
-      background: #f0f0f0;
-    }
-  </style>
 </head>
 <body>
-  <header>
-    <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-    <button id="visitedPlaces" onclick="location.href='visited_places.html'">Visited Places</button>
-    <button id="addNewPlace" onclick="location.href='add_new_place.html'">Add New Place</button>
-    <button id="planNewTrip" onclick="location.href='../routePlanner/plan_new_trip.html'">Plan New Trip</button>
-    <button id="surpriseMe" onclick="location.href='../routePlanner/surprise_me.html'">Surprise Me!</button>
-    <button id="plannedRoutes" onclick="location.href='../routePlanner/planned_trips.html'">Planned Trips</button>
-  </header>
+  <div class="main-page map-view-page">
+    <header class="main-header">
+      <nav class="main-nav">
+        <a href="../main_page.html" class="nav-link">Home</a>
+        <a href="visited_places.html" class="nav-link">Visited Places</a>
+        <a href="add_new_place.html" class="nav-link">Add New Place</a>
+        <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+        <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+        <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+        <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+      </nav>
+    </header>
 
-  <div id="map"></div>
-
-  <div class="map-controls">
-    <button onclick="location.href='visited_places.html'">List View</button>
-    <button onclick="location.href='../main_page.html'">Back to Main Page</button>
+    <main class="main-content">
+      <div class="map-view-wrap">
+        <div id="map"></div>
+        <div class="map-controls">
+          <a href="visited_places.html" class="btn-map">List View</a>
+        </div>
+      </div>
+    </main>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="../../scripts/visitedPlaces/loadPlacesMap.js"></script>
-
 </body>
 </html>

@@ -4,19 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/styles.css">
-    <title>Login</title>
+    <title>Log in – TravelApp</title>
 </head>
 <body>
-    <h1>Login to "my app"</h1>
-    <form>
-        <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
 
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
+        <main class="main-content route-planner-page">
+            <div class="route-planner-inner">
+                <div class="route-planner-header">
+                    <h1 class="route-planner-title">Log in</h1>
+                    <p class="route-planner-subtitle">Sign in to your TravelApp account</p>
+                </div>
 
-        <input type="submit" value="Login">
-    </form>
-    <p>Don't have an account? <a href="registerPage.html">Register here</a></p>
+                <div class="card add-place-card">
+                    <form id="loginForm" class="add-place-form">
+                        <div class="form-group">
+                            <label for="username" class="form-label">Username *</label>
+                            <input type="text" id="username" name="username" required class="form-input" placeholder="Your username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password *</label>
+                            <input type="password" id="password" name="password" required class="form-input" placeholder="Your password">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Log in</button>
+                            <a href="profile.html" class="btn-cancel">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+
+                <p class="auth-switch muted">
+                    Don't have an account? <a href="registerPage.html">Register here</a>
+                </p>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/loginRegister/login.js"></script>
 </body>
 </html>

@@ -4,20 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../styles/styles.css">
-    <title>Main page</title>
+    <title>TravelApp – Main page</title>
 </head>
 <body>
-    <header>
-        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-        <button id="visitedPlaces" onclick="location.href='visitedPlaces/visited_places.html'">Visited Places</button>
-        <button id="addNewPlace" onclick="location.href='visitedPlaces/add_new_place.html'">Add New Place</button>
-        <button id="planNewTrip" onclick="location.href='routePlanner/plan_new_trip.html'">Plan New Trip</button>
-        <button id="surpriseMe" onclick="location.href='routePlanner/surprise_me.html'">Surprise Me!</button>
-        <button id="plannedTrips" onclick="location.href='routePlanner/planned_trips.html'">Planned Trips</button>
-    </header>
-    <h1>Welcome to "my app"</h1>
-    <p>
-        This is the main page where you can navigate to different sections of the application using the buttons above.
-    </p>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="main_page.html" class="nav-link">Home</a>
+                <a href="visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-inner">
+                <h1 class="hero-title">Welcome to TravelApp</h1>
+                <p class="hero-subtitle">Discover amazing destinations and log your travels</p>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="main-inner">
+                <div class="main-grid">
+                    <!-- Left Column - Travel Log -->
+                    <div class="main-col">
+                        <div class="section-header">
+                            <h2 class="section-title">My Travel Log</h2>
+                            <a href="routePlanner/plan_new_trip.html" class="btn-add">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                Add Trip
+                            </a>
+                        </div>
+
+                        <div id="mainTravelLogs" class="travel-logs">
+                            <p class="travel-logs-loading muted">Loading…</p>
+                        </div>
+
+                        <!-- Info Cards -->
+                        <div class="info-cards">
+                            <div class="info-card">
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <p class="info-label">200+ Places</p>
+                            </div>
+                            <div class="info-card">
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                <p class="info-label">Plan Trips</p>
+                            </div>
+                            <div class="info-card">
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                <p class="info-label">Share Stories</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Featured Image and Text -->
+                    <div class="main-col main-col-right">
+                        <div class="featured-image-wrap">
+                            <img
+                                src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1080&q=80"
+                                alt="Travel adventure landscape"
+                                class="featured-image"
+                            />
+                        </div>
+                        <div class="card feature-text">
+                            <h3 class="feature-title">Start Your Journey</h3>
+                            <p class="feature-p">
+                                Document your adventures, share your experiences, and inspire others to explore the world.
+                            </p>
+                            <p class="feature-p">
+                                Whether it's a weekend getaway or a cross-continental expedition, keep all your travel memories in one place.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../scripts/mainPageTravelLog.js"></script>
 </body>
 </html>

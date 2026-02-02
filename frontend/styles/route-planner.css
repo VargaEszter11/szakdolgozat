@@ -1,0 +1,83 @@
+/* Route planner: Surprise Me, Plan New Trip */
+.route-planner-page {
+    padding: 2rem 1rem;
+}
+
+.route-planner-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.route-planner-header {
+    margin-bottom: 2rem;
+}
+
+.route-planner-title {
+    font-size: 2.25rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.route-planner-subtitle {
+    color: var(--muted);
+    margin: 0;
+}
+
+.route-planner-card {
+    padding: 2rem;
+    max-width: 42rem;
+}
+
+.route-planner-intro {
+    color: var(--muted);
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.route-planner-card .btn-add {
+    display: inline-flex;
+}
+
+.route-planner-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .route-planner-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.route-option-card {
+    display: block;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.route-option-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--muted);
+    text-decoration: none;
+    color: inherit;
+}
+
+.route-option-title {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.route-option-desc {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+.route-option-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent);
+}

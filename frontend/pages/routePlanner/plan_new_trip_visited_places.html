@@ -4,40 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/styles.css">
-    <title>Plan New Route</title>
+    <title>Plan from Visited Places – TravelApp</title>
 </head>
 <body>
-        <header>
-        <button id="backToMain" onclick="location.href='../main_page.html'">Back to Main Page</button>
-        <button id="visitedPlaces" onclick="location.href='../visitedPlaces/visited_places.html'">Visited Places</button>
-        <button id="addNewPlace" onclick="location.href='../visitedPlaces/add_new_place.html'">Add New Place</button>
-        <button id="planNewTrip" onclick="location.href='plan_new_trip.html'">Plan New Trip</button>
-        <button id="surpriseMe" onclick="location.href='surprise_me.html'">Surprise Me!</button>
-        <button id="plannedTrips" onclick="location.href='planned_trips.html'">Planned Trips</button>
-    </header>
-    <h1>Plan New Route from Visited Places</h1>
-    <p>Select where you want to travel next, the default selected will be your visited countries.</p>
+    <div class="main-page">
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../main_page.html" class="nav-link">Home</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="plan_new_trip.html" class="nav-link nav-link-active">Plan New Trip</a>
+                <a href="surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+            </nav>
+        </header>
 
-    <form id="visitedPlanForm">
-        <div>
-            <label for="destination">Destination:</label><br>
-            <input type="text" id="destination" name="destination" placeholder="e.g. Germany" required>
-        </div>
-        <div style="margin-top:0.5rem;">
-            <label for="travelLength">Preferred Travel Length in Days:</label><br>
-            <input type="number" id="travelLength" name="travelLength" placeholder="e.g.10" required>
-        </div>
-        <div style="margin-top:0.5rem;">
-            <label for="budget">Budget in Euros:</label><br>
-            <input type="number" id="budget" name="budget" placeholder="e.g. 1000" required>
-        </div>
-        <div style="margin-top:0.5rem;">
-            <label for="preferences">Preferences (separated by commas):</label><br>
-            <input type="text" id="preferences" name="preferences" placeholder="e.g. museums, hiking, etc." required>
-        </div>
-        <div style="margin-top:1rem;">
-            <button type="submit">Create Plan</button>
-        </div>
-    </form>
+        <main class="main-content route-planner-page">
+            <div class="route-planner-inner">
+                <div class="route-planner-header">
+                    <h1 class="route-planner-title">Plan from Visited Places</h1>
+                    <p class="route-planner-subtitle">Select where you want to travel next. The default will use your visited countries.</p>
+                </div>
+
+                <div class="card add-place-card">
+                    <form id="visitedPlanForm" class="add-place-form">
+                        <div class="form-group">
+                            <label for="destination" class="form-label">Destination *</label>
+                            <input type="text" id="destination" name="destination" placeholder="e.g. Germany" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="travelLength" class="form-label">Preferred travel length (days) *</label>
+                            <input type="number" id="travelLength" name="travelLength" placeholder="e.g. 10" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="budget" class="form-label">Budget (€) *</label>
+                            <input type="number" id="budget" name="budget" placeholder="e.g. 1000" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="preferences" class="form-label">Preferences (comma-separated) *</label>
+                            <input type="text" id="preferences" name="preferences" placeholder="e.g. museums, hiking" required class="form-input">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Create Plan</button>
+                            <a href="plan_new_trip.html" class="btn-cancel">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/routePlanner/planVisited.js"></script>
 </body>
 </html>
