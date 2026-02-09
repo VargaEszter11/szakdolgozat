@@ -32,7 +32,8 @@
       country: country || '',
       displayName: name,
       dateVisited: formatDate(dateValue),
-      description: item.description || item.notes || ''
+      description: item.description || item.notes || '',
+      coordinates: item.coordinates || null  // Include stored coordinates
     };
   }
 
@@ -41,49 +42,23 @@
     return list.map(normalizePlace);
   }
 
-  async function geocodePlace(cityName, countryName) {
-    var cacheKey = cityName + ',' + countryName;
-    var cached = localStorage.getItem(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    var query = countryName ? cityName + ', ' + countryName : cityName;
-    var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query);
-    try {
-      var response = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      var results = await response.json();
-      if (!results || results.length === 0) return null;
-
-      var coords = { lat: parseFloat(results[0].lat), lon: parseFloat(results[0].lon) };
-      localStorage.setItem(cacheKey, JSON.stringify(coords));
-      return coords;
-    } catch (err) {
-      console.error('Geocoding error:', cityName, err);
-      return null;
-    }
-  }
-
-  async function loadCities(places, batchSize, delay) {
-    batchSize = batchSize || 5;
-    delay = delay || 500;
+  function loadCities(places) {
     var markerGroup = L.featureGroup();
 
-    for (var i = 0; i < places.length; i += batchSize) {
-      var batch = places.slice(i, i + batchSize);
-
-      for (var j = 0; j < batch.length; j++) {
-        var place = batch[j];
-        var coords = await geocodePlace(place.name, place.country);
-        if (coords) {
-          var popupHtml = '<b>' + escapeHtml(place.displayName) + '</b><br>Visited: ' + escapeHtml(place.dateVisited) + '<br>' + escapeHtml(place.description);
-          var marker = L.marker([coords.lat, coords.lon])
-            .addTo(map)
-            .bindPopup(popupHtml);
-          markerGroup.addLayer(marker);
-        } else {
-          console.warn('City not found:', place.name);
-        }
+    for (var i = 0; i < places.length; i++) {
+      var place = places[i];
+      
+      // Only use stored coordinates
+      if (place.coordinates && place.coordinates.lat && place.coordinates.lon) {
+        var coords = place.coordinates;
+        var popupHtml = '<b>' + escapeHtml(place.displayName) + '</b><br>Visited: ' + escapeHtml(place.dateVisited) + '<br>' + escapeHtml(place.description);
+        var marker = L.marker([coords.lat, coords.lon])
+          .addTo(map)
+          .bindPopup(popupHtml);
+        markerGroup.addLayer(marker);
+      } else {
+        console.warn('Place has no coordinates:', place.name);
       }
-      await new Promise(function (r) { setTimeout(r, delay); });
     }
 
     if (markerGroup.getLayers().length > 0) {
@@ -94,8 +69,6 @@
   async function initMap() {
     var mapEl = document.getElementById('map');
     if (!mapEl) return;
-
-    await new Promise(function (r) { setTimeout(r, 50); });
 
     map = L.map('map').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -121,7 +94,7 @@
       places = getPlacesFromStorage();
     }
 
-    await loadCities(places);
+    loadCities(places);
   }
 
   window.addEventListener('DOMContentLoaded', initMap);
