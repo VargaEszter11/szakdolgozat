@@ -22,17 +22,58 @@
 
         <main class="main-content route-planner-page">
             <div class="route-planner-inner">
-                <div class="route-planner-header">
-                    <h1 class="route-planner-title">Surprise Me</h1>
-                    <p class="route-planner-subtitle">Generate a random travel suggestion.</p>
+                <div class="route-planner-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 class="route-planner-title">Surprise Me!</h1>
+                        <p class="route-planner-subtitle">Generate a random travel suggestion based on your preferences.</p>
+                    </div>
+                    <a href="plan_new_trip.html" class="btn-add">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                        Plan From Options
+                    </a>
                 </div>
 
-                <div class="card route-planner-card">
-                    <p class="route-planner-intro">Get a random trip idea based on your starting point, budget, and travel length. Perfect when you're open to new destinations.</p>
-                    <a href="plan_new_trip.html" class="btn-add">Plan From Options</a>
+                <div class="card add-place-card">
+                    <form id="randomTripForm" class="add-place-form">
+                        <div class="form-group">
+                            <label for="startingCity" class="form-label">Starting City *</label>
+                            <input type="text" id="startingCity" name="startingCity" placeholder="e.g. Budapest" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="travelLength" class="form-label">Trip Length (days) *</label>
+                            <input type="number" id="travelLength" name="travelLength" placeholder="e.g. 7" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="budget" class="form-label">Budget (€) *</label>
+                            <input type="number" id="budget" name="budget" placeholder="e.g. 1000" required class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="preferences" class="form-label">Preferences (comma-separated)</label>
+                            <input type="text" id="preferences" name="preferences" placeholder="e.g. beach, museums, hiking" class="form-input">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-add" id="generateBtn">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                Generate Random Trip
+                            </button>
+                            <a href="plan_new_trip.html" class="btn-cancel">Cancel</a>
+                        </div>
+                    </form>
+
+                    <!-- Loading State -->
+                    <div id="loadingState" style="display: none; padding: 2rem; text-align: center;">
+                        <p>Generating your random trip...</p>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="resultsContainer" style="display: none; margin-top: 2rem;">
+                        <h3>Your Random Trip Options</h3>
+                        <div id="tripResults"></div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
+    <script src="../../scripts/surpriseMe.js"></script>
 </body>
 </html>

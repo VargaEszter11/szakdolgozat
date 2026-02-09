@@ -1,20 +1,29 @@
 # logic: api(possibble destinations) -> draft plan -> api -> final plan
 
-from ast import List
 import json
-import re
 from typing import List
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import httpx
 from utils.coordinates import geocode_place
 from utils.nearest_airport import nearest_airport, get_direct_destinations
-from utils.flight_pricing import validate_travel_plan, get_city_airport_code
+from utils.flight_pricing import validate_travel_plan
+from travel_types import (
+    generate_travel_plan_visited,
+    generate_travel_plan_unvisited,
+    generate_travel_plan_random,
+)
 
 app = FastAPI()
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma3:4b"
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class GenerationRequest(BaseModel):
@@ -30,18 +39,6 @@ class RandomGenerationRequest(BaseModel):
     budget: int
     travelLength: int
     preferences: List[str] = []
-
-async def call_ollama_api(prompt: str) -> str:
-    payload = {
-        "model": MODEL_NAME,
-        "stream": False,
-        "prompt": prompt,
-    }
-    async with httpx.AsyncClient(timeout=None) as client:
-        response = await client.post(OLLAMA_API_URL, json=payload)
-        response.raise_for_status()
-        data = response.json()
-        return data["response"]
 
 
 # Get coordinates for a place name
@@ -185,199 +182,8 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
         "validation": validation
     }
 
-# Generate travel plan functions
-async def generate_travel_plan_visited(
-    startingPoint: str,
-    travelLength: int,
-    preferences: List[str],
-    visitedPlaces: List[str],
-    direct_destinations: List[dict] = None,
-) -> str:
-    # Filter visited places to only include those with direct flights
-    available_places = []
-    if direct_destinations:
-        dest_cities = {(dest.get("city") or "").lower(): dest for dest in direct_destinations if dest.get("city")}
-        for place in visitedPlaces:
-            # Try to match visited places with available destinations
-            place_lower = place.lower()
-            for city_key, dest in dest_cities.items():
-                if city_key and (place_lower in city_key or city_key in place_lower):
-                    available_places.append(f"{dest.get('city')}, {dest.get('country')} (IATA: {dest.get('iata')})")
-    
-    direct_destinations = "\n".join(available_places) if available_places else "No direct flights available from starting airport."
-    
-    prompt = f"""
-SYSTEM:
-You are a travel planning AI.
-DO NOT estimate prices.
-DO NOT mention costs.
-DO NOT add activities.
-ONLY decide cities, order, transport type, and number of days.
 
-USER:
-Starting point: {startingPoint}
-Trip length: {travelLength} days
-Preferences: {preferences}
-
-Available destinations with direct flights:
-{direct_destinations} 
-
-Constraint:
-ONLY choose destinations from this list of visited places that have direct flights:
-{visitedPlaces}
-
-TASK:
-Generate a realistic draft itinerary using ONLY destinations with direct flights available.
-
-Rules:
-- Use the starting point only as a transport hub.
-- ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
-- Choose geographically reasonable routes.
-- Sum of days MUST equal {travelLength}.
-- At the end of the trip, return to the starting point.
-- Choose the BEST transport method for each segment: use "flight" only when it's the most practical option (long distances, islands, time constraints), otherwise prefer "train" or "bus" for shorter distances.
-- For each destination, suggest 1-2 realistic activities/programs (e.g., "Museum visit", "City tour", "Beach day", "Historical site", "Local cuisine experience").
-
-OUTPUT:
-Return JSON ONLY using this structure:
-
-{{
-  "startingPoint": string,
-  "tripLengthDays": number,
-  "strategy": "visited",
-  "plan": [
-    {{"city": string,"country": string,"iata": string,"days": number,"transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}
-  ]
-}}
-"""
-    return await call_ollama_api(prompt)
-
-
-async def generate_travel_plan_unvisited(
-    startingPoint: str,
-    travelLength: int,
-    preferences: List[str],
-    visitedPlaces: List[str],
-    direct_destinations: List[dict] = None,
-) -> str:
-    # Filter out visited places from direct destinations
-    available_destinations = []
-    if direct_destinations:
-        visited_lower = [place.lower() for place in visitedPlaces]
-        for dest in direct_destinations:
-            city = dest.get("city")
-            if city:
-                city_lower = city.lower()
-                if not any(visited in city_lower or city_lower in visited for visited in visited_lower):
-                    available_destinations.append(f"{dest.get('city')}, {dest.get('country')} (IATA: {dest.get('iata')})")
-    
-    destinations_info = "\n".join(available_destinations) if available_destinations else "No direct flights available from starting airport."
-    
-    prompt = f"""
-SYSTEM:
-You are a travel planning AI.
-DO NOT estimate prices.
-DO NOT mention costs.
-DO NOT add activities.
-
-USER:
-Starting point: {startingPoint}
-Trip length: {travelLength} days
-Preferences: {preferences}
-
-Available destinations with direct flights (excluding visited places):
-{destinations_info}
-
-Constraint:
-EXCLUDE the following places completely:
-{visitedPlaces}
-
-TASK:
-Generate a realistic draft itinerary using ONLY new destinations that have direct flights available.
-
-Rules:
-- Use the starting point only as a transport hub.
-- ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
-- Do not include excluded places.
-- Sum of days MUST equal {travelLength}.
-- At the end of the trip, return to the starting point.
-- Choose the BEST transport method for each segment: use "flight" only when it's the most practical option (long distances, islands, time constraints), otherwise prefer "train" or "bus" for shorter distances.
-- For each destination, suggest 1-2 realistic activities/programs (e.g., "Museum visit", "City tour", "Beach day", "Historical site", "Local cuisine experience").
-
-OUTPUT:
-Return JSON ONLY using this structure:
-
-{{
-  "startingPoint": string,
-  "tripLengthDays": number,
-  "strategy": "unvisited",
-  "plan": [
-    {{"city": string,"country": string,"iata": string,"days": number,"transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}
-  ]
-}}
-"""
-    return await call_ollama_api(prompt)
-
-
-async def generate_travel_plan_random(
-    startingPoint: str,
-    travelLength: int,
-    preferences: List[str],
-    direct_destinations: List[dict] = None,
-) -> str:
-    # Use all direct destinations for random plans
-    available_destinations = []
-    if direct_destinations:
-        for dest in direct_destinations:
-            city = dest.get("city")
-            if city:  # Only include destinations with valid city names
-                available_destinations.append(f"{city}, {dest.get('country')} (IATA: {dest.get('iata')})")
-    
-    destinations_info = "\n".join(available_destinations) if available_destinations else "No direct flights available from starting airport."
-    
-    prompt = f"""
-SYSTEM:
-You are a travel planning AI.
-DO NOT estimate prices.
-DO NOT mention costs.
-DO NOT add activities.
-
-USER:
-Starting point: {startingPoint}
-Trip length: {travelLength} days
-Preferences: {preferences}
-
-Available destinations with direct flights:
-{destinations_info}
-
-TASK:
-Generate 5 realistic random European itineraries using ONLY destinations with direct flights available.
-
-Rules:
-- Starting point is used only as a transport hub.
-- ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
-- Cities may be in different countries but must be ES, DE, or GB.
-- Routes must be geographically reasonable.
-- Sum of days MUST equal {travelLength}.
-- At the end of the trip, return to the starting point.
-- Choose the BEST transport method for each segment: use "flight" only when it's the most practical option (long distances, islands, time constraints), otherwise prefer "train" or "bus" for shorter distances.
-- For each destination, suggest 1-2 realistic activities/programs (e.g., "Museum visit", "City tour", "Beach day", "Historical site", "Local cuisine experience").
-
-OUTPUT:
-Return JSON ONLY using this structure:
-
-{{
-"trips": [
-  {{"startingPoint": string,"tripLengthDays": number,"strategy": "random","plan": [{{"city": string,"country": string,"iata": string,"days": number,"transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}]}}
-  ]
-}}
-"""
-    return await call_ollama_api(prompt)
-
-#Endpoints
+# Endpoints
 @app.post("/generate_travel_plans/visited")
 async def travel_plans_visited(request: GenerationRequest):
     return await generate_plan_with_location(
