@@ -14,7 +14,7 @@ async def generate_travel_plan_random(
     if direct_destinations:
         for dest in direct_destinations:
             city = dest.get("city")
-            if city:  # Only include destinations with valid city names
+            if city:
                 available_destinations.append(f"{city}, {dest.get('country')} (IATA: {dest.get('iata')})")
     
     destinations_info = "\n".join(available_destinations) if available_destinations else "No direct flights available from starting airport."

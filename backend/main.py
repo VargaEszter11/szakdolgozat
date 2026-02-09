@@ -129,16 +129,12 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
             # Select the best trip (first after sorting)
             best_trip = validated_trips[0] if validated_trips else None
             
+            # Return only the best trip
             return {
-                "draft_plan": {
-                    "selected_trip": best_trip["trip"] if best_trip else None,
-                    "all_trips": [vt["trip"] for vt in validated_trips] if validated_trips else trips,
-                    "validations": [vt["validation"] for vt in validated_trips] if validated_trips else []
-                },
+                "draft_plan": best_trip["trip"] if best_trip else None,
                 "starting_point_coords": {"lat": lat, "lon": lon},
                 "nearest_airport": airport,
-                "validation": best_trip["validation"] if best_trip else None,
-                "best_trip_index": 0 if best_trip else None
+                "validation": best_trip["validation"] if best_trip else None
             }
         else:
             # Single plan validation - retry until we get a valid plan
