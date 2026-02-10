@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../styles/styles.css">
+    <link rel="icon" href="../../pictures/marker.png">
+    <title>Settings – TravelApp</title>
+</head>
+<body>
+    <div class="main-page">
+        <a href="../main_page.html" class="nav-logo" style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+            <img src="../../pictures/marker.png" alt="TravelApp" width="32" height="32">
+        </a>
+        <header class="main-header">
+            <nav class="main-nav">
+                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
+                <a href="settings.html" class="nav-link nav-link-active">Settings</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="main-inner">
+                <div class="profile-page">
+                    <div class="route-planner-header">
+                        <h1 class="route-planner-title">Settings</h1>
+                        <p class="route-planner-subtitle">Customize your TravelApp experience</p>
+                    </div>
+
+                    <!-- Theme Settings -->
+                    <section class="card add-place-card">
+                        <h2 class="section-title">Appearance</h2>
+                        <div class="form-group">
+                            <label for="themeSelect" class="form-label">Theme</label>
+                            <select id="themeSelect" name="theme" class="form-input">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="auto">Auto (System)</option>
+                            </select>
+                            <small class="form-hint">Choose your preferred color theme</small>
+                        </div>
+                    </section>
+
+                    <!-- Language Settings -->
+                    <section class="card add-place-card">
+                        <h2 class="section-title">Language</h2>
+                        <div class="form-group">
+                            <label for="languageSelect" class="form-label">Language</label>
+                            <select id="languageSelect" name="language" class="form-input">
+                                <option value="en">English</option>
+                                <option value="hu">Magyar (Hungarian)</option>
+                                <option value="de">Deutsch (German)</option>
+                                <option value="es">Español (Spanish)</option>
+                                <option value="fr">Français (French)</option>
+                            </select>
+                            <small class="form-hint">Select your preferred language</small>
+                        </div>
+                    </section>
+
+                    <!-- Save Button -->
+                    <section class="card add-place-card">
+                        <div class="form-actions">
+                            <button type="button" id="saveSettings" class="btn-add">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                    <polyline points="17 21 17 13 7 13 7 21"/>
+                                    <polyline points="7 3 7 8 15 8"/>
+                                </svg>
+                                Save Settings
+                            </button>
+                            <a href="../main_page.html" class="btn-cancel">Cancel</a>
+                        </div>
+                        <div id="saveMessage" style="display: none; margin-top: 1rem; padding: 1rem; background: #d4edda; color: #155724; border-radius: 4px;">
+                            Settings saved successfully!
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="../../scripts/settings/settings.js"></script>
+</body>
+</html>
