@@ -14,13 +14,15 @@ This application is designed for people who travel frequently and want to store 
 - Surprise Me! Page: Generates a random trip suggestion.
 - Planned Trips Page: Lists trips that have been previously planned.
 - Login/Register Page: Provides user authentication and registration functionality.
+- Profile Page: Edit profile, checks if a user is logged in, displays statistics.
+- Settings Page: Theme and language can be changed.
 
 Trips are planned with the help of AI
 
 ## Technologies Used
 
 - Frontend: HTML, CSS, JavaScript
-- Backend: Python FastAPI (for AI integration)
+- Backend: Python FastAPI
 - Database
 
 
