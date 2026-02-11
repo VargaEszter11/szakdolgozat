@@ -42,8 +42,8 @@
 }
 
 .hero {
-    background: linear-gradient(to bottom right, #111827, #1f2937);
-    color: var(--surface);
+    background: linear-gradient(to bottom right, var(--hero-bg-from), var(--hero-bg-to));
+    color: var(--hero-text);
     padding: 2rem 1rem;
     flex-shrink: 0;
 }
@@ -58,13 +58,13 @@
 .hero-title {
     font-size: 2.25rem;
     margin: 0 0 0.5rem 0;
-    color: var(--surface);
+    color: var(--hero-text);
     font-weight: 700;
 }
 
 .hero-subtitle {
     font-size: 1rem;
-    color: #d1d5db;
+    color: var(--hero-muted);
     margin: 0;
 }
 

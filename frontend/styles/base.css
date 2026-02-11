@@ -1,5 +1,8 @@
 /* Base: variables, reset, global utilities */
-:root {
+
+/* Light theme (default) */
+:root,
+[data-theme="light"] {
     --bg: #f4f4f4;
     --surface: #ffffff;
     --text: #111111;
@@ -7,6 +10,25 @@
     --border: #dddddd;
     --accent: #222222;
     --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    --hero-bg-from: #111827;
+    --hero-bg-to: #1f2937;
+    --hero-text: #ffffff;
+    --hero-muted: #d1d5db;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --text: #e0e0e0;
+    --muted: #a0a0b0;
+    --border: #2a2a4a;
+    --accent: #e0e0e0;
+    --shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    --hero-bg-from: #0f0f23;
+    --hero-bg-to: #1a1a2e;
+    --hero-text: #e0e0e0;
+    --hero-muted: #a0a0b0;
 }
 
 * {
