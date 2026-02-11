@@ -59,3 +59,14 @@
     text-decoration: none;
     color: var(--text);
 }
+
+@media (max-width: 768px) {
+    .map-view-page .main-content {
+        height: calc(100vh - 4rem);
+    }
+
+    .map-controls {
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+}

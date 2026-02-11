@@ -74,3 +74,21 @@
     display: inline-block;
     margin-right: 1rem;
 }
+
+@media (max-width: 768px) {
+    .profile-page {
+        padding: 1rem 0;
+    }
+
+    .profile-card {
+        padding: 1.5rem;
+    }
+
+    .profile-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-name {
+        font-size: 1.25rem;
+    }
+}

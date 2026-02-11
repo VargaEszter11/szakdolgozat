@@ -202,3 +202,34 @@
 .auth-switch a {
     color: var(--accent);
 }
+
+@media (max-width: 768px) {
+    .add-place-page {
+        padding: 1rem 0.75rem;
+    }
+
+    .add-place-inner {
+        max-width: 100%;
+    }
+
+    .add-place-card {
+        padding: 1.25rem;
+    }
+
+    .add-place-title {
+        font-size: 1.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn-submit,
+    .btn-cancel {
+        text-align: center;
+    }
+
+    .upload-zone {
+        padding: 1.5rem;
+    }
+}

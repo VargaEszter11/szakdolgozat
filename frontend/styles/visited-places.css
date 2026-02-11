@@ -29,8 +29,20 @@
 }
 
 @media (max-width: 768px) {
+    .visited-places-page {
+        padding: 1rem 0.75rem;
+    }
+
+    .visited-places-title {
+        font-size: 1.5rem;
+    }
+
     .place-cards {
         grid-template-columns: 1fr;
+    }
+
+    .place-card-content {
+        padding: 1rem;
     }
 }
 

@@ -7,13 +7,17 @@
     <link rel="icon" href="../../pictures/marker.png">
     <title>Planned Trips – TravelApp</title>
     <script src="../../scripts/themeLoader.js"></script>
+    <script src="../../scripts/navToggle.js" defer></script>
 </head>
 <body>
     <div class="main-page">
-        <a href="../main_page.html" class="nav-logo" style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
-            <img src="../../pictures/marker.png" alt="TravelApp" width="32" height="32">
-        </a>
         <header class="main-header">
+            <a href="../main_page.html" class="nav-logo">
+                <img src="../../pictures/marker.png" alt="TravelApp">
+            </a>
+            <button class="hamburger-btn" aria-label="Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <nav class="main-nav">
                 <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
                 <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>

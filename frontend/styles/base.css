@@ -187,3 +187,28 @@ body>button {
         width: calc(100% - 16px);
     }
 }
+
+@media (max-width: 768px) {
+    button,
+    .btn {
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+
+    input,
+    textarea,
+    select {
+        padding: 12px 14px;
+        font-size: 1rem;
+    }
+
+    .card {
+        padding: 12px;
+        border-radius: 6px;
+    }
+
+    .container {
+        padding: 0 12px;
+        margin: 16px auto;
+    }
+}

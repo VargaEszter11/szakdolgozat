@@ -44,8 +44,20 @@
 }
 
 @media (max-width: 768px) {
+    .route-planner-page {
+        padding: 1rem 0.75rem;
+    }
+
+    .route-planner-title {
+        font-size: 1.5rem;
+    }
+
     .route-planner-options {
         grid-template-columns: 1fr;
+    }
+
+    .route-planner-card {
+        padding: 1.25rem;
     }
 }
 
