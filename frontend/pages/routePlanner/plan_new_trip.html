@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,10 @@
     <title>Plan New Trip – TravelApp</title>
     <script src="../../scripts/themeLoader.js"></script>
     <script src="../../scripts/navToggle.js" defer></script>
+    <script src="../../scripts/i18n/translations.js"></script>
+    <script src="../../scripts/i18n/i18n.js"></script>
 </head>
+
 <body>
     <div class="main-page">
         <header class="main-header">
@@ -16,40 +20,54 @@
                 <img src="../../pictures/marker.png" alt="TravelApp">
             </a>
             <button class="hamburger-btn" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
             </button>
             <nav class="main-nav">
-                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
-                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
-                <a href="plan_new_trip.html" class="nav-link nav-link-active">Plan New Trip</a>
-                <a href="surprise_me.html" class="nav-link">Surprise Me!</a>
-                <a href="planned_trips.html" class="nav-link">Planned Trips</a>
-                <a href="../loginRegister/profile.html" class="nav-link">Profile</a>
-                <a href="../settings/settings.html" class="nav-link">Settings</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link" data-i18n="nav.visitedPlaces">Visited
+                    Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link" data-i18n="nav.addNewPlace">Add New
+                    Place</a>
+                <a href="plan_new_trip.html" class="nav-link nav-link-active" data-i18n="nav.planNewTrip">Plan New
+                    Trip</a>
+                <a href="surprise_me.html" class="nav-link" data-i18n="nav.surpriseMe">Surprise Me!</a>
+                <a href="planned_trips.html" class="nav-link" data-i18n="nav.plannedTrips">Planned Trips</a>
+                <a href="../loginRegister/profile.html" class="nav-link" data-i18n="nav.profile">Profile</a>
+                <a href="../settings/settings.html" class="nav-link" data-i18n="nav.settings">Settings</a>
             </nav>
         </header>
 
         <main class="main-content route-planner-page">
             <div class="route-planner-inner">
                 <div class="route-planner-header">
-                    <h1 class="route-planner-title">Plan a New Trip</h1>
-                    <p class="route-planner-subtitle">Choose from the options below, then start planning your next travel.</p>
+                    <h1 class="route-planner-title" data-i18n="planNewTrip.title">Plan a New Trip</h1>
+                    <p class="route-planner-subtitle" data-i18n="planNewTrip.subtitle">Choose from the options below,
+                        then start planning your next travel.</p>
                 </div>
 
                 <div class="route-planner-options">
                     <a href="plan_new_trip_visited_places.html" class="card route-option-card">
-                        <h3 class="route-option-title">From Visited Places</h3>
-                        <p class="route-option-desc">Plan a trip starting from places you've already been. Build on your travel history.</p>
-                        <span class="route-option-link">Get started →</span>
+                        <h3 class="route-option-title" data-i18n="planNewTrip.fromVisitedPlaces">From Visited Places
+                        </h3>
+                        <p class="route-option-desc" data-i18n="fromVisitedPlaces.subtitle">Select where you want to
+                            travel next. The default will be your visited countries.</p>
+                        <span class="route-option-link" data-i18n="planNewTrip.getStarted">Get started →</span>
                     </a>
                     <a href="plan_new_trip_unvisited_places.html" class="card route-option-card">
-                        <h3 class="route-option-title">From Unvisited Places</h3>
-                        <p class="route-option-desc">Discover new destinations. Plan a trip to places you haven't visited yet.</p>
-                        <span class="route-option-link">Get started →</span>
+                        <h3 class="route-option-title" data-i18n="planNewTrip.fromUnvisitedPlaces">From Unvisited Places
+                        </h3>
+                        <p class="route-option-desc" data-i18n="fromUnvisitedPlaces.subtitle">Select where you want to
+                            travel next. The default will use places you haven't visited yet.</p>
+                        <span class="route-option-link" data-i18n="planNewTrip.getStarted">Get started →</span>
                     </a>
                 </div>
             </div>
         </main>
     </div>
 </body>
+
 </html>

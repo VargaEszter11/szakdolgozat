@@ -10,17 +10,28 @@ document.addEventListener('DOMContentLoaded', function () {
     themeSelect.value = savedTheme;
     languageSelect.value = savedLanguage;
 
+    if (window.i18n) {
+        window.i18n.setLanguage(savedLanguage);
+        window.i18n.applyToPage();
+    }
+
     themeSelect.addEventListener('change', function () {
         applyTheme(themeSelect.value);
     });
 
     saveBtn.addEventListener('click', function () {
         localStorage.setItem('theme', themeSelect.value);
-        localStorage.setItem('language', languageSelect.value);
+        var newLang = languageSelect.value;
+        localStorage.setItem('language', newLang);
 
-        saveMessage.style.display = 'block';
+        if (window.i18n) {
+            window.i18n.setLanguage(newLang);
+            window.i18n.applyToPage();
+            saveMessage.textContent = window.i18n.t('settings.savedMessage');
+        }
+        saveMessage.classList.add('visible');
         setTimeout(function () {
-            saveMessage.style.display = 'none';
+            saveMessage.classList.remove('visible');
         }, 3000);
     });
 });

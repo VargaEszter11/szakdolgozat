@@ -9,6 +9,8 @@
     <title>Profile – TravelApp</title>
     <script src="../../scripts/themeLoader.js"></script>
     <script src="../../scripts/navToggle.js" defer></script>
+    <script src="../../scripts/i18n/translations.js"></script>
+    <script src="../../scripts/i18n/i18n.js"></script>
 </head>
 
 <body>
@@ -18,16 +20,25 @@
                 <img src="../../pictures/marker.png" alt="TravelApp">
             </a>
             <button class="hamburger-btn" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
             </button>
             <nav class="main-nav">
-                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
-                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
-                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
-                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
-                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
-                <a href="profile.html" class="nav-link nav-link-active">Profile</a>
-                <a href="../settings/settings.html" class="nav-link">Settings</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link" data-i18n="nav.visitedPlaces">Visited
+                    Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link" data-i18n="nav.addNewPlace">Add New
+                    Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link" data-i18n="nav.planNewTrip">Plan New
+                    Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link" data-i18n="nav.surpriseMe">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link" data-i18n="nav.plannedTrips">Planned
+                    Trips</a>
+                <a href="profile.html" class="nav-link nav-link-active" data-i18n="nav.profile">Profile</a>
+                <a href="../settings/settings.html" class="nav-link" data-i18n="nav.settings">Settings</a>
             </nav>
         </header>
 
@@ -40,28 +51,30 @@
                         </div>
                         <h1 class="profile-name">Traveler</h1>
                         <p class="profile-email">traveler@example.com</p>
-                        <a href="../settings/editProfile.html" class="btn-add">Edit profile</a>
+                        <a href="../settings/editProfile.html" class="btn-add" data-i18n="profile.editProfile">Edit
+                            Profile</a>
                     </section>
 
                     <section class="profile-stats card">
-                        <h2 class="section-title">Your stats</h2>
+                        <h2 class="section-title" data-i18n="profile.yourStats">Your Stats</h2>
                         <div class="profile-stats-grid">
                             <div class="profile-stat">
                                 <span class="profile-stat-value">0</span>
-                                <span class="profile-stat-label">Places visited</span>
+                                <span class="profile-stat-label" data-i18n="profile.placesVisited">Places Visited</span>
                             </div>
                             <div class="profile-stat">
                                 <span class="profile-stat-value">0</span>
-                                <span class="profile-stat-label">Trips planned</span>
+                                <span class="profile-stat-label" data-i18n="profile.tripsPlanned">Trips Planned</span>
                             </div>
                         </div>
                     </section>
 
                     <section class="profile-actions card">
-                        <h2 class="section-title">Account</h2>
-                        <p class="muted">Manage your account and preferences.</p>
-                        <a href="loginPage.html" class="nav-link">Log in</a>
-                        <a href="registerPage.html" class="nav-link">Register</a>
+                        <h2 class="section-title" data-i18n="profile.account">Account</h2>
+                        <p class="muted" data-i18n="profile.manageYourAccountAndPreferences">Manage your account and
+                            preferences.</p>
+                        <a href="loginPage.html" class="nav-link" data-i18n="profile.login">Login</a>
+                        <a href="registerPage.html" class="nav-link" data-i18n="profile.register">Register</a>
                     </section>
                 </div>
             </div>

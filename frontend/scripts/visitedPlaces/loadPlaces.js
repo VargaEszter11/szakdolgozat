@@ -55,23 +55,23 @@
   function renderCard(place) {
     return (
       '<div class="place-card card" data-id="' + escapeHtml(place.id) + '">' +
-        '<div class="place-card-image-wrap">' +
-          '<img src="' + escapeHtml(place.image) + '" alt="' + escapeHtml(place.name) + '" class="place-card-image" onerror="this.src=\'' + escapeHtml(DEFAULT_IMAGE) + '\';">' +
-        '</div>' +
-        '<div class="place-card-content">' +
-          '<div class="place-card-header">' +
-            '<div class="place-card-name">' +
-              '<svg class="icon icon-pin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
-              '<h2 class="place-card-title">' + escapeHtml(place.name) + '</h2>' +
-            '</div>' +
-            '<div class="place-stars">' + starsHtml(place.rating) + '</div>' +
-          '</div>' +
-          '<div class="place-card-date">' +
-            '<svg class="icon icon-cal" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>' +
-            '<span>' + escapeHtml(place.date) + '</span>' +
-          '</div>' +
-          '<p class="place-card-description">' + escapeHtml(place.description || 'No description.') + '</p>' +
-        '</div>' +
+      '<div class="place-card-image-wrap">' +
+      '<img src="' + escapeHtml(place.image) + '" alt="' + escapeHtml(place.name) + '" class="place-card-image" onerror="this.src=\'' + escapeHtml(DEFAULT_IMAGE) + '\';">' +
+      '</div>' +
+      '<div class="place-card-content">' +
+      '<div class="place-card-header">' +
+      '<div class="place-card-name">' +
+      '<svg class="icon icon-pin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
+      '<h2 class="place-card-title">' + escapeHtml(place.name) + '</h2>' +
+      '</div>' +
+      '<div class="place-stars">' + starsHtml(place.rating) + '</div>' +
+      '</div>' +
+      '<div class="place-card-date">' +
+      '<svg class="icon icon-cal" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>' +
+      '<span>' + escapeHtml(place.date) + '</span>' +
+      '</div>' +
+      '<p class="place-card-description">' + escapeHtml(place.description || 'No description.') + '</p>' +
+      '</div>' +
       '</div>'
     );
   }
@@ -99,9 +99,11 @@
     var sorted = sortByVisitDate(places);
     if (countEl) countEl.textContent = sorted.length;
 
+    var t = window.i18n && window.i18n.t ? window.i18n.t.bind(window.i18n) : function (k) { return k; };
+    var emptyHtml = (t('visitedPlaces.emptyText') || 'No places yet.') + ' <a href="add_new_place.html">' + (t('visitedPlaces.addFirstPlace') || 'Add your first place') + '</a>.';
     container.innerHTML = sorted.length
       ? sorted.map(renderCard).join('')
-      : '<p class="place-cards-empty">No places yet. <a href="add_new_place.html">Add your first place</a>.</p>';
+      : '<p class="place-cards-empty">' + emptyHtml + '</p>';
   }
 
   function loadPlaces() {

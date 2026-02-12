@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,10 @@
     <title>Register – TravelApp</title>
     <script src="../../scripts/themeLoader.js"></script>
     <script src="../../scripts/navToggle.js" defer></script>
+    <script src="../../scripts/i18n/translations.js"></script>
+    <script src="../../scripts/i18n/i18n.js"></script>
 </head>
+
 <body>
     <div class="main-page">
         <header class="main-header">
@@ -16,52 +20,67 @@
                 <img src="../../pictures/marker.png" alt="TravelApp">
             </a>
             <button class="hamburger-btn" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
             </button>
             <nav class="main-nav">
-                <a href="../visitedPlaces/visited_places.html" class="nav-link">Visited Places</a>
-                <a href="../visitedPlaces/add_new_place.html" class="nav-link">Add New Place</a>
-                <a href="../routePlanner/plan_new_trip.html" class="nav-link">Plan New Trip</a>
-                <a href="../routePlanner/surprise_me.html" class="nav-link">Surprise Me!</a>
-                <a href="../routePlanner/planned_trips.html" class="nav-link">Planned Trips</a>
-                <a href="profile.html" class="nav-link">Profile</a>
-                <a href="../settings/settings.html" class="nav-link">Settings</a>
+                <a href="../visitedPlaces/visited_places.html" class="nav-link" data-i18n="nav.visitedPlaces">Visited
+                    Places</a>
+                <a href="../visitedPlaces/add_new_place.html" class="nav-link" data-i18n="nav.addNewPlace">Add New
+                    Place</a>
+                <a href="../routePlanner/plan_new_trip.html" class="nav-link" data-i18n="nav.planNewTrip">Plan New
+                    Trip</a>
+                <a href="../routePlanner/surprise_me.html" class="nav-link" data-i18n="nav.surpriseMe">Surprise Me!</a>
+                <a href="../routePlanner/planned_trips.html" class="nav-link" data-i18n="nav.plannedTrips">Planned
+                    Trips</a>
+                <a href="profile.html" class="nav-link" data-i18n="nav.profile">Profile</a>
+                <a href="../settings/settings.html" class="nav-link" data-i18n="nav.settings">Settings</a>
             </nav>
         </header>
 
         <main class="main-content route-planner-page">
             <div class="route-planner-inner">
                 <div class="route-planner-header">
-                    <h1 class="route-planner-title">Register</h1>
-                    <p class="route-planner-subtitle">Create your TravelApp account</p>
+                    <h1 class="route-planner-title" data-i18n="register.title">Register</h1>
+                    <p class="route-planner-subtitle" data-i18n="register.subtitle">Create your TravelApp account</p>
                 </div>
 
                 <div class="card add-place-card">
                     <form id="registerForm" class="add-place-form">
                         <div class="form-group">
-                            <label for="username" class="form-label">Username *</label>
-                            <input type="text" id="username" name="username" required class="form-input" placeholder="Choose a username">
+                            <label for="username" class="form-label" data-i18n="register.username">Username *</label>
+                            <input type="text" id="username" name="username" required class="form-input"
+                                data-i18n-placeholder="register.usernamePlaceholder" placeholder="Choose a username">
                         </div>
                         <div class="form-group">
-                            <label for="email" class="form-label">Email *</label>
-                            <input type="email" id="email" name="email" required class="form-input" placeholder="Your email">
+                            <label for="email" class="form-label" data-i18n="register.email">Email *</label>
+                            <input type="email" id="email" name="email" required class="form-input"
+                                data-i18n-placeholder="register.emailPlaceholder" placeholder="Your email">
                         </div>
                         <div class="form-group">
-                            <label for="password" class="form-label">Password *</label>
-                            <input type="password" id="password" name="password" required class="form-input" placeholder="Choose a password">
+                            <label for="password" class="form-label" data-i18n="register.password">Password *</label>
+                            <input type="password" id="password" name="password" required class="form-input"
+                                data-i18n-placeholder="register.passwordPlaceholder" placeholder="Choose a password">
                         </div>
                         <div class="form-group">
-                            <label for="confirmPassword" class="form-label">Confirm password *</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" required class="form-input" placeholder="Confirm your password">
+                            <label for="confirmPassword" class="form-label" data-i18n="register.confirmPassword">Confirm
+                                Password *</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required
+                                class="form-input" data-i18n-placeholder="register.confirmPasswordPlaceholder"
+                                placeholder="Confirm your password">
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn-submit">Register</button>
-                            <a href="loginPage.html" class="btn-cancel">Cancel</a>
+                            <button type="submit" class="btn-submit" data-i18n="register.register">Register</button>
+                            <a href="loginPage.html" class="btn-cancel" data-i18n="register.cancel">Cancel</a>
                         </div>
                     </form>
                 </div>
 
-                <p class="auth-switch muted">
+                <p class="auth-switch muted" data-i18n="register.alreadyHaveAnAccount">
                     Already have an account? <a href="loginPage.html">Log in here</a>
                 </p>
             </div>
@@ -69,4 +88,5 @@
     </div>
     <script src="../../scripts/loginRegister/register.js"></script>
 </body>
+
 </html>

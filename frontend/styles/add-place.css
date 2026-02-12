@@ -203,6 +203,19 @@
     color: var(--accent);
 }
 
+.settings-saved-message {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 4px;
+}
+
+.settings-saved-message.visible {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .add-place-page {
         padding: 1rem 0.75rem;
