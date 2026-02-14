@@ -27,24 +27,65 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (!form) return;
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
-    var place = {
-      placeName: document.getElementById('placeName').value.trim(),
-      country: document.getElementById('country').value.trim(),
-      visitedDate: document.getElementById('visitedDate').value,
-      description: document.getElementById('description').value.trim(),
-      notes: document.getElementById('notes').value.trim(),
-      rating: parseInt(document.getElementById('rating').value, 10) || 5
-    };
-    if (!place.placeName || !place.country || !place.visitedDate) {
+
+    // Get user_id from localStorage (set during login)
+    var userId = localStorage.getItem('user_id');
+    if (!userId) {
+      alert('Please log in to add a place.');
+      window.location.href = '../loginRegister/loginPage.html';
+      return;
+    }
+
+    var placeName = document.getElementById('placeName').value.trim();
+    var country = document.getElementById('country').value.trim();
+    var visitedDate = document.getElementById('visitedDate').value;
+    var description = document.getElementById('description').value.trim();
+    var notes = document.getElementById('notes').value.trim();
+    var rating = parseInt(document.getElementById('rating').value, 10) || 5;
+
+    if (!placeName || !country || !visitedDate) {
       alert('Please fill in Place Name, Country and Date Visited.');
       return;
     }
-    var key = 'visitedPlaces';
-    var list = JSON.parse(localStorage.getItem(key) || '[]');
-    list.push(place);
-    localStorage.setItem(key, JSON.stringify(list));
-    window.location.href = 'visited_places.html';
+
+    // Combine description and notes
+    var fullDescription = description;
+    if (notes) {
+      fullDescription = description ? description + '\n\n' + notes : notes;
+    }
+
+    // Prepare API request body
+    var requestBody = {
+      user_id: parseInt(userId, 10),
+      place_name: placeName,
+      country: country,
+      date: visitedDate, // Format: YYYY-MM-DD
+      rating: rating,
+      description: fullDescription || null
+    };
+
+    try {
+      var response = await fetch('http://localhost:8000/api/visited-places', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        var errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(errorData.detail || 'Failed to add place');
+      }
+
+      var data = await response.json();
+      alert('Place added successfully!');
+      window.location.href = 'visited_places.html';
+    } catch (error) {
+      console.error('Error adding place:', error);
+      alert('Failed to add place: ' + error.message);
+    }
   });
 });

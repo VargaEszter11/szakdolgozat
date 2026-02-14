@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import crud, schemas, get_db
+from utils.coordinates import geocode_place
 
 router = APIRouter()
 
 
 @router.post("/planned-trips", response_model=schemas.PlannedTripResponse, status_code=status.HTTP_201_CREATED)
-def create_planned_trip(trip: schemas.PlannedTripCreate, db: Session = Depends(get_db)):
+async def create_planned_trip(trip: schemas.PlannedTripCreate, db: Session = Depends(get_db)):
     """Create a new planned trip"""
     # Verify user exists
     db_user = crud.get_user(db, user_id=trip.user_id)
@@ -16,6 +17,22 @@ def create_planned_trip(trip: schemas.PlannedTripCreate, db: Session = Depends(g
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+    
+    # Geocode the start city if provided
+    if trip.start_city:
+        try:
+            lat, lon = await geocode_place(trip.start_city)
+            
+            # Create a new PlannedTripCreate object with coordinates
+            trip_dict = trip.model_dump()
+            trip_dict['start_latitude'] = lat
+            trip_dict['start_longitude'] = lon
+            trip_with_coords = schemas.PlannedTripCreate(**trip_dict)
+            
+            return crud.create_planned_trip(db=db, trip=trip_with_coords)
+        except Exception as e:
+            # If geocoding fails, save without coordinates
+            print(f"Geocoding failed for start city {trip.start_city}: {e}")
     
     return crud.create_planned_trip(db=db, trip=trip)
 

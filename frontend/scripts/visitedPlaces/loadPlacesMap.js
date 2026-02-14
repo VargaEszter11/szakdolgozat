@@ -22,18 +22,29 @@
   }
 
   function normalizePlace(item) {
-    var placeName = item.placeName || item.name || '';
+    // API response uses: place_name, country, date, description, latitude, longitude
+    var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
-    var dateValue = item.visitedDate || item.dateVisited || item.date;
+    var dateValue = item.date || item.visitedDate || item.dateVisited;
+    
+    // Build coordinates object from latitude/longitude fields
+    var coordinates = null;
+    if (item.latitude != null && item.longitude != null) {
+      coordinates = {
+        lat: parseFloat(item.latitude),
+        lon: parseFloat(item.longitude)
+      };
+    }
+    
     return {
       name: placeName.trim() || 'Unknown',
       country: country || '',
       displayName: name,
       dateVisited: formatDate(dateValue),
       description: item.description || item.notes || '',
-      coordinates: item.coordinates || null  // Include stored coordinates
+      coordinates: coordinates
     };
   }
 
@@ -79,21 +90,37 @@
       if (map) map.invalidateSize();
     }, 100);
 
-    var places = [];
-    try {
-      var response = await fetch(JSON_URL);
-      if (response.ok) {
-        var data = await response.json();
-        var list = data && data.places ? data.places : [];
-        places = list.map(normalizePlace);
-      }
-    } catch (err) {
-      console.warn('Could not load places.json for map, falling back to localStorage:', err);
-    }
-    if (places.length === 0) {
-      places = getPlacesFromStorage();
+    // Get user_id from localStorage (set during login)
+    var userId = localStorage.getItem('user_id');
+    if (!userId) {
+      console.warn('No user_id found. User not logged in.');
+      return;
     }
 
+    var places = [];
+    try {
+      var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+      var response = await fetch(apiUrl);
+      if (response.ok) {
+        var data = await response.json();
+        console.log('Raw API data:', data);
+        // API returns array of visited places directly
+        var list = Array.isArray(data) ? data : [];
+        places = list.map(normalizePlace);
+        console.log('Normalized places:', places);
+        console.log('Places with coordinates:', places.filter(function(p) { return p.coordinates; }).length);
+      } else if (response.status === 404) {
+        console.log('No places found for this user.');
+        places = [];
+      } else {
+        throw new Error('API request failed: ' + response.status);
+      }
+    } catch (err) {
+      console.error('Failed to load visited places from API:', err);
+      places = [];
+    }
+
+    console.log('Loading cities on map. Total places:', places.length);
     loadCities(places);
   }
 

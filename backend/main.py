@@ -16,7 +16,7 @@ from travel_types import (
 
 # Database imports
 from database.database import engine, Base
-from routers import users, planned_trips, trip_stops, visited_places
+from routers import users, planned_trips, trip_stops, visited_places, auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -41,6 +41,7 @@ app.add_middleware(
 )
 
 # Include routers for database operations
+app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(planned_trips.router, prefix="/api", tags=["trips"])
 app.include_router(trip_stops.router, prefix="/api", tags=["stops"])

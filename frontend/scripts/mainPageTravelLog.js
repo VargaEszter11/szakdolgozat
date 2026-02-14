@@ -22,11 +22,12 @@
   }
 
   function normalizePlace(item) {
-    var placeName = item.placeName || item.name || '';
+    // API response uses: place_name, country, date, description
+    var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
-    var dateValue = item.visitedDate || item.dateVisited || item.date;
+    var dateValue = item.date || item.visitedDate || item.dateVisited;
     var d = dateValue ? new Date(dateValue) : null;
     var dateSortKey = d && !isNaN(d.getTime()) ? d.getTime() : 0;
     return {
@@ -77,19 +78,39 @@
     var container = document.getElementById('mainTravelLogs');
     if (!container) return;
 
-    fetch(JSON_URL)
+    // Get user_id from localStorage (set during login)
+    var userId = localStorage.getItem('user_id');
+    if (!userId) {
+      console.warn('No user_id found. User not logged in.');
+      var msg = 'Please <a href="pages/loginRegister/loginPage.html">log in</a> to see your travel log.';
+      container.innerHTML = '<p class="travel-logs-empty muted">' + msg + '</p>';
+      return;
+    }
+
+    var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+    fetch(apiUrl)
       .then(function (res) {
-        if (!res.ok) throw new Error('Network response was not ok');
+        if (!res.ok) {
+          if (res.status === 404) {
+            // No places found for this user
+            render([]);
+            return null;
+          }
+          throw new Error('API request failed: ' + res.status);
+        }
         return res.json();
       })
       .then(function (data) {
-        var list = data && data.places ? data.places : [];
+        if (data === null) return; // Already handled 404
+        // API returns array of visited places directly
+        var list = Array.isArray(data) ? data : [];
         var places = list.map(normalizePlace);
         render(places);
       })
       .catch(function (err) {
-        console.warn('Could not load places.json for travel log, falling back to localStorage:', err);
-        render(getPlacesFromStorage());
+        console.error('Failed to load travel log from API:', err);
+        var msg = 'Failed to load travel log. Please try again later.';
+        container.innerHTML = '<p class="travel-logs-empty muted">' + msg + '</p>';
       });
   }
 

@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from database import crud, schemas, get_db
+from utils.coordinates import geocode_place
 
 router = APIRouter()
 
 
 @router.post("/trip-stops", response_model=schemas.TripStopResponse, status_code=status.HTTP_201_CREATED)
-def create_trip_stop(stop: schemas.TripStopCreate, db: Session = Depends(get_db)):
+async def create_trip_stop(stop: schemas.TripStopCreate, db: Session = Depends(get_db)):
     """Add a stop to a trip"""
     # Verify trip exists
     db_trip = crud.get_planned_trip(db, trip_id=stop.trip_id)
@@ -17,7 +18,22 @@ def create_trip_stop(stop: schemas.TripStopCreate, db: Session = Depends(get_db)
             detail="Planned trip not found"
         )
     
-    return crud.create_trip_stop(db=db, stop=stop)
+    # Geocode the stop to get coordinates
+    try:
+        place_query = f"{stop.place_name}, {stop.country}" if stop.country else stop.place_name
+        lat, lon = await geocode_place(place_query)
+        
+        # Create a new TripStopCreate object with coordinates
+        stop_dict = stop.model_dump()
+        stop_dict['latitude'] = lat
+        stop_dict['longitude'] = lon
+        stop_with_coords = schemas.TripStopCreate(**stop_dict)
+        
+        return crud.create_trip_stop(db=db, stop=stop_with_coords)
+    except Exception as e:
+        # If geocoding fails, save without coordinates
+        print(f"Geocoding failed for {stop.place_name}: {e}")
+        return crud.create_trip_stop(db=db, stop=stop)
 
 
 @router.get("/trip-stops/{stop_id}", response_model=schemas.TripStopResponse)

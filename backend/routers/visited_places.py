@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import crud, schemas, get_db
+from utils.coordinates import geocode_place
 
 router = APIRouter()
 
 
 @router.post("/visited-places", response_model=schemas.VisitedPlaceResponse, status_code=status.HTTP_201_CREATED)
-def create_visited_place(place: schemas.VisitedPlaceCreate, db: Session = Depends(get_db)):
+async def create_visited_place(place: schemas.VisitedPlaceCreate, db: Session = Depends(get_db)):
     """Add a visited place"""
     # Verify user exists
     db_user = crud.get_user(db, user_id=place.user_id)
@@ -17,7 +18,22 @@ def create_visited_place(place: schemas.VisitedPlaceCreate, db: Session = Depend
             detail="User not found"
         )
     
-    return crud.create_visited_place(db=db, place=place)
+    # Geocode the place to get coordinates
+    try:
+        place_query = f"{place.place_name}, {place.country}" if place.country else place.place_name
+        lat, lon = await geocode_place(place_query)
+        
+        # Create a new VisitedPlaceCreate object with coordinates
+        place_dict = place.model_dump()
+        place_dict['latitude'] = lat
+        place_dict['longitude'] = lon
+        place_with_coords = schemas.VisitedPlaceCreate(**place_dict)
+        
+        return crud.create_visited_place(db=db, place=place_with_coords)
+    except Exception as e:
+        # If geocoding fails, save without coordinates
+        print(f"Geocoding failed for {place.place_name}: {e}")
+        return crud.create_visited_place(db=db, place=place)
 
 
 @router.get("/visited-places/{place_id}", response_model=schemas.VisitedPlaceResponse)

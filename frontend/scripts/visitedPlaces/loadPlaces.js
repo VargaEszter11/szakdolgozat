@@ -33,11 +33,12 @@
   }
 
   function normalizePlace(item, index) {
-    var placeName = item.placeName || item.name || '';
+    // API response uses: place_name, country, date, rating, description
+    var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
-    var dateValue = item.visitedDate || item.dateVisited || item.date;
+    var dateValue = item.date || item.visitedDate || item.dateVisited;
     var d = dateValue ? new Date(dateValue) : null;
     var dateSortKey = d && !isNaN(d.getTime()) ? d.getTime() : 0;
     return {
@@ -107,22 +108,45 @@
   }
 
   function loadPlaces() {
-    var jsonUrl = '../../../dummy_places/places.json';
-    fetch(jsonUrl)
+    // Get user_id from localStorage (set during login)
+    var userId = localStorage.getItem('user_id');
+    if (!userId) {
+      console.error('No user_id found. Please log in.');
+      var container = document.getElementById('placeCards');
+      if (container) {
+        container.innerHTML = '<p class="place-cards-empty">Please log in to view your places. <a href="../loginRegister/loginPage.html">Log in here</a>.</p>';
+      }
+      return;
+    }
+
+    var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+    fetch(apiUrl)
       .then(function (res) {
-        if (!res.ok) throw new Error('Network response was not ok');
+        if (!res.ok) {
+          if (res.status === 404) {
+            // No places found for this user
+            render([]);
+            return null;
+          }
+          throw new Error('API request failed: ' + res.status);
+        }
         return res.json();
       })
       .then(function (data) {
-        var list = data && data.places ? data.places : [];
+        if (data === null) return; // Already handled 404
+        // API returns array of visited places directly
+        var list = Array.isArray(data) ? data : [];
         var places = list.map(function (item, index) {
           return normalizePlace(item, index);
         });
         render(places);
       })
       .catch(function (err) {
-        console.warn('Could not load places.json, falling back to localStorage:', err);
-        render(getPlacesFromStorage());
+        console.error('Failed to load visited places from API:', err);
+        var container = document.getElementById('placeCards');
+        if (container) {
+          container.innerHTML = '<p class="place-cards-empty">Failed to load places. Please try again later.</p>';
+        }
       });
   }
 

@@ -1,63 +1,77 @@
 (function () {
-  var STORAGE_KEY = 'plannedTrips';
+  function normalizeTrip(trip) {
+    // Map API response fields to frontend fields
+    // API provides: id, user_id, title, start_date, end_date, start_city, stops
+    return {
+      id: trip.id,
+      destination: trip.title || 'Unknown destination',
+      startDate: formatApiDate(trip.start_date),
+      endDate: formatApiDate(trip.end_date),
+      travelers: trip.stops ? trip.stops.length : 0, // Estimate from stops count
+      status: 'Planning', // Default status (can be enhanced later)
+      budget: '—', // Not in API yet
+      accommodation: '—', // Not in API yet
+      image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80' // Default image
+    };
+  }
 
-  var defaultTrips = [
-    {
-      id: 1,
-      destination: 'Barcelona, Spain',
-      startDate: 'March 15, 2026',
-      endDate: 'March 22, 2026',
-      travelers: 2,
-      status: 'Confirmed',
-      budget: '$3,500',
-      accommodation: 'Hotel',
-      image: 'https://images.unsplash.com/photo-1676749467838-e85a864205fc?w=1080&q=80'
-    },
-    {
-      id: 2,
-      destination: 'Iceland Road Trip',
-      startDate: 'June 10, 2026',
-      endDate: 'June 20, 2026',
-      travelers: 4,
-      status: 'Planning',
-      budget: '$6,000',
-      accommodation: 'Airbnb',
-      image: 'https://images.unsplash.com/photo-1595368062405-e4d7840cba14?w=1080&q=80'
-    },
-    {
-      id: 3,
-      destination: 'Maldives',
-      startDate: 'August 5, 2026',
-      endDate: 'August 12, 2026',
-      travelers: 2,
-      status: 'Confirmed',
-      budget: '$5,500',
-      accommodation: 'Resort',
-      image: 'https://images.unsplash.com/photo-1714412192114-61dca8f15f68?w=1080&q=80'
+  function formatApiDate(dateStr) {
+    if (!dateStr) return '—';
+    try {
+      var d = new Date(dateStr);
+      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    } catch (e) {
+      return dateStr;
     }
-  ];
+  }
 
-  function getTrips() {
-    var raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        return [];
+  async function getTrips() {
+    // Get user_id from localStorage (set during login)
+    var userId = localStorage.getItem('user_id');
+    if (!userId) {
+      console.warn('No user_id found. User not logged in.');
+      return [];
+    }
+
+    try {
+      var apiUrl = 'http://localhost:8000/api/users/' + userId + '/planned-trips';
+      var response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No trips found for this user
+          return [];
+        }
+        throw new Error('API request failed: ' + response.status);
       }
+
+      var data = await response.json();
+      // API returns array of planned trips directly
+      var list = Array.isArray(data) ? data : [];
+      return list.map(normalizeTrip);
+    } catch (error) {
+      console.error('Failed to load planned trips from API:', error);
+      return [];
     }
-    saveTrips(defaultTrips);
-    return defaultTrips;
   }
 
-  function saveTrips(trips) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trips));
-  }
+  async function deleteTrip(id) {
+    try {
+      var response = await fetch('http://localhost:8000/api/planned-trips/' + id, {
+        method: 'DELETE'
+      });
 
-  function deleteTrip(id) {
-    var trips = getTrips().filter(function (t) { return t.id !== id; });
-    saveTrips(trips);
-    render();
+      if (!response.ok) {
+        throw new Error('Failed to delete trip: ' + response.status);
+      }
+
+      alert('Trip deleted successfully');
+      await render();
+    } catch (error) {
+      console.error('Error deleting trip:', error);
+      alert('Failed to delete trip: ' + error.message);
+    }
   }
 
   function escapeHtml(str) {
@@ -126,13 +140,15 @@
     });
   }
 
-  function render() {
+  async function render() {
     var container = document.getElementById('tripCards');
     var emptyState = document.getElementById('emptyState');
     if (!container || !emptyState) return;
 
-    var trips = sortTripsByStartDate(getTrips());
-    if (trips.length === 0) {
+    var trips = await getTrips();
+    var sortedTrips = sortTripsByStartDate(trips);
+    
+    if (sortedTrips.length === 0) {
       container.classList.add('hidden');
       emptyState.classList.remove('hidden');
       return;
@@ -140,7 +156,7 @@
 
     emptyState.classList.add('hidden');
     container.classList.remove('hidden');
-    container.innerHTML = trips.map(renderCard).join('');
+    container.innerHTML = sortedTrips.map(renderCard).join('');
 
     container.querySelectorAll('.trip-delete').forEach(function (btn) {
       btn.addEventListener('click', function () {

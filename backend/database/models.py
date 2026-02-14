@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, Float, ForeignKey, func
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -48,6 +48,8 @@ class PlannedTripStop(Base):
     transport_from_last = Column(Text, nullable=True)
     activities = Column(Text, nullable=True)
     estimated_price = Column(Numeric(10, 2), nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     # Relationships
     trip = relationship("PlannedTrip", back_populates="stops")
@@ -65,6 +67,8 @@ class VisitedPlace(Base):
     rating = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)
     photo_path = Column(Text, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="visited_places")

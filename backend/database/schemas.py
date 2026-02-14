@@ -29,6 +29,30 @@ class UserResponse(UserBase):
         from_attributes = True
 
 
+# ============= Authentication Schemas =============
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    success: bool
+    user_id: int
+    username: str
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+
+
+class RegisterResponse(BaseModel):
+    success: bool
+    message: str
+
+
 # ============= Visited Place Schemas =============
 
 class VisitedPlaceBase(BaseModel):
@@ -38,6 +62,8 @@ class VisitedPlaceBase(BaseModel):
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class VisitedPlaceCreate(VisitedPlaceBase):
@@ -51,6 +77,8 @@ class VisitedPlaceUpdate(BaseModel):
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class VisitedPlaceResponse(BaseModel):
@@ -62,6 +90,8 @@ class VisitedPlaceResponse(BaseModel):
     rating: Optional[int] = None
     description: Optional[str] = None
     photo_path: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -78,6 +108,8 @@ class TripStopBase(BaseModel):
     transport_from_last: Optional[str] = None
     activities: Optional[str] = None
     estimated_price: Optional[Decimal] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class TripStopCreate(TripStopBase):
@@ -93,6 +125,8 @@ class TripStopUpdate(BaseModel):
     transport_from_last: Optional[str] = None
     activities: Optional[str] = None
     estimated_price: Optional[Decimal] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class TripStopResponse(TripStopBase):
