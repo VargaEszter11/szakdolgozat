@@ -1,5 +1,10 @@
 fastapi
 uvicorn[standard]
 httpx
-pydantic
+pydantic[email]
 requests
+sqlalchemy
+psycopg2-binary
+python-dotenv
+bcrypt
+python-multipart

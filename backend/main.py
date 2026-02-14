@@ -14,7 +14,22 @@ from travel_types import (
     generate_travel_plan_random,
 )
 
-app = FastAPI()
+# Database imports
+from database.database import engine, Base
+from routers import users, planned_trips, trip_stops, visited_places
+
+# Create FastAPI app
+app = FastAPI(
+    title="TravelApp API",
+    description="API for travel planning and visited places tracking",
+    version="1.0.0"
+)
+
+# Create database tables on startup
+@app.on_event("startup")
+def startup_event():
+    """Create database tables on application startup"""
+    Base.metadata.create_all(bind=engine)
 
 # Configure CORS
 app.add_middleware(
@@ -24,6 +39,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers for database operations
+app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(planned_trips.router, prefix="/api", tags=["trips"])
+app.include_router(trip_stops.router, prefix="/api", tags=["stops"])
+app.include_router(visited_places.router, prefix="/api", tags=["places"])
 
 
 class GenerationRequest(BaseModel):
@@ -179,7 +200,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
     }
 
 
-# Endpoints
+# Travel Plan Generation Endpoints
 @app.post("/generate_travel_plans/visited")
 async def travel_plans_visited(request: GenerationRequest):
     return await generate_plan_with_location(
