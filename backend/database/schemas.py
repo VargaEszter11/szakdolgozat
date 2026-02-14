@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
-from datetime import date, datetime
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, List, Union
+import datetime as dt
 from decimal import Decimal
 
 
@@ -23,7 +23,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     id: int
-    created_at: datetime
+    created_at: dt.datetime
 
     class Config:
         from_attributes = True
@@ -34,7 +34,7 @@ class UserResponse(UserBase):
 class VisitedPlaceBase(BaseModel):
     place_name: str
     country: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[dt.date] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
@@ -47,15 +47,21 @@ class VisitedPlaceCreate(VisitedPlaceBase):
 class VisitedPlaceUpdate(BaseModel):
     place_name: Optional[str] = None
     country: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[dt.date] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
 
 
-class VisitedPlaceResponse(VisitedPlaceBase):
+class VisitedPlaceResponse(BaseModel):
     id: int
     user_id: int
+    place_name: str
+    country: Optional[str] = None
+    date: Optional[dt.date] = None
+    rating: Optional[int] = None
+    description: Optional[str] = None
+    photo_path: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -67,8 +73,8 @@ class TripStopBase(BaseModel):
     place_name: str
     country: Optional[str] = None
     stop_order: Optional[int] = None
-    arrival_date: Optional[date] = None
-    departure_date: Optional[date] = None
+    arrival_date: Optional[dt.date] = None
+    departure_date: Optional[dt.date] = None
     transport_from_last: Optional[str] = None
     activities: Optional[str] = None
     estimated_price: Optional[Decimal] = None
@@ -82,8 +88,8 @@ class TripStopUpdate(BaseModel):
     place_name: Optional[str] = None
     country: Optional[str] = None
     stop_order: Optional[int] = None
-    arrival_date: Optional[date] = None
-    departure_date: Optional[date] = None
+    arrival_date: Optional[dt.date] = None
+    departure_date: Optional[dt.date] = None
     transport_from_last: Optional[str] = None
     activities: Optional[str] = None
     estimated_price: Optional[Decimal] = None
@@ -101,8 +107,8 @@ class TripStopResponse(TripStopBase):
 
 class PlannedTripBase(BaseModel):
     title: str
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start_date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
 
 
@@ -112,8 +118,8 @@ class PlannedTripCreate(PlannedTripBase):
 
 class PlannedTripUpdate(BaseModel):
     title: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start_date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
 
 
