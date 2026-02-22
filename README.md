@@ -23,7 +23,7 @@ Trips are planned with the help of AI
 
 - Frontend: HTML, CSS, JavaScript
 - Backend: Python FastAPI
-- Database
+- Database: PostgreSQL
 
 
 

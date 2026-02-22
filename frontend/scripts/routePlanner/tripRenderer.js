@@ -9,6 +9,13 @@ export function displayResults(data, tripResults, resultsContainer) {
 
     tripResults.innerHTML = html;
     resultsContainer.style.display = 'block';
+
+    const saveTripBtn = tripResults.querySelector('#saveTripBtn');
+    if (saveTripBtn) {
+        saveTripBtn.addEventListener('click', async () => {
+            await saveTripToDatabase(data.draft_plan, saveTripBtn);
+        });
+    }
 }
 
 export function renderTripDetails(trip, validation) {
@@ -48,7 +55,103 @@ export function renderTripDetails(trip, validation) {
         html += '</div>';
     }
 
+    // Save trip button
+    html += `
+        <div class="trip-actions" style="margin-top: 2rem; text-align: center;">
+            <button id="saveTripBtn" class="btn-add" style="padding: 0.75rem 2rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Trip to My Trips
+            </button>
+        </div>
+    `;
+
     return html;
+}
+
+async function saveTripToDatabase(trip, button) {
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+        alert('Please log in to save trips.');
+        window.location.href = '../loginRegister/loginPage.html';
+        return;
+    }
+
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.textContent = 'Saving...';
+
+    try {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + (trip.tripLengthDays || 0));
+
+        const tripData = {
+            user_id: parseInt(userId),
+            title: trip.startingPoint || 'My Trip',
+            start_date: startDate.toISOString().split('T')[0],
+            end_date: endDate.toISOString().split('T')[0],
+            start_city: trip.startingPoint || null
+        };
+
+        const tripResponse = await fetch('http://localhost:8000/api/planned-trips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tripData)
+        });
+
+        if (!tripResponse.ok) {
+            throw new Error('Failed to create trip');
+        }
+
+        const createdTrip = await tripResponse.json();
+        const tripId = createdTrip.id;
+
+        if (trip.plan && Array.isArray(trip.plan)) {
+            let currentDate = new Date(startDate);
+
+            for (let i = 0; i < trip.plan.length; i++) {
+                const destination = trip.plan[i];
+                const arrivalDate = new Date(currentDate);
+                currentDate.setDate(currentDate.getDate() + (destination.days || 1));
+                const departureDate = new Date(currentDate);
+
+                const stopData = {
+                    trip_id: tripId,
+                    place_name: destination.city,
+                    country: destination.country,
+                    stop_order: i + 1,
+                    arrival_date: arrivalDate.toISOString().split('T')[0],
+                    departure_date: departureDate.toISOString().split('T')[0],
+                    transport_from_last: destination.transportFromPreviousCity || null,
+                    activities: destination.activities ? destination.activities.join(', ') : null
+                };
+
+                await fetch('http://localhost:8000/api/trip-stops', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(stopData)
+                });
+            }
+        }
+
+        alert('Trip saved successfully!');
+        button.textContent = 'Saved ✓';
+        button.style.backgroundColor = 'var(--success, #22c55e)';
+
+        setTimeout(() => {
+            window.location.href = 'planned_trips.html';
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error saving trip:', error);
+        alert('Failed to save trip: ' + error.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
 }
 
 export function showError(message, details, tripResults, resultsContainer) {

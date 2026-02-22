@@ -2,6 +2,8 @@ import { displayResults, showError } from './tripRenderer.js';
 
 const API_BASE_URL = 'http://localhost:8000';
 
+//next: add visited/unvisited places as default values, date selection
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('visitedPlanForm');
     const loadingState = document.getElementById('loadingState');
@@ -17,12 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const travelLength = parseInt(document.getElementById('travelLength').value);
         const preferencesInput = document.getElementById('preferences').value.trim();
         const visitedPlacesInput = document.getElementById('visitedPlaces').value.trim();
-        
-        const preferences = preferencesInput 
+
+        const preferences = preferencesInput
             ? preferencesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
 
-        const visitedPlaces = visitedPlacesInput 
+        const visitedPlaces = visitedPlacesInput
             ? visitedPlacesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
 

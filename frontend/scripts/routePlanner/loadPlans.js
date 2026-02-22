@@ -37,7 +37,7 @@
     try {
       var apiUrl = 'http://localhost:8000/api/users/' + userId + '/planned-trips';
       var response = await fetch(apiUrl);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           // No trips found for this user
@@ -123,7 +123,7 @@
       '</div>' +
       '</div>' +
       '<div class="trip-card-buttons">' +
-      '<a href="#" class="btn-trip btn-trip-primary">' + (window.i18n && window.i18n.t ? window.i18n.t('plannedTrips.viewDetails') : 'View Details') + '</a>' +
+      '<button type="button" class="btn-trip btn-trip-primary trip-view-details" data-id="' + trip.id + '">' + (window.i18n && window.i18n.t ? window.i18n.t('plannedTrips.viewDetails') : 'View Details') + '</button>' +
       '<button type="button" class="btn-trip btn-trip-secondary">' + (window.i18n && window.i18n.t ? window.i18n.t('plannedTrips.shareItinerary') : 'Share Itinerary') + '</button>' +
       '</div>' +
       '</div>' +
@@ -147,7 +147,7 @@
 
     var trips = await getTrips();
     var sortedTrips = sortTripsByStartDate(trips);
-    
+
     if (sortedTrips.length === 0) {
       container.classList.add('hidden');
       emptyState.classList.remove('hidden');
@@ -171,6 +171,98 @@
         window.location.href = 'plan_new_trip.html?edit=' + id;
       });
     });
+
+    container.querySelectorAll('.trip-view-details').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var id = parseInt(btn.getAttribute('data-id'), 10);
+        await showTripDetails(id);
+      });
+    });
+  }
+
+  async function showTripDetails(tripId) {
+    try {
+      var response = await fetch('http://localhost:8000/api/planned-trips/' + tripId);
+      if (!response.ok) {
+        throw new Error('Failed to load trip details');
+      }
+
+      var trip = await response.json();
+
+      var modalHtml = `
+        <div class="trip-details-modal-overlay" id="tripDetailsModal">
+          <div class="trip-details-modal">
+            <div class="trip-details-header">
+              <h2>${escapeHtml(trip.title)}</h2>
+              <button class="trip-details-close" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div class="trip-details-content">
+              <div class="trip-details-info">
+                <p><strong>Start Date:</strong> ${formatApiDate(trip.start_date)}</p>
+                <p><strong>End Date:</strong> ${formatApiDate(trip.end_date)}</p>
+                ${trip.start_city ? '<p><strong>Starting City:</strong> ' + escapeHtml(trip.start_city) + '</p>' : ''}
+              </div>
+              
+              <h3>Trip Stops (${trip.stops ? trip.stops.length : 0})</h3>
+              <div class="trip-stops-list">
+                ${trip.stops && trip.stops.length > 0
+          ? trip.stops.sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0)).map(function (stop) {
+            return `
+                        <div class="trip-stop-card">
+                          <div class="trip-stop-number">${stop.stop_order || '?'}</div>
+                          <div class="trip-stop-details">
+                            <h4>${escapeHtml(stop.place_name)}${stop.country ? ', ' + escapeHtml(stop.country) : ''}</h4>
+                            <div class="trip-stop-info">
+                              ${stop.arrival_date ? '<p><strong>Arrival:</strong> ' + formatApiDate(stop.arrival_date) + '</p>' : ''}
+                              ${stop.departure_date ? '<p><strong>Departure:</strong> ' + formatApiDate(stop.departure_date) + '</p>' : ''}
+                              ${stop.transport_from_last ? '<p><strong>Transport:</strong> ' + escapeHtml(stop.transport_from_last) + '</p>' : ''}
+                              ${stop.activities ? '<p><strong>Activities:</strong> ' + escapeHtml(stop.activities) + '</p>' : ''}
+                              ${stop.estimated_price ? '<p><strong>Estimated Price:</strong> $' + stop.estimated_price + '</p>' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      `;
+          }).join('')
+          : '<p class="muted">No stops added yet.</p>'
+        }
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      var modal = document.getElementById('tripDetailsModal');
+      var closeBtn = modal.querySelector('.trip-details-close');
+
+      closeBtn.addEventListener('click', function () {
+        modal.remove();
+      });
+
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+          modal.remove();
+        }
+      });
+
+      function handleEsc(e) {
+        if (e.key === 'Escape') {
+          modal.remove();
+          document.removeEventListener('keydown', handleEsc);
+        }
+      }
+      document.addEventListener('keydown', handleEsc);
+
+    } catch (error) {
+      console.error('Error loading trip details:', error);
+      alert('Failed to load trip details: ' + error.message);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', render);

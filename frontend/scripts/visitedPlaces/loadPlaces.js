@@ -1,3 +1,5 @@
+//next: reduce redundant API calls
+
 (function () {
   var STORAGE_KEY = 'visitedPlaces';
   var DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
@@ -124,7 +126,6 @@
       .then(function (res) {
         if (!res.ok) {
           if (res.status === 404) {
-            // No places found for this user
             render([]);
             return null;
           }
@@ -133,8 +134,7 @@
         return res.json();
       })
       .then(function (data) {
-        if (data === null) return; // Already handled 404
-        // API returns array of visited places directly
+        if (data === null) return;
         var list = Array.isArray(data) ? data : [];
         var places = list.map(function (item, index) {
           return normalizePlace(item, index);
