@@ -266,6 +266,11 @@ body>button {
     color: #721c24;
 }
 
+.custom-modal-icon.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
 .custom-modal-title {
     font-size: 1.25rem;
     font-weight: 600;
@@ -303,6 +308,17 @@ body>button {
 
 .custom-modal-btn-primary:hover {
     opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.custom-modal-btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.custom-modal-btn-secondary:hover {
+    opacity: 0.85;
     transform: translateY(-1px);
 }
 

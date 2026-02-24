@@ -170,3 +170,22 @@
 .place-cards-empty a {
     color: var(--accent);
 }
+
+.place-delete-btn {
+    padding: 0.4rem;
+    border: none;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.place-delete-btn:hover {
+    background: var(--bg);
+    color: #e53e3e;
+}

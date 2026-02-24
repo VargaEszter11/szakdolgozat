@@ -67,7 +67,12 @@
       '<svg class="icon icon-pin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
       '<h2 class="place-card-title">' + escapeHtml(place.name) + '</h2>' +
       '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
       '<div class="place-stars">' + starsHtml(place.rating) + '</div>' +
+      '<button type="button" class="place-delete-btn" data-id="' + escapeHtml(place.id) + '" aria-label="Delete" title="Delete place">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>' +
+      '</button>' +
+      '</div>' +
       '</div>' +
       '<div class="place-card-date">' +
       '<svg class="icon icon-cal" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>' +
@@ -77,6 +82,18 @@
       '</div>' +
       '</div>'
     );
+  }
+
+  function deletePlace(id) {
+    fetch('http://localhost:8000/api/visited-places/' + id, { method: 'DELETE' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Failed to delete: ' + res.status);
+        loadPlaces();
+      })
+      .catch(function (err) {
+        console.error('Error deleting place:', err);
+        showError('Failed to delete place. Please try again.');
+      });
   }
 
   function getPlacesFromStorage() {
@@ -107,6 +124,15 @@
     container.innerHTML = sorted.length
       ? sorted.map(renderCard).join('')
       : '<p class="place-cards-empty">' + emptyHtml + '</p>';
+
+    container.querySelectorAll('.place-delete-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = parseInt(btn.getAttribute('data-id'), 10);
+        showConfirm('Are you sure you want to delete this place?', function () {
+          deletePlace(id);
+        });
+      });
+    });
   }
 
   function loadPlaces() {

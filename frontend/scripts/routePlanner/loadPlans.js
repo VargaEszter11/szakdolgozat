@@ -66,11 +66,11 @@
         throw new Error('Failed to delete trip: ' + response.status);
       }
 
-      alert('Trip deleted successfully');
+      showSuccess('Trip deleted successfully');
       await render();
     } catch (error) {
       console.error('Error deleting trip:', error);
-      alert('Failed to delete trip: ' + error.message);
+      showError('Failed to delete trip: ' + error.message);
     }
   }
 
@@ -161,7 +161,7 @@
     container.querySelectorAll('.trip-delete').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var id = parseInt(btn.getAttribute('data-id'), 10);
-        if (confirm('Delete this trip?')) deleteTrip(id);
+        showConfirm('Delete this trip?', function () { deleteTrip(id); });
       });
     });
 
@@ -261,7 +261,7 @@
 
     } catch (error) {
       console.error('Error loading trip details:', error);
-      alert('Failed to load trip details: ' + error.message);
+      showError('Failed to load trip details: ' + error.message);
     }
   }
 

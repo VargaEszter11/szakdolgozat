@@ -69,12 +69,13 @@ document.addEventListener('DOMContentLoaded', async function () {
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
-          if (confirm('Are you sure you want to logout?')) {
+          showConfirm('Are you sure you want to logout?', function () {
             localStorage.removeItem('user_id');
             localStorage.removeItem('username');
-            alert('Logged out successfully');
-            window.location.href = 'loginPage.html';
-          }
+            showSuccess('Logged out successfully', function () {
+              window.location.href = 'loginPage.html';
+            });
+          });
         });
       }
     }

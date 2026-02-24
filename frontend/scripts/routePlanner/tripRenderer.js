@@ -75,8 +75,9 @@ export function renderTripDetails(trip, validation) {
 async function saveTripToDatabase(trip, button) {
     const userId = localStorage.getItem('user_id');
     if (!userId) {
-        alert('Please log in to save trips.');
-        window.location.href = '../loginRegister/loginPage.html';
+        window.showError('Please log in to save trips.', function () {
+            window.location.href = '../loginRegister/loginPage.html';
+        });
         return;
     }
 
@@ -138,17 +139,15 @@ async function saveTripToDatabase(trip, button) {
             }
         }
 
-        alert('Trip saved successfully!');
         button.textContent = 'Saved ✓';
         button.style.backgroundColor = 'var(--success, #22c55e)';
-
-        setTimeout(() => {
+        window.showSuccess('Trip saved successfully!', function () {
             window.location.href = 'planned_trips.html';
-        }, 1000);
+        });
 
     } catch (error) {
         console.error('Error saving trip:', error);
-        alert('Failed to save trip: ' + error.message);
+        window.showError('Failed to save trip: ' + error.message);
         button.disabled = false;
         button.innerHTML = originalText;
     }

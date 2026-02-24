@@ -101,3 +101,74 @@ function showError(message, onClose) {
         onClose
     });
 }
+
+function showConfirm(message, onConfirm, onCancel) {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'custom-modal';
+
+    const icon = document.createElement('div');
+    icon.className = 'custom-modal-icon warning';
+    icon.innerHTML = '!';
+
+    const titleEl = document.createElement('h3');
+    titleEl.className = 'custom-modal-title';
+    titleEl.textContent = 'Are you sure?';
+
+    const header = document.createElement('div');
+    header.className = 'custom-modal-header';
+    header.appendChild(icon);
+    header.appendChild(titleEl);
+
+    const messageEl = document.createElement('p');
+    messageEl.className = 'custom-modal-message';
+    messageEl.textContent = message;
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+    cancelBtn.textContent = 'Cancel';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+    confirmBtn.textContent = 'Confirm';
+
+    const actions = document.createElement('div');
+    actions.className = 'custom-modal-actions';
+    actions.appendChild(cancelBtn);
+    actions.appendChild(confirmBtn);
+
+    modal.appendChild(header);
+    modal.appendChild(messageEl);
+    modal.appendChild(actions);
+    overlay.appendChild(modal);
+
+    const close = (callback) => {
+        overlay.style.animation = 'fadeOut 0.2s ease-in-out';
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+            if (callback) callback();
+        }, 200);
+    };
+
+    cancelBtn.addEventListener('click', () => close(onCancel));
+    confirmBtn.addEventListener('click', () => close(onConfirm));
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close(onCancel);
+    });
+
+    if (!document.querySelector('#modal-fadeout-animation')) {
+        const style = document.createElement('style');
+        style.id = 'modal-fadeout-animation';
+        style.textContent = `
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(overlay);
+}
