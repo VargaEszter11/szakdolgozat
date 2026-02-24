@@ -40,8 +40,6 @@ Generate 5 realistic random European itineraries using ONLY destinations with di
 Rules:
 - Starting point is used only as a transport hub.
 - ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
-- Cities may be in different countries but must be ES, DE, or GB.
 - Routes must be geographically reasonable.
 - Sum of days MUST equal {travelLength}.
 - At the end of the trip, return to the starting point.

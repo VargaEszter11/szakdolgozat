@@ -2,14 +2,34 @@ import { displayResults, showError } from './tripRenderer.js';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-//next: add visited/unvisited places as default values, date selection
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('visitedPlanForm');
     const loadingState = document.getElementById('loadingState');
     const resultsContainer = document.getElementById('resultsContainer');
     const tripResults = document.getElementById('tripResults');
     const generateBtn = document.getElementById('generateBtn');
+    // Fetch visited places from database to send automatically on submit
+    let savedVisitedPlaces = [];
+    const userId = localStorage.getItem('user_id');
+    if (userId) {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/users/${userId}/visited-places`);
+            if (res.ok) {
+                const places = await res.json();
+                if (Array.isArray(places) && places.length > 0) {
+                    savedVisitedPlaces = [...new Set(
+                        places.map(p => {
+                            const name = p.place_name || '';
+                            const country = p.country || '';
+                            return country ? `${name}, ${country}` : name;
+                        }).filter(n => n)
+                    )];
+                }
+            }
+        } catch (err) {
+            console.warn('Could not load visited places:', err);
+        }
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -24,14 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ? preferencesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
 
-        const visitedPlaces = visitedPlacesInput
+        const manualPlaces = visitedPlacesInput
             ? visitedPlacesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
+        const visitedPlaces = [...new Set([...savedVisitedPlaces, ...manualPlaces])];
 
-        if (visitedPlaces.length === 0) {
-            alert('Please enter at least one visited place.');
-            return;
-        }
+        
 
         // Show loading state
         loadingState.style.display = 'block';

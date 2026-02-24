@@ -53,6 +53,26 @@ class RegisterResponse(BaseModel):
     message: str
 
 
+class ForgotPasswordVerifyRequest(BaseModel):
+    username: str
+    email: EmailStr
+
+
+class ForgotPasswordVerifyResponse(BaseModel):
+    success: bool
+    user_id: int
+
+
+class ForgotPasswordResetRequest(BaseModel):
+    user_id: int
+    new_password: str = Field(..., min_length=6)
+
+
+class ForgotPasswordResetResponse(BaseModel):
+    success: bool
+    message: str
+
+
 # ============= Visited Place Schemas =============
 
 class VisitedPlaceBase(BaseModel):

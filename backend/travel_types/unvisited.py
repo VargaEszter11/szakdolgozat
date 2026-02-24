@@ -48,7 +48,6 @@ Generate a realistic draft itinerary using ONLY new destinations that have direc
 Rules:
 - Use the starting point only as a transport hub.
 - ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
 - Do not include excluded places.
 - Sum of days MUST equal {travelLength}.
 - At the end of the trip, return to the starting point.

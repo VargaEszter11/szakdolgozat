@@ -49,7 +49,6 @@ Generate a realistic draft itinerary using ONLY destinations with direct flights
 Rules:
 - Use the starting point only as a transport hub.
 - ONLY use cities from the available destinations list above.
-- ONLY choose destinations in Spain (ES), Germany (DE), or United Kingdom (GB).
 - Choose geographically reasonable routes.
 - Sum of days MUST equal {travelLength}.
 - At the end of the trip, return to the starting point.
