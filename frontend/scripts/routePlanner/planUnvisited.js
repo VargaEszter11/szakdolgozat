@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const startingCity = document.getElementById('startingCity').value.trim();
         const budget = parseInt(document.getElementById('budget').value);
-        const travelLength = parseInt(document.getElementById('travelLength').value);
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
         const visitedPlacesInput = document.getElementById('visitedPlaces').value.trim();
         
@@ -68,7 +69,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({
                     startingPoint: startingCity,
                     budget: budget,
-                    travelLength: travelLength,
+                    startDate: startDate,
+                    endDate: endDate,
                     preferences: preferences,
                     visitedPlaces: visitedPlaces
                 })
@@ -81,7 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             console.log('API Response:', data);
 
-            // Display results
+            data.userStartDate = startDate;
+            data.userEndDate = endDate;
             displayResults(data, tripResults, resultsContainer);
 
         } catch (error) {

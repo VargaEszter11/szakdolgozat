@@ -8,14 +8,14 @@ async def generate_travel_plan_visited(
     preferences: List[str],
     visitedPlaces: List[str],
     direct_destinations: List[dict] = None,
+    start_date: str = None,
+    end_date: str = None,
 ) -> str:
     """Generate travel plan for visited places."""
-    # Filter visited places to only include those with direct flights
     available_places = []
     if direct_destinations:
         dest_cities = {(dest.get("city") or "").lower(): dest for dest in direct_destinations if dest.get("city")}
         for place in visitedPlaces:
-            # Try to match visited places with available destinations
             place_lower = place.lower()
             for city_key, dest in dest_cities.items():
                 if city_key and (place_lower in city_key or city_key in place_lower):
@@ -28,11 +28,11 @@ SYSTEM:
 You are a travel planning AI.
 DO NOT estimate prices.
 DO NOT mention costs.
-DO NOT add activities.
-ONLY decide cities, order, transport type, and number of days.
 
 USER:
 Starting point: {startingPoint}
+Start date: {start_date}
+End date: {end_date}
 Trip length: {travelLength} days
 Preferences: {preferences}
 
@@ -45,13 +45,15 @@ ONLY choose destinations from this list of visited places that have direct fligh
 
 TASK:
 Generate a realistic draft itinerary using ONLY destinations with direct flights available.
+The trip must start on {start_date} and end on {end_date}.
 
 Rules:
 - Use the starting point only as a transport hub.
 - ONLY use cities from the available destinations list above.
 - Choose geographically reasonable routes.
 - Sum of days MUST equal {travelLength}.
-- At the end of the trip, return to the starting point.
+- Assign concrete arrival and departure dates for each stop, starting from {start_date}.
+- At the end of the trip, return to the starting point by {end_date}.
 - Choose the BEST transport method for each segment: use "flight" only when it's the most practical option (long distances, islands, time constraints), otherwise prefer "train" or "bus" for shorter distances.
 - For each destination, suggest 1-2 realistic activities/programs (e.g., "Museum visit", "City tour", "Beach day", "Historical site", "Local cuisine experience").
 
@@ -60,10 +62,12 @@ Return JSON ONLY using this structure:
 
 {{
   "startingPoint": string,
+  "startDate": "{start_date}",
+  "endDate": "{end_date}",
   "tripLengthDays": number,
   "strategy": "visited",
   "plan": [
-    {{"city": string,"country": string,"iata": string,"days": number,"transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}
+    {{"city": string,"country": string,"iata": string,"days": number,"arrivalDate": "YYYY-MM-DD","departureDate": "YYYY-MM-DD","transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}
   ]
 }}
 """

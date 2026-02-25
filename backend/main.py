@@ -1,7 +1,9 @@
 # logic: api(possibble destinations) -> draft plan -> api -> final plan
+# next: create realistic plans
 
 import json
 from typing import List
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -52,14 +54,16 @@ class GenerationRequest(BaseModel):
     visitedPlaces: List[str]
     startingPoint: str
     budget: int
-    travelLength: int
+    startDate: str
+    endDate: str
     preferences: List[str] = []
 
 
 class RandomGenerationRequest(BaseModel):
     startingPoint: str
     budget: int
-    travelLength: int
+    startDate: str
+    endDate: str
     preferences: List[str] = []
 
 
@@ -72,7 +76,7 @@ async def get_coordinates(place_name: str):
 
 
 # Get nearest airport and generate plan
-async def generate_plan_with_location(draft_plan_func, *args, starting_point: str, budget: int = None, **kwargs):
+async def generate_plan_with_location(draft_plan_func, *args, starting_point: str, budget: int = None, start_date: str = None, end_date: str = None, **kwargs):
     lat, lon = await get_coordinates(starting_point)
     airport = await nearest_airport(lat, lon)
     
@@ -81,8 +85,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
     if airport and airport.get("iata"):
         direct_destinations = await get_direct_destinations(airport["iata"])
     
-    # Pass direct destinations to the draft plan function
-    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, **kwargs)
+    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
     
     # Parse the draft plan (it's a JSON string from Ollama)
     try:
@@ -114,7 +117,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
             while retry_count < max_retries:
                 # Calculate prices for all trips
                 for trip in trips:
-                    trip_validation = await validate_travel_plan(trip, airport["iata"], budget, travel_length)
+                    trip_validation = await validate_travel_plan(trip, airport["iata"], budget, travel_length, start_date)
                     validated_trips.append({
                         "trip": trip,
                         "validation": trip_validation
@@ -128,7 +131,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 # If no valid plans, regenerate
                 if retry_count < max_retries - 1:
                     validated_trips = []  # Clear previous attempts
-                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, **kwargs)
+                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
                     try:
                         draft_plan_text = draft_plan_raw.strip()
                         if draft_plan_text.startswith("```"):
@@ -164,7 +167,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
             retry_count = 0
             
             while retry_count < max_retries:
-                validation = await validate_travel_plan(draft_plan, airport["iata"], budget, travel_length)
+                validation = await validate_travel_plan(draft_plan, airport["iata"], budget, travel_length, start_date)
                 
                 # If plan is valid, break
                 if validation and validation.get("valid"):
@@ -172,7 +175,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 
                 # If invalid, regenerate plan
                 if retry_count < max_retries - 1:
-                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, **kwargs)
+                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
                     try:
                         draft_plan_text = draft_plan_raw.strip()
                         if draft_plan_text.startswith("```"):
@@ -204,37 +207,55 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
 # Travel Plan Generation Endpoints
 @app.post("/generate_travel_plans/visited")
 async def travel_plans_visited(request: GenerationRequest):
+    start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
+    end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    travel_length = (end_dt - start_dt).days
+
     return await generate_plan_with_location(
         generate_travel_plan_visited,
         request.startingPoint,
-        request.travelLength,
+        travel_length,
         request.preferences,
         request.visitedPlaces,
         starting_point=request.startingPoint,
-        budget=request.budget
+        budget=request.budget,
+        start_date=request.startDate,
+        end_date=request.endDate,
     )
 
 
 @app.post("/generate_travel_plans/unvisited")
 async def travel_plans_unvisited(request: GenerationRequest):
+    start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
+    end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    travel_length = (end_dt - start_dt).days
+
     return await generate_plan_with_location(
         generate_travel_plan_unvisited,
         request.startingPoint,
-        request.travelLength,
+        travel_length,
         request.preferences,
         request.visitedPlaces,
         starting_point=request.startingPoint,
-        budget=request.budget
+        budget=request.budget,
+        start_date=request.startDate,
+        end_date=request.endDate,
     )
 
 
 @app.post("/generate_travel_plans/random")
 async def travel_plans_random(request: RandomGenerationRequest):
+    start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
+    end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    travel_length = (end_dt - start_dt).days
+
     return await generate_plan_with_location(
         generate_travel_plan_random,
         request.startingPoint,
-        request.travelLength,
+        travel_length,
         request.preferences,
         starting_point=request.startingPoint,
-        budget=request.budget
+        budget=request.budget,
+        start_date=request.startDate,
+        end_date=request.endDate,
     )

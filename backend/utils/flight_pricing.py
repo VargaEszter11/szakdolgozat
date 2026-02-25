@@ -80,7 +80,7 @@ async def validate_plan_segment(origin_airport: str, dest_airport: str, date: st
             "price": None
         }
 
-async def validate_travel_plan(plan: Dict[str, Any], starting_airport: str, budget: int, travel_length: int) -> Dict[str, Any]:
+async def validate_travel_plan(plan: Dict[str, Any], starting_airport: str, budget: int, travel_length: int, start_date: str = None) -> Dict[str, Any]:
     """Validate an entire travel plan by checking all flight segments and prices."""
     if not plan or "plan" not in plan:
         return {
@@ -101,8 +101,7 @@ async def validate_travel_plan(plan: Dict[str, Any], starting_airport: str, budg
             "score": 0
         }
     
-    # Calculate dates (using current date + days)
-    base_date = datetime.now() + timedelta(days=7)  # Start 7 days from now
+    base_date = datetime.strptime(start_date, "%Y-%m-%d") if start_date else datetime.now() + timedelta(days=7)
     current_date = base_date
     total_price = 0
     validated_segments = []

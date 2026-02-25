@@ -13,16 +13,19 @@ export function displayResults(data, tripResults, resultsContainer) {
     const saveTripBtn = tripResults.querySelector('#saveTripBtn');
     if (saveTripBtn) {
         saveTripBtn.addEventListener('click', async () => {
-            await saveTripToDatabase(data.draft_plan, saveTripBtn);
+            await saveTripToDatabase(data.draft_plan, saveTripBtn, data.userStartDate, data.userEndDate);
         });
     }
 }
 
 export function renderTripDetails(trip, validation) {
+    const dateRange = trip.startDate && trip.endDate
+        ? `${trip.startDate} — ${trip.endDate}`
+        : `${trip.tripLengthDays || 0} days`;
     let html = `
         <div class="trip-header">
             <h3>${trip.startingPoint || 'Your Trip'}</h3>
-            <span class="trip-length">${trip.tripLengthDays || 0} days</span>
+            <span class="trip-length">${dateRange}</span>
         </div>
     `;
 
@@ -36,8 +39,10 @@ export function renderTripDetails(trip, validation) {
                     <div class="destination-details">
                         <h4 class="destination-city">${destination.city}, ${destination.country}</h4>
                         <p class="destination-info">
-                            <strong>Days:</strong> ${destination.days} | 
-                            <strong>Transport:</strong> ${destination.transportFromPreviousCity || 'N/A'}
+                            ${destination.arrivalDate && destination.departureDate
+                                ? `<strong>Dates:</strong> ${destination.arrivalDate} → ${destination.departureDate} (${destination.days} days)`
+                                : `<strong>Days:</strong> ${destination.days}`}
+                             | <strong>Transport:</strong> ${destination.transportFromPreviousCity || 'N/A'}
                             ${destination.iata ? ` | <strong>Airport:</strong> ${destination.iata}` : ''}
                         </p>
                         ${destination.activities && destination.activities.length > 0 ? `
@@ -72,7 +77,7 @@ export function renderTripDetails(trip, validation) {
     return html;
 }
 
-async function saveTripToDatabase(trip, button) {
+async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
     const userId = localStorage.getItem('user_id');
     if (!userId) {
         window.showError('Please log in to save trips.', function () {
@@ -86,9 +91,8 @@ async function saveTripToDatabase(trip, button) {
     button.textContent = 'Saving...';
 
     try {
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + (trip.tripLengthDays || 0));
+        const startDate = userStartDate ? new Date(userStartDate) : new Date();
+        const endDate = userEndDate ? new Date(userEndDate) : new Date(startDate.getTime() + (trip.tripLengthDays || 0) * 86400000);
 
         const tripData = {
             user_id: parseInt(userId),
@@ -112,21 +116,29 @@ async function saveTripToDatabase(trip, button) {
         const tripId = createdTrip.id;
 
         if (trip.plan && Array.isArray(trip.plan)) {
-            let currentDate = new Date(startDate);
+            let currentDate = new Date(startDate.getTime());
 
             for (let i = 0; i < trip.plan.length; i++) {
                 const destination = trip.plan[i];
-                const arrivalDate = new Date(currentDate);
-                currentDate.setDate(currentDate.getDate() + (destination.days || 1));
-                const departureDate = new Date(currentDate);
+                let arrivalStr, departureStr;
+
+                if (destination.arrivalDate && destination.departureDate) {
+                    arrivalStr = destination.arrivalDate;
+                    departureStr = destination.departureDate;
+                    currentDate = new Date(destination.departureDate);
+                } else {
+                    arrivalStr = currentDate.toISOString().split('T')[0];
+                    currentDate.setDate(currentDate.getDate() + (destination.days || 1));
+                    departureStr = currentDate.toISOString().split('T')[0];
+                }
 
                 const stopData = {
                     trip_id: tripId,
                     place_name: destination.city,
                     country: destination.country,
                     stop_order: i + 1,
-                    arrival_date: arrivalDate.toISOString().split('T')[0],
-                    departure_date: departureDate.toISOString().split('T')[0],
+                    arrival_date: arrivalStr,
+                    departure_date: departureStr,
                     transport_from_last: destination.transportFromPreviousCity || null,
                     activities: destination.activities ? destination.activities.join(', ') : null
                 };
