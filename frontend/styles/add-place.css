@@ -34,56 +34,6 @@
     gap: 1.5rem;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.form-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text);
-}
-
-.input-with-icon {
-    position: relative;
-}
-
-.input-with-icon .input-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    pointer-events: none;
-}
-
-.input-with-icon .form-input {
-    padding-left: 2.75rem;
-}
-
-.form-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    background: var(--surface);
-    color: var(--text);
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--text);
-    box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.15);
-}
-
-.form-textarea {
-    resize: none;
-    min-height: 100px;
-}
-
 .star-rating {
     display: flex;
     gap: 0.5rem;
@@ -157,65 +107,6 @@
     margin: 0;
 }
 
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    padding-top: 0.5rem;
-}
-
-.btn-submit {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background: var(--accent);
-    color: var(--surface);
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn-submit:hover {
-    filter: brightness(0.9);
-}
-
-.btn-cancel {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-}
-
-.btn-cancel:hover {
-    background: var(--bg);
-}
-
-.auth-switch {
-    margin-top: 1.5rem;
-    text-align: center;
-}
-
-.auth-switch a {
-    color: var(--accent);
-}
-
-.settings-saved-message {
-    display: none;
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #d4edda;
-    color: #155724;
-    border-radius: 4px;
-}
-
-.settings-saved-message.visible {
-    display: block;
-}
-
 @media (max-width: 768px) {
     .add-place-page {
         padding: 1rem 0.75rem;
@@ -231,15 +122,6 @@
 
     .add-place-title {
         font-size: 1.5rem;
-    }
-
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .btn-submit,
-    .btn-cancel {
-        text-align: center;
     }
 
     .upload-zone {

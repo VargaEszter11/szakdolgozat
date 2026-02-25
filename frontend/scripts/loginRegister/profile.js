@@ -1,5 +1,3 @@
-//next: forgot password, show password button
-
 document.addEventListener('DOMContentLoaded', async function () {
   const userId = localStorage.getItem('user_id');
   const username = localStorage.getItem('username');
