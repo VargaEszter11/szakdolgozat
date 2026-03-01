@@ -90,7 +90,7 @@ function showVerifyStep() {
         verifyBtn.textContent = 'Verifying...';
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/forgot-password/verify', {
+            const response = await fetch('/api/forgot-password/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -221,7 +221,7 @@ function showResetStep(userId) {
         resetBtn.textContent = 'Resetting...';
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/forgot-password/reset', {
+            const response = await fetch('/api/forgot-password/reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

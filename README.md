@@ -25,6 +25,6 @@ Trips are planned with the help of AI
 - Backend: Python FastAPI
 - Database: PostgreSQL
 
+## Starting the application
 
-
-
+Start with the start.bat file in the project root by clicking on it.

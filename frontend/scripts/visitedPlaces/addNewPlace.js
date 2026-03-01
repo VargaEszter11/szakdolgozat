@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     try {
-      var response = await fetch('http://localhost:8000/api/visited-places', {
+      var response = await fetch('/api/visited-places', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

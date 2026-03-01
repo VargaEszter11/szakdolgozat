@@ -35,7 +35,7 @@
     }
 
     try {
-      var apiUrl = 'http://localhost:8000/api/users/' + userId + '/planned-trips';
+      var apiUrl = '/api/users/' + userId + '/planned-trips';
       var response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -58,7 +58,7 @@
 
   async function deleteTrip(id) {
     try {
-      var response = await fetch('http://localhost:8000/api/planned-trips/' + id, {
+      var response = await fetch('/api/planned-trips/' + id, {
         method: 'DELETE'
       });
 
@@ -182,7 +182,7 @@
 
   async function showTripDetails(tripId) {
     try {
-      var response = await fetch('http://localhost:8000/api/planned-trips/' + tripId);
+      var response = await fetch('/api/planned-trips/' + tripId);
       if (!response.ok) {
         throw new Error('Failed to load trip details');
       }

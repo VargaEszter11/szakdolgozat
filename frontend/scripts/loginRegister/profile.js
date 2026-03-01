@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     if (profileName) profileName.textContent = username;
 
-    const userResponse = await fetch(`http://localhost:8000/api/users/${userId}`);
+    const userResponse = await fetch(`/api/users/${userId}`);
     if (userResponse.ok) {
       const userData = await userResponse.json();
       if (profileEmail) profileEmail.textContent = userData.email || 'No email';
     }
 
-    const placesResponse = await fetch(`http://localhost:8000/api/users/${userId}/visited-places`);
+    const placesResponse = await fetch(`/api/users/${userId}/visited-places`);
     if (placesResponse.ok) {
       const places = await placesResponse.json();
       if (placesVisitedEl) {
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     }
 
-    const tripsResponse = await fetch(`http://localhost:8000/api/users/${userId}/planned-trips`);
+    const tripsResponse = await fetch(`/api/users/${userId}/planned-trips`);
     if (tripsResponse.ok) {
       const trips = await tripsResponse.json();
       if (tripsPlannedEl) {

@@ -87,7 +87,7 @@
       return;
     }
 
-    var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+    var apiUrl = '/api/users/' + userId + '/visited-places';
     fetch(apiUrl)
       .then(function (res) {
         if (!res.ok) {

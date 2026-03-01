@@ -102,7 +102,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
             start_city: trip.startingPoint || null
         };
 
-        const tripResponse = await fetch('http://localhost:8000/api/planned-trips', {
+        const tripResponse = await fetch('/api/planned-trips', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(tripData)
@@ -143,7 +143,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
                     activities: destination.activities ? destination.activities.join(', ') : null
                 };
 
-                await fetch('http://localhost:8000/api/trip-stops', {
+                await fetch('/api/trip-stops', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(stopData)

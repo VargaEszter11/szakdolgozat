@@ -99,7 +99,7 @@
 
     var places = [];
     try {
-      var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+      var apiUrl = '/api/users/' + userId + '/visited-places';
       var response = await fetch(apiUrl);
       if (response.ok) {
         var data = await response.json();

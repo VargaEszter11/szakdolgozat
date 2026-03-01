@@ -85,7 +85,7 @@
   }
 
   function deletePlace(id) {
-    fetch('http://localhost:8000/api/visited-places/' + id, { method: 'DELETE' })
+    fetch('/api/visited-places/' + id, { method: 'DELETE' })
       .then(function (res) {
         if (!res.ok) throw new Error('Failed to delete: ' + res.status);
         loadPlaces();
@@ -147,7 +147,7 @@
       return;
     }
 
-    var apiUrl = 'http://localhost:8000/api/users/' + userId + '/visited-places';
+    var apiUrl = '/api/users/' + userId + '/visited-places';
     fetch(apiUrl)
       .then(function (res) {
         if (!res.ok) {

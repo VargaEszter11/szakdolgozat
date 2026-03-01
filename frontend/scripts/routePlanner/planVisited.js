@@ -1,6 +1,6 @@
 import { displayResults, showError } from './tripRenderer.js';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('visitedPlanForm');

@@ -2,10 +2,13 @@
 # next: create realistic plans
 
 import json
+import os
 from typing import List
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from utils.coordinates import geocode_place
 from utils.nearest_airport import nearest_airport, get_direct_destinations
@@ -259,3 +262,12 @@ async def travel_plans_random(request: RandomGenerationRequest):
         start_date=request.startDate,
         end_date=request.endDate,
     )
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/pages/main_page.html")
+
+
+_frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
