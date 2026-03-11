@@ -50,7 +50,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             : [];
         const visitedPlaces = [...new Set([...savedVisitedPlaces, ...manualPlaces])];
 
-        
+        if (!startDate || !endDate) {
+            showError('Please select both start and end dates.', '', tripResults, resultsContainer);
+            return;
+        }
+        if (endDate <= startDate) {
+            showError('End date must be after start date.', '', tripResults, resultsContainer);
+            return;
+        }
 
         // Show loading state
         loadingState.style.display = 'block';
@@ -72,7 +79,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     startDate: startDate,
                     endDate: endDate,
                     preferences: preferences,
-                    visitedPlaces: visitedPlaces
+                    visitedPlaces: visitedPlaces,
+                    language: localStorage.getItem('language') || 'en'
                 })
             });
 

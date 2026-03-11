@@ -1,9 +1,9 @@
 import httpx
 import os
 
-AMADEUS_CLIENT_ID = "7hA3yhRNp2yxMhuAmqEpUv31NriVXpQ3"
-AMADEUS_CLIENT_SECRET = "bD47XfCmmRgnRnIZ"
-AMADEUS_BASE_URL = "https://test.api.amadeus.com"
+AMADEUS_CLIENT_ID = os.getenv("AMADEUS_CLIENT_ID", "")
+AMADEUS_CLIENT_SECRET = os.getenv("AMADEUS_CLIENT_SECRET", "")
+AMADEUS_BASE_URL = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com")
 
 async def get_amadeus_token():
     """Get OAuth2 access token from Amadeus API."""

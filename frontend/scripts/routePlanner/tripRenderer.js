@@ -1,3 +1,15 @@
+var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
+
+function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    try {
+        var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
+        return new Date(dateStr).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+        return dateStr;
+    }
+}
+
 export function displayResults(data, tripResults, resultsContainer) {
     if (!data.draft_plan) {
         tripResults.innerHTML = '<p class="error-message">No trip plan was generated. Please try again.</p>';
@@ -20,7 +32,7 @@ export function displayResults(data, tripResults, resultsContainer) {
 
 export function renderTripDetails(trip, validation) {
     const dateRange = trip.startDate && trip.endDate
-        ? `${trip.startDate} — ${trip.endDate}`
+        ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}`
         : `${trip.tripLengthDays || 0} days`;
     let html = `
         <div class="trip-header">
@@ -40,7 +52,7 @@ export function renderTripDetails(trip, validation) {
                         <h4 class="destination-city">${destination.city}, ${destination.country}</h4>
                         <p class="destination-info">
                             ${destination.arrivalDate && destination.departureDate
-                                ? `<strong>Dates:</strong> ${destination.arrivalDate} → ${destination.departureDate} (${destination.days} days)`
+                                ? `<strong>Dates:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)} (${destination.days} days)`
                                 : `<strong>Days:</strong> ${destination.days}`}
                              | <strong>Transport:</strong> ${destination.transportFromPreviousCity || 'N/A'}
                             ${destination.iata ? ` | <strong>Airport:</strong> ${destination.iata}` : ''}

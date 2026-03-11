@@ -1,6 +1,7 @@
 (function () {
   var STORAGE_KEY = 'language';
   var DEFAULT_LANG = 'en';
+  var FULL_LOCALE = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
 
   function getTranslations() {
     return window.I18N_TRANSLATIONS || {};
@@ -14,8 +15,9 @@
     var translations = getTranslations();
     if (!translations[locale]) locale = DEFAULT_LANG;
     localStorage.setItem(STORAGE_KEY, locale);
+    var fullLocale = FULL_LOCALE[locale] || locale;
     if (document.documentElement) {
-      document.documentElement.setAttribute('lang', locale);
+      document.documentElement.setAttribute('lang', fullLocale);
     }
     return locale;
   }

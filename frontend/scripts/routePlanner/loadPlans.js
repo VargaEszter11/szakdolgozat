@@ -15,12 +15,13 @@
     };
   }
 
+  var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
+
   function formatApiDate(dateStr) {
     if (!dateStr) return '—';
     try {
-      var d = new Date(dateStr);
-      var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
+      return new Date(dateStr).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
     } catch (e) {
       return dateStr;
     }

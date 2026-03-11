@@ -2,7 +2,7 @@ import httpx
 
 
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "gemma3:4b"  
+MODEL_NAME = "gemma3:4b"
 
 
 async def call_ollama_api(prompt: str) -> str:

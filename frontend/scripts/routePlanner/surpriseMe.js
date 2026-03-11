@@ -17,8 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
-        
-        // Parse preferences (comma-separated)
+
+        if (!startDate || !endDate) {
+            showError('Please select both start and end dates.', '', tripResults, resultsContainer);
+            return;
+        }
+        if (endDate <= startDate) {
+            showError('End date must be after start date.', '', tripResults, resultsContainer);
+            return;
+        }
+
         const preferences = preferencesInput 
             ? preferencesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
@@ -42,7 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     budget: budget,
                     startDate: startDate,
                     endDate: endDate,
-                    preferences: preferences
+                    preferences: preferences,
+                    language: localStorage.getItem('language') || 'en'
                 })
             });
 

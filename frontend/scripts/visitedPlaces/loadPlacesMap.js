@@ -3,12 +3,14 @@
   var JSON_URL = '../../../dummy_places/places.json';
   var map;
 
+  var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
+
   function formatDate(value) {
     if (!value) return '—';
     var d = new Date(value);
     if (isNaN(d.getTime())) return value;
-    var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    return months[d.getMonth()] + ' ' + d.getFullYear();
+    var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
   }
 
   function escapeHtml(str) {

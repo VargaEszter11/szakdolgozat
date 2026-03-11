@@ -1,6 +1,9 @@
 # logic: api(possibble destinations) -> draft plan -> api -> final plan
 # next: create realistic plans
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import json
 import os
 from typing import List
@@ -12,7 +15,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from utils.coordinates import geocode_place
 from utils.nearest_airport import nearest_airport, get_direct_destinations
-from utils.flight_pricing import validate_travel_plan
+from utils.plan_validator import validate_travel_plan
 from travel_types import (
     generate_travel_plan_visited,
     generate_travel_plan_unvisited,
@@ -60,6 +63,7 @@ class GenerationRequest(BaseModel):
     startDate: str
     endDate: str
     preferences: List[str] = []
+    language: str = "en"
 
 
 class RandomGenerationRequest(BaseModel):
@@ -68,6 +72,7 @@ class RandomGenerationRequest(BaseModel):
     startDate: str
     endDate: str
     preferences: List[str] = []
+    language: str = "en"
 
 
 # Get coordinates for a place name
@@ -102,6 +107,19 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
         draft_plan = json.loads(draft_plan_text)
     except:
         draft_plan = {"raw": draft_plan_raw}
+    
+    # Fix AI-generated dates/lengths to match user's actual input
+    if isinstance(draft_plan, dict) and start_date and end_date:
+        travel_length_user = args[1] if len(args) > 1 else 7
+        if "trips" in draft_plan:
+            for trip in draft_plan.get("trips", []):
+                trip["startDate"] = start_date
+                trip["endDate"] = end_date
+                trip["tripLengthDays"] = travel_length_user
+        else:
+            draft_plan["startDate"] = start_date
+            draft_plan["endDate"] = end_date
+            draft_plan["tripLengthDays"] = travel_length_user
     
     # Validate the plan if budget is provided
     validation = None
@@ -212,6 +230,8 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
 async def travel_plans_visited(request: GenerationRequest):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    if end_dt <= start_dt:
+        raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
 
     return await generate_plan_with_location(
@@ -224,6 +244,7 @@ async def travel_plans_visited(request: GenerationRequest):
         budget=request.budget,
         start_date=request.startDate,
         end_date=request.endDate,
+        language=request.language,
     )
 
 
@@ -231,6 +252,8 @@ async def travel_plans_visited(request: GenerationRequest):
 async def travel_plans_unvisited(request: GenerationRequest):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    if end_dt <= start_dt:
+        raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
 
     return await generate_plan_with_location(
@@ -243,6 +266,7 @@ async def travel_plans_unvisited(request: GenerationRequest):
         budget=request.budget,
         start_date=request.startDate,
         end_date=request.endDate,
+        language=request.language,
     )
 
 
@@ -250,6 +274,8 @@ async def travel_plans_unvisited(request: GenerationRequest):
 async def travel_plans_random(request: RandomGenerationRequest):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
+    if end_dt <= start_dt:
+        raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
 
     return await generate_plan_with_location(
@@ -261,6 +287,7 @@ async def travel_plans_random(request: RandomGenerationRequest):
         budget=request.budget,
         start_date=request.startDate,
         end_date=request.endDate,
+        language=request.language,
     )
 
 
