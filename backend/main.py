@@ -75,12 +75,33 @@ class RandomGenerationRequest(BaseModel):
     language: str = "en"
 
 
+class GeocodeRequest(BaseModel):
+    places: List[str]
+    language: str = "en"
+
+
 # Get coordinates for a place name
 async def get_coordinates(place_name: str):
     try:
         return await geocode_place(place_name)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/geocode")
+async def batch_geocode(request: GeocodeRequest):
+    """Return coordinates for a list of place names (e.g. 'City, Country'). Same order as input; null for failed."""
+    result = []
+    for place in request.places:
+        if not (place and str(place).strip()):
+            result.append(None)
+            continue
+        try:
+            lat, lon = await geocode_place(str(place).strip(), language=request.language)
+            result.append({"lat": lat, "lon": lon})
+        except Exception:
+            result.append(None)
+    return result
 
 
 # Get nearest airport and generate plan

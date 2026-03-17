@@ -51,7 +51,16 @@
                         <h1 class="planned-trips-title" data-i18n="plannedTrips.title">Planned Trips</h1>
                         <p class="planned-trips-subtitle" data-i18n="plannedTrips.subtitle">Your upcoming adventures</p>
                     </div>
-                    <a href="plan_new_trip.html" class="btn-add" data-i18n="plannedTrips.newTrip">+ New Trip</a>
+                    <a href="plan_new_trip.html" class="btn-add">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                        </svg>
+                        <span data-i18n="plannedTrips.newTrip">New Trip</span>
+                    </a>
                 </div>
 
                 <div id="tripCards" class="trip-cards">
@@ -66,6 +75,32 @@
             </div>
         </main>
     </div>
+
+    <!-- Trip details modal: cloned from template by loadPlans.js -->
+    <template id="tripDetailsModalTemplate">
+        <div class="trip-details-modal-overlay" id="tripDetailsModal" role="dialog" aria-modal="true" aria-labelledby="tripDetailsTitle">
+            <div class="trip-details-modal" id="tripDetailsModalBox">
+                <div class="trip-details-header">
+                    <h2 id="tripDetailsTitle" class="trip-details-title"></h2>
+                    <button type="button" class="trip-details-close" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="trip-details-content">
+                    <div class="trip-details-info">
+                        <p><strong>Start Date:</strong> <span id="tripDetailsStartDate"></span></p>
+                        <p><strong>End Date:</strong> <span id="tripDetailsEndDate"></span></p>
+                        <p id="tripDetailsStartCityWrap" class="hidden"><strong>Starting City:</strong> <span id="tripDetailsStartCity"></span></p>
+                    </div>
+                    <h3 id="tripDetailsStopsHeading">Trip Stops (<span id="tripDetailsStopsCount">0</span>)</h3>
+                    <div class="trip-stops-list" id="tripDetailsStopsList"></div>
+                </div>
+            </div>
+        </div>
+    </template>
 
     <script src="../../scripts/loginRegister/modal.js"></script>
     <script src="../../scripts/routePlanner/loadPlans.js"></script>

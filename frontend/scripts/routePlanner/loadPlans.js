@@ -181,85 +181,115 @@
     });
   }
 
+  function buildStopCard(stop) {
+    var card = document.createElement('div');
+    card.className = 'trip-stop-card';
+    var num = document.createElement('div');
+    num.className = 'trip-stop-number';
+    num.textContent = stop.stop_order != null ? String(stop.stop_order) : '?';
+    var details = document.createElement('div');
+    details.className = 'trip-stop-details';
+    var h4 = document.createElement('h4');
+    h4.textContent = stop.place_name + (stop.country ? ', ' + stop.country : '');
+    var info = document.createElement('div');
+    info.className = 'trip-stop-info';
+    if (stop.arrival_date) {
+      var pArr = document.createElement('p');
+      pArr.innerHTML = '<strong>Arrival:</strong> ' + formatApiDate(stop.arrival_date);
+      info.appendChild(pArr);
+    }
+    if (stop.departure_date) {
+      var pDep = document.createElement('p');
+      pDep.innerHTML = '<strong>Departure:</strong> ' + formatApiDate(stop.departure_date);
+      info.appendChild(pDep);
+    }
+    if (stop.transport_from_last) {
+      var pTrans = document.createElement('p');
+      pTrans.innerHTML = '<strong>Transport:</strong> ' + escapeHtml(stop.transport_from_last);
+      info.appendChild(pTrans);
+    }
+    if (stop.activities) {
+      var pAct = document.createElement('p');
+      pAct.innerHTML = '<strong>Activities:</strong> ' + escapeHtml(stop.activities);
+      info.appendChild(pAct);
+    }
+    if (stop.estimated_price != null) {
+      var pPrice = document.createElement('p');
+      pPrice.innerHTML = '<strong>Estimated Price:</strong> $' + escapeHtml(String(stop.estimated_price));
+      info.appendChild(pPrice);
+    }
+    details.appendChild(h4);
+    details.appendChild(info);
+    card.appendChild(num);
+    card.appendChild(details);
+    return card;
+  }
+
   async function showTripDetails(tripId) {
     try {
-      var response = await fetch('/api/planned-trips/' + tripId);
-      if (!response.ok) {
-        throw new Error('Failed to load trip details');
-      }
+      var existing = document.querySelectorAll('.trip-details-modal-overlay');
+      existing.forEach(function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
 
+      var response = await fetch('/api/planned-trips/' + tripId);
+      if (!response.ok) throw new Error('Failed to load trip details');
       var trip = await response.json();
 
-      var modalHtml = `
-        <div class="trip-details-modal-overlay" id="tripDetailsModal">
-          <div class="trip-details-modal">
-            <div class="trip-details-header">
-              <h2>${escapeHtml(trip.title)}</h2>
-              <button class="trip-details-close" aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
-            <div class="trip-details-content">
-              <div class="trip-details-info">
-                <p><strong>Start Date:</strong> ${formatApiDate(trip.start_date)}</p>
-                <p><strong>End Date:</strong> ${formatApiDate(trip.end_date)}</p>
-                ${trip.start_city ? '<p><strong>Starting City:</strong> ' + escapeHtml(trip.start_city) + '</p>' : ''}
-              </div>
-              
-              <h3>Trip Stops (${trip.stops ? trip.stops.length : 0})</h3>
-              <div class="trip-stops-list">
-                ${trip.stops && trip.stops.length > 0
-          ? trip.stops.sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0)).map(function (stop) {
-            return `
-                        <div class="trip-stop-card">
-                          <div class="trip-stop-number">${stop.stop_order || '?'}</div>
-                          <div class="trip-stop-details">
-                            <h4>${escapeHtml(stop.place_name)}${stop.country ? ', ' + escapeHtml(stop.country) : ''}</h4>
-                            <div class="trip-stop-info">
-                              ${stop.arrival_date ? '<p><strong>Arrival:</strong> ' + formatApiDate(stop.arrival_date) + '</p>' : ''}
-                              ${stop.departure_date ? '<p><strong>Departure:</strong> ' + formatApiDate(stop.departure_date) + '</p>' : ''}
-                              ${stop.transport_from_last ? '<p><strong>Transport:</strong> ' + escapeHtml(stop.transport_from_last) + '</p>' : ''}
-                              ${stop.activities ? '<p><strong>Activities:</strong> ' + escapeHtml(stop.activities) + '</p>' : ''}
-                              ${stop.estimated_price ? '<p><strong>Estimated Price:</strong> $' + stop.estimated_price + '</p>' : ''}
-                            </div>
-                          </div>
-                        </div>
-                      `;
-          }).join('')
-          : '<p class="muted">No stops added yet.</p>'
-        }
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      var template = document.getElementById('tripDetailsModalTemplate');
+      if (!template || !template.content) return;
+      var clone = document.importNode(template.content, true);
+      var modal = clone.querySelector('.trip-details-modal-overlay');
+      if (!modal) return;
+      document.body.appendChild(clone);
 
-      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      var titleEl = modal.querySelector('#tripDetailsTitle');
+      var startDateEl = modal.querySelector('#tripDetailsStartDate');
+      var endDateEl = modal.querySelector('#tripDetailsEndDate');
+      var startCityWrap = modal.querySelector('#tripDetailsStartCityWrap');
+      var startCityEl = modal.querySelector('#tripDetailsStartCity');
+      var stopsCountEl = modal.querySelector('#tripDetailsStopsCount');
+      var stopsListEl = modal.querySelector('#tripDetailsStopsList');
 
-      var modal = document.getElementById('tripDetailsModal');
-      var closeBtn = modal.querySelector('.trip-details-close');
+      if (titleEl) titleEl.textContent = trip.title || '';
+      if (startDateEl) startDateEl.textContent = formatApiDate(trip.start_date);
+      if (endDateEl) endDateEl.textContent = formatApiDate(trip.end_date);
+      if (trip.start_city) {
+        if (startCityWrap) startCityWrap.classList.remove('hidden');
+        if (startCityEl) startCityEl.textContent = trip.start_city;
+      } else {
+        if (startCityWrap) startCityWrap.classList.add('hidden');
+      }
 
-      closeBtn.addEventListener('click', function () {
-        modal.remove();
-      });
-
-      modal.addEventListener('click', function (e) {
-        if (e.target === modal) {
-          modal.remove();
-        }
-      });
-
-      function handleEsc(e) {
-        if (e.key === 'Escape') {
-          modal.remove();
-          document.removeEventListener('keydown', handleEsc);
+      var stops = (trip.stops || []).slice().sort(function (a, b) { return (a.stop_order || 0) - (b.stop_order || 0); });
+      if (stopsCountEl) stopsCountEl.textContent = String(stops.length);
+      if (stopsListEl) {
+        stopsListEl.innerHTML = '';
+        if (stops.length === 0) {
+          var empty = document.createElement('p');
+          empty.className = 'muted';
+          empty.textContent = 'No stops added yet.';
+          stopsListEl.appendChild(empty);
+        } else {
+          stops.forEach(function (stop) { stopsListEl.appendChild(buildStopCard(stop)); });
         }
       }
-      document.addEventListener('keydown', handleEsc);
 
+      var closeBtn = modal.querySelector('.trip-details-close');
+      var modalBox = modal.querySelector('.trip-details-modal');
+
+      function removeModal() {
+        document.removeEventListener('keydown', handleEsc);
+        if (modal.parentNode) modal.parentNode.removeChild(modal);
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', removeModal);
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) removeModal();
+      });
+      if (modalBox) {
+        modalBox.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+      function handleEsc(e) { if (e.key === 'Escape') removeModal(); }
+      document.addEventListener('keydown', handleEsc);
     } catch (error) {
       console.error('Error loading trip details:', error);
       showError('Failed to load trip details: ' + error.message);

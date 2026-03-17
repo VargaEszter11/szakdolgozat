@@ -212,8 +212,10 @@
 
 .trip-card-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: auto;
+    flex-shrink: 0;
 }
 
 .btn-trip {
@@ -224,7 +226,9 @@
     text-decoration: none;
     cursor: pointer;
     border: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .btn-trip-primary {

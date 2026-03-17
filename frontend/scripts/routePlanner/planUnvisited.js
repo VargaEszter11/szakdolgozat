@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
         const visitedPlacesInput = document.getElementById('visitedPlaces').value.trim();
-        
-        const preferences = preferencesInput 
+
+        const preferences = preferencesInput
             ? preferencesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
 
-        const manualPlaces = visitedPlacesInput 
+        const manualPlaces = visitedPlacesInput
             ? visitedPlacesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
         const visitedPlaces = [...new Set([...savedVisitedPlaces, ...manualPlaces])];

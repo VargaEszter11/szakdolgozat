@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const startingCity = document.getElementById('startingCity').value.trim();
         const budget = parseInt(document.getElementById('budget').value);
         const startDate = document.getElementById('startDate').value;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const preferences = preferencesInput 
+        const preferences = preferencesInput
             ? preferencesInput.split(',').map(p => p.trim()).filter(p => p)
             : [];
 
