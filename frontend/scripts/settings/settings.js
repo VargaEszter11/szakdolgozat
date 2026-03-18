@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var saveBtn = document.getElementById('saveSettings');
     var saveMessage = document.getElementById('saveMessage');
 
-    var savedTheme = localStorage.getItem('theme') || 'light';
+    var savedTheme = localStorage.getItem('theme') || 'dark';
     var savedLanguage = localStorage.getItem('language') || 'en';
 
     themeSelect.value = savedTheme;

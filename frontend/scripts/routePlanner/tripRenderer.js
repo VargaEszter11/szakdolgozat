@@ -34,6 +34,7 @@ export function renderTripDetails(trip, validation) {
     const dateRange = trip.startDate && trip.endDate
         ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}`
         : `${trip.tripLengthDays || 0} days`;
+
     let html = `
         <div class="trip-header">
             <h3>${trip.startingPoint || 'Your Trip'}</h3>
@@ -41,10 +42,11 @@ export function renderTripDetails(trip, validation) {
         </div>
     `;
 
-    // Trip plan
+    // Destinations
     if (trip.plan && Array.isArray(trip.plan)) {
         html += '<div class="trip-destinations">';
         trip.plan.forEach((destination, idx) => {
+            const segValidation = validation?.segments?.[idx];
             html += `
                 <div class="destination-card">
                     <div class="destination-number">${idx + 1}</div>
@@ -57,11 +59,12 @@ export function renderTripDetails(trip, validation) {
                              | <strong>Transport:</strong> ${destination.transportFromPreviousCity || 'N/A'}
                             ${destination.iata ? ` | <strong>Airport:</strong> ${destination.iata}` : ''}
                         </p>
+                        ${segValidation ? renderSegmentCosts(segValidation) : ''}
                         ${destination.activities && destination.activities.length > 0 ? `
                             <div class="activities">
                                 <strong>Activities:</strong>
                                 <ul>
-                                    ${destination.activities.map(activity => `<li>${activity}</li>`).join('')}
+                                    ${destination.activities.map(a => `<li>${a}</li>`).join('')}
                                 </ul>
                             </div>
                         ` : ''}
@@ -72,21 +75,59 @@ export function renderTripDetails(trip, validation) {
         html += '</div>';
     }
 
+    // Cost summary
+    if (validation) {
+        html += renderCostSummary(validation);
+    }
+
     // Save trip button
     html += `
-        <div class="trip-actions" style="margin-top: 2rem; text-align: center;">
-            <button id="saveTripBtn" class="btn-add" style="padding: 0.75rem 2rem;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
+        <div class="trip-actions">
+            <button id="saveTripBtn" class="btn-add">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                Save Trip to My Trips
+                Save Trip
             </button>
         </div>
     `;
 
     return html;
+}
+
+function renderSegmentCosts(seg) {
+    const parts = [];
+    if (seg.transport_price) parts.push(`Transport: €${seg.transport_price}`);
+    if (seg.hotel_price)     parts.push(`Hotel: €${seg.hotel_price}`);
+    if (seg.activity_price)  parts.push(`Activities: €${seg.activity_price}`);
+    if (!parts.length) return '';
+    return `<p class="segment-costs">${parts.join(' · ')}</p>`;
+}
+
+function renderCostSummary(v) {
+    const bd = v.cost_breakdown || {};
+    const withinBudget = v.valid;
+    return `
+        <div class="cost-summary ${withinBudget ? 'cost-ok' : 'cost-over'}">
+            <div class="cost-summary-header">
+                <span class="cost-total">Estimated total: <strong>€${v.total_price ?? '—'}</strong></span>
+                <span class="cost-budget">Budget: <strong>€${v.budget ?? '—'}</strong></span>
+            </div>
+            <div class="cost-breakdown">
+                ${bd.flights   ? `<span>Flights €${bd.flights}</span>`   : ''}
+                ${bd.transport ? `<span>Transport €${bd.transport}</span>` : ''}
+                ${bd.hotels    ? `<span>Hotels €${bd.hotels}</span>`    : ''}
+                ${bd.activities? `<span>Activities €${bd.activities}</span>` : ''}
+            </div>
+            ${v.remaining_budget != null ? `
+                <p class="cost-remaining">${withinBudget
+                    ? `€${v.remaining_budget} remaining`
+                    : `€${Math.abs(v.remaining_budget)} over budget`}</p>
+            ` : ''}
+        </div>
+    `;
 }
 
 async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
@@ -114,7 +155,8 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
             start_city: trip.startingPoint || null
         };
 
-        const tripResponse = await fetch('/api/planned-trips', {
+        const base = window.API_BASE_URL || '';
+        const tripResponse = await fetch(base + '/api/planned-trips', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(tripData)
@@ -155,7 +197,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
                     activities: destination.activities ? destination.activities.join(', ') : null
                 };
 
-                await fetch('/api/trip-stops', {
+                await fetch(base + '/api/trip-stops', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(stopData)

@@ -1,0 +1,426 @@
+/* Plan New Trip – styles unique to this page (layout inherited from main-page.css) */
+
+/* ── Plan Type Cards ── */
+.route-planner-options {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.route-option-card {
+    background: #2F2E2E;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    flex: 1 1 calc(33% - 1rem);
+    min-width: 220px;
+    text-decoration: none;
+    color: #ffffff;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.route-option-card:hover {
+    background: rgba(222, 190, 86, 0.15);
+}
+
+.route-option-card.selected {
+    border-color: #DEBE56;
+}
+
+.route-option-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.route-option-desc {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Form Card ── */
+.add-place-card {
+    background: #2F2E2E;
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.add-place-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.add-place-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.add-place-form .form-input {
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #1e1e26;
+    color: #ffffff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.add-place-form .form-input:focus {
+    border-color: #DEBE56;
+    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.25);
+}
+
+.add-place-form .form-input:not(:placeholder-shown):not([type="date"]),
+.add-place-form .form-input.has-value {
+    border-color: rgba(222, 190, 86, 0.5);
+    background: #22222c;
+}
+
+.add-place-form .form-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.add-place-form .form-input[type="date"] {
+    color-scheme: dark;
+}
+
+.add-place-form .form-input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(0.8);
+    cursor: pointer;
+}
+
+.add-place-form .form-input[type="date"].has-value {
+    border-color: rgba(222, 190, 86, 0.5);
+    background: #22222c;
+}
+
+.add-place-form .form-input[type="number"]::-webkit-inner-spin-button,
+.add-place-form .form-input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.5;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.btn-cancel {
+    background: none;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.45rem 1rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Flatpickr dark theme ── */
+.flatpickr-calendar {
+    background: #2F2E2E !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 12px !important;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: #2F2E2E !important;
+    color: #ffffff !important;
+}
+
+.flatpickr-current-month input.cur-year {
+    color: #ffffff !important;
+}
+
+.flatpickr-weekdays {
+    background: #2F2E2E !important;
+}
+
+span.flatpickr-weekday {
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: #2F2E2E !important;
+}
+
+.flatpickr-day {
+    color: #ffffff !important;
+    border-radius: 8px !important;
+}
+
+.flatpickr-day:hover {
+    background: rgba(222, 190, 86, 0.2) !important;
+    border-color: transparent !important;
+}
+
+.flatpickr-day.selected {
+    background: #DEBE56 !important;
+    border-color: #DEBE56 !important;
+    color: #16161D !important;
+}
+
+.flatpickr-day.today {
+    border-color: rgba(222, 190, 86, 0.5) !important;
+}
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    fill: #ffffff !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+    color: #DEBE56 !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: #DEBE56 !important;
+}
+
+/* ── Loading & Results ── */
+#loadingState {
+    padding: 2rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+#resultsContainer {
+    margin-top: 2rem;
+}
+
+#resultsContainer > h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+/* ── Trip output ── */
+.trip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.trip-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.trip-length {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.trip-destinations {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.destination-card {
+    display: flex;
+    gap: 1rem;
+    background: #1e1e26;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.25rem;
+    align-items: flex-start;
+}
+
+.destination-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #DEBE56;
+    color: #16161D;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.destination-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.destination-city {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 0.35rem;
+}
+
+.destination-info {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin: 0 0 0.5rem;
+}
+
+.destination-info strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.activities {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.activities strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.activities ul {
+    margin: 0.35rem 0 0 1.25rem;
+    padding: 0;
+}
+
+.activities li {
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+}
+
+.trip-actions {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 1.25rem;
+    color: #fca5a5;
+}
+
+.error-message strong {
+    color: #f87171;
+}
+
+.error-details {
+    font-size: 0.85rem;
+    color: rgba(252, 165, 165, 0.7);
+    margin-top: 0.5rem;
+}
+
+.segment-costs {
+    font-size: 0.8rem;
+    color: #DEBE56;
+    margin: 0.25rem 0 0.5rem;
+    opacity: 0.85;
+}
+
+/* ── Cost summary ── */
+.cost-summary {
+    margin-top: 1.5rem;
+    border-radius: 14px;
+    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cost-summary.cost-ok {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+.cost-summary.cost-over {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.cost-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.cost-total {
+    font-size: 1rem;
+    color: #ffffff;
+}
+
+.cost-budget {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cost-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.cost-remaining {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.cost-ok .cost-remaining {
+    color: #4ade80;
+}
+
+.cost-over .cost-remaining {
+    color: #f87171;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .route-planner-options {
+        flex-direction: column;
+    }
+
+    .route-option-card {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-cancel {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+}

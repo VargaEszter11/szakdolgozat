@@ -277,7 +277,6 @@
     display: block;
 }
 
-/* --- Route planner header (used with inline flex on surprise_me) --- */
 .route-planner-header-flex {
     display: flex;
     justify-content: space-between;

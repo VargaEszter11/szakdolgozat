@@ -7,13 +7,13 @@
 
     var HEADER_HTML =
         '<a href="' + pagePrefix + 'main_page.html" class="nav-logo">' +
-            '<img src="' + prefix + 'pictures/marker.png" alt="TravelApp">' +
+        '<img src="' + prefix + 'pictures/marker.png" alt="TravelApp">' +
         '</a>' +
         '<a href="' + pagePrefix + 'loginRegister/profile.html" class="main-header-profile" aria-label="Profile">' +
-            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-                '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>' +
-                '<circle cx="12" cy="7" r="4"/>' +
-            '</svg>' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>' +
+        '<circle cx="12" cy="7" r="4"/>' +
+        '</svg>' +
         '</a>';
 
     var MAP_ICON = '<svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
@@ -34,26 +34,26 @@
 
     var SIDEBAR_HTML =
         '<nav class="sidebar-nav">' +
-            '<div class="sidebar-section">' +
-                '<div class="sidebar-section-title">' + MAP_ICON +
-                    '<span data-i18n="nav.placesSection">Places</span>' +
-                '</div>' +
-                '<a href="' + pagePrefix + 'visitedPlaces/visited_places.html" class="sidebar-link" data-i18n="nav.visitedPlaces" data-sidebar-id="visitedPlaces">Visited Places</a>' +
-                '<a href="' + pagePrefix + 'visitedPlaces/add_new_place.html" class="sidebar-link" data-i18n="nav.addNewPlace" data-sidebar-id="addNewPlace">Add New Place</a>' +
-            '</div>' +
-            '<div class="sidebar-section">' +
-                '<div class="sidebar-section-title">' + PLANE_ICON +
-                    '<span data-i18n="nav.tripsSection">Trips</span>' +
-                '</div>' +
-                '<a href="' + pagePrefix + 'routePlanner/planned_trips.html" class="sidebar-link" data-i18n="nav.plannedTrips" data-sidebar-id="plannedTrips">Planned Trips</a>' +
-                '<a href="' + pagePrefix + 'routePlanner/plan_new_trip.html" class="sidebar-link" data-i18n="nav.planNewTrip" data-sidebar-id="planNewTrip">Plan New Trip</a>' +
-            '</div>' +
-            '<div class="sidebar-section sidebar-section-settings">' +
-                '<a href="' + pagePrefix + 'settings/settings.html" class="sidebar-link sidebar-link-single" data-sidebar-id="settings">' +
-                    SETTINGS_ICON +
-                    '<span data-i18n="nav.settings">Settings</span>' +
-                '</a>' +
-            '</div>' +
+        '<div class="sidebar-section">' +
+        '<div class="sidebar-section-title">' + MAP_ICON +
+        '<span data-i18n="nav.placesSection">Places</span>' +
+        '</div>' +
+        '<a href="' + pagePrefix + 'visitedPlaces/visited_places.html" class="sidebar-link" data-i18n="nav.visitedPlaces" data-sidebar-id="visitedPlaces">Visited Places</a>' +
+        '<a href="' + pagePrefix + 'visitedPlaces/add_new_place.html" class="sidebar-link" data-i18n="nav.addNewPlace" data-sidebar-id="addNewPlace">Add New Place</a>' +
+        '</div>' +
+        '<div class="sidebar-section">' +
+        '<div class="sidebar-section-title">' + PLANE_ICON +
+        '<span data-i18n="nav.tripsSection">Trips</span>' +
+        '</div>' +
+        '<a href="' + pagePrefix + 'routePlanner/planned_trips.html" class="sidebar-link" data-i18n="nav.plannedTrips" data-sidebar-id="plannedTrips">Planned Trips</a>' +
+        '<a href="' + pagePrefix + 'routePlanner/plan_new_trip.html" class="sidebar-link" data-i18n="nav.planNewTrip" data-sidebar-id="planNewTrip">Plan New Trip</a>' +
+        '</div>' +
+        '<div class="sidebar-section sidebar-section-settings">' +
+        '<a href="' + pagePrefix + 'settings/settings.html" class="sidebar-link sidebar-link-single" data-sidebar-id="settings">' +
+        SETTINGS_ICON +
+        '<span data-i18n="nav.settings">Settings</span>' +
+        '</a>' +
+        '</div>' +
         '</nav>';
 
     var PAGE_MAP = {
@@ -61,9 +61,6 @@
         'add_new_place': 'addNewPlace',
         'planned_trips': 'plannedTrips',
         'plan_new_trip': 'planNewTrip',
-        'surprise_me': 'planNewTrip',
-        'plan_new_trip_visited_places': 'planNewTrip',
-        'plan_new_trip_unvisited_places': 'planNewTrip',
         'settings': 'settings',
         'places_map_view': 'visitedPlaces'
     };

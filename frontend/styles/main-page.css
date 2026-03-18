@@ -14,9 +14,10 @@ body {
 .main-page-home {
     background: #16161D;
     color: #ffffff;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 /* ── Header: flush full-width bar ── */
@@ -131,6 +132,15 @@ body {
 .main-page-home .sidebar-link:hover {
     background: rgba(255, 255, 255, 0.06);
     color: #ffffff;
+}
+
+.main-page-home .sidebar-link.sidebar-link-active {
+    color: #DEBE56;
+    background: rgba(222, 190, 86, 0.1);
+}
+
+.main-page-home .sidebar-link.sidebar-link-active .sidebar-icon {
+    color: #DEBE56;
 }
 
 .main-page-home .sidebar-link-single {
