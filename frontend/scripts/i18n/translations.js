@@ -8,7 +8,10 @@ window.I18N_TRANSLATIONS = {
       surpriseMe: 'Surprise Me!',
       plannedTrips: 'Planned Trips',
       profile: 'Profile',
-      settings: 'Settings'
+      settings: 'Settings',
+      addPlace: 'Add Place',
+      placesSection: 'Places',
+      tripsSection: 'Trips'
     },
     settings: {
       title: 'Settings',
@@ -29,12 +32,12 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Deutsch (German)'
     },
     mainPage: {
-      title: 'Welcome to TravelApp',
+      title: 'Welcome to TravelApp!',
       subtitle: 'Discover amazing destinations and log your travels',
       myTravelLog: 'My Travel Log',
       addTrip: 'Add Trip',
       loading: 'Loading…',
-      noTravelsYet: 'No travels yet. <a href="visitedPlaces/add_new_place.html">Add your first place</a>.',
+      noTravelsYet: 'No travels yet.',
       startYourJourney: 'Start Your Journey',
       documentYourAdventures: 'Document your adventures, share your experiences, and inspire others to explore the world.',
       whetherItsAGetawayOrACrossContinentalExpedition: 'Whether it\'s a weekend getaway or a cross-continental expedition, keep all your travel memories in one place.',
@@ -187,7 +190,10 @@ window.I18N_TRANSLATIONS = {
       surpriseMe: 'Lepj meg!',
       plannedTrips: 'Tervezett utak',
       profile: 'Profil',
-      settings: 'Beállítások'
+      settings: 'Beállítások',
+      addPlace: 'Hely hozzáadása',
+      placesSection: 'Helyek',
+      tripsSection: 'Utak'
     },
     settings: {
       title: 'Beállítások',
@@ -208,12 +214,12 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Német'
     },
     mainPage: {
-      title: 'Üdvözlünk a TravelAppben',
+      title: 'Üdvözlünk a TravelAppben!',
       subtitle: 'Fedezz fel lenyűgöző úti célokat és rögzítsd utazásaidat',
       myTravelLog: 'Utazási naplóm',
       addTrip: 'Utazás hozzáadása',
       loading: 'Betöltés…',
-      noTravelsYet: 'Még nincsenek utazásaid. <a href="visitedPlaces/add_new_place.html">Add hozzá az első helyedet</a>.',
+      noTravelsYet: 'Még nincsenek utazásaid.',
       startYourJourney: 'Kezdd el az utazásod',
       documentYourAdventures: 'Örökítsd meg kalandjaidat, oszd meg élményeidet, és inspirálj másokat a világ felfedezésére.',
       whetherItsAGetawayOrACrossContinentalExpedition: 'Legyen szó egy hétvégi kiruccanásról vagy egy kontinenseken átívelő expedícióról, tartsd meg minden utazási emléked egy helyen.',
@@ -366,7 +372,10 @@ window.I18N_TRANSLATIONS = {
       surpriseMe: 'Überrasche mich!',
       plannedTrips: 'Geplante Reisen',
       profile: 'Profil',
-      settings: 'Einstellungen'
+      settings: 'Einstellungen',
+      addPlace: 'Ort hinzufügen',
+      placesSection: 'Orte',
+      tripsSection: 'Reisen'
     },
     settings: {
       title: 'Einstellungen',
@@ -387,12 +396,12 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Deutsch'
     },
     mainPage: {
-      title: 'Willkommen bei TravelApp',
+      title: 'Willkommen bei TravelApp!',
       subtitle: 'Entdecke beeindruckende Reiseziele und halte deine Reisen fest',
       myTravelLog: 'Mein Reisetagebuch',
       addTrip: 'Reise hinzufügen',
       loading: 'Lädt…',
-      noTravelsYet: 'Noch keine Reisen. <a href="visitedPlaces/add_new_place.html">Füge deinen ersten Ort hinzu</a>.',
+      noTravelsYet: 'Noch keine Reisen.',
       startYourJourney: 'Starte deine Reise',
       documentYourAdventures: 'Halte deine Abenteuer fest, teile deine Erfahrungen und inspiriere andere.',
       whetherItsAGetawayOrACrossContinentalExpedition: 'Ob Wochenendausflug oder Expedition – bewahre alle Reiseerinnerungen an einem Ort.',

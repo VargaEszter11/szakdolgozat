@@ -14,52 +14,76 @@
   function setLanguage(locale) {
     var translations = getTranslations();
     if (!translations[locale]) locale = DEFAULT_LANG;
+
     localStorage.setItem(STORAGE_KEY, locale);
+
     var fullLocale = FULL_LOCALE[locale] || locale;
     if (document.documentElement) {
       document.documentElement.setAttribute('lang', fullLocale);
     }
+
     return locale;
+  }
+
+  // ✅ Nested key + fallback support
+  function resolveKey(obj, key) {
+    var parts = key.split('.');
+    var result = obj;
+
+    for (var i = 0; i < parts.length; i++) {
+      result = result?.[parts[i]];
+      if (result === undefined) return undefined;
+    }
+
+    return result;
   }
 
   function t(key) {
     var translations = getTranslations();
     var lang = getLanguage();
-    var map = translations[lang] || translations[DEFAULT_LANG] || {};
-    var parts = key.split('.');
-    for (var i = 0; i < parts.length; i++) {
-      map = map[parts[i]];
-      if (map === undefined) return key;
+
+    // try current language
+    var value = resolveKey(translations[lang], key);
+
+    // fallback to EN if missing
+    if (value === undefined) {
+      value = resolveKey(translations[DEFAULT_LANG], key);
     }
-    return typeof map === 'string' ? map : key;
+
+    return typeof value === 'string' ? value : key;
   }
 
   function applyToPage(root) {
     root = root || document;
-    var nodes = root.querySelectorAll ? root.querySelectorAll('[data-i18n]') : [];
-    for (var i = 0; i < nodes.length; i++) {
-      var key = nodes[i].getAttribute('data-i18n');
-      if (key) {
-        var val = t(key);
-        if (val.indexOf('<') !== -1) {
-          nodes[i].innerHTML = val;
-        } else {
-          nodes[i].textContent = val;
-        }
+
+    var nodes = root.querySelectorAll('[data-i18n]');
+    nodes.forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (!key) return;
+
+      var val = t(key);
+
+      if (val.includes('<')) {
+        el.innerHTML = val;
+      } else {
+        el.textContent = val;
       }
-    }
-    var placeholders = root.querySelectorAll ? root.querySelectorAll('[data-i18n-placeholder]') : [];
-    for (var j = 0; j < placeholders.length; j++) {
-      var phKey = placeholders[j].getAttribute('data-i18n-placeholder');
-      if (phKey) placeholders[j].placeholder = t(phKey);
-    }
-    var titles = root.querySelectorAll ? root.querySelectorAll('[data-i18n-title]') : [];
-    for (var k = 0; k < titles.length; k++) {
-      var titleKey = titles[k].getAttribute('data-i18n-title');
-      if (titleKey) titles[k].setAttribute('title', t(titleKey));
-    }
+    });
+
+    var placeholders = root.querySelectorAll('[data-i18n-placeholder]');
+    placeholders.forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      if (key) el.placeholder = t(key);
+    });
+
+    var titles = root.querySelectorAll('[data-i18n-title]');
+    titles.forEach(function (el) {
+      var key = el.getAttribute('data-i18n-title');
+      if (key) el.setAttribute('title', t(key));
+    });
   }
 
+  // ✅ expose globally so other scripts can re-run it
   window.i18n = {
     getLanguage: getLanguage,
     setLanguage: setLanguage,
@@ -67,8 +91,24 @@
     applyToPage: applyToPage
   };
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function initI18n() {
     setLanguage(getLanguage());
+
+    // First pass immediately
     applyToPage();
-  });
+
+    // Run again after a short delay to catch any late-added DOM
+    setTimeout(() => applyToPage(), 50); // 50ms gives time for other scripts
+  }
+
+  // DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initI18n);
+  } else {
+    initI18n();
+  }
+
+  // Also after full page load
+  window.addEventListener('load', () => applyToPage());
+
 })();

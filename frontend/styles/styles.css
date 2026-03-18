@@ -1,6 +1,7 @@
 /* Main stylesheet: imports all partials */
 @import url("base.css");
 @import url("layout.css");
+@import url("main-page.css");
 @import url("forms.css");
 @import url("profile.css");
 @import url("add-place.css");
