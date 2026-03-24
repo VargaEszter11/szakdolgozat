@@ -32,7 +32,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Welcome to TravelApp!',
-      subtitle: 'Discover amazing destinations and log your travels',
+      subtitle: 'Your freshest travel memories:',
       myTravelLog: 'My Travel Log',
       addTrip: 'Add Trip',
       loading: 'Loading…',
@@ -179,7 +179,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Üdvözlünk a TravelAppben!',
-      subtitle: 'Fedezz fel lenyűgöző úti célokat és rögzítsd utazásaidat',
+      subtitle: 'Legfrissebb utazási élményeid:',
       myTravelLog: 'Utazási naplóm',
       addTrip: 'Utazás hozzáadása',
       loading: 'Betöltés…',
@@ -326,7 +326,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Willkommen bei TravelApp!',
-      subtitle: 'Entdecke beeindruckende Reiseziele und halte deine Reisen fest',
+      subtitle: 'Deine freshesten Reiseerinnerungen:',
       myTravelLog: 'Mein Reisetagebuch',
       addTrip: 'Reise hinzufügen',
       loading: 'Lädt…',

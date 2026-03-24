@@ -182,6 +182,16 @@ body {
     color: #ffffff;
 }
 
+.main-page-home-intro {
+    min-width: 0;
+}
+
+.main-page-home-subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
 /* ── Add Place button ── */
 .main-page-home .btn-add {
     background: #DEBE56;
@@ -305,5 +315,14 @@ body {
 
     .main-page-home-content-inner {
         padding: 1.5rem 1rem;
+    }
+
+    .main-page-home-content-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .main-page-home-content-header .btn-add {
+        justify-content: center;
     }
 }
