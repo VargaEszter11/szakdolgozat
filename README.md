@@ -7,11 +7,10 @@ This application is designed for people who travel frequently and want to store 
 
 ## Application Components
 
-- Main Page: Displays a welcome message, brief overview of the application, and navigation bar.
+- Main Page: Displays a welcome message and a list of previously visited places.
 - Visited Places Page: Lists previously visited locations; includes both table and map views.
-- Add New Place Page: Allows users to add new visited locations.
-- Plan New Trip Page: Enables users to plan a new trip, either by selecting from previously visited places or by adding entirely new destinations.
-- Surprise Me! Page: Generates a random trip suggestion.
+- Add New Place Page: Allows users to add new visited locations, has a list and a map view.
+- Plan New Trip Page: Enables users to plan a new trip, either by selecting from previously visited places, adding entirely new destinations or generating random.
 - Planned Trips Page: Lists trips that have been previously planned.
 - Login/Register Page: Provides user authentication and registration functionality.
 - Profile Page: Edit profile, checks if a user is logged in, displays statistics.
