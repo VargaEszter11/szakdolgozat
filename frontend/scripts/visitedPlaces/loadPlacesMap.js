@@ -30,7 +30,7 @@
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
     var dateValue = item.date || item.visitedDate || item.dateVisited;
-    
+
     // Build coordinates object from latitude/longitude fields
     var coordinates = null;
     if (item.latitude != null && item.longitude != null) {
@@ -39,7 +39,7 @@
         lon: parseFloat(item.longitude)
       };
     }
-    
+
     return {
       name: placeName.trim() || 'Unknown',
       country: country || '',
@@ -60,7 +60,7 @@
 
     for (var i = 0; i < places.length; i++) {
       var place = places[i];
-      
+
       // Only use stored coordinates
       if (place.coordinates && place.coordinates.lat && place.coordinates.lon) {
         var coords = place.coordinates;
@@ -110,7 +110,7 @@
         var list = Array.isArray(data) ? data : [];
         places = list.map(normalizePlace);
         console.log('Normalized places:', places);
-        console.log('Places with coordinates:', places.filter(function(p) { return p.coordinates; }).length);
+        console.log('Places with coordinates:', places.filter(function (p) { return p.coordinates; }).length);
       } else if (response.status === 404) {
         console.log('No places found for this user.');
         places = [];

@@ -50,7 +50,9 @@ window.I18N_TRANSLATIONS = {
       placesCountSuffix: 'places visited so far. Keep exploring!',
       mapView: 'Map View',
       emptyText: 'No places yet.',
-      addFirstPlace: 'Add your first place'
+      addFirstPlace: 'Add your first place',
+      mapViewTitle: 'Map View',
+      mapViewSubtitle: 'See all your visited places on the map'
     },
     addNewPlace: {
       title: 'Add New Place',
@@ -197,7 +199,9 @@ window.I18N_TRANSLATIONS = {
       placesCountSuffix: 'meglátogatott hely. Fedezz fel még!',
       mapView: 'Térkép nézet',
       emptyText: 'Még nincsenek helyek.',
-      addFirstPlace: 'Add hozzá az első helyedet'
+      addFirstPlace: 'Add hozzá az első helyedet',
+      mapViewTitle: 'Térkép nézet',
+      mapViewSubtitle: 'Lásd az összes meglátogatott helyedet a térképen'
     },
     addNewPlace: {
       title: 'Új hely hozzáadása',
@@ -344,7 +348,9 @@ window.I18N_TRANSLATIONS = {
       placesCountSuffix: 'besuchte Orte. Entdecke weiter!',
       mapView: 'Kartenansicht',
       emptyText: 'Noch keine Orte.',
-      addFirstPlace: 'Füge deinen ersten Ort hinzu'
+      addFirstPlace: 'Füge deinen ersten Ort hinzu',
+      mapViewTitle: 'Kartenansicht',
+      mapViewSubtitle: 'Sehe alle deine besuchten Orte auf der Karte'
     },
     addNewPlace: {
       title: 'Ort hinzufügen',
