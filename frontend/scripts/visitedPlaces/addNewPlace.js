@@ -1,15 +1,36 @@
 document.addEventListener('DOMContentLoaded', function () {
+  var t = window.i18n && window.i18n.t ? window.i18n.t.bind(window.i18n) : function (k) { return k; };
+  var showErrorMsg = typeof window.showError === 'function'
+    ? window.showError.bind(window)
+    : function (msg, onClose) { alert(msg); if (typeof onClose === 'function') onClose(); };
+  var showSuccessMsg = typeof window.showSuccess === 'function'
+    ? window.showSuccess.bind(window)
+    : function (msg, onClose) { alert(msg); if (typeof onClose === 'function') onClose(); };
   const form = document.getElementById('addPlaceForm');
   const cancelBtn = document.getElementById('cancelBtn');
+  const visitedDateInput = document.getElementById('visitedDate');
   const ratingInput = document.getElementById('rating');
   const starBtns = document.querySelectorAll('.star-btn');
+
+  if (visitedDateInput && typeof flatpickr === 'function') {
+    var LOCALE_MAP = { hu: 'hu', de: 'de' };
+    var lang = localStorage.getItem('language') || 'en';
+    var fpLocale = LOCALE_MAP[lang] || 'default';
+
+    flatpickr(visitedDateInput, {
+      dateFormat: 'Y-m-d',
+      maxDate: 'today',
+      locale: fpLocale,
+      disableMobile: true
+    });
+  }
 
   if (starBtns.length && ratingInput) {
     function setRating(value) {
       ratingInput.value = value;
       starBtns.forEach(function (btn) {
         var r = parseInt(btn.getAttribute('data-rating'), 10);
-        btn.classList.toggle('active', r <= value);
+        btn.classList.toggle('selected', r <= value);
       });
     }
     starBtns.forEach(function (btn) {
@@ -33,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get user_id from localStorage (set during login)
     var userId = localStorage.getItem('user_id');
     if (!userId) {
-      showError('Please log in to add a place.', function () {
+      showErrorMsg('Please log in to add a place.', function () {
         window.location.href = '../loginRegister/loginPage.html';
       });
       return;
@@ -47,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var rating = parseInt(document.getElementById('rating').value, 10) || 5;
 
     if (!placeName || !country || !visitedDate) {
-      showError('Please fill in Place Name, Country and Date Visited.');
+      showErrorMsg('Please fill in Place Name, Country and Date Visited.');
       return;
     }
 
@@ -81,13 +102,18 @@ document.addEventListener('DOMContentLoaded', function () {
         throw new Error(errorData.detail || 'Failed to add place');
       }
 
-      var data = await response.json();
-      showSuccess('Place added successfully!', function () {
+      await response.json().catch(function () { return null; });
+      var successMessage = t('addNewPlace.savedMessage');
+      if (!successMessage || successMessage === 'addNewPlace.savedMessage') {
+        successMessage = 'Place added successfully!';
+      }
+
+      showSuccessMsg(successMessage, function () {
         window.location.href = 'visited_places.html';
       });
     } catch (error) {
       console.error('Error adding place:', error);
-      showError('Failed to add place: ' + error.message);
+      showErrorMsg('Failed to add place: ' + error.message);
     }
   });
 });
