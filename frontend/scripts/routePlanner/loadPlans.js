@@ -144,29 +144,35 @@
     emptyState.classList.add('hidden');
     container.classList.remove('hidden');
     container.innerHTML = sortedTrips.map(renderCard).join('');
+  }
 
-    container.querySelectorAll('.trip-delete').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
+  function bindTripListActions() {
+    var container = document.getElementById('tripCards');
+    if (!container || container.dataset.tripListBound === '1') return;
+    container.dataset.tripListBound = '1';
+    container.addEventListener('click', function (e) {
+      var delBtn = e.target.closest('.trip-delete');
+      if (delBtn) {
+        e.preventDefault();
         e.stopPropagation();
-        var id = parseInt(btn.getAttribute('data-id'), 10);
-        showConfirm('Delete this trip?', function () { deleteTrip(id); });
-      });
-    });
-
-    container.querySelectorAll('.trip-edit').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
+        var did = parseInt(delBtn.getAttribute('data-id'), 10);
+        if (Number.isNaN(did)) return;
+        showConfirm('Delete this trip?', function () { deleteTrip(did); });
+        return;
+      }
+      var editBtn = e.target.closest('.trip-edit');
+      if (editBtn) {
+        e.preventDefault();
         e.stopPropagation();
-        var id = btn.getAttribute('data-id');
-        window.location.href = 'plan_new_trip.html?edit=' + id;
-      });
-    });
-
-    container.querySelectorAll('.planned-trip-card').forEach(function (card) {
-      card.addEventListener('click', function (e) {
-        if (e.target.closest('button, a')) return;
-        var id = parseInt(card.getAttribute('data-id'), 10);
-        if (!isNaN(id)) showTripDetails(id);
-      });
+        var eid = editBtn.getAttribute('data-id');
+        if (eid) window.location.href = 'plan_new_trip.html?edit=' + eid;
+        return;
+      }
+      var card = e.target.closest('.planned-trip-card');
+      if (card && !e.target.closest('button, a')) {
+        var cid = parseInt(card.getAttribute('data-id'), 10);
+        if (!Number.isNaN(cid)) showTripDetails(cid);
+      }
     });
   }
 
@@ -285,5 +291,8 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', render);
+  document.addEventListener('DOMContentLoaded', function () {
+    bindTripListActions();
+    render();
+  });
 })();

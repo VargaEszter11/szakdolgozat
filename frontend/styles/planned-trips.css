@@ -1,4 +1,3 @@
-/* Planned Trips page – tokens aligned with main-page-home (see main-page.css) */
 .main-page-home-content.planned-trips-page {
     --bg: #16161D;
     --surface: #2F2E2E;
@@ -42,7 +41,6 @@
     align-items: center;
 }
 
-/* List layout matches visited places (travel-log-card styles from visited-places.css + main-page.css) */
 .planned-trips-page .main-page-home-content-inner {
     display: flex;
     flex-direction: column;

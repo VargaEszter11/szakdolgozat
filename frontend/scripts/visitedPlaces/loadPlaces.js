@@ -46,7 +46,7 @@
     var d = dateValue ? new Date(dateValue) : null;
     var dateSortKey = d && !isNaN(d.getTime()) ? d.getTime() : 0;
     return {
-      id: item.id || (placeName + '-' + (dateValue || '') + '-' + index),
+      id: item.id != null && item.id !== '' ? item.id : (placeName + '-' + (dateValue || '') + '-' + index),
       name: name,
       date: formatDate(dateValue),
       dateSortKey: dateSortKey,
@@ -145,8 +145,10 @@
       var delBtn = e.target.closest('.place-delete-btn');
       if (delBtn) {
         e.preventDefault();
-        var delId = parseInt(delBtn.getAttribute('data-id'), 10);
-        if (isNaN(delId)) {
+        e.stopPropagation();
+        var raw = delBtn.getAttribute('data-id');
+        var delId = parseInt(raw, 10);
+        if (raw == null || String(raw).trim() === '' || Number.isNaN(delId)) {
           showError('Cannot delete this place.');
           return;
         }
