@@ -144,12 +144,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             language: localStorage.getItem('language') || 'en'
         };
 
-        if (selectedPlan !== 'random') {
-            const placesInput = (document.getElementById('placesList')?.value || '').trim();
-            const manualPlaces = placesInput
-                ? placesInput.split(',').map(p => p.trim()).filter(p => p)
-                : [];
+        const placesInput = (document.getElementById('placesList')?.value || '').trim();
+        const manualPlaces = placesInput
+            ? placesInput.split(',').map(p => p.trim()).filter(p => p)
+            : [];
+
+        if (selectedPlan === 'visited') {
             body.visitedPlaces = [...new Set([...savedVisitedPlaces, ...manualPlaces])];
+        } else if (selectedPlan === 'unvisited') {
+            const uid = localStorage.getItem('user_id');
+            if (!uid) {
+                const msg = window.i18n && window.i18n.t
+                    ? window.i18n.t('planNewTrip.unvisitedRequiresLogin')
+                    : 'Please log in. Unvisited trips load your saved places on the server to exclude them.';
+                showError(msg, '', tripResults, resultsContainer);
+                return;
+            }
+            const parsed = parseInt(uid, 10);
+            if (Number.isNaN(parsed)) {
+                showError('Invalid user session.', '', tripResults, resultsContainer);
+                return;
+            }
+            body.userId = parsed;
+            body.additionalExclusions = manualPlaces;
         }
 
         loadingState.style.display = 'block';

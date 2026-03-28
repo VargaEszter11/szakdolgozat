@@ -275,6 +275,10 @@ body {
     color: rgba(255, 255, 255, 0.7);
 }
 
+.hidden {
+    display: none !important;
+}
+
 .main-page-home .hamburger-btn {
     color: #ffffff;
 }

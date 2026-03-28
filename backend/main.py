@@ -8,7 +8,8 @@ import json
 import os
 from typing import List
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -20,10 +21,12 @@ from travel_types import (
     generate_travel_plan_visited,
     generate_travel_plan_unvisited,
     generate_travel_plan_random,
+    UnvisitedGenerationRequest,
+    build_unvisited_forbidden_places,
 )
 
 # Database imports
-from database.database import engine, Base
+from database.database import engine, Base, get_db
 from routers import users, planned_trips, trip_stops, visited_places, auth
 
 # Create FastAPI app
@@ -270,19 +273,23 @@ async def travel_plans_visited(request: GenerationRequest):
 
 
 @app.post("/generate_travel_plans/unvisited")
-async def travel_plans_unvisited(request: GenerationRequest):
+async def travel_plans_unvisited(request: UnvisitedGenerationRequest, db: Session = Depends(get_db)):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
     if end_dt <= start_dt:
         raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
 
+    forbidden_places = build_unvisited_forbidden_places(
+        db, request.userId, request.additionalExclusions
+    )
+
     return await generate_plan_with_location(
         generate_travel_plan_unvisited,
         request.startingPoint,
         travel_length,
         request.preferences,
-        request.visitedPlaces,
+        forbidden_places,
         starting_point=request.startingPoint,
         budget=request.budget,
         start_date=request.startDate,

@@ -1,4 +1,6 @@
 (function () {
+  var DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
+
   function normalizeTrip(trip) {
     // Map API response fields to frontend fields
     // API provides: id, user_id, title, start_date, end_date, start_city, stops
@@ -7,12 +9,16 @@
       destination: trip.title || 'Unknown destination',
       startDate: formatApiDate(trip.start_date),
       endDate: formatApiDate(trip.end_date),
-      travelers: trip.stops ? trip.stops.length : 0, // Estimate from stops count
-      status: 'Planning', // Default status (can be enhanced later)
-      budget: '—', // Not in API yet
-      accommodation: '—', // Not in API yet
-      image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80' // Default image
+      startDateSort: trip.start_date || null,
+      stopCount: trip.stops ? trip.stops.length : 0,
+      image: DEFAULT_IMAGE
     };
+  }
+
+  function stopsSummaryLine(n) {
+    var t = window.i18n && window.i18n.t ? window.i18n.t.bind(window.i18n) : null;
+    if (n === 1) return t ? t('plannedTrips.stopsOne') : '1 stop';
+    return t ? t('plannedTrips.stopsMany').replace(/\{\{n\}\}/g, String(n)) : (n + ' stops');
   }
 
   var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
@@ -83,51 +89,31 @@
   }
 
   function renderCard(trip) {
-    var statusClass = trip.status === 'Confirmed' ? 'trip-status trip-status-confirmed' : 'trip-status trip-status-planning';
     return (
-      '<div class="trip-card card" data-id="' + trip.id + '">' +
-      '<div class="trip-card-grid">' +
-      '<div class="trip-card-image-wrap">' +
-      '<img src="' + escapeHtml(trip.image || '') + '" alt="' + escapeHtml(trip.destination) + '" class="trip-card-image" onerror="this.style.background=\'var(--bg)\';this.src=\'\';">' +
-      '<span class="' + statusClass + '">' + escapeHtml(trip.status) + '</span>' +
+      '<div class="travel-log-card planned-trip-card" data-id="' + trip.id + '">' +
+      '<div class="log-image-wrapper">' +
+      '<img src="' + escapeHtml(trip.image || '') + '" alt="' + escapeHtml(trip.destination) + '" class="log-image" onerror="this.src=\'' + escapeHtml(DEFAULT_IMAGE) + '\';">' +
       '</div>' +
-      '<div class="trip-card-content">' +
-      '<div class="trip-card-header">' +
-      '<div>' +
-      '<div class="trip-card-dest">' +
-      '<svg class="icon icon-pin" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' +
-      '<h2 class="trip-card-title">' + escapeHtml(trip.destination) + '</h2>' +
+      '<div class="log-content">' +
+      '<div class="log-header">' +
+      '<div class="log-dest">' +
+      '<svg class="icon-pin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"/>' +
+      '<circle cx="12" cy="11" r="2"/>' +
+      '</svg>' +
+      '<h3 class="log-title">' + escapeHtml(trip.destination) + '</h3>' +
       '</div>' +
-      '<div class="trip-card-dates">' +
-      '<svg class="icon icon-cal" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>' +
-      '<span>' + escapeHtml(trip.startDate) + ' - ' + escapeHtml(trip.endDate) + '</span>' +
-      '</div>' +
-      '</div>' +
-      '<div class="trip-card-actions">' +
-      '<button type="button" class="trip-btn-icon trip-edit" data-id="' + trip.id + '" aria-label="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg></button>' +
-      '<button type="button" class="trip-btn-icon trip-delete" data-id="' + trip.id + '" aria-label="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>' +
-      '</div>' +
-      '</div>' +
-      '<div class="trip-card-meta">' +
-      '<div class="trip-meta-item">' +
-      '<svg class="trip-meta-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
-      '<span class="trip-meta-label">Travelers</span>' +
-      '<p class="trip-meta-value">' + (trip.travelers || 0) + ' people</p>' +
-      '</div>' +
-      '<div class="trip-meta-item">' +
-      '<span class="trip-meta-label">Budget</span>' +
-      '<p class="trip-meta-value">' + escapeHtml(trip.budget || '—') + '</p>' +
-      '</div>' +
-      '<div class="trip-meta-item">' +
-      '<span class="trip-meta-label">Stay</span>' +
-      '<p class="trip-meta-value">' + escapeHtml(trip.accommodation || '—') + '</p>' +
+      '<div class="visited-places-card-actions">' +
+      '<button type="button" class="place-delete-btn trip-edit" data-id="' + trip.id + '" title="Edit" aria-label="Edit trip">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>' +
+      '</button>' +
+      '<button type="button" class="place-delete-btn trip-delete" data-id="' + trip.id + '" title="Delete" aria-label="Delete trip">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>' +
+      '</button>' +
       '</div>' +
       '</div>' +
-      '<div class="trip-card-buttons">' +
-      '<button type="button" class="btn-trip btn-trip-primary trip-view-details" data-id="' + trip.id + '">' + (window.i18n && window.i18n.t ? window.i18n.t('plannedTrips.viewDetails') : 'View Details') + '</button>' +
-      '<button type="button" class="btn-trip btn-trip-secondary">' + (window.i18n && window.i18n.t ? window.i18n.t('plannedTrips.shareItinerary') : 'Share Itinerary') + '</button>' +
-      '</div>' +
-      '</div>' +
+      '<div class="log-date">' + escapeHtml(trip.startDate) + ' – ' + escapeHtml(trip.endDate) + '</div>' +
+      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + '</p>' +
       '</div>' +
       '</div>'
     );
@@ -135,8 +121,8 @@
 
   function sortTripsByStartDate(trips) {
     return trips.slice().sort(function (a, b) {
-      var tA = a.startDate ? new Date(a.startDate).getTime() : 0;
-      var tB = b.startDate ? new Date(b.startDate).getTime() : 0;
+      var tA = a.startDateSort ? new Date(a.startDateSort).getTime() : 0;
+      var tB = b.startDateSort ? new Date(b.startDateSort).getTime() : 0;
       return tA - tB;
     });
   }
@@ -160,23 +146,26 @@
     container.innerHTML = sortedTrips.map(renderCard).join('');
 
     container.querySelectorAll('.trip-delete').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
         var id = parseInt(btn.getAttribute('data-id'), 10);
         showConfirm('Delete this trip?', function () { deleteTrip(id); });
       });
     });
 
     container.querySelectorAll('.trip-edit').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
         var id = btn.getAttribute('data-id');
         window.location.href = 'plan_new_trip.html?edit=' + id;
       });
     });
 
-    container.querySelectorAll('.trip-view-details').forEach(function (btn) {
-      btn.addEventListener('click', async function () {
-        var id = parseInt(btn.getAttribute('data-id'), 10);
-        await showTripDetails(id);
+    container.querySelectorAll('.planned-trip-card').forEach(function (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('button, a')) return;
+        var id = parseInt(card.getAttribute('data-id'), 10);
+        if (!isNaN(id)) showTripDetails(id);
       });
     });
   }

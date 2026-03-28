@@ -108,7 +108,9 @@ window.I18N_TRANSLATIONS = {
       planFirstTrip: 'Plan Your First Trip',
       newTrip: 'New Trip',
       viewDetails: 'View Details',
-      shareItinerary: 'Share Itinerary'
+      shareItinerary: 'Share Itinerary',
+      stopsOne: '1 stop',
+      stopsMany: '{{n}} stops'
     },
     profile: {
       editProfile: 'Edit Profile',
@@ -257,7 +259,9 @@ window.I18N_TRANSLATIONS = {
       planFirstTrip: 'Tervezd meg az első utazásod',
       newTrip: 'Új utazás',
       viewDetails: 'Részletek megtekintése',
-      shareItinerary: 'Útiterv megosztása'
+      shareItinerary: 'Útiterv megosztása',
+      stopsOne: '1 megálló',
+      stopsMany: '{{n}} megálló'
     },
     profile: {
       editProfile: 'Profil szerkesztése',
@@ -406,7 +410,9 @@ window.I18N_TRANSLATIONS = {
       planFirstTrip: 'Plan deine erste Reise',
       newTrip: 'Neue Reise',
       viewDetails: 'Details anzeigen',
-      shareItinerary: 'Reiseplan teilen'
+      shareItinerary: 'Reiseplan teilen',
+      stopsOne: '1 Zwischenstopp',
+      stopsMany: '{{n}} Zwischenstopps'
     },
     profile: {
       editProfile: 'Profil bearbeiten',

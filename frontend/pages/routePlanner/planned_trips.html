@@ -1,87 +1,81 @@
-<!-- next: status change (for example: confirmed, cancelled, in progress, completed) -->
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../styles/styles.css">
+    <link rel="stylesheet" href="../../styles/main-page.css">
+    <link rel="stylesheet" href="../../styles/visited-places.css">
+    <link rel="stylesheet" href="../../styles/planned-trips.css">
     <link rel="icon" href="../../pictures/marker.png">
     <title>Planned Trips – TravelApp</title>
+
     <script src="../../scripts/utils/apiConfig.js"></script>
     <script src="../../scripts/utils/themeLoader.js"></script>
     <script src="../../scripts/utils/authGuard.js"></script>
-    <script src="../../scripts/utils/navToggle.js" defer></script>
     <script src="../../scripts/i18n/translations.js"></script>
     <script src="../../scripts/i18n/i18n.js"></script>
+    <script src="../../scripts/utils/sidebarHeader.js"></script>
 </head>
 
 <body>
-    <div class="main-page">
-        <header class="main-header">
-            <a href="../main_page.html" class="nav-logo">
-                <img src="../../pictures/marker.png" alt="TravelApp">
-            </a>
-            <button class="hamburger-btn" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-            </button>
-            <nav class="main-nav">
-                <a href="../visitedPlaces/visited_places.html" class="nav-link" data-i18n="nav.visitedPlaces">Visited
-                    Places</a>
-                <a href="../visitedPlaces/add_new_place.html" class="nav-link" data-i18n="nav.addNewPlace">Add New
-                    Place</a>
-                <a href="plan_new_trip.html" class="nav-link" data-i18n="nav.planNewTrip">Plan New Trip</a>
-                <a href="planned_trips.html" class="nav-link nav-link-active" data-i18n="nav.plannedTrips">Planned
-                    Trips</a>
-                <a href="../loginRegister/profile.html" class="nav-link" data-i18n="nav.profile">Profile</a>
-                <a href="../settings/settings.html" class="nav-link" data-i18n="nav.settings">Settings</a>
-            </nav>
-        </header>
+    <div class="main-page-home">
 
-        <main class="main-content planned-trips-page">
-            <div class="planned-trips-inner">
-                <div class="planned-trips-header">
-                    <div>
-                        <h1 class="planned-trips-title" data-i18n="plannedTrips.title">Planned Trips</h1>
-                        <p class="planned-trips-subtitle" data-i18n="plannedTrips.subtitle">Your upcoming adventures</p>
+        <!-- Shared header -->
+        <header id="app-header" class="main-header main-page-home-header"></header>
+
+        <div class="main-page-home-body">
+
+            <aside id="app-sidebar" class="main-page-home-sidebar"></aside>
+
+            <main class="main-content main-page-home-content planned-trips-page">
+                <div class="main-page-home-content-inner">
+
+                    <div class="main-page-home-content-header">
+                        <div>
+                            <h1 class="main-page-home-title" data-i18n="plannedTrips.title">
+                                Planned Trips
+                            </h1>
+                            <p class="muted" data-i18n="plannedTrips.subtitle">
+                                Your upcoming adventures
+                            </p>
+                        </div>
+
+                        <div class="planned-trips-header-actions">
+                            <a href="plan_new_trip.html" class="btn-add">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 8v8" />
+                                    <path d="M8 12h8" />
+                                </svg>
+                                <span data-i18n="plannedTrips.newTrip">New Trip</span>
+                            </a>
+                        </div>
                     </div>
-                    <a href="plan_new_trip.html" class="btn-add">
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 8v8" />
-                            <path d="M8 12h8" />
-                        </svg>
-                        <span data-i18n="plannedTrips.newTrip">New Trip</span>
-                    </a>
-                </div>
 
-                <div id="tripCards" class="trip-cards">
-                    <!-- Trip cards rendered by loadPlans.js -->
-                </div>
+                    <div id="tripCards" class="travel-logs-list" aria-live="polite">
+                    </div>
 
-                <div id="emptyState" class="empty-state hidden">
-                    <p class="empty-state-text" data-i18n="plannedTrips.noTripsPlannedYet">No trips planned yet</p>
-                    <a href="plan_new_trip.html" class="btn-submit" data-i18n="plannedTrips.planFirstTrip">Plan Your
-                        First Trip</a>
+                    <div id="emptyState" class="card empty-state hidden">
+                        <p class="empty-state-text" data-i18n="plannedTrips.noTripsPlannedYet">
+                            No trips planned yet
+                        </p>
+                        <a href="plan_new_trip.html" class="btn-submit" data-i18n="plannedTrips.planFirstTrip">
+                            Plan Your First Trip
+                        </a>
+                    </div>
+
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
-    <!-- Trip details modal: cloned from template by loadPlans.js -->
     <template id="tripDetailsModalTemplate">
-        <div class="trip-details-modal-overlay" id="tripDetailsModal" role="dialog" aria-modal="true"
-            aria-labelledby="tripDetailsTitle">
-            <div class="trip-details-modal" id="tripDetailsModalBox">
-                <div class="trip-details-header">
+        <div class="trip-details-modal-overlay planned-trips-trip-popup" id="tripDetailsModal" role="dialog"
+            aria-modal="true" aria-labelledby="tripDetailsTitle">
+            <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripDetailsModalBox">
+                <div class="trip-details-header planned-trips-trip-popup__header">
                     <h2 id="tripDetailsTitle" class="trip-details-title"></h2>
                     <button type="button" class="trip-details-close" aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -91,14 +85,21 @@
                         </svg>
                     </button>
                 </div>
+
                 <div class="trip-details-content">
                     <div class="trip-details-info">
                         <p><strong>Start Date:</strong> <span id="tripDetailsStartDate"></span></p>
                         <p><strong>End Date:</strong> <span id="tripDetailsEndDate"></span></p>
-                        <p id="tripDetailsStartCityWrap" class="hidden"><strong>Starting City:</strong> <span
-                                id="tripDetailsStartCity"></span></p>
+                        <p id="tripDetailsStartCityWrap" class="hidden">
+                            <strong>Starting City:</strong>
+                            <span id="tripDetailsStartCity"></span>
+                        </p>
                     </div>
-                    <h3 id="tripDetailsStopsHeading">Trip Stops (<span id="tripDetailsStopsCount">0</span>)</h3>
+
+                    <h3 id="tripDetailsStopsHeading">
+                        Trip Stops (<span id="tripDetailsStopsCount">0</span>)
+                    </h3>
+
                     <div class="trip-stops-list" id="tripDetailsStopsList"></div>
                 </div>
             </div>
@@ -106,7 +107,8 @@
     </template>
 
     <script src="../../scripts/loginRegister/modal.js"></script>
-    <script src="../../scripts/routePlanner/loadPlans.js"></script>
+    <script src="../../scripts/routePlanner/loadPlans.js" defer></script>
+
 </body>
 
 </html>
