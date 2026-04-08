@@ -114,6 +114,7 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Edit Profile',
+      subtitle: 'Your account overview',
       yourStats: 'Your Stats',
       placesVisited: 'Places Visited',
       tripsPlanned: 'Trips Planned',
@@ -265,6 +266,7 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Profil szerkesztése',
+      subtitle: 'Fiókod áttekintése',
       yourStats: 'Statisztikáid',
       placesVisited: 'Meglátogatott helyek',
       tripsPlanned: 'Tervezett utazások',
@@ -416,6 +418,7 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Profil bearbeiten',
+      subtitle: 'Dein Konto auf einen Blick',
       yourStats: 'Deine Statistiken',
       placesVisited: 'Besuchte Orte',
       tripsPlanned: 'Geplante Reisen',

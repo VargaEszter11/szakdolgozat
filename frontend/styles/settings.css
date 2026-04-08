@@ -1,5 +1,3 @@
-/* Settings page only — rules are scoped to body.page-settings (see settings.html). */
-
 body.page-settings #settingsForm .section-title {
     font-size: 1.05rem;
     font-weight: 600;
@@ -16,6 +14,34 @@ body.page-settings #settingsForm .section-title:not(:first-of-type) {
 body.page-settings #settingsForm select.form-input {
     cursor: pointer;
     color-scheme: dark;
+    min-height: 2.75rem;
+    padding: 0.65rem 2.75rem 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background-color: #1e1e26;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23DEBE56' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+    background-size: 1.25rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+body.page-settings #settingsForm select.form-input:hover {
+    border-color: rgba(222, 190, 86, 0.5);
+    background-color: #252530;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(222, 190, 86, 0.12);
+}
+
+body.page-settings #settingsForm select.form-input:focus {
+    border-color: #DEBE56;
+    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.28);
+    outline: none;
+    background-color: #22222c;
+}
+
+body.page-settings #settingsForm select.form-input:active {
+    background-color: #1a1a22;
 }
 
 body.page-settings #settingsForm .form-hint {

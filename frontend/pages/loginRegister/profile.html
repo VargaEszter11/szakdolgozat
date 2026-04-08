@@ -4,49 +4,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../styles/styles.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/profile.css">
     <link rel="icon" href="../../pictures/marker.png">
     <title>Profile – TravelApp</title>
+
     <script src="../../scripts/utils/apiConfig.js"></script>
     <script src="../../scripts/utils/themeLoader.js"></script>
     <script src="../../scripts/utils/authGuard.js"></script>
-    <script src="../../scripts/utils/navToggle.js" defer></script>
-    <script src="../../scripts/i18n/translations.js"></script>
-    <script src="../../scripts/i18n/i18n.js"></script>
+
+    <script src="../../scripts/i18n/translations.js" defer></script>
+    <script src="../../scripts/i18n/i18n.js" defer></script>
+    <script src="../../scripts/utils/sidebarHeader.js" defer></script>
 </head>
 
-<body>
-    <div class="main-page">
-        <header class="main-header">
-            <a href="../main_page.html" class="nav-logo">
-                <img src="../../pictures/marker.png" alt="TravelApp">
-            </a>
-            <button class="hamburger-btn" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-            </button>
-            <nav class="main-nav">
-                <a href="../visitedPlaces/visited_places.html" class="nav-link" data-i18n="nav.visitedPlaces">Visited
-                    Places</a>
-                <a href="../visitedPlaces/add_new_place.html" class="nav-link" data-i18n="nav.addNewPlace">Add New
-                    Place</a>
-                <a href="../routePlanner/plan_new_trip.html" class="nav-link" data-i18n="nav.planNewTrip">Plan New
-                    Trip</a>
-                <a href="../routePlanner/surprise_me.html" class="nav-link" data-i18n="nav.surpriseMe">Surprise Me!</a>
-                <a href="../routePlanner/planned_trips.html" class="nav-link" data-i18n="nav.plannedTrips">Planned
-                    Trips</a>
-                <a href="profile.html" class="nav-link nav-link-active" data-i18n="nav.profile">Profile</a>
-                <a href="../settings/settings.html" class="nav-link" data-i18n="nav.settings">Settings</a>
-            </nav>
-        </header>
+<body class="page-profile">
+    <div class="main-page main-page-home">
 
-        <main class="main-content">
-            <div class="main-inner">
-                <div class="profile-page">
+        <header id="app-header" class="main-header main-page-home-header"></header>
+
+        <div class="main-page-home-body">
+
+            <aside id="app-sidebar" class="main-page-home-sidebar"></aside>
+
+            <main class="main-content main-page-home-content">
+                <div class="main-page-home-content-inner">
+
+                    <div class="main-page-home-content-header">
+                        <div class="main-page-home-intro">
+                            <h1 class="main-page-home-title" data-i18n="nav.profile">Profile</h1>
+                            <p class="main-page-home-subtitle muted" data-i18n="profile.subtitle">
+                                Your account overview
+                            </p>
+                        </div>
+                    </div>
+
                     <section class="profile-card card">
                         <div class="profile-avatar-wrap">
                             <div class="profile-avatar" aria-hidden="true"></div>
@@ -60,11 +52,15 @@
                         <div class="profile-stats-grid">
                             <div class="profile-stat">
                                 <span class="profile-stat-value">0</span>
-                                <span class="profile-stat-label" data-i18n="profile.placesVisited">Places Visited</span>
+                                <span class="profile-stat-label" data-i18n="profile.placesVisited">
+                                    Places Visited
+                                </span>
                             </div>
                             <div class="profile-stat">
                                 <span class="profile-stat-value">0</span>
-                                <span class="profile-stat-label" data-i18n="profile.tripsPlanned">Trips Planned</span>
+                                <span class="profile-stat-label" data-i18n="profile.tripsPlanned">
+                                    Trips Planned
+                                </span>
                             </div>
                         </div>
                     </section>
@@ -73,13 +69,15 @@
                         <h2 class="section-title" data-i18n="profile.account">Account</h2>
                         <p class="muted">Loading...</p>
                     </section>
+
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <script src="../../scripts/loginRegister/modal.js"></script>
-    <script src="../../scripts/loginRegister/profile.js"></script>
+    <script src="../../scripts/loginRegister/profile.js" defer></script>
+
 </body>
 
 </html>

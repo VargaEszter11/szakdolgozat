@@ -1,0 +1,147 @@
+body.page-register .main-page-home-content-inner>.card {
+    background: #2F2E2E;
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+body.page-register .register-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+body.page-register .register-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #ffffff;
+}
+
+body.page-register .register-form .form-input {
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #1e1e26;
+    color: #ffffff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+}
+
+body.page-register .register-form .form-input:focus {
+    border-color: #DEBE56;
+    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.25);
+}
+
+body.page-register .register-form .form-input:not(:placeholder-shown),
+body.page-register .register-form .form-input.has-value {
+    border-color: rgba(222, 190, 86, 0.5);
+    background: #22222c;
+}
+
+body.page-register .register-form .form-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+body.page-register .password-wrapper {
+    position: relative;
+    display: block;
+}
+
+body.page-register .password-wrapper .form-input {
+    padding-right: 2.75rem;
+}
+
+body.page-register .password-toggle {
+    position: absolute;
+    right: 0.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    line-height: 0;
+}
+
+body.page-register .password-toggle:hover,
+body.page-register .password-toggle:focus-visible {
+    color: #DEBE56;
+    outline: none;
+}
+
+body.page-register .password-toggle:focus-visible {
+    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.35);
+}
+
+body.page-register .password-toggle .eye-icon {
+    display: block;
+}
+
+body.page-register .form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+body.page-register .form-actions .btn-cancel {
+    background: none;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.45rem 1rem;
+    border-radius: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.page-register .form-actions .btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.page-register .main-page-home-content-inner>p.muted {
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+body.page-register .main-page-home-content-inner>p.muted a {
+    color: #DEBE56;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+body.page-register .main-page-home-content-inner>p.muted a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    body.page-register .main-page-home-content-inner>.card {
+        padding: 1.5rem 1.25rem;
+    }
+
+    body.page-register .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    body.page-register .form-actions .btn-add,
+    body.page-register .form-actions .btn-cancel {
+        width: 100%;
+        justify-content: center;
+    }
+}

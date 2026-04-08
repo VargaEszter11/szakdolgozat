@@ -16,9 +16,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       accountSection.innerHTML = `
         <h2 class="section-title" data-i18n="profile.account">Account</h2>
         <p class="muted" data-i18n="profile.notLoggedIn">You are not logged in.</p>
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+        <div class="profile-actions-row">
           <a href="loginPage.html" class="btn-add" data-i18n="profile.login">Login</a>
-          <a href="registerPage.html" class="btn-add" data-i18n="profile.register" style="background-color: var(--text-muted);">Register</a>
+          <a href="registerPage.html" class="btn-add btn-add-outline" data-i18n="profile.register">Register</a>
         </div>
       `;
     }
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       accountSection.innerHTML = `
         <h2 class="section-title" data-i18n="profile.account">Account</h2>
         <p class="muted" data-i18n="profile.manageYourAccountAndPreferences">Manage your account and preferences.</p>
-        <button id="logoutBtn" class="btn-add" style="margin-top: 1rem; width: 100%; background-color: var(--danger, #ef4444);">
+        <button type="button" id="logoutBtn" class="btn-add btn-add-danger">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
