@@ -1,14 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('settingsForm');
     var themeSelect = document.getElementById('themeSelect');
     var languageSelect = document.getElementById('languageSelect');
-    var saveBtn = document.getElementById('saveSettings');
     var saveMessage = document.getElementById('saveMessage');
 
-    var savedTheme = localStorage.getItem('theme') || 'dark';
+    var savedTheme = localStorage.getItem('theme') || 'light';
     var savedLanguage = localStorage.getItem('language') || 'en';
 
     themeSelect.value = savedTheme;
     languageSelect.value = savedLanguage;
+    applyTheme(savedTheme);
 
     if (window.i18n) {
         window.i18n.setLanguage(savedLanguage);
@@ -19,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
         applyTheme(themeSelect.value);
     });
 
-    saveBtn.addEventListener('click', function () {
+    function persistSettings() {
         localStorage.setItem('theme', themeSelect.value);
         var newLang = languageSelect.value;
         localStorage.setItem('language', newLang);
@@ -29,10 +30,15 @@ document.addEventListener('DOMContentLoaded', function () {
             window.i18n.applyToPage();
             saveMessage.textContent = window.i18n.t('settings.savedMessage');
         }
-        saveMessage.classList.add('visible');
+        saveMessage.hidden = false;
         setTimeout(function () {
-            saveMessage.classList.remove('visible');
+            saveMessage.hidden = true;
         }, 3000);
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        persistSettings();
     });
 });
 

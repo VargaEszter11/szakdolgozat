@@ -1,5 +1,7 @@
 /* Main page – #16161D background | #2F2E2E header/sidebar/cards | #DEBE56 button | white text */
 
+@import url("settings.css");
+
 * {
     margin: 0;
     padding: 0;

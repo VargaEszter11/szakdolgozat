@@ -1,0 +1,40 @@
+/* Settings page only — rules are scoped to body.page-settings (see settings.html). */
+
+body.page-settings #settingsForm .section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.5rem;
+}
+
+body.page-settings #settingsForm .section-title:not(:first-of-type) {
+    margin-top: 1.5rem;
+}
+
+body.page-settings #settingsForm select.form-input {
+    cursor: pointer;
+    color-scheme: dark;
+}
+
+body.page-settings #settingsForm .form-hint {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.4;
+    margin: 0;
+}
+
+body.page-settings .settings-saved-message {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+body.page-settings .settings-saved-message[hidden] {
+    display: none !important;
+}
