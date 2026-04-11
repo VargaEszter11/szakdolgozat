@@ -1,6 +1,5 @@
-/* Plan New Trip – styles unique to this page (layout inherited from main-page.css) */
+/* Plan New Trip — layout inherited from main.css */
 
-/* ── Plan Type Cards ── */
 .route-planner-options {
     display: flex;
     gap: 1rem;
@@ -9,24 +8,24 @@
 }
 
 .route-option-card {
-    background: #2F2E2E;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 1.25rem 1.5rem;
     flex: 1 1 calc(33% - 1rem);
     min-width: 220px;
     text-decoration: none;
-    color: #ffffff;
+    color: var(--color-text);
     cursor: pointer;
     border: 2px solid transparent;
     transition: background 0.2s, border-color 0.2s;
 }
 
 .route-option-card:hover {
-    background: rgba(222, 190, 86, 0.15);
+    background: var(--color-accent-subtle);
 }
 
 .route-option-card.selected {
-    border-color: #DEBE56;
+    border-color: var(--color-accent);
 }
 
 .route-option-title {
@@ -38,15 +37,14 @@
 .route-option-desc {
     font-size: 0.9rem;
     line-height: 1.4;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-card-notes);
 }
 
-/* ── Form Card ── */
 .add-place-card {
-    background: #2F2E2E;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-surface-border);
 }
 
 .add-place-form .form-group {
@@ -58,14 +56,15 @@
 .add-place-form .form-label {
     font-weight: 600;
     margin-bottom: 0.25rem;
+    color: var(--color-text);
 }
 
 .add-place-form .form-input {
     padding: 0.6rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: #1e1e26;
-    color: #ffffff;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -74,32 +73,32 @@
 }
 
 .add-place-form .form-input:focus {
-    border-color: #DEBE56;
-    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.25);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
 }
 
 .add-place-form .form-input:not(:placeholder-shown):not([type="date"]),
 .add-place-form .form-input.has-value {
-    border-color: rgba(222, 190, 86, 0.5);
-    background: #22222c;
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
 }
 
 .add-place-form .form-input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--color-text-faint);
 }
 
 .add-place-form .form-input[type="date"] {
-    color-scheme: dark;
+    color-scheme: var(--color-scheme-ui);
 }
 
 .add-place-form .form-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) brightness(0.8);
+    filter: var(--color-date-icon-filter);
     cursor: pointer;
 }
 
 .add-place-form .form-input[type="date"].has-value {
-    border-color: rgba(222, 190, 86, 0.5);
-    background: #22222c;
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
 }
 
 .add-place-form .form-input[type="number"]::-webkit-inner-spin-button,
@@ -115,8 +114,8 @@
 
 .btn-cancel {
     background: none;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-text);
+    border: 1px solid var(--color-btn-cancel-border);
     padding: 0.45rem 1rem;
     border-radius: 12px;
     margin-left: 0.5rem;
@@ -125,100 +124,97 @@
 }
 
 .btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-btn-cancel-hover);
 }
 
-/* ── Flatpickr dark theme ── */
 .flatpickr-calendar {
-    background: #2F2E2E !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-surface-border-medium) !important;
+    box-shadow: var(--color-shadow-popover) !important;
     border-radius: 12px !important;
 }
 
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months {
-    background: #2F2E2E !important;
-    color: #ffffff !important;
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-current-month input.cur-year {
-    color: #ffffff !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-weekdays {
-    background: #2F2E2E !important;
+    background: var(--color-surface) !important;
 }
 
 span.flatpickr-weekday {
-    color: rgba(255, 255, 255, 0.5) !important;
-    background: #2F2E2E !important;
+    color: var(--color-text-muted) !important;
+    background: var(--color-surface) !important;
 }
 
 .flatpickr-day {
-    color: #ffffff !important;
+    color: var(--color-text) !important;
     border-radius: 8px !important;
 }
 
 .flatpickr-day:hover {
-    background: rgba(222, 190, 86, 0.2) !important;
+    background: var(--color-accent-subtle) !important;
     border-color: transparent !important;
 }
 
 .flatpickr-day.selected {
-    background: #DEBE56 !important;
-    border-color: #DEBE56 !important;
-    color: #16161D !important;
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-on-accent) !important;
 }
 
 .flatpickr-day.today {
-    border-color: rgba(222, 190, 86, 0.5) !important;
+    border-color: var(--color-accent-muted) !important;
 }
 
 .flatpickr-day.prevMonthDay,
 .flatpickr-day.nextMonthDay {
-    color: rgba(255, 255, 255, 0.25) !important;
+    color: var(--color-text-faint) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month {
-    fill: #ffffff !important;
-    color: #ffffff !important;
+    fill: var(--color-text) !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
 .flatpickr-months .flatpickr-next-month svg {
-    fill: #ffffff !important;
+    fill: var(--color-text) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover,
 .flatpickr-months .flatpickr-next-month:hover {
-    color: #DEBE56 !important;
+    color: var(--color-accent) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
 .flatpickr-months .flatpickr-next-month:hover svg {
-    fill: #DEBE56 !important;
+    fill: var(--color-accent) !important;
 }
 
-/* ── Loading & Results ── */
 #loadingState {
     padding: 2rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-card-notes);
 }
 
 #resultsContainer {
     margin-top: 2rem;
 }
 
-#resultsContainer > h3 {
+#resultsContainer>h3 {
     font-size: 1.2rem;
     margin-bottom: 1rem;
-    color: #ffffff;
+    color: var(--color-text);
 }
 
-/* ── Trip output ── */
 .trip-header {
     display: flex;
     justify-content: space-between;
@@ -227,19 +223,19 @@ span.flatpickr-weekday {
     gap: 0.5rem;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--color-trip-header-border);
 }
 
 .trip-header h3 {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-text);
     margin: 0;
 }
 
 .trip-length {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-cost-muted);
 }
 
 .trip-destinations {
@@ -251,8 +247,8 @@ span.flatpickr-weekday {
 .destination-card {
     display: flex;
     gap: 1rem;
-    background: #1e1e26;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--color-embed-panel);
+    border: 1px solid var(--color-embed-panel-border);
     border-radius: 14px;
     padding: 1.25rem;
     align-items: flex-start;
@@ -263,8 +259,8 @@ span.flatpickr-weekday {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #DEBE56;
-    color: #16161D;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     font-weight: 700;
     font-size: 0.85rem;
     display: flex;
@@ -280,29 +276,29 @@ span.flatpickr-weekday {
 .destination-city {
     font-size: 1.05rem;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--color-text);
     margin: 0 0 0.35rem;
 }
 
 .destination-info {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-muted);
     line-height: 1.5;
     margin: 0 0 0.5rem;
 }
 
 .destination-info strong {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-strong);
 }
 
 .activities {
     margin-top: 0.5rem;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-muted);
 }
 
 .activities strong {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--color-text-strong);
 }
 
 .activities ul {
@@ -338,19 +334,30 @@ span.flatpickr-weekday {
     margin-top: 0.5rem;
 }
 
+html[data-theme="light"] .error-message {
+    color: #b91c1c;
+}
+
+html[data-theme="light"] .error-message strong {
+    color: #991b1b;
+}
+
+html[data-theme="light"] .error-details {
+    color: rgba(153, 27, 27, 0.75);
+}
+
 .segment-costs {
     font-size: 0.8rem;
-    color: #DEBE56;
+    color: var(--color-accent);
     margin: 0.25rem 0 0.5rem;
     opacity: 0.85;
 }
 
-/* ── Cost summary ── */
 .cost-summary {
     margin-top: 1.5rem;
     border-radius: 14px;
     padding: 1.25rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--color-embed-panel-border);
 }
 
 .cost-summary.cost-ok {
@@ -374,12 +381,12 @@ span.flatpickr-weekday {
 
 .cost-total {
     font-size: 1rem;
-    color: #ffffff;
+    color: var(--color-text);
 }
 
 .cost-budget {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-cost-muted);
 }
 
 .cost-breakdown {
@@ -387,7 +394,7 @@ span.flatpickr-weekday {
     flex-wrap: wrap;
     gap: 0.75rem 1.25rem;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-cost-muted);
 }
 
 .cost-remaining {
@@ -404,7 +411,14 @@ span.flatpickr-weekday {
     color: #f87171;
 }
 
-/* ── Responsive ── */
+html[data-theme="light"] .cost-ok .cost-remaining {
+    color: #15803d;
+}
+
+html[data-theme="light"] .cost-over .cost-remaining {
+    color: #b91c1c;
+}
+
 @media (max-width: 768px) {
     .route-planner-options {
         flex-direction: column;

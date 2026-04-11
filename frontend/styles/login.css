@@ -1,8 +1,8 @@
 body.page-login .main-page-home-content-inner > .card {
-    background: #2F2E2E;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-surface-border);
 }
 
 body.page-login .login-form .form-group {
@@ -14,15 +14,15 @@ body.page-login .login-form .form-group {
 body.page-login .login-form .form-label {
     font-weight: 600;
     margin-bottom: 0.25rem;
-    color: #ffffff;
+    color: var(--color-text);
 }
 
 body.page-login .login-form .form-input {
     padding: 0.6rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: #1e1e26;
-    color: #ffffff;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -32,18 +32,18 @@ body.page-login .login-form .form-input {
 }
 
 body.page-login .login-form .form-input:focus {
-    border-color: #DEBE56;
-    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.25);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
 }
 
 body.page-login .login-form .form-input:not(:placeholder-shown),
 body.page-login .login-form .form-input.has-value {
-    border-color: rgba(222, 190, 86, 0.5);
-    background: #22222c;
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
 }
 
 body.page-login .login-form .form-input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--color-text-faint);
 }
 
 body.page-login .password-wrapper {
@@ -67,19 +67,19 @@ body.page-login .password-toggle {
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--color-icon-muted);
     cursor: pointer;
     line-height: 0;
 }
 
 body.page-login .password-toggle:hover,
 body.page-login .password-toggle:focus-visible {
-    color: #DEBE56;
+    color: var(--color-accent);
     outline: none;
 }
 
 body.page-login .password-toggle:focus-visible {
-    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.35);
+    box-shadow: 0 0 0 2px var(--color-accent-ring-focus);
 }
 
 body.page-login .password-toggle .eye-icon {
@@ -96,8 +96,8 @@ body.page-login .form-actions {
 
 body.page-login .form-actions .btn-cancel {
     background: none;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-text);
+    border: 1px solid var(--color-btn-cancel-border);
     padding: 0.45rem 1rem;
     border-radius: 12px;
     text-decoration: none;
@@ -110,7 +110,7 @@ body.page-login .form-actions .btn-cancel {
 }
 
 body.page-login .form-actions .btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-btn-cancel-hover);
 }
 
 body.page-login .main-page-home-content-inner > p.muted {
@@ -124,7 +124,7 @@ body.page-login .main-page-home-content-inner > p.muted + p.muted {
 }
 
 body.page-login .main-page-home-content-inner > p.muted a {
-    color: #DEBE56;
+    color: var(--color-accent);
     font-weight: 600;
     text-decoration: none;
 }

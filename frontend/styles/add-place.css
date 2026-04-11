@@ -1,8 +1,8 @@
 .add-place-card {
-    background: #2F2E2E;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-surface-border);
 }
 
 .add-place-form .form-group {
@@ -14,15 +14,16 @@
 .add-place-form .form-label {
     font-weight: 600;
     margin-bottom: 0.25rem;
+    color: var(--color-text);
 }
 
 .add-place-form .form-input,
 .add-place-form .form-textarea {
     padding: 0.6rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: #1e1e26;
-    color: #ffffff;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
     font-size: 0.9rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -32,28 +33,28 @@
 
 .add-place-form .form-input:focus,
 .add-place-form .form-textarea:focus {
-    border-color: #DEBE56;
-    box-shadow: 0 0 0 2px rgba(222, 190, 86, 0.25);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
 }
 
 .add-place-form .form-input:not(:placeholder-shown),
 .add-place-form .form-input.has-value,
 .add-place-form .form-textarea.has-value {
-    border-color: rgba(222, 190, 86, 0.5);
-    background: #22222c;
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
 }
 
 .add-place-form .form-input::placeholder,
 .add-place-form .form-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--color-text-faint);
 }
 
 .add-place-form .form-input[type="date"] {
-    color-scheme: dark;
+    color-scheme: var(--color-scheme-ui);
 }
 
 .add-place-form .form-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) brightness(0.8);
+    filter: var(--color-date-icon-filter);
     cursor: pointer;
 }
 
@@ -75,14 +76,14 @@
 }
 
 .star-btn .star-icon polygon {
-    stroke: #ffffff;
+    stroke: var(--color-text);
     fill: none;
     transition: fill 0.2s, stroke 0.2s;
 }
 
 .star-btn.selected .star-icon polygon {
-    fill: #DEBE56;
-    stroke: #DEBE56;
+    fill: var(--color-accent);
+    stroke: var(--color-accent);
 }
 
 .upload-zone {
@@ -92,20 +93,20 @@
     justify-content: center;
     gap: 0.25rem;
     padding: 1rem;
-    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border: 2px dashed var(--color-upload-dash);
     border-radius: 12px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
 }
 
 .upload-zone:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: #DEBE56;
+    background: var(--color-upload-hover-bg);
+    border-color: var(--color-accent);
 }
 
 .upload-text,
 .upload-hint {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-upload-text);
     font-size: 0.85rem;
     text-align: center;
 }
@@ -121,8 +122,8 @@
 }
 
 .btn-add {
-    background: #DEBE56;
-    color: #16161D;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     border: none;
     padding: 0.5rem 1.2rem;
     border-radius: 12px;
@@ -132,13 +133,13 @@
 }
 
 .btn-add:hover {
-    background: rgba(222, 190, 86, 0.85);
+    background: var(--color-btn-add-secondary-hover);
 }
 
 .btn-cancel {
     background: none;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--color-text);
+    border: 1px solid var(--color-btn-cancel-border);
     padding: 0.45rem 1rem;
     border-radius: 12px;
     margin-left: 0.5rem;
@@ -147,85 +148,85 @@
 }
 
 .btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--color-btn-cancel-hover);
 }
 
 .flatpickr-calendar {
-    background: #2F2E2E !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-surface-border-medium) !important;
+    box-shadow: var(--color-shadow-popover) !important;
     border-radius: 12px !important;
 }
 
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months {
-    background: #2F2E2E !important;
-    color: #ffffff !important;
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-current-month input.cur-year {
-    color: #ffffff !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-weekdays {
-    background: #2F2E2E !important;
+    background: var(--color-surface) !important;
 }
 
 span.flatpickr-weekday {
-    color: rgba(255, 255, 255, 0.5) !important;
-    background: #2F2E2E !important;
+    color: var(--color-text-muted) !important;
+    background: var(--color-surface) !important;
 }
 
 .flatpickr-day {
-    color: #ffffff !important;
+    color: var(--color-text) !important;
     border-radius: 8px !important;
 }
 
 .flatpickr-day:hover {
-    background: rgba(222, 190, 86, 0.2) !important;
+    background: var(--color-accent-subtle) !important;
     border-color: transparent !important;
 }
 
 .flatpickr-day.selected {
-    background: #DEBE56 !important;
-    border-color: #DEBE56 !important;
-    color: #16161D !important;
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-on-accent) !important;
 }
 
 .flatpickr-day.today {
-    border-color: rgba(222, 190, 86, 0.5) !important;
+    border-color: var(--color-accent-muted) !important;
 }
 
 .flatpickr-day.prevMonthDay,
 .flatpickr-day.nextMonthDay {
-    color: rgba(255, 255, 255, 0.25) !important;
+    color: var(--color-text-faint) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month {
-    fill: #ffffff !important;
-    color: #ffffff !important;
+    fill: var(--color-text) !important;
+    color: var(--color-text) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
 .flatpickr-months .flatpickr-next-month svg {
-    fill: #ffffff !important;
+    fill: var(--color-text) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover,
 .flatpickr-months .flatpickr-next-month:hover {
-    color: #DEBE56 !important;
+    color: var(--color-accent) !important;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
 .flatpickr-months .flatpickr-next-month:hover svg {
-    fill: #DEBE56 !important;
+    fill: var(--color-accent) !important;
 }
 
 #loadingState {
     padding: 2rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--color-text-card-notes);
 }
 
 #resultsContainer {

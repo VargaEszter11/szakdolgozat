@@ -9,7 +9,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     themeSelect.value = savedTheme;
     languageSelect.value = savedLanguage;
-    applyTheme(savedTheme);
+
+    if (window.applyAppTheme) {
+        window.applyAppTheme(savedTheme);
+    }
+    if (savedTheme === 'auto' && window.bindThemeAutoListener) {
+        window.bindThemeAutoListener();
+    }
 
     if (window.i18n) {
         window.i18n.setLanguage(savedLanguage);
@@ -17,13 +23,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     themeSelect.addEventListener('change', function () {
-        applyTheme(themeSelect.value);
+        if (window.applyAppTheme) {
+            window.applyAppTheme(themeSelect.value);
+        }
+        if (themeSelect.value === 'auto' && window.bindThemeAutoListener) {
+            window.bindThemeAutoListener();
+        }
     });
 
     function persistSettings() {
         localStorage.setItem('theme', themeSelect.value);
         var newLang = languageSelect.value;
         localStorage.setItem('language', newLang);
+
+        if (window.applyAppTheme) {
+            window.applyAppTheme(themeSelect.value);
+        }
+        if (themeSelect.value === 'auto' && window.bindThemeAutoListener) {
+            window.bindThemeAutoListener();
+        }
 
         if (window.i18n) {
             window.i18n.setLanguage(newLang);
@@ -41,14 +59,3 @@ document.addEventListener('DOMContentLoaded', function () {
         persistSettings();
     });
 });
-
-function applyTheme(theme) {
-    if (theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-    } else if (theme === 'auto') {
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-    } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
-}

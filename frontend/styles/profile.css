@@ -12,15 +12,15 @@ body.page-profile .profile-avatar {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: #16161D;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: var(--color-profile-avatar-bg);
+    border: 2px solid var(--color-profile-avatar-border);
 }
 
 body.page-profile .profile-name {
     font-size: 1.125rem;
     font-weight: 600;
     margin: 0.35rem 0 0;
-    color: #ffffff;
+    color: var(--color-text);
 }
 
 body.page-profile .profile-email {
@@ -35,17 +35,17 @@ body.page-profile .profile-stats-grid {
 }
 
 body.page-profile .profile-stat {
-    background: #16161D;
+    background: var(--color-profile-stat-inner);
     border-radius: 12px;
     padding: 1rem;
     text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--color-surface-border);
 }
 
 body.page-profile .profile-stat-value {
     font-size: 1.35rem;
     font-weight: 700;
-    color: #DEBE56;
+    color: var(--color-accent);
     display: block;
     line-height: 1.2;
 }
@@ -53,7 +53,7 @@ body.page-profile .profile-stat-value {
 body.page-profile .profile-stat-label {
     font-size: 0.75rem;
     margin-top: 0.4rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-muted);
     display: block;
     line-height: 1.35;
 }
