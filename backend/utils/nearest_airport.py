@@ -1,9 +1,14 @@
-import httpx
+import logging
 import os
+
+import httpx
+
+logger = logging.getLogger(__name__)
 
 AMADEUS_CLIENT_ID = os.getenv("AMADEUS_CLIENT_ID", "")
 AMADEUS_CLIENT_SECRET = os.getenv("AMADEUS_CLIENT_SECRET", "")
 AMADEUS_BASE_URL = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com")
+
 
 async def get_amadeus_token():
     """Get OAuth2 access token from Amadeus API."""
@@ -22,25 +27,50 @@ async def get_amadeus_token():
 
 async def nearest_airport(lat, lng, distance_km=200):
     """Return the nearest European airport to given coordinates using Amadeus API."""
-    # Get access token
-    access_token = await get_amadeus_token()
-    
-    # Call Airport Nearest Relevant API
+    if not (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET):
+        logger.warning("Amadeus credentials missing; nearest airport lookup skipped")
+        return None
+
+    try:
+        access_token = await get_amadeus_token()
+    except httpx.HTTPStatusError as e:
+        logger.warning(
+            "Amadeus OAuth failed (%s): %s",
+            e.response.status_code,
+            (e.response.text or "")[:300],
+        )
+        return None
+    except httpx.RequestError as e:
+        logger.warning("Amadeus OAuth request failed: %s", e)
+        return None
+
     url = f"{AMADEUS_BASE_URL}/v1/reference-data/locations/airports"
     params = {
         "latitude": lat,
         "longitude": lng,
-        "radius": distance_km
+        "radius": distance_km,
     }
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.get(url, params=params, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-    
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPStatusError as e:
+        logger.warning(
+            "Amadeus airport lookup failed (%s): %s",
+            e.response.status_code,
+            (e.response.text or "")[:300],
+        )
+        return None
+    except httpx.RequestError as e:
+        logger.warning("Amadeus airport lookup request failed: %s", e)
+        return None
+    except ValueError as e:
+        logger.warning("Amadeus airport lookup returned invalid JSON: %s", e)
+        return None
+
     airports = data.get("data", [])
     if not airports:
         return None
@@ -58,23 +88,38 @@ async def nearest_airport(lat, lng, distance_km=200):
 
 async def get_direct_destinations(origin_airport_code: str):
     """Get direct destinations from an airport using Amadeus Direct Destinations API."""
-    # Get access token
-    access_token = await get_amadeus_token()
-    
-    # Call Direct Destinations API
+    if not origin_airport_code or not (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET):
+        return []
+
+    try:
+        access_token = await get_amadeus_token()
+    except (httpx.HTTPStatusError, httpx.RequestError) as e:
+        logger.warning("Amadeus OAuth failed for direct destinations: %s", e)
+        return []
+
     url = f"{AMADEUS_BASE_URL}/v1/airport/direct-destinations"
-    params = {
-        "departureAirportCode": origin_airport_code
-    }
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.get(url, params=params, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-    
+    params = {"departureAirportCode": origin_airport_code}
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+    except httpx.HTTPStatusError as e:
+        logger.warning(
+            "Amadeus direct-destinations failed (%s): %s",
+            e.response.status_code,
+            (e.response.text or "")[:300],
+        )
+        return []
+    except httpx.RequestError as e:
+        logger.warning("Amadeus direct-destinations request failed: %s", e)
+        return []
+    except ValueError as e:
+        logger.warning("Amadeus direct-destinations invalid JSON: %s", e)
+        return []
+
     destinations = data.get("data", [])
     # Extract destination airport codes and cities
     destination_list = []

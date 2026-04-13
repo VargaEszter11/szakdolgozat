@@ -131,7 +131,7 @@
     justify-content: center;
 }
 
-.visited-places-page .main-page-home .travel-log-card .log-header {
+.main-page-home .visited-places-page .travel-log-card .log-header {
     align-items: center;
 }
 
@@ -196,4 +196,65 @@
     color: #ff6b6b;
     background: rgba(255, 107, 107, 0.12);
     outline: none;
+}
+
+@media (max-width: 768px) {
+    .main-page-home .travel-log-card:has(.log-image-wrapper) {
+        flex-direction: column;
+        align-items: stretch;
+        overflow: hidden;
+        gap: 0;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-image-wrapper {
+        width: 100%;
+        height: min(200px, 42vw);
+        min-height: 140px;
+        flex-shrink: 0;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-content {
+        padding: 1rem 1.15rem 1.25rem;
+        justify-content: flex-start;
+        min-width: 0;
+        gap: 0.5rem;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-dest {
+        min-width: 0;
+        align-items: flex-start;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-title {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .visited-places-card-actions {
+        margin-left: 0;
+        align-self: flex-start;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-date {
+        white-space: normal;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+    }
+
+    .main-page-home .travel-log-card:has(.log-image-wrapper) .log-notes {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        min-width: 0;
+    }
 }

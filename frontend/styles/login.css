@@ -146,6 +146,9 @@ body.page-login .main-page-home-content-inner > p.muted a:hover {
     body.page-login .form-actions .btn-add,
     body.page-login .form-actions .btn-cancel {
         width: 100%;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
+        text-align: center;
     }
 }

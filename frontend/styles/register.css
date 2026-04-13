@@ -142,6 +142,9 @@ body.page-register .main-page-home-content-inner>p.muted a:hover {
     body.page-register .form-actions .btn-add,
     body.page-register .form-actions .btn-cancel {
         width: 100%;
+        display: inline-flex;
+        align-items: center;
         justify-content: center;
+        text-align: center;
     }
 }

@@ -239,6 +239,14 @@ span.flatpickr-weekday {
         align-items: stretch;
     }
 
+    .form-actions .btn-add,
+    .form-actions .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
     .btn-cancel {
         margin-left: 0;
         margin-top: 0.5rem;

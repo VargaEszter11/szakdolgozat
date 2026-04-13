@@ -5,10 +5,20 @@
     var prefix = depth >= 2 ? '../../' : '../';
     var pagePrefix = depth >= 2 ? '../' : '';
 
+    var MENU_ICON =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />' +
+        '</svg>';
+
     var HEADER_HTML =
-        '<a href="' + pagePrefix + 'main_page.html" class="nav-logo">' +
+        '<div class="app-header-start">' +
+        '<button type="button" class="hamburger-btn" id="app-menu-toggle" aria-expanded="false" aria-controls="app-sidebar" aria-label="Menu">' +
+        MENU_ICON +
+        '</button>' +
+        '<a href="' + pagePrefix + 'main_page.html" class="nav-logo" data-i18n-title="nav.home" title="Home">' +
         '<img src="' + prefix + 'pictures/marker.png" alt="TravelApp">' +
         '</a>' +
+        '</div>' +
         '<a href="' + pagePrefix + 'loginRegister/profile.html" class="main-header-profile" aria-label="Profile">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
         '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>' +
@@ -87,12 +97,73 @@
         highlightActive();
     }
 
+    var mobileDrawerBound = false;
+
+    function initMobileDrawer() {
+        if (mobileDrawerBound) return;
+        var shell = document.querySelector('.main-page-home');
+        var sidebar = document.getElementById('app-sidebar');
+        var toggle = document.getElementById('app-menu-toggle');
+        if (!shell || !sidebar || !toggle) return;
+
+        mobileDrawerBound = true;
+
+        var backdrop = document.getElementById('nav-drawer-backdrop');
+        if (!backdrop) {
+            backdrop = document.createElement('button');
+            backdrop.type = 'button';
+            backdrop.id = 'nav-drawer-backdrop';
+            backdrop.className = 'nav-drawer-backdrop';
+            backdrop.setAttribute('aria-label', 'Close menu');
+            shell.appendChild(backdrop);
+        }
+
+        function setOpen(open) {
+            document.body.classList.toggle('nav-drawer-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function closeDrawer() {
+            setOpen(false);
+        }
+
+        toggle.addEventListener('click', function () {
+            setOpen(!document.body.classList.contains('nav-drawer-open'));
+        });
+
+        backdrop.addEventListener('click', closeDrawer);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeDrawer();
+        });
+
+        function bindSidebarLinks() {
+            var links = sidebar.querySelectorAll('.sidebar-link');
+            for (var i = 0; i < links.length; i++) {
+                links[i].addEventListener('click', closeDrawer);
+            }
+        }
+
+        bindSidebarLinks();
+
+        var mq = window.matchMedia('(min-width: 769px)');
+        function onViewportChange() {
+            if (mq.matches) closeDrawer();
+        }
+        if (mq.addEventListener) {
+            mq.addEventListener('change', onViewportChange);
+        } else if (mq.addListener) {
+            mq.addListener(onViewportChange);
+        }
+    }
+
     window.appShell = {
         injectHeader: injectHeader,
         injectSidebar: injectSidebar,
         init: function () {
             injectHeader();
             injectSidebar();
+            initMobileDrawer();
             if (window.i18n) window.i18n.applyToPage();
         }
     };
