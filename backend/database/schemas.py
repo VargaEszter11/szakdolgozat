@@ -36,6 +36,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
+
 class LoginResponse(BaseModel):
     success: bool
     user_id: int

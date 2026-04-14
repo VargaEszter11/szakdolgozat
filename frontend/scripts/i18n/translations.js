@@ -132,6 +132,10 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Your password',
       login: 'Log in',
       cancel: 'Cancel',
+      googleOrContinue: 'or continue with',
+      googleUnavailable: 'Google sign-in is currently unavailable.',
+      googleNotConfigured: 'Google sign-in is not configured on the server.',
+      googleLoadFailed: 'Google sign-in failed to load. Please try refreshing.',
       dontHaveAnAccount: 'Don\'t have an account? <a href="registerPage.html">Register here</a>'
     },
     register: {
@@ -284,6 +288,10 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Jelszavad',
       login: 'Bejelentkezés',
       cancel: 'Mégse',
+      googleOrContinue: 'vagy folytasd ezzel',
+      googleUnavailable: 'A Google bejelentkezés jelenleg nem érhető el.',
+      googleNotConfigured: 'A Google bejelentkezés nincs beállítva a szerveren.',
+      googleLoadFailed: 'A Google bejelentkezés nem töltődött be. Próbáld újratölteni az oldalt.',
       dontHaveAnAccount: 'Még nincs fiókod? <a href="registerPage.html">Regisztrálj itt</a>'
     },
     register: {
@@ -436,6 +444,10 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Dein Passwort',
       login: 'Anmelden',
       cancel: 'Abbrechen',
+      googleOrContinue: 'oder weiter mit',
+      googleUnavailable: 'Google-Anmeldung ist derzeit nicht verfügbar.',
+      googleNotConfigured: 'Google-Anmeldung ist auf dem Server nicht konfiguriert.',
+      googleLoadFailed: 'Google-Anmeldung konnte nicht geladen werden. Bitte die Seite neu laden.',
       dontHaveAnAccount: 'Noch kein Konto? <a href="registerPage.html">Hier registrieren</a>'
     },
     register: {

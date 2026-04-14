@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 import bcrypt
+import re
+import secrets
 from typing import List, Optional
 from . import models, schemas
 
@@ -29,6 +31,32 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
         username=user.username,
         email=user.email,
         password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def create_google_user(db: Session, email: str, display_name: Optional[str] = None) -> models.User:
+    """Create a new user account for Google Sign-In."""
+    base_name = (display_name or email.split("@")[0] or "google_user").strip().lower()
+    base_name = re.sub(r"[^a-z0-9_]", "_", base_name)
+    if len(base_name) < 3:
+        base_name = "google_user"
+
+    username = base_name[:50]
+    suffix = 1
+    while get_user_by_username(db, username=username):
+        suffix_text = f"_{suffix}"
+        username = f"{base_name[: max(1, 50 - len(suffix_text))]}{suffix_text}"
+        suffix += 1
+
+    random_password = secrets.token_urlsafe(32)
+    db_user = models.User(
+        username=username,
+        email=email,
+        password=hash_password(random_password),
     )
     db.add(db_user)
     db.commit()

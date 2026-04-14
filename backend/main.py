@@ -1,11 +1,13 @@
 # logic: api(possibble destinations) -> draft plan -> api -> final plan
 # next: create realistic plans
 
+import os
 from dotenv import load_dotenv
+
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 load_dotenv()
 
 import json
-import os
 from typing import List
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends
