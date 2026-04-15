@@ -111,7 +111,7 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
         user = crud.create_google_user(
             db=db,
             email=email,
-            display_name=id_info.get("name")
+            display_name=id_info.get("name"),
         )
 
     return schemas.LoginResponse(

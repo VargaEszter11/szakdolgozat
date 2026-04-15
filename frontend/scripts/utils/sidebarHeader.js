@@ -19,11 +19,11 @@
         '<img src="' + prefix + 'pictures/marker.png" alt="TravelApp">' +
         '</a>' +
         '</div>' +
-        '<a href="' + pagePrefix + 'loginRegister/profile.html" class="main-header-profile" aria-label="Profile">' +
-        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-        '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>' +
-        '<circle cx="12" cy="7" r="4"/>' +
-        '</svg>' +
+        '<a href="' + pagePrefix + 'loginRegister/profile.html" class="main-header-profile" data-i18n-title="nav.profile" title="Profile">' +
+        '<span class="main-header-profile-inner">' +
+        '<img id="headerProfileAvatarImg" class="main-header-profile-img" alt="" width="28" height="28" decoding="async" />' +
+        '<span id="headerProfileInitials" class="main-header-profile-initials" aria-hidden="true"></span>' +
+        '</span>' +
         '</a>';
 
     var MAP_ICON = '<svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
@@ -84,10 +84,95 @@
         if (link) link.classList.add('sidebar-link-active');
     }
 
+    function headerInitialsFromDisplayName(name) {
+        if (!name || !String(name).trim()) return '?';
+        var s = String(name).trim();
+        var parts = s.split(/[\s._-]+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        if (s.length >= 2) return s.slice(0, 2).toUpperCase();
+        return s.charAt(0).toUpperCase();
+    }
+
+    function showHeaderProfileInitials(link, initialsEl, img, username) {
+        link.classList.remove('main-header-profile-hidden');
+        link.classList.remove('main-header-profile--photo');
+        link.classList.add('main-header-profile--initials');
+        if (img) {
+            img.removeAttribute('src');
+            img.alt = '';
+        }
+        if (initialsEl) {
+            initialsEl.textContent = headerInitialsFromDisplayName(username);
+        }
+    }
+
+    function showHeaderProfileGuest(link, initialsEl, img) {
+        link.classList.add('main-header-profile-hidden');
+        link.classList.remove('main-header-profile--photo');
+        link.classList.remove('main-header-profile--initials');
+        if (img) {
+            img.removeAttribute('src');
+            img.alt = '';
+        }
+        if (initialsEl) {
+            initialsEl.textContent = '';
+        }
+    }
+
+    function refreshHeaderProfileAvatar() {
+        var userId = localStorage.getItem('user_id');
+        var username = localStorage.getItem('username');
+        var url = localStorage.getItem('google_avatar_url');
+        var img = document.getElementById('headerProfileAvatarImg');
+        var link = document.querySelector('.main-header-profile');
+        var initialsEl = document.getElementById('headerProfileInitials');
+        if (!img || !link) return;
+
+        if (!userId || !username) {
+            showHeaderProfileGuest(link, initialsEl, img);
+            return;
+        }
+
+        if (!url) {
+            showHeaderProfileInitials(link, initialsEl, img, username);
+            return;
+        }
+
+        link.classList.remove('main-header-profile-hidden');
+        link.classList.remove('main-header-profile--initials');
+        if (initialsEl) {
+            initialsEl.textContent = '';
+        }
+
+        img.onerror = function () {
+            link.classList.remove('main-header-profile--photo');
+            img.removeAttribute('src');
+            img.alt = '';
+            showHeaderProfileInitials(link, initialsEl, img, username);
+        };
+        img.onload = function () {
+            link.classList.add('main-header-profile--photo');
+        };
+
+        img.alt = '';
+        if (img.getAttribute('src') === url && img.complete && img.naturalHeight > 0) {
+            link.classList.add('main-header-profile--photo');
+            return;
+        }
+
+        img.src = url;
+        if (img.complete && img.naturalHeight > 0) {
+            link.classList.add('main-header-profile--photo');
+        }
+    }
+
     function injectHeader() {
         var el = document.getElementById('app-header');
         if (!el) return;
         el.innerHTML = HEADER_HTML;
+        refreshHeaderProfileAvatar();
     }
 
     function injectSidebar() {
@@ -160,6 +245,7 @@
     window.appShell = {
         injectHeader: injectHeader,
         injectSidebar: injectSidebar,
+        refreshHeaderProfileAvatar: refreshHeaderProfileAvatar,
         init: function () {
             injectHeader();
             injectSidebar();

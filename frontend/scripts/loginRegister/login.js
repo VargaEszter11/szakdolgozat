@@ -26,6 +26,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
         const data = await response.json();
         if (data.success) {
+            localStorage.removeItem("google_avatar_url");
             saveSessionAndRedirect(data);
         } else {
             showError(data.detail || "Login failed");
@@ -123,6 +124,27 @@ function loadGoogleIdentityScript() {
     });
 }
 
+function parseGoogleCredentialPayload(credential) {
+    try {
+        var parts = String(credential).split(".");
+        if (parts.length < 2) return {};
+        var base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        var pad = base64.length % 4;
+        if (pad) base64 += new Array(5 - pad).join("=");
+        var json = decodeURIComponent(
+            atob(base64)
+                .split("")
+                .map(function (c) {
+                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+        );
+        return JSON.parse(json);
+    } catch (e) {
+        return {};
+    }
+}
+
 async function handleGoogleCredential(credential) {
     const response = await fetch("/api/google-login", {
         method: "POST",
@@ -136,6 +158,14 @@ async function handleGoogleCredential(credential) {
     if (!response.ok || !data.success) {
         throw new Error(data.detail || "Google login failed");
     }
+
+    var payload = parseGoogleCredentialPayload(credential);
+    if (payload.picture && typeof payload.picture === "string") {
+        localStorage.setItem("google_avatar_url", payload.picture);
+    } else {
+        localStorage.removeItem("google_avatar_url");
+    }
+
     return data;
 }
 

@@ -14,6 +14,41 @@ body.page-profile .profile-avatar {
     border-radius: 50%;
     background: var(--color-profile-avatar-bg);
     border: 2px solid var(--color-profile-avatar-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+body.page-profile .profile-avatar-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: none;
+}
+
+body.page-profile .profile-avatar--photo .profile-avatar-img {
+    display: block;
+}
+
+body.page-profile .profile-avatar--photo .profile-avatar-initials {
+    visibility: hidden;
+}
+
+body.page-profile .profile-avatar-initials {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    user-select: none;
+    position: relative;
+    z-index: 0;
 }
 
 body.page-profile .profile-name {
@@ -58,10 +93,29 @@ body.page-profile .profile-stat-label {
     line-height: 1.35;
 }
 
+body.page-profile .profile-account-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+body.page-profile .profile-account-buttons .btn-add {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 2.75rem;
+    margin-top: 0;
+}
+
+body.page-profile .profile-action-icon {
+    flex-shrink: 0;
+}
+
 body.page-profile .profile-actions .btn-add.btn-add-danger {
     width: 100%;
     justify-content: center;
-    margin-top: 1rem;
+    margin-top: 0;
 }
 
 @media (max-width: 768px) {
