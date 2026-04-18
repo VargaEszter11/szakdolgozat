@@ -21,3 +21,6 @@ Thumbs.db
 .env
 *.env
 backend/.env
+
+# Uploaded visit photos (created at runtime)
+uploads/

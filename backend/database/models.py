@@ -72,3 +72,17 @@ class VisitedPlace(Base):
 
     # Relationships
     user = relationship("User", back_populates="visited_places")
+    images = relationship("Image", back_populates="visited_place", cascade="all, delete-orphan")
+
+class Image(Base):
+    """Image model for images uploaded by users"""
+    __tablename__ = "images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    visited_place_id = Column(Integer, ForeignKey("visited_places.id", ondelete="CASCADE"), nullable=False)
+    # Persisted column name is `url` (existing PostgreSQL schema); attribute stays image_path in code.
+    image_path = Column("url", Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    # Relationships
+    visited_place = relationship("VisitedPlace", back_populates="images")

@@ -52,7 +52,7 @@
       dateSortKey: dateSortKey,
       rating: item.rating != null ? item.rating : 5,
       description: item.description || item.notes || '',
-      image: item.image || DEFAULT_IMAGE,
+      image: item.image || item.photo_path || DEFAULT_IMAGE,
       coordinates: item.coordinates || null
     };
   }

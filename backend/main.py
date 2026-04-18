@@ -43,6 +43,9 @@ app = FastAPI(
 def startup_event():
     """Create database tables on application startup"""
     Base.metadata.create_all(bind=engine)
+    from utils.place_image_upload import ensure_place_images_dir
+
+    ensure_place_images_dir()
 
 # Configure CORS
 app.add_middleware(
@@ -325,6 +328,10 @@ async def travel_plans_random(request: RandomGenerationRequest):
 async def root():
     return RedirectResponse(url="/pages/main_page.html")
 
+
+_uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
+os.makedirs(_uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
 
 _frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")

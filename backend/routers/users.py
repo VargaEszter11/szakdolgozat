@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
-from database import crud, schemas, get_db
+from typing import List, Optional
+
+from database import crud, schemas, get_db, models
 
 router = APIRouter()
+
+
+def _cover_image_url(place: models.VisitedPlace) -> Optional[str]:
+    """First uploaded gallery image for cards, else legacy photo_path."""
+    imgs = getattr(place, "images", None) or []
+    if imgs:
+        first = sorted(imgs, key=lambda im: im.id)[0]
+        return first.image_path
+    return place.photo_path
 
 
 @router.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
@@ -100,7 +110,13 @@ def get_user_visited_places(user_id: int, db: Session = Depends(get_db)):
             detail="User not found"
         )
     
-    return crud.get_user_visited_places(db, user_id=user_id)
+    places = crud.get_user_visited_places(db, user_id=user_id)
+    return [
+        schemas.VisitedPlaceResponse.model_validate(p).model_copy(
+            update={"image": _cover_image_url(p)}
+        )
+        for p in places
+    ]
 
 
 @router.get("/users/{user_id}/planned-trips", response_model=List[schemas.PlannedTripResponse])

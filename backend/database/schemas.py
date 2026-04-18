@@ -116,6 +116,8 @@ class VisitedPlaceResponse(BaseModel):
     photo_path: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    # First gallery image URL for list cards (not an ORM column; set in API layer).
+    image: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -195,6 +197,34 @@ class PlannedTripResponse(PlannedTripBase):
 class UserWithRelationsResponse(UserResponse):
     planned_trips: List[PlannedTripResponse] = []
     visited_places: List[VisitedPlaceResponse] = []
+
+    class Config:
+        from_attributes = True
+
+# ============= Image Schemas =============
+
+class ImageBase(BaseModel):
+    image_path: str
+
+
+class ImageCreate(ImageBase):
+    visited_place_id: int
+
+
+class ImageCreateBody(BaseModel):
+    """POST body for `/visited-places/{place_id}/images` (place id comes from the URL)."""
+
+    image_path: str
+
+
+class ImageUpdate(BaseModel):
+    image_path: Optional[str] = None
+
+
+class ImageResponse(ImageBase):
+    id: int
+    visited_place_id: int
+    created_at: dt.datetime
 
     class Config:
         from_attributes = True

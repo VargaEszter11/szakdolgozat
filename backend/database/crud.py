@@ -1,9 +1,10 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import bcrypt
 import re
 import secrets
 from typing import List, Optional
 from . import models, schemas
+from utils.place_image_upload import delete_file_for_public_path
 
 
 def hash_password(password: str) -> str:
@@ -234,7 +235,12 @@ def get_visited_place(db: Session, place_id: int) -> Optional[models.VisitedPlac
 
 def get_user_visited_places(db: Session, user_id: int) -> List[models.VisitedPlace]:
     """Get all visited places for a user"""
-    return db.query(models.VisitedPlace).filter(models.VisitedPlace.user_id == user_id).all()
+    return (
+        db.query(models.VisitedPlace)
+        .options(joinedload(models.VisitedPlace.images))
+        .filter(models.VisitedPlace.user_id == user_id)
+        .all()
+    )
 
 
 def get_visited_places(db: Session, skip: int = 0, limit: int = 100) -> List[models.VisitedPlace]:
@@ -259,10 +265,80 @@ def update_visited_place(db: Session, place_id: int, place_update: schemas.Visit
 
 def delete_visited_place(db: Session, place_id: int) -> bool:
     """Delete a visited place"""
-    db_place = get_visited_place(db, place_id)
+    db_place = (
+        db.query(models.VisitedPlace)
+        .options(joinedload(models.VisitedPlace.images))
+        .filter(models.VisitedPlace.id == place_id)
+        .first()
+    )
     if not db_place:
         return False
-    
+
+    for img in db_place.images:
+        delete_file_for_public_path(img.image_path)
+
     db.delete(db_place)
     db.commit()
+    return True
+
+# ============= Image CRUD Operations =============
+
+def create_image(db: Session, image: schemas.ImageCreate) -> models.Image:
+    """Create a new image"""
+    db_image = models.Image(**image.model_dump())
+    db.add(db_image)
+    db.commit()
+    db.refresh(db_image)
+    return db_image
+
+def get_image(db: Session, image_id: int) -> Optional[models.Image]:
+    """Get an image by ID"""
+    return db.query(models.Image).filter(models.Image.id == image_id).first()
+
+def get_images(db: Session, visited_place_id: int) -> List[models.Image]:
+    """Get all images for a visited place"""
+    return db.query(models.Image).filter(models.Image.visited_place_id == visited_place_id).all()
+
+
+def count_images_for_visited_place(db: Session, visited_place_id: int) -> int:
+    """How many image rows exist for this place (expected at most one)."""
+    return (
+        db.query(models.Image)
+        .filter(models.Image.visited_place_id == visited_place_id)
+        .count()
+    )
+
+def update_image(db: Session, image_id: int, image_update: schemas.ImageUpdate) -> Optional[models.Image]:
+    """Update an image"""
+    db_image = get_image(db, image_id)
+    if not db_image:
+        return None
+
+    update_data = image_update.model_dump(exclude_unset=True)
+    old_path = None
+    if "image_path" in update_data:
+        old_path = db_image.image_path
+
+    for key, value in update_data.items():
+        setattr(db_image, key, value)
+
+    db.commit()
+    db.refresh(db_image)
+
+    if old_path and old_path != db_image.image_path:
+        delete_file_for_public_path(old_path)
+
+    return db_image
+
+
+def delete_image(db: Session, image_id: int) -> bool:
+    """Delete an image"""
+    db_image = get_image(db, image_id)
+    if not db_image:
+        return False
+
+    path = db_image.image_path
+    db.delete(db_image)
+    db.commit()
+    delete_file_for_public_path(path)
     return True
