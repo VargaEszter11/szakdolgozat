@@ -225,6 +225,56 @@ body {
     background: var(--color-page-bg);
 }
 
+/* Scrollbars: follow theme (avoid default bright / white bars in dark mode) */
+.main-page-home-sidebar,
+.main-page-home-content,
+.edit-place-modal,
+.planned-trips-trip-popup .trip-details-content,
+.place-details-body {
+    color-scheme: var(--color-scheme-ui);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+.main-page-home-sidebar::-webkit-scrollbar,
+.main-page-home-content::-webkit-scrollbar,
+.edit-place-modal::-webkit-scrollbar,
+.planned-trips-trip-popup .trip-details-content::-webkit-scrollbar,
+.place-details-body::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.main-page-home-sidebar::-webkit-scrollbar-track,
+.main-page-home-content::-webkit-scrollbar-track,
+.edit-place-modal::-webkit-scrollbar-track,
+.planned-trips-trip-popup .trip-details-content::-webkit-scrollbar-track,
+.place-details-body::-webkit-scrollbar-track {
+    background: var(--color-scrollbar-track);
+    border-radius: 8px;
+}
+
+.main-page-home-sidebar::-webkit-scrollbar-thumb,
+.main-page-home-content::-webkit-scrollbar-thumb,
+.edit-place-modal::-webkit-scrollbar-thumb,
+.planned-trips-trip-popup .trip-details-content::-webkit-scrollbar-thumb,
+.place-details-body::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.main-page-home-sidebar::-webkit-scrollbar-thumb:hover,
+.main-page-home-content::-webkit-scrollbar-thumb:hover,
+.edit-place-modal::-webkit-scrollbar-thumb:hover,
+.planned-trips-trip-popup .trip-details-content::-webkit-scrollbar-thumb:hover,
+.place-details-body::-webkit-scrollbar-thumb:hover {
+    background: var(--color-scrollbar-thumb-hover);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
 .main-page-home-content-inner {
     max-width: 960px;
     margin: 0 auto;

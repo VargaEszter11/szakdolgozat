@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Literal
 import datetime as dt
 from decimal import Decimal
 
@@ -19,11 +19,15 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6)
+    use_travel_log_in_planner: Optional[bool] = None
+    preferred_llm_provider: Optional[Literal["deepseek", "ollama"]] = None
 
 
 class UserResponse(UserBase):
     id: int
     created_at: dt.datetime
+    use_travel_log_in_planner: bool = True
+    preferred_llm_provider: str = "deepseek"
 
     class Config:
         from_attributes = True
@@ -116,7 +120,6 @@ class VisitedPlaceResponse(BaseModel):
     photo_path: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    # First gallery image URL for list cards (not an ORM column; set in API layer).
     image: Optional[str] = None
 
     class Config:

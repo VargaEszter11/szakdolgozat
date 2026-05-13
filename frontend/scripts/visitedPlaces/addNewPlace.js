@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
     photoPreviewGrid.hidden = false;
-    selectedPhotoFiles.forEach(function (file, index) {
+    selectedPhotoFiles.forEach(function (file) {
       var url = URL.createObjectURL(file);
       previewObjectUrls.push(url);
 
@@ -175,7 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
       rm.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        selectedPhotoFiles.splice(index, 1);
+        var idx = selectedPhotoFiles.indexOf(file);
+        if (idx >= 0) selectedPhotoFiles.splice(idx, 1);
         syncSelectedFilesToInput();
         renderPhotoPreviews();
       });
@@ -226,14 +227,15 @@ document.addEventListener('DOMContentLoaded', function () {
         showPhotoFormatErrors([]);
         return;
       }
-      var file = picked[0];
-      if (!isAllowedImage(file)) {
-        batchErrors.push({ file: file, reason: 'format' });
-      } else if (file.size > MAX_PHOTO_BYTES) {
-        batchErrors.push({ file: file, reason: 'size' });
-      } else {
-        selectedPhotoFiles = [file];
-      }
+      picked.forEach(function (file) {
+        if (!isAllowedImage(file)) {
+          batchErrors.push({ file: file, reason: 'format' });
+        } else if (file.size > MAX_PHOTO_BYTES) {
+          batchErrors.push({ file: file, reason: 'size' });
+        } else {
+          selectedPhotoFiles.push(file);
+        }
+      });
       syncSelectedFilesToInput();
       renderPhotoPreviews();
       showPhotoFormatErrors(batchErrors);
@@ -297,8 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
       description: fullDescription || null
     };
 
-    var files = photosInput && photosInput.files ? photosInput.files : null;
-    var fileCount = files ? files.length : 0;
+    var filesToUpload = selectedPhotoFiles.slice();
+    var fileCount = filesToUpload.length;
 
     hideProgress();
     setSubmitLoading(true, 'addNewPlace.buttonSaving');
@@ -334,36 +336,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
       setSubmitLoading(true, 'addNewPlace.buttonUploading');
 
-      var upLine = t('addNewPlace.progressUploadSingle');
-      if (!upLine || upLine === 'addNewPlace.progressUploadSingle') {
-        upLine = 'Uploading photo…';
-      }
-      showProgress(upLine);
-
-      var fd = new FormData();
-      fd.append('file', files[0]);
-
-      var up = await fetch('/api/visited-places/' + placeId + '/images/upload', {
-        method: 'POST',
-        body: fd
-      });
-
-      if (!up.ok) {
-        var failDetail = await responseDetail(up);
-        showProgress('✗ ' + failDetail, 'error');
-        var partialTpl = t('addNewPlace.uploadPartial');
-        var partialMsg = tpl(partialTpl, { details: failDetail });
-        if (partialMsg.indexOf('addNewPlace.') === 0 || partialMsg.indexOf('{{details}}') >= 0) {
-          partialMsg = 'Place saved, but the photo failed to upload:\n' + failDetail;
+      for (var fi = 0; fi < filesToUpload.length; fi++) {
+        var upLine = t('addNewPlace.progressUploadSingle');
+        if (!upLine || upLine === 'addNewPlace.progressUploadSingle') {
+          upLine = 'Uploading photo…';
         }
-        setSubmitLoading(false);
-        showErrorMsg(partialMsg);
-        return;
+        if (filesToUpload.length > 1) {
+          upLine = upLine + ' (' + (fi + 1) + '/' + filesToUpload.length + ')';
+        }
+        showProgress(upLine);
+
+        var fd = new FormData();
+        fd.append('file', filesToUpload[fi]);
+
+        var up = await fetch('/api/visited-places/' + placeId + '/images/upload', {
+          method: 'POST',
+          body: fd
+        });
+
+        if (!up.ok) {
+          var failDetail = await responseDetail(up);
+          showProgress('✗ ' + failDetail, 'error');
+          var partialTpl = t('addNewPlace.uploadPartial');
+          var partialMsg = tpl(partialTpl, { details: failDetail });
+          if (partialMsg.indexOf('addNewPlace.') === 0 || partialMsg.indexOf('{{details}}') >= 0) {
+            partialMsg = 'Place saved, but a photo failed to upload:\n' + failDetail;
+          }
+          setSubmitLoading(false);
+          showErrorMsg(partialMsg);
+          return;
+        }
       }
 
       var okLine = t('addNewPlace.progressPhotoUploaded');
       if (!okLine || okLine === 'addNewPlace.progressPhotoUploaded') {
         okLine = 'Photo uploaded.';
+      }
+      if (filesToUpload.length > 1) {
+        okLine = filesToUpload.length + ' photos uploaded.';
       }
       showProgress(okLine, 'ok');
 

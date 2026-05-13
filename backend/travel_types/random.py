@@ -1,7 +1,7 @@
 #does not work
 
 from typing import List
-from .ollama_client import call_ollama_api
+from .llm_client import call_llm_api
 
 
 LANG_NAMES = {"en": "English", "hu": "Hungarian", "de": "German"}
@@ -15,6 +15,7 @@ async def generate_travel_plan_random(
     start_date: str = None,
     end_date: str = None,
     language: str = "en",
+    llm_provider: str = "deepseek",
 ) -> str:
     """Generate random travel plans."""
     lang_name = LANG_NAMES.get(language, "English")
@@ -67,4 +68,4 @@ Return JSON ONLY using this structure:
   ]
 }}
 """
-    return await call_ollama_api(prompt)
+    return await call_llm_api(prompt, llm_provider)

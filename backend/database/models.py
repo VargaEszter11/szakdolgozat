@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, Float, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, Float, Boolean, ForeignKey, func, text
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -12,6 +12,16 @@ class User(Base):
     email = Column(Text, unique=True, nullable=False, index=True)
     password = Column(Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
+    use_travel_log_in_planner = Column(
+        Boolean,
+        nullable=False,
+        server_default=text("true"),
+    )
+    preferred_llm_provider = Column(
+        Text,
+        nullable=False,
+        server_default=text("'deepseek'"),
+    )
 
     # Relationships
     planned_trips = relationship("PlannedTrip", back_populates="user", cascade="all, delete-orphan")

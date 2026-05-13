@@ -14,6 +14,7 @@
     <script src="../../scripts/i18n/translations.js" defer></script>
     <script src="../../scripts/i18n/i18n.js" defer></script>
     <script src="../../scripts/utils/sidebarHeader.js" defer></script>
+    <script src="../../scripts/routePlanner/travelLogPlannerToggle.js" defer></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
@@ -54,6 +55,17 @@
                             <p class="route-option-desc" data-i18n="planNewTrip.randomDesc">Let us surprise you with a
                                 random trip suggestion.</p>
                         </div>
+                    </div>
+
+                    <div class="card planner-db-toggle-wrap">
+                        <label class="planner-db-toggle" for="useTravelLogInPlanner">
+                            <input type="checkbox" id="useTravelLogInPlanner" checked />
+                            <span data-i18n="travelPlanner.useDbTravelLog">Use travel log from database</span>
+                        </label>
+                        <p class="muted planner-db-toggle-hint" data-i18n="travelPlanner.useDbTravelLogHint">
+                            When enabled, your saved visited places are merged into "visited" plans and excluded for
+                            "unvisited" plans.
+                        </p>
                     </div>
 
                     <div class="card add-place-card">

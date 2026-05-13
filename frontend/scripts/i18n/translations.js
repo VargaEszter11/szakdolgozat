@@ -28,7 +28,16 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Settings saved successfully!',
       langOptionEn: 'English',
       langOptionHu: 'Magyar (Hungarian)',
-      langOptionDe: 'Deutsch (German)'
+      langOptionDe: 'Deutsch (German)',
+      aiAssistant: 'AI for trip planning',
+      llmDeepseekTitle: 'DeepSeek (cloud)',
+      llmDeepseekDesc: 'Uses the DeepSeek API. The server must have DEEPSEEK_API_KEY set.',
+      llmOllamaTitle: 'Local Ollama',
+      llmOllamaDesc: 'Runs on your computer (default: http://localhost:11434).',
+      aiNote: 'Tap an option to save it to your account immediately.',
+      aiSaved: 'AI choice saved.',
+      aiSaveFailed: 'Could not save AI choice. Try again.',
+      aiLoginRequired: 'Log in to choose which AI plans your trips.'
     },
     mainPage: {
       title: 'Welcome to TravelApp!',
@@ -52,7 +61,29 @@ window.I18N_TRANSLATIONS = {
       emptyText: 'No places yet.',
       addFirstPlace: 'Add your first place',
       mapViewTitle: 'Map View',
-      mapViewSubtitle: 'See all your visited places on the map'
+      mapViewSubtitle: 'See all your visited places on the map',
+      editPlace: 'Edit place',
+      editTitle: 'Edit place',
+      saveChanges: 'Save changes',
+      saving: 'Saving…',
+      editSuccess: 'Place updated.',
+      editFailed: 'Could not save changes. Please try again.',
+      editInvalid: 'Cannot edit this place.',
+      placeNameRequired: 'Please enter a place name.',
+      removePhoto: 'Remove photo',
+      replacePhotoHint: 'Upload a new photo (PNG or JPG, max 10 MB)',
+      clearNewPhoto: 'Remove new photo',
+      detailsCountry: 'Country',
+      detailsDateLabel: 'Date visited',
+      detailsRatingLabel: 'Rating',
+      detailsLocation: 'Location',
+      detailsMapLink: 'Open map',
+      detailsPhotosHeading: 'Photos',
+      detailsNoPhotos: 'No photos for this place yet.',
+      detailsNotesHeading: 'Notes',
+      detailsNoDescription: 'No notes for this place.',
+      detailsClose: 'Close',
+      detailsLoadFailed: 'Could not load place details.'
     },
     addNewPlace: {
       title: 'Add New Place',
@@ -107,7 +138,15 @@ window.I18N_TRANSLATIONS = {
       startingCityPlaceholder: 'e.g. Budapest',
       budgetPlaceholder: 'e.g. 1000',
       preferencesPlaceholder: 'e.g. museums, hiking',
-      placesPlaceholder: 'e.g. Paris, Berlin, Rome'
+      placesPlaceholder: 'e.g. Paris, Berlin, Rome',
+      unvisitedRequiresLogin:
+        'Please log in. Unvisited trips use your saved places on the server to exclude them.',
+      placesHintVisitedNoDb:
+        'Only the places you type below are used; nothing is loaded from your saved travel log.',
+      placesHintUnvisitedNoDb:
+        'Only the exclusions you type below apply; your saved visited places are not loaded from the server.',
+      manualPlacesRequired:
+        'Add at least one place in the field above, or turn on using your travel log from the database.'
     },
     plannedTrips: {
       title: 'Planned Trips',
@@ -119,6 +158,12 @@ window.I18N_TRANSLATIONS = {
       shareItinerary: 'Share Itinerary',
       stopsOne: '1 stop',
       stopsMany: '{{n}} stops'
+    },
+    travelPlanner: {
+      useDbTravelLog: 'Use travel log from database',
+      useDbTravelLogHint:
+        'When enabled, your saved visited places are included in "visited" trip plans and excluded when you plan trips to unvisited places.',
+      saveFailed: 'Could not save this setting. Please try again.'
     },
     profile: {
       editProfile: 'Edit Profile',
@@ -212,7 +257,16 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Beállítások sikeresen mentve!',
       langOptionEn: 'Angol',
       langOptionHu: 'Magyar',
-      langOptionDe: 'Német'
+      langOptionDe: 'Német',
+      aiAssistant: 'MI az utazástervezéshez',
+      llmDeepseekTitle: 'DeepSeek (felhő)',
+      llmDeepseekDesc: 'DeepSeek API. A szerveren be kell állítani a DEEPSEEK_API_KEY-t.',
+      llmOllamaTitle: 'Helyi Ollama',
+      llmOllamaDesc: 'A gépeden fut (alapértelmezés: http://localhost:11434).',
+      aiNote: 'Koppints egy lehetőségre — azonnal elmentjük a fiókodhoz.',
+      aiSaved: 'MI választás mentve.',
+      aiSaveFailed: 'Az MI választás mentése sikertelen. Próbáld újra.',
+      aiLoginRequired: 'Jelentkezz be, hogy kiválaszthasd, melyik MI tervezze az utaidat.'
     },
     mainPage: {
       title: 'Üdvözlünk a TravelAppben!',
@@ -236,7 +290,29 @@ window.I18N_TRANSLATIONS = {
       emptyText: 'Még nincsenek helyek.',
       addFirstPlace: 'Add hozzá az első helyedet',
       mapViewTitle: 'Térkép nézet',
-      mapViewSubtitle: 'Lásd az összes meglátogatott helyedet a térképen'
+      mapViewSubtitle: 'Lásd az összes meglátogatott helyedet a térképen',
+      editPlace: 'Hely szerkesztése',
+      editTitle: 'Hely szerkesztése',
+      saveChanges: 'Módosítások mentése',
+      saving: 'Mentés…',
+      editSuccess: 'Hely frissítve.',
+      editFailed: 'A mentés sikertelen. Próbáld újra.',
+      editInvalid: 'Ez a hely nem szerkeszthető.',
+      placeNameRequired: 'Add meg a hely nevét.',
+      removePhoto: 'Fénykép eltávolítása',
+      replacePhotoHint: 'Új fénykép feltöltése (PNG vagy JPG, max. 10 MB)',
+      clearNewPhoto: 'Új fénykép törlése',
+      detailsCountry: 'Ország',
+      detailsDateLabel: 'Látogatás dátuma',
+      detailsRatingLabel: 'Értékelés',
+      detailsLocation: 'Helyszín',
+      detailsMapLink: 'Térkép megnyitása',
+      detailsPhotosHeading: 'Fényképek',
+      detailsNoPhotos: 'Ehhez a helyhez még nincsenek fényképek.',
+      detailsNotesHeading: 'Jegyzetek',
+      detailsNoDescription: 'Ehhez a helyhez nincsenek jegyzetek.',
+      detailsClose: 'Bezárás',
+      detailsLoadFailed: 'A hely részletei nem tölthetők be.'
     },
     addNewPlace: {
       title: 'Új hely hozzáadása',
@@ -291,7 +367,15 @@ window.I18N_TRANSLATIONS = {
       startingCityPlaceholder: 'pl. Budapest',
       budgetPlaceholder: 'pl. 1000',
       preferencesPlaceholder: 'pl. múzeumok, túrázás',
-      placesPlaceholder: 'pl. Párizs, Berlin, Róma'
+      placesPlaceholder: 'pl. Párizs, Berlin, Róma',
+      unvisitedRequiresLogin:
+        'Jelentkezz be. A „még nem látott” tervek a szerveren tárolt meglátogatott helyeid alapján zárják ki őket.',
+      placesHintVisitedNoDb:
+        'Csak az alább beírt helyeket használjuk; semmi nem töltődik be a mentett utazási naplódból.',
+      placesHintUnvisitedNoDb:
+        'Csak az alább megadott kizárások érvényesek; a meglátogatott helyeid nem töltődnek be a szerverről.',
+      manualPlacesRequired:
+        'Adj meg legalább egy helyet a mezőben, vagy kapcsold be az adatbázisból származó utazási napló használatát.'
     },
     plannedTrips: {
       title: 'Tervezett utak',
@@ -303,6 +387,12 @@ window.I18N_TRANSLATIONS = {
       shareItinerary: 'Útiterv megosztása',
       stopsOne: '1 megálló',
       stopsMany: '{{n}} megálló'
+    },
+    travelPlanner: {
+      useDbTravelLog: 'Utazási napló használata az adatbázisból',
+      useDbTravelLogHint:
+        'Bekapcsolva a mentett meglátogatott helyek bekerülnek a „már látott” tervekbe, és kizárásra kerülnek a „még nem látott” terveknél.',
+      saveFailed: 'A beállítás mentése sikertelen. Próbáld újra.'
     },
     profile: {
       editProfile: 'Profil szerkesztése',
@@ -396,7 +486,16 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Einstellungen erfolgreich gespeichert!',
       langOptionEn: 'Englisch',
       langOptionHu: 'Ungarisch',
-      langOptionDe: 'Deutsch'
+      langOptionDe: 'Deutsch',
+      aiAssistant: 'KI für die Reiseplanung',
+      llmDeepseekTitle: 'DeepSeek (Cloud)',
+      llmDeepseekDesc: 'Nutzt die DeepSeek-API. Auf dem Server muss DEEPSEEK_API_KEY gesetzt sein.',
+      llmOllamaTitle: 'Lokales Ollama',
+      llmOllamaDesc: 'Läuft auf deinem Rechner (Standard: http://localhost:11434).',
+      aiNote: 'Tippe auf eine Option — sie wird sofort in deinem Konto gespeichert.',
+      aiSaved: 'KI-Auswahl gespeichert.',
+      aiSaveFailed: 'KI-Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.',
+      aiLoginRequired: 'Melde dich an, um die KI für Reisepläne zu wählen.'
     },
     mainPage: {
       title: 'Willkommen bei TravelApp!',
@@ -420,7 +519,29 @@ window.I18N_TRANSLATIONS = {
       emptyText: 'Noch keine Orte.',
       addFirstPlace: 'Füge deinen ersten Ort hinzu',
       mapViewTitle: 'Kartenansicht',
-      mapViewSubtitle: 'Sehe alle deine besuchten Orte auf der Karte'
+      mapViewSubtitle: 'Sehe alle deine besuchten Orte auf der Karte',
+      editPlace: 'Ort bearbeiten',
+      editTitle: 'Ort bearbeiten',
+      saveChanges: 'Änderungen speichern',
+      saving: 'Wird gespeichert…',
+      editSuccess: 'Ort aktualisiert.',
+      editFailed: 'Speichern fehlgeschlagen. Bitte erneut versuchen.',
+      editInvalid: 'Dieser Ort kann nicht bearbeitet werden.',
+      placeNameRequired: 'Bitte gib einen Ort ein.',
+      removePhoto: 'Foto entfernen',
+      replacePhotoHint: 'Neues Foto hochladen (PNG oder JPG, max. 10 MB)',
+      clearNewPhoto: 'Neues Foto entfernen',
+      detailsCountry: 'Land',
+      detailsDateLabel: 'Besuchsdatum',
+      detailsRatingLabel: 'Bewertung',
+      detailsLocation: 'Standort',
+      detailsMapLink: 'Karte öffnen',
+      detailsPhotosHeading: 'Fotos',
+      detailsNoPhotos: 'Für diesen Ort gibt es noch keine Fotos.',
+      detailsNotesHeading: 'Notizen',
+      detailsNoDescription: 'Keine Notizen zu diesem Ort.',
+      detailsClose: 'Schließen',
+      detailsLoadFailed: 'Ortsdetails konnten nicht geladen werden.'
     },
     addNewPlace: {
       title: 'Ort hinzufügen',
@@ -475,7 +596,15 @@ window.I18N_TRANSLATIONS = {
       startingCityPlaceholder: 'z. B. Budapest',
       budgetPlaceholder: 'z. B. 1000',
       preferencesPlaceholder: 'z. B. Museen, Wandern',
-      placesPlaceholder: 'z. B. Paris, Berlin, Rom'
+      placesPlaceholder: 'z. B. Paris, Berlin, Rom',
+      unvisitedRequiresLogin:
+        'Bitte melde dich an. Unbesuchte Pläne nutzen deine gespeicherten Orte auf dem Server zum Ausschließen.',
+      placesHintVisitedNoDb:
+        'Es werden nur die unten eingegebenen Orte verwendet; nichts wird aus deinem gespeicherten Reisetagebuch geladen.',
+      placesHintUnvisitedNoDb:
+        'Es gelten nur die unten angegebenen Ausschlüsse; besuchte Orte werden nicht vom Server geladen.',
+      manualPlacesRequired:
+        'Gib mindestens einen Ort oben ein oder aktiviere die Nutzung deines Reisetagebuchs aus der Datenbank.'
     },
     plannedTrips: {
       title: 'Geplante Reisen',
@@ -487,6 +616,12 @@ window.I18N_TRANSLATIONS = {
       shareItinerary: 'Reiseplan teilen',
       stopsOne: '1 Zwischenstopp',
       stopsMany: '{{n}} Zwischenstopps'
+    },
+    travelPlanner: {
+      useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',
+      useDbTravelLogHint:
+        'Wenn aktiviert, werden gespeicherte besuchte Orte in „besuchte“ Reisepläne einbezogen und bei „unbesuchten“ Plänen ausgeschlossen.',
+      saveFailed: 'Einstellung konnte nicht gespeichert werden. Bitte erneut versuchen.'
     },
     profile: {
       editProfile: 'Profil bearbeiten',

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="stylesheet" href="../../styles/visited-places.css">
     <link rel="icon" href="../pictures/marker.png">
     <title>Visited Places – TravelApp</title>
@@ -74,6 +75,54 @@
 
     <script src="../../scripts/loginRegister/modal.js"></script>
     <script src="../../scripts/visitedPlaces/loadPlaces.js" defer></script>
+
+    <template id="placeDetailsModalTemplate">
+        <div class="place-details-overlay" role="dialog" aria-modal="true" aria-labelledby="placeDetailsTitle">
+            <div class="place-details-panel" id="placeDetailsModalBox">
+                <div class="place-details-header">
+                    <h2 id="placeDetailsTitle" class="place-details-title"></h2>
+                    <button type="button" class="place-details-close" data-place-details-close aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="place-details-body">
+                    <div class="place-details-meta">
+                        <p id="placeDetailsCountryRow">
+                            <strong data-i18n="visitedPlaces.detailsCountry">Country</strong>
+                            <span id="placeDetailsCountry"></span>
+                        </p>
+                        <p>
+                            <strong data-i18n="visitedPlaces.detailsDateLabel">Date visited</strong>
+                            <span id="placeDetailsDate"></span>
+                        </p>
+                        <p id="placeDetailsRatingRow">
+                            <strong data-i18n="visitedPlaces.detailsRatingLabel">Rating</strong>
+                            <span id="placeDetailsRating"></span>
+                        </p>
+                        <p id="placeDetailsCoordsRow" class="hidden">
+                            <strong data-i18n="visitedPlaces.detailsLocation">Location</strong>
+                            <a id="placeDetailsMapLink" class="place-details-map-link" href="#" target="_blank"
+                                rel="noopener noreferrer"></a>
+                        </p>
+                    </div>
+                    <div id="placeDetailsPhotosSection" class="place-details-section">
+                        <h3 id="placeDetailsPhotosHeading" data-i18n="visitedPlaces.detailsPhotosHeading">Photos</h3>
+                        <div class="place-details-photo-grid" id="placeDetailsPhotoGrid"></div>
+                        <p id="placeDetailsNoPhotos" class="place-details-muted hidden"
+                            data-i18n="visitedPlaces.detailsNoPhotos">No photos for this place yet.</p>
+                    </div>
+                    <div class="place-details-section place-details-notes">
+                        <h3 data-i18n="visitedPlaces.detailsNotesHeading">Notes</h3>
+                        <div id="placeDetailsDescription" class="place-details-description"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 
 </body>
 

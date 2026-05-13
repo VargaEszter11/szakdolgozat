@@ -77,6 +77,9 @@ html:not([data-theme]) {
     --color-settings-success-border: rgba(34, 197, 94, 0.25);
     --color-cost-muted: rgba(255, 255, 255, 0.6);
     --color-btn-add-secondary-hover: rgba(222, 190, 86, 0.85);
+    --color-scrollbar-track: rgba(255, 255, 255, 0.06);
+    --color-scrollbar-thumb: rgba(255, 255, 255, 0.28);
+    --color-scrollbar-thumb-hover: rgba(222, 190, 86, 0.6);
     --muted: var(--color-text-muted);
     --accent: var(--color-accent);
     --shadow: var(--color-shadow-elevated);
@@ -160,6 +163,9 @@ html[data-theme="light"] {
     --color-settings-success-border: rgba(34, 197, 94, 0.35);
     --color-cost-muted: rgba(0, 0, 0, 0.55);
     --color-btn-add-secondary-hover: rgba(222, 190, 86, 0.92);
+    --color-scrollbar-track: rgba(0, 0, 0, 0.06);
+    --color-scrollbar-thumb: rgba(0, 0, 0, 0.28);
+    --color-scrollbar-thumb-hover: rgba(184, 154, 46, 0.75);
     --muted: var(--color-text-muted);
     --accent: var(--color-accent);
     --shadow: var(--color-shadow-elevated);

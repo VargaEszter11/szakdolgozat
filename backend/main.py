@@ -8,8 +8,9 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 load_dotenv()
 
 import json
-from typing import List
 from datetime import datetime
+from typing import List, Optional
+
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,9 +26,11 @@ from travel_types import (
     generate_travel_plan_random,
     UnvisitedGenerationRequest,
     build_unvisited_forbidden_places,
+    merge_exclusion_lists,
 )
 
 # Database imports
+from database import crud
 from database.database import engine, Base, get_db
 from routers import users, planned_trips, trip_stops, visited_places, auth
 
@@ -72,6 +75,8 @@ class GenerationRequest(BaseModel):
     endDate: str
     preferences: List[str] = []
     language: str = "en"
+    userId: Optional[int] = None
+    plannerUserId: Optional[int] = None
 
 
 class RandomGenerationRequest(BaseModel):
@@ -81,6 +86,8 @@ class RandomGenerationRequest(BaseModel):
     endDate: str
     preferences: List[str] = []
     language: str = "en"
+    userId: Optional[int] = None
+    plannerUserId: Optional[int] = None
 
 
 class GeocodeRequest(BaseModel):
@@ -88,7 +95,26 @@ class GeocodeRequest(BaseModel):
     language: str = "en"
 
 
-# Get coordinates for a place name
+def resolve_llm_provider(db: Optional[Session], user_id: Optional[int]) -> str:
+    from travel_types.llm_client import normalize_llm_provider
+
+    if db is not None and user_id is not None:
+        user = crud.get_user(db, user_id)
+        if user is not None:
+            raw = getattr(user, "preferred_llm_provider", None)
+            if raw:
+                return normalize_llm_provider(str(raw))
+    return normalize_llm_provider(os.getenv("DEFAULT_LLM_PROVIDER"))
+
+
+def planner_account_id(request) -> Optional[int]:
+    """User id for loading planner preferences (LLM provider), independent of trip logic userId."""
+    pid = getattr(request, "plannerUserId", None)
+    if pid is not None:
+        return pid
+    return getattr(request, "userId", None)
+
+
 async def get_coordinates(place_name: str):
     try:
         return await geocode_place(place_name)
@@ -124,7 +150,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
     
     draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
     
-    # Parse the draft plan (it's a JSON string from Ollama)
+    # Parse the draft plan (it's a JSON string from the LLM)
     try:
         import json
         # Try to extract JSON from the response
@@ -256,12 +282,14 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
 
 # Travel Plan Generation Endpoints
 @app.post("/generate_travel_plans/visited")
-async def travel_plans_visited(request: GenerationRequest):
+async def travel_plans_visited(request: GenerationRequest, db: Session = Depends(get_db)):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
     if end_dt <= start_dt:
         raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
+
+    llm_provider = resolve_llm_provider(db, planner_account_id(request))
 
     return await generate_plan_with_location(
         generate_travel_plan_visited,
@@ -274,6 +302,7 @@ async def travel_plans_visited(request: GenerationRequest):
         start_date=request.startDate,
         end_date=request.endDate,
         language=request.language,
+        llm_provider=llm_provider,
     )
 
 
@@ -285,9 +314,14 @@ async def travel_plans_unvisited(request: UnvisitedGenerationRequest, db: Sessio
         raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
 
-    forbidden_places = build_unvisited_forbidden_places(
-        db, request.userId, request.additionalExclusions
-    )
+    if request.userId is not None:
+        forbidden_places = build_unvisited_forbidden_places(
+            db, request.userId, request.additionalExclusions
+        )
+    else:
+        forbidden_places = merge_exclusion_lists([], request.additionalExclusions)
+
+    llm_provider = resolve_llm_provider(db, planner_account_id(request))
 
     return await generate_plan_with_location(
         generate_travel_plan_unvisited,
@@ -300,16 +334,19 @@ async def travel_plans_unvisited(request: UnvisitedGenerationRequest, db: Sessio
         start_date=request.startDate,
         end_date=request.endDate,
         language=request.language,
+        llm_provider=llm_provider,
     )
 
 
 @app.post("/generate_travel_plans/random")
-async def travel_plans_random(request: RandomGenerationRequest):
+async def travel_plans_random(request: RandomGenerationRequest, db: Session = Depends(get_db)):
     start_dt = datetime.strptime(request.startDate, "%Y-%m-%d")
     end_dt = datetime.strptime(request.endDate, "%Y-%m-%d")
     if end_dt <= start_dt:
         raise HTTPException(status_code=400, detail="End date must be after start date.")
     travel_length = (end_dt - start_dt).days
+
+    llm_provider = resolve_llm_provider(db, planner_account_id(request))
 
     return await generate_plan_with_location(
         generate_travel_plan_random,
@@ -321,6 +358,7 @@ async def travel_plans_random(request: RandomGenerationRequest):
         start_date=request.startDate,
         end_date=request.endDate,
         language=request.language,
+        llm_provider=llm_provider,
     )
 
 

@@ -177,6 +177,27 @@
     display: block;
 }
 
+.place-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    margin: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--color-icon-muted);
+    border-radius: 8px;
+    line-height: 0;
+}
+
+.place-edit-btn:hover,
+.place-edit-btn:focus-visible {
+    color: var(--color-accent);
+    background: rgba(99, 102, 241, 0.1);
+    outline: none;
+}
+
 .place-delete-btn {
     display: inline-flex;
     align-items: center;
@@ -196,6 +217,264 @@
     color: #ff6b6b;
     background: rgba(255, 107, 107, 0.12);
     outline: none;
+}
+
+.edit-place-modal {
+    max-width: min(480px, 100%);
+    max-height: min(90vh, 720px);
+    overflow-y: auto;
+}
+
+.edit-place-modal-header {
+    margin-bottom: 1rem;
+}
+
+.edit-place-modal-title {
+    flex: 1;
+}
+
+.edit-place-modal .add-place-form {
+    margin-bottom: 0.5rem;
+}
+
+.edit-place-modal .add-place-form .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.edit-place-current-photo {
+    margin-bottom: 0.75rem;
+}
+
+.edit-place-current-photo .photo-preview-grid {
+    max-width: 120px;
+}
+
+.edit-place-photo-shell .upload-zone {
+    margin-top: 0;
+}
+
+.edit-place-modal-actions {
+    margin-top: 0.25rem;
+}
+
+.visited-place-card {
+    cursor: pointer;
+}
+
+.visited-place-card .visited-places-card-actions,
+.visited-place-card .visited-places-card-actions button {
+    cursor: default;
+}
+
+/* ── Place details modal (matches travel-log cards + page background) ── */
+@keyframes place-details-overlay-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes place-details-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.place-details-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: var(--color-modal-overlay);
+    backdrop-filter: blur(4px);
+    animation: place-details-overlay-in 0.2s ease;
+    font-family: inherit;
+}
+
+.place-details-panel {
+    width: 100%;
+    max-width: 560px;
+    max-height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-radius: 16px;
+    border: 1px solid var(--color-surface-border);
+    box-shadow: var(--color-shadow-elevated);
+    animation: place-details-panel-in 0.26s ease;
+}
+
+.place-details-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-shrink: 0;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-surface-border);
+}
+
+.place-details-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+}
+
+.place-details-close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-icon-muted);
+    cursor: pointer;
+    line-height: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.place-details-close:hover,
+.place-details-close:focus-visible {
+    color: var(--color-accent);
+    background: var(--color-nav-hover-bg);
+    outline: none;
+}
+
+.place-details-close svg {
+    display: block;
+    stroke: currentColor;
+}
+
+.place-details-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.25rem 1.5rem 1.5rem;
+    background: var(--color-page-bg);
+}
+
+.place-details-meta {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.15rem;
+    background: var(--color-surface);
+    border-radius: 16px;
+    border: 1px solid var(--color-surface-border);
+}
+
+.place-details-meta p {
+    margin: 0.45rem 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--color-text-card-list);
+}
+
+.place-details-meta p:first-child {
+    margin-top: 0;
+}
+
+.place-details-meta p:last-child {
+    margin-bottom: 0;
+}
+
+.place-details-meta strong {
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-right: 0.35rem;
+}
+
+.place-details-map-link {
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.place-details-map-link:hover {
+    text-decoration: underline;
+}
+
+.place-details-meta + .place-details-section {
+    margin-top: 0;
+}
+
+.place-details-section + .place-details-section {
+    margin-top: 1.25rem;
+}
+
+.place-details-body h3,
+.place-details-body #placeDetailsPhotosHeading {
+    margin: 0 0 0.65rem 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-text);
+}
+
+.place-details-notes h3 {
+    margin-bottom: 0.5rem;
+}
+
+.place-details-muted {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.place-details-description {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--color-text-card-notes);
+}
+
+.place-details-description.place-details-description--empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.place-details-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 0.75rem;
+    margin: 0 0 0.5rem;
+}
+
+.place-details-photo-item {
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--color-surface-border);
+    aspect-ratio: 1;
+    background: var(--color-input-bg);
+}
+
+.place-details-photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.place-details-photo-item:hover img {
+    filter: brightness(1.04);
 }
 
 @media (max-width: 768px) {
@@ -256,5 +535,21 @@
         overflow-wrap: anywhere;
         word-break: break-word;
         min-width: 0;
+    }
+
+    .place-details-overlay {
+        padding: 0.85rem;
+    }
+
+    .place-details-header {
+        padding: 1rem 1.15rem;
+    }
+
+    .place-details-body {
+        padding: 1rem 1.15rem 1.25rem;
+    }
+
+    .place-details-title {
+        font-size: 1.1rem;
     }
 }

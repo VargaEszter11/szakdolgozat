@@ -114,11 +114,6 @@ def create_place_image(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Visited place not found",
         )
-    if crud.count_images_for_visited_place(db, place_id) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This visited place already has an image.",
-        )
     image_in = schemas.ImageCreate(image_path=body.image_path, visited_place_id=place_id)
     return crud.create_image(db, image_in)
 
@@ -139,11 +134,6 @@ async def upload_place_image(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Visited place not found",
-        )
-    if crud.count_images_for_visited_place(db, place_id) > 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This visited place already has an image.",
         )
     content = await file.read()
     try:
