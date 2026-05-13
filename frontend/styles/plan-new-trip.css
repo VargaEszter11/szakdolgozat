@@ -471,3 +471,54 @@ html[data-theme="light"] .cost-over .cost-remaining {
     font-size: 0.9rem;
     line-height: 1.45;
 }
+
+.trip-pricing-banner {
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+}
+
+.trip-pricing-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.trip-pricing-total {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.trip-pricing-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: 0.35rem;
+}
+
+.booking-block {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-surface-border);
+    background: var(--color-surface);
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.booking-line,
+.booking-note {
+    margin: 0.25rem 0;
+}
+
+.flight-legs {
+    margin: 0.35rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.flight-leg {
+    margin: 0.2rem 0;
+}
+
+.flight-leg-label {
+    font-weight: 600;
+    margin-right: 0.35rem;
+}

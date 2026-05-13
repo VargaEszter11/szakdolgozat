@@ -1,7 +1,7 @@
 import httpx
 import os
 from typing import List, Dict, Any
-from utils.nearest_airport import get_amadeus_token
+from utils.nearest_airport import get_amadeus_token, AMADEUS_JSON_HEADERS
 from utils.coordinates import geocode_place
 
 AMADEUS_BASE_URL = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com")
@@ -12,7 +12,8 @@ async def search_hotels_by_city(city_name: str, country_code: str, check_in: str
     try:
         access_token = await get_amadeus_token()
         headers = {
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {access_token}",
+            **AMADEUS_JSON_HEADERS,
         }
 
         async with httpx.AsyncClient(timeout=30) as client:
@@ -55,7 +56,7 @@ async def search_hotels_by_city(city_name: str, country_code: str, check_in: str
 
 
 async def get_hotel_price(city_name: str, country_code: str, check_in: str, check_out: str, nights: int) -> Dict[str, Any]:
-    """Get hotel price for a city and date range."""
+    """Get hotel price for a city and date range (Amadeus stay total when available)."""
     estimated_price_per_night = 80
     try:
         hotels = await search_hotels_by_city(city_name, country_code, check_in, check_out)
@@ -66,25 +67,56 @@ async def get_hotel_price(city_name: str, country_code: str, check_in: str, chec
                 "price": estimated_price_per_night * nights,
                 "price_per_night": estimated_price_per_night,
                 "currency": "EUR",
-                "source": "estimated"
+                "source": "estimated",
+                "hotel_summary": {
+                    "hotel_name": None,
+                    "check_in": check_in,
+                    "check_out": check_out,
+                    "nights": nights,
+                    "stay_total": round(estimated_price_per_night * nights, 2),
+                    "currency": "EUR",
+                    "note": "No Amadeus hotel offers; heuristic estimate.",
+                },
             }
 
-        cheapest_price = None
+        best = None
         for hotel in hotels:
-            offers = hotel.get("offers", [])
-            for offer in offers:
+            hblock = hotel.get("hotel") or {}
+            hname = hblock.get("name") or hotel.get("name")
+            for offer in hotel.get("offers", []) or []:
                 price = offer.get("price", {})
-                total = float(price.get("total", "999999"))
-                if cheapest_price is None or total < cheapest_price:
-                    cheapest_price = total
+                try:
+                    stay_total = float(price.get("total", "999999"))
+                except (TypeError, ValueError):
+                    continue
+                if best is None or stay_total < best["stay_total"]:
+                    room = (offer.get("room") or {}).get("typeEstimated", {}) or {}
+                    best = {
+                        "stay_total": stay_total,
+                        "currency": price.get("currency") or "EUR",
+                        "hotel_name": hname,
+                        "room_category": room.get("category"),
+                        "check_in": check_in,
+                        "check_out": check_out,
+                    }
 
-        if cheapest_price:
+        if best:
+            stay = round(best["stay_total"], 2)
             return {
                 "valid": True,
-                "price": cheapest_price * nights,
-                "price_per_night": cheapest_price,
-                "currency": "EUR",
-                "source": "amadeus"
+                "price": stay,
+                "price_per_night": round(stay / max(nights, 1), 2),
+                "currency": best["currency"],
+                "source": "amadeus",
+                "hotel_summary": {
+                    "hotel_name": best["hotel_name"],
+                    "check_in": best["check_in"],
+                    "check_out": best["check_out"],
+                    "nights": nights,
+                    "stay_total": stay,
+                    "currency": best["currency"],
+                    "room_category": best["room_category"],
+                },
             }
 
         return {
@@ -92,7 +124,16 @@ async def get_hotel_price(city_name: str, country_code: str, check_in: str, chec
             "price": estimated_price_per_night * nights,
             "price_per_night": estimated_price_per_night,
             "currency": "EUR",
-            "source": "estimated"
+            "source": "estimated",
+            "hotel_summary": {
+                "hotel_name": None,
+                "check_in": check_in,
+                "check_out": check_out,
+                "nights": nights,
+                "stay_total": round(estimated_price_per_night * nights, 2),
+                "currency": "EUR",
+                "note": "Amadeus returned no priced offers; heuristic estimate.",
+            },
         }
     except Exception as e:
         return {
@@ -101,5 +142,14 @@ async def get_hotel_price(city_name: str, country_code: str, check_in: str, chec
             "price_per_night": estimated_price_per_night,
             "currency": "EUR",
             "source": "estimated",
-            "error": str(e)
+            "error": str(e),
+            "hotel_summary": {
+                "hotel_name": None,
+                "check_in": check_in,
+                "check_out": check_out,
+                "nights": nights,
+                "stay_total": round(estimated_price_per_night * nights, 2),
+                "currency": "EUR",
+                "note": "Error while contacting Amadeus; heuristic estimate.",
+            },
         }

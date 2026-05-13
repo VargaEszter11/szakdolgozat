@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from utils.coordinates import geocode_place
 from utils.nearest_airport import nearest_airport, get_direct_destinations
 from utils.plan_validator import validate_travel_plan
+from utils.plan_enrichment import merge_validation_into_plan, normalize_planner_response
 from travel_types import (
     generate_travel_plan_visited,
     generate_travel_plan_unvisited,
@@ -33,6 +34,8 @@ from travel_types import (
 from database import crud
 from database.database import engine, Base, get_db
 from routers import users, planned_trips, trip_stops, visited_places, auth
+from middleware.request_logging import RequestLoggingMiddleware
+from utils.console_logging import attach_api_loggers_to_console
 
 # Create FastAPI app
 app = FastAPI(
@@ -40,6 +43,9 @@ app = FastAPI(
     description="API for travel planning and visited places tracking",
     version="1.0.0"
 )
+
+# Inbound API logs print to the terminal (stderr)
+attach_api_loggers_to_console()
 
 # Create database tables on startup
 @app.on_event("startup")
@@ -49,6 +55,8 @@ def startup_event():
     from utils.place_image_upload import ensure_place_images_dir
 
     ensure_place_images_dir()
+
+app.add_middleware(RequestLoggingMiddleware)
 
 # Configure CORS
 app.add_middleware(
@@ -70,7 +78,7 @@ app.include_router(visited_places.router, prefix="/api", tags=["places"])
 class GenerationRequest(BaseModel):
     visitedPlaces: List[str]
     startingPoint: str
-    budget: int
+    budget: Optional[int] = None
     startDate: str
     endDate: str
     preferences: List[str] = []
@@ -81,7 +89,7 @@ class GenerationRequest(BaseModel):
 
 class RandomGenerationRequest(BaseModel):
     startingPoint: str
-    budget: int
+    budget: Optional[int] = None
     startDate: str
     endDate: str
     preferences: List[str] = []
@@ -148,7 +156,14 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
     if airport and airport.get("iata"):
         direct_destinations = await get_direct_destinations(airport["iata"])
     
-    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
+    draft_plan_raw = await draft_plan_func(
+        *args,
+        direct_destinations=direct_destinations,
+        starting_airport_iata=(airport or {}).get("iata"),
+        start_date=start_date,
+        end_date=end_date,
+        **kwargs,
+    )
     
     # Parse the draft plan (it's a JSON string from the LLM)
     try:
@@ -176,9 +191,9 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
             draft_plan["endDate"] = end_date
             draft_plan["tripLengthDays"] = travel_length_user
     
-    # Validate the plan if budget is provided
+    # Validate against Amadeus when we know the home airport (budget optional = pricing-only)
     validation = None
-    if budget and airport and airport.get("iata") and isinstance(draft_plan, dict):
+    if airport and airport.get("iata") and isinstance(draft_plan, dict):
         # Get travelLength from args (it's the second positional argument after startingPoint)
         travel_length = args[1] if len(args) > 1 else 7
         
@@ -207,7 +222,14 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 # If no valid plans, regenerate
                 if retry_count < max_retries - 1:
                     validated_trips = []  # Clear previous attempts
-                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
+                    draft_plan_raw = await draft_plan_func(
+        *args,
+        direct_destinations=direct_destinations,
+        starting_airport_iata=(airport or {}).get("iata"),
+        start_date=start_date,
+        end_date=end_date,
+        **kwargs,
+    )
                     try:
                         draft_plan_text = draft_plan_raw.strip()
                         if draft_plan_text.startswith("```"):
@@ -221,21 +243,29 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 retry_count += 1
             
             # Sort by: validity first, then by score (highest first), then by total price (lowest first)
-            validated_trips.sort(key=lambda x: (
-                x["validation"]["valid"],
-                x["validation"]["score"],
-                -x["validation"]["total_price"]  # Negative for ascending (lower price = better)
-            ), reverse=True)
-            
+            validated_trips.sort(
+                key=lambda x: (
+                    x["validation"].get("valid", False),
+                    x["validation"].get("score") or 0,
+                    -(x["validation"].get("total_price") or 0),
+                ),
+                reverse=True,
+            )
+
             # Select the best trip (first after sorting)
             best_trip = validated_trips[0] if validated_trips else None
-            
-            # Return only the best trip
+            merged_plan = None
+            if best_trip and best_trip.get("trip"):
+                merged_plan = merge_validation_into_plan(best_trip["trip"], best_trip.get("validation"))
+            if merged_plan is None:
+                merged_plan = draft_plan
+            merged_plan = normalize_planner_response(merged_plan)
+
             return {
-                "draft_plan": best_trip["trip"] if best_trip else None,
+                "draft_plan": merged_plan,
                 "starting_point_coords": {"lat": lat, "lon": lon},
                 "nearest_airport": airport,
-                "validation": best_trip["validation"] if best_trip else None
+                "validation": best_trip["validation"] if best_trip else None,
             }
         else:
             # Single plan validation - retry until we get a valid plan
@@ -251,7 +281,14 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 
                 # If invalid, regenerate plan
                 if retry_count < max_retries - 1:
-                    draft_plan_raw = await draft_plan_func(*args, direct_destinations=direct_destinations, start_date=start_date, end_date=end_date, **kwargs)
+                    draft_plan_raw = await draft_plan_func(
+        *args,
+        direct_destinations=direct_destinations,
+        starting_airport_iata=(airport or {}).get("iata"),
+        start_date=start_date,
+        end_date=end_date,
+        **kwargs,
+    )
                     try:
                         draft_plan_text = draft_plan_raw.strip()
                         if draft_plan_text.startswith("```"):
@@ -271,12 +308,17 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                     "total_price": 0,
                     "score": 0
                 }
-    
+
+    merged_plan = draft_plan
+    if validation and isinstance(draft_plan, dict):
+        merged_plan = merge_validation_into_plan(draft_plan, validation)
+    merged_plan = normalize_planner_response(merged_plan)
+
     return {
-        "draft_plan": draft_plan,
+        "draft_plan": merged_plan,
         "starting_point_coords": {"lat": lat, "lon": lon},
         "nearest_airport": airport,
-        "validation": validation
+        "validation": validation,
     }
 
 

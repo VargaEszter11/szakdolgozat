@@ -1,7 +1,7 @@
 import httpx
 import os
 from typing import List, Dict, Any
-from utils.nearest_airport import get_amadeus_token
+from utils.nearest_airport import get_amadeus_token, AMADEUS_JSON_HEADERS
 from utils.coordinates import geocode_place
 
 AMADEUS_BASE_URL = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com")
@@ -19,7 +19,8 @@ async def search_activities_by_location(lat: float, lon: float, radius: int = 1)
             "radius": radius
         }
         headers = {
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {access_token}",
+            **AMADEUS_JSON_HEADERS,
         }
 
         async with httpx.AsyncClient(timeout=30) as client:
@@ -42,7 +43,11 @@ async def get_activity_price(city_name: str, country_code: str, days: int) -> Di
 
         if activities:
             prices = []
-            for activity in activities:
+            titles = []
+            for activity in activities[:8]:
+                name = activity.get("name")
+                if name:
+                    titles.append(name)
                 amount = activity.get("price", {}).get("amount")
                 if amount:
                     try:
@@ -60,6 +65,11 @@ async def get_activity_price(city_name: str, country_code: str, days: int) -> Di
                     "currency": "EUR",
                     "source": "amadeus",
                     "activities_count": len(prices),
+                    "activity_summary": {
+                        "sample_experiences": titles[:6],
+                        "priced_items_sampled": len(prices),
+                        "currency": "EUR",
+                    },
                 }
 
         return {
@@ -69,6 +79,10 @@ async def get_activity_price(city_name: str, country_code: str, days: int) -> Di
             "currency": "EUR",
             "source": "estimated",
             "activities_count": days * 2,
+            "activity_summary": {
+                "sample_experiences": [],
+                "note": "No priced Amadeus activities for this area; heuristic estimate.",
+            },
         }
     except Exception as e:
         return {
@@ -78,4 +92,8 @@ async def get_activity_price(city_name: str, country_code: str, days: int) -> Di
             "currency": "EUR",
             "source": "estimated",
             "error": str(e),
+            "activity_summary": {
+                "sample_experiences": [],
+                "note": f"Heuristic estimate (error: {e})",
+            },
         }

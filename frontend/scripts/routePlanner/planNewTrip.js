@@ -141,7 +141,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
 
         const startingCity = document.getElementById('startingCity').value.trim();
-        const budget = parseInt(document.getElementById('budget').value);
+        const budgetRaw = (document.getElementById('budget').value || '').trim();
+        const budgetParsed = budgetRaw === '' ? NaN : parseInt(budgetRaw, 10);
+        const budget = Number.isFinite(budgetParsed) ? budgetParsed : null;
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
@@ -161,12 +163,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const body = {
             startingPoint: startingCity,
-            budget: budget,
             startDate: startDate,
             endDate: endDate,
             preferences: preferences,
             language: localStorage.getItem('language') || 'en'
         };
+        if (budget != null) {
+            body.budget = budget;
+        }
 
         const plannerUid = localStorage.getItem('user_id');
         if (plannerUid) {
