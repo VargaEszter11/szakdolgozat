@@ -1,8 +1,9 @@
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session, joinedload
 import bcrypt
 import re
 import secrets
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Set
 from . import models, schemas
 from utils.place_image_upload import delete_file_for_public_path
 
@@ -342,3 +343,272 @@ def delete_image(db: Session, image_id: int) -> bool:
     db.commit()
     delete_file_for_public_path(path)
     return True
+
+
+# ============= Airport & route cache CRUD =============
+
+
+def _norm_iata(code: Optional[str]) -> str:
+    return (code or "").strip().upper()
+
+
+def _norm_country(code: Optional[str]) -> Optional[str]:
+    if not code:
+        return None
+    c = str(code).strip().upper()
+    return c[:2] if c else None
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def get_airport(db: Session, iata: str) -> Optional[models.Airport]:
+    """Get a cached airport by IATA code (case-insensitive lookup key)."""
+    return db.query(models.Airport).filter(models.Airport.iata == _norm_iata(iata)).first()
+
+
+def create_airport(db: Session, airport: schemas.AirportCreate) -> models.Airport:
+    """Insert a new airport row. Fails if ``iata`` already exists."""
+    data = airport.model_dump()
+    data["iata"] = _norm_iata(data["iata"])
+    if data.get("country"):
+        data["country"] = _norm_country(data["country"])
+    if data.get("icao"):
+        data["icao"] = str(data["icao"]).strip().upper()
+    db_airport = models.Airport(**data)
+    db.add(db_airport)
+    db.commit()
+    db.refresh(db_airport)
+    return db_airport
+
+
+def _upsert_airport_no_commit(db: Session, airport: schemas.AirportCreate) -> models.Airport:
+    iata = _norm_iata(airport.iata)
+    row = get_airport(db, iata)
+    country = _norm_country(airport.country) if airport.country else None
+    icao = airport.icao.strip().upper() if airport.icao else None
+
+    if row is None:
+        row = models.Airport(
+            iata=iata,
+            icao=icao,
+            city=airport.city,
+            country=country,
+            latitude=airport.latitude,
+            longitude=airport.longitude,
+        )
+        db.add(row)
+        return row
+
+    if icao is not None:
+        row.icao = icao
+    if airport.city is not None:
+        row.city = airport.city
+    if country is not None:
+        row.country = country
+    if airport.latitude is not None:
+        row.latitude = airport.latitude
+    if airport.longitude is not None:
+        row.longitude = airport.longitude
+    row.updated_at = _utcnow()
+    return row
+
+
+def upsert_airport(db: Session, airport: schemas.AirportCreate) -> models.Airport:
+    """Insert or update cached airport metadata (``updated_at`` bumped on update)."""
+    row = _upsert_airport_no_commit(db, airport)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def update_airport(db: Session, iata: str, airport_update: schemas.AirportUpdate) -> Optional[models.Airport]:
+    """Patch fields on an existing airport."""
+    row = get_airport(db, iata)
+    if not row:
+        return None
+
+    update_data = airport_update.model_dump(exclude_unset=True)
+    if "icao" in update_data and update_data["icao"] is not None:
+        update_data["icao"] = str(update_data["icao"]).strip().upper()
+    if "country" in update_data and update_data["country"] is not None:
+        update_data["country"] = _norm_country(update_data["country"])
+
+    for key, value in update_data.items():
+        setattr(row, key, value)
+    row.updated_at = _utcnow()
+
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def get_direct_route(
+    db: Session, origin_iata: str, destination_iata: str
+) -> Optional[models.DirectRoute]:
+    return (
+        db.query(models.DirectRoute)
+        .filter(
+            models.DirectRoute.origin_iata == _norm_iata(origin_iata),
+            models.DirectRoute.destination_iata == _norm_iata(destination_iata),
+        )
+        .first()
+    )
+
+
+def create_direct_route(db: Session, route: schemas.DirectRouteCreate) -> models.DirectRoute:
+    """Insert a new direct route edge."""
+    data = route.model_dump()
+    data["origin_iata"] = _norm_iata(data["origin_iata"])
+    data["destination_iata"] = _norm_iata(data["destination_iata"])
+    db_route = models.DirectRoute(**data)
+    db.add(db_route)
+    db.commit()
+    db.refresh(db_route)
+    return db_route
+
+
+def _upsert_direct_route_no_commit(
+    db: Session, origin_iata: str, destination_iata: str, *, is_active: bool = True
+) -> models.DirectRoute:
+    o = _norm_iata(origin_iata)
+    d = _norm_iata(destination_iata)
+    if o == d:
+        raise ValueError("origin and destination must differ")
+
+    now = _utcnow()
+    row = get_direct_route(db, o, d)
+    if row is None:
+        row = models.DirectRoute(
+            origin_iata=o,
+            destination_iata=d,
+            is_active=is_active,
+            first_seen_at=now,
+            last_seen_at=now,
+        )
+        db.add(row)
+        return row
+
+    row.is_active = is_active
+    row.last_seen_at = now
+    return row
+
+
+def upsert_direct_route(
+    db: Session, origin_iata: str, destination_iata: str, *, is_active: bool = True
+) -> models.DirectRoute:
+    """Insert or touch a direct route (``last_seen_at`` always updated)."""
+    row = _upsert_direct_route_no_commit(db, origin_iata, destination_iata, is_active=is_active)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[Dict[str, Any]]:
+    """Return dicts compatible with ``get_direct_destinations`` (``iata``, ``city``, ``country``)."""
+    o = _norm_iata(origin_iata)
+    rows = (
+        db.query(models.Airport)
+        .join(
+            models.DirectRoute,
+            models.DirectRoute.destination_iata == models.Airport.iata,
+        )
+        .filter(
+            models.DirectRoute.origin_iata == o,
+            models.DirectRoute.is_active.is_(True),
+        )
+        .order_by(models.Airport.iata)
+        .all()
+    )
+    return [{"iata": a.iata, "city": a.city, "country": a.country} for a in rows]
+
+
+def sync_direct_routes_for_origin(
+    db: Session, origin_iata: str, destinations: List[Dict[str, Any]]
+) -> int:
+    """Upsert origin + destination airports and routes; deactivate missing edges.
+
+    ``destinations`` items should look like Amadeus direct-destination entries:
+    ``iata``, ``city``, ``country`` (ISO-2). Commits once. Returns active route count for this origin.
+    """
+    o = _norm_iata(origin_iata)
+    _upsert_airport_no_commit(db, schemas.AirportCreate(iata=o))
+
+    seen: Set[str] = set()
+    for dest in destinations:
+        d_iata = _norm_iata(dest.get("iata"))
+        if not d_iata or d_iata == o:
+            continue
+        seen.add(d_iata)
+        _upsert_airport_no_commit(
+            db,
+            schemas.AirportCreate(
+                iata=d_iata,
+                city=dest.get("city"),
+                country=_norm_country(dest.get("country")),
+            ),
+        )
+        _upsert_direct_route_no_commit(db, o, d_iata, is_active=True)
+
+    deactivate_q = db.query(models.DirectRoute).filter(models.DirectRoute.origin_iata == o)
+    if seen:
+        deactivate_q = deactivate_q.filter(models.DirectRoute.destination_iata.notin_(list(seen)))
+    deactivate_q.update({"is_active": False}, synchronize_session=False)
+
+    db.commit()
+
+    return (
+        db.query(models.DirectRoute)
+        .filter(
+            models.DirectRoute.origin_iata == o,
+            models.DirectRoute.is_active.is_(True),
+        )
+        .count()
+    )
+
+
+def distinct_route_origins(db: Session) -> List[str]:
+    """All origins that appear in ``direct_routes`` (for a scheduled refresh job)."""
+    rows = db.query(models.DirectRoute.origin_iata).distinct().order_by(models.DirectRoute.origin_iata).all()
+    return [r[0] for r in rows]
+
+
+def start_route_refresh_run(db: Session, origin_iata: str) -> models.RouteRefreshRun:
+    run = models.RouteRefreshRun(origin_iata=_norm_iata(origin_iata))
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    return run
+
+
+def complete_route_refresh_run(
+    db: Session,
+    run_id: int,
+    *,
+    success: bool,
+    routes_found: Optional[int] = None,
+    error_message: Optional[str] = None,
+) -> Optional[models.RouteRefreshRun]:
+    run = db.query(models.RouteRefreshRun).filter(models.RouteRefreshRun.id == run_id).first()
+    if not run:
+        return None
+    run.finished_at = _utcnow()
+    run.success = success
+    run.routes_found = routes_found
+    run.error_message = error_message
+    db.commit()
+    db.refresh(run)
+    return run
+
+
+def get_route_refresh_runs_for_origin(
+    db: Session, origin_iata: str, limit: int = 50
+) -> List[models.RouteRefreshRun]:
+    return (
+        db.query(models.RouteRefreshRun)
+        .filter(models.RouteRefreshRun.origin_iata == _norm_iata(origin_iata))
+        .order_by(models.RouteRefreshRun.started_at.desc())
+        .limit(limit)
+        .all()
+    )

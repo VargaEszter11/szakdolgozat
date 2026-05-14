@@ -1,4 +1,4 @@
-"""Build itineraries leg-by-leg: each hop loads Amadeus direct destinations from the *current* airport."""
+"""Build itineraries leg-by-leg: each hop loads direct destinations from DB cache or Amadeus."""
 
 from __future__ import annotations
 
@@ -7,7 +7,8 @@ import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from utils.nearest_airport import get_direct_destinations
+from database.database import SessionLocal
+from utils.direct_destinations_cache import get_direct_destinations_cached
 
 from .llm_client import call_llm_api
 from .prompt_common import language_name, preferences_line, stepwise_next_stop_prompt
@@ -226,73 +227,78 @@ async def build_plan_stepwise(
     visited_places = visited_places or []
     forbidden_places = forbidden_places or []
 
-    for _ in range(max_legs):
-        if remaining <= 0:
-            break
-
-        raw_dests = await get_direct_destinations(current_airport)
-        if strategy == "visited":
-            candidates = _filter_visited(raw_dests, visited_places)
-        elif strategy == "unvisited":
-            candidates = _filter_unvisited(raw_dests, forbidden_places)
-        else:
-            candidates = _filter_random(raw_dests)
-
-        # Do not bounce back to the same IATA as home hub mid-trip (return leg is separate).
-        hub = (starting_airport_iata or "").strip().upper()
-        candidates = [
-            c for c in candidates if c.get("iata") and (c.get("iata") or "").strip().upper() != hub
-        ]
-
-        # Drop already visited IATAs on this trip
-        used_iata = {(p.get("iata") or "").strip().upper() for p in plan if p.get("iata")}
-        candidates = [c for c in candidates if (c.get("iata") or "").strip().upper() not in used_iata]
-
-        if not candidates:
-            break
-
-        choice = None
-        for _attempt in range(2):
-            choice = await _llm_pick_next_stop(
-                strategy=strategy,
-                lang_name=lang_name,
-                current_airport=current_airport,
-                current_city_label=starting_point if not plan else f"{plan[-1].get('city')}, {plan[-1].get('country')}",
-                candidates=candidates,
-                remaining_days=remaining,
-                preferences=preferences,
-                avoid_labels=avoid_labels,
-                llm_provider=llm_provider,
-            )
-            if choice:
+    db = SessionLocal()
+    try:
+        for _ in range(max_legs):
+            if remaining <= 0:
                 break
-        if not choice:
-            choice = _pick_fallback(candidates, remaining)
 
-        days = int(choice.get("days") or 1)
-        days = max(1, min(days, remaining))
+            raw_dests = await get_direct_destinations_cached(db, current_airport)
+            if strategy == "visited":
+                candidates = _filter_visited(raw_dests, visited_places)
+            elif strategy == "unvisited":
+                candidates = _filter_unvisited(raw_dests, forbidden_places)
+            else:
+                candidates = _filter_random(raw_dests)
 
-        arrival = cursor.strftime("%Y-%m-%d")
-        departure_dt = cursor + timedelta(days=days)
-        departure = departure_dt.strftime("%Y-%m-%d")
+            # Do not bounce back to the same IATA as home hub mid-trip
+            hub = (starting_airport_iata or "").strip().upper()
+            candidates = [
+                c for c in candidates if c.get("iata") and (c.get("iata") or "").strip().upper() != hub
+            ]
 
-        plan.append(
-            {
-                "city": choice["city"],
-                "country": choice.get("country") or "",
-                "iata": choice["iata"],
-                "days": days,
-                "arrivalDate": arrival,
-                "departureDate": departure,
-                "transportFromPreviousCity": choice.get("transportFromPreviousCity") or "flight",
-                "activities": choice.get("activities") or [],
-                "direct_flights_queried_from": current_airport,
-            }
-        )
-        avoid_labels.append(str(choice.get("city") or "").lower())
-        cursor = departure_dt
-        remaining -= days
-        current_airport = choice["iata"]
+            # Drop already visited IATAs on this trip
+            used_iata = {(p.get("iata") or "").strip().upper() for p in plan if p.get("iata")}
+            candidates = [c for c in candidates if (c.get("iata") or "").strip().upper() not in used_iata]
+
+            if not candidates:
+                break
+
+            choice = None
+            for _attempt in range(2):
+                choice = await _llm_pick_next_stop(
+                    strategy=strategy,
+                    lang_name=lang_name,
+                    current_airport=current_airport,
+                    current_city_label=starting_point if not plan else f"{plan[-1].get('city')}, {plan[-1].get('country')}",
+                    candidates=candidates,
+                    remaining_days=remaining,
+                    preferences=preferences,
+                    avoid_labels=avoid_labels,
+                    llm_provider=llm_provider,
+                )
+                if choice:
+                    break
+            if not choice:
+                choice = _pick_fallback(candidates, remaining)
+
+            days = int(choice.get("days") or 1)
+            days = max(1, min(days, remaining))
+
+            arrival = cursor.strftime("%Y-%m-%d")
+            departure_dt = cursor + timedelta(days=days)
+            departure = departure_dt.strftime("%Y-%m-%d")
+
+            plan.append(
+                {
+                    "city": choice["city"],
+                    "country": choice.get("country") or "",
+                    "iata": choice["iata"],
+                    "days": days,
+                    "arrivalDate": arrival,
+                    "departureDate": departure,
+                    "transportFromPreviousCity": choice.get("transportFromPreviousCity") or "flight",
+                    "activities": choice.get("activities") or [],
+                    "direct_flights_queried_from": current_airport,
+                }
+            )
+            avoid_labels.append(str(choice.get("city") or "").lower())
+            cursor = departure_dt
+            remaining -= days
+            current_airport = choice["iata"]
+
+    finally:
+        db.close()
 
     if remaining > 0 and plan:
         plan[-1]["days"] = int(plan[-1].get("days") or 1) + remaining

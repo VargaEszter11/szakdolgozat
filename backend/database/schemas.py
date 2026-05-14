@@ -231,3 +231,75 @@ class ImageResponse(ImageBase):
 
     class Config:
         from_attributes = True
+
+# ============= Airport Schemas =============
+
+class AirportBase(BaseModel):
+    iata: str = Field(..., min_length=3, max_length=3)
+    icao: Optional[str] = Field(None, min_length=4, max_length=4)
+    city: Optional[str] = None
+    country: Optional[str] = Field(None, min_length=2, max_length=2)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
+class AirportCreate(AirportBase):
+    pass
+
+
+class AirportUpdate(BaseModel):
+    icao: Optional[str] = Field(None, min_length=4, max_length=4)
+    city: Optional[str] = None
+    country: Optional[str] = Field(None, min_length=2, max_length=2)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
+class AirportResponse(AirportBase):
+    first_seen_at: dt.datetime
+    updated_at: dt.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============= Direct Route Schemas =============
+
+class DirectRouteBase(BaseModel):
+    origin_iata: str = Field(..., min_length=3, max_length=3)
+    destination_iata: str = Field(..., min_length=3, max_length=3)
+    is_active: bool = True
+
+
+class DirectRouteCreate(DirectRouteBase):
+    pass
+
+
+class DirectRouteResponse(DirectRouteBase):
+    first_seen_at: dt.datetime
+    last_seen_at: dt.datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============= Route Refresh Run Schemas =============
+
+class RouteRefreshRunBase(BaseModel):
+    origin_iata: str = Field(..., min_length=3, max_length=3)
+    routes_found: Optional[int] = None
+    success: bool = False
+    error_message: Optional[str] = None
+
+
+class RouteRefreshRunCreate(BaseModel):
+    origin_iata: str = Field(..., min_length=3, max_length=3)
+
+
+class RouteRefreshRunResponse(RouteRefreshRunBase):
+    id: int
+    started_at: dt.datetime
+    finished_at: Optional[dt.datetime] = None
+
+    class Config:
+        from_attributes = True

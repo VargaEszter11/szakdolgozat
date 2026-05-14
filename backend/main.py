@@ -19,6 +19,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from utils.coordinates import geocode_place
 from utils.nearest_airport import nearest_airport, get_direct_destinations
+from utils.direct_destinations_cache import get_direct_destinations_cached
 from utils.plan_validator import validate_travel_plan
 from utils.plan_enrichment import merge_validation_into_plan, normalize_planner_response
 from travel_types import (
@@ -147,14 +148,26 @@ async def batch_geocode(request: GeocodeRequest):
 
 
 # Get nearest airport and generate plan
-async def generate_plan_with_location(draft_plan_func, *args, starting_point: str, budget: int = None, start_date: str = None, end_date: str = None, **kwargs):
+async def generate_plan_with_location(
+    draft_plan_func,
+    *args,
+    starting_point: str,
+    budget: int = None,
+    start_date: str = None,
+    end_date: str = None,
+    db: Optional[Session] = None,
+    **kwargs,
+):
     lat, lon = await get_coordinates(starting_point)
     airport = await nearest_airport(lat, lon)
     
-    # Get direct destinations from the nearest airport
+    # Get direct destinations from the nearest airport (DB cache when session available)
     direct_destinations = []
     if airport and airport.get("iata"):
-        direct_destinations = await get_direct_destinations(airport["iata"])
+        if db is not None:
+            direct_destinations = await get_direct_destinations_cached(db, airport["iata"])
+        else:
+            direct_destinations = await get_direct_destinations(airport["iata"])
     
     draft_plan_raw = await draft_plan_func(
         *args,
@@ -238,7 +251,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                         draft_plan = json.loads(draft_plan_text)
                         trips = draft_plan.get("trips", [])
                     except:
-                        break  # If parsing fails, break and use what we have
+                        break
                 
                 retry_count += 1
             
@@ -252,7 +265,7 @@ async def generate_plan_with_location(draft_plan_func, *args, starting_point: st
                 reverse=True,
             )
 
-            # Select the best trip (first after sorting)
+            # Select the best trip
             best_trip = validated_trips[0] if validated_trips else None
             merged_plan = None
             if best_trip and best_trip.get("trip"):
@@ -345,6 +358,7 @@ async def travel_plans_visited(request: GenerationRequest, db: Session = Depends
         end_date=request.endDate,
         language=request.language,
         llm_provider=llm_provider,
+        db=db,
     )
 
 
@@ -377,6 +391,7 @@ async def travel_plans_unvisited(request: UnvisitedGenerationRequest, db: Sessio
         end_date=request.endDate,
         language=request.language,
         llm_provider=llm_provider,
+        db=db,
     )
 
 
@@ -401,6 +416,7 @@ async def travel_plans_random(request: RandomGenerationRequest, db: Session = De
         end_date=request.endDate,
         language=request.language,
         llm_provider=llm_provider,
+        db=db,
     )
 
 

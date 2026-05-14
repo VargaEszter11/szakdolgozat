@@ -1,4 +1,19 @@
-from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Numeric, Float, Boolean, ForeignKey, func, text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    Date,
+    DateTime,
+    Numeric,
+    Float,
+    Boolean,
+    ForeignKey,
+    CheckConstraint,
+    Index,
+    func,
+    text,
+)
 from sqlalchemy.orm import relationship
 from .database import Base
 
@@ -96,3 +111,77 @@ class Image(Base):
 
     # Relationships
     visited_place = relationship("VisitedPlace", back_populates="images")
+
+
+class Airport(Base):
+    """Cached airport metadata (lazily populated on first use)."""
+    __tablename__ = "airports"
+
+    iata = Column(String(3), primary_key=True)
+    icao = Column(String(4), nullable=True)
+    city = Column(Text, nullable=True)
+    country = Column(String(2), nullable=True, index=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    first_seen_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    # Relationships
+    outgoing_routes = relationship(
+        "DirectRoute",
+        foreign_keys="DirectRoute.origin_iata",
+        back_populates="origin",
+        cascade="all, delete-orphan",
+    )
+    incoming_routes = relationship(
+        "DirectRoute",
+        foreign_keys="DirectRoute.destination_iata",
+        back_populates="destination",
+        cascade="all, delete-orphan",
+    )
+
+
+class DirectRoute(Base):
+    """A directed direct-flight edge between two airports."""
+    __tablename__ = "direct_routes"
+    __table_args__ = (
+        CheckConstraint("origin_iata <> destination_iata", name="ck_route_not_self"),
+        Index("idx_direct_routes_origin", "origin_iata"),
+        Index("idx_direct_routes_dest", "destination_iata"),
+    )
+
+    origin_iata = Column(
+        String(3),
+        ForeignKey("airports.iata", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    destination_iata = Column(
+        String(3),
+        ForeignKey("airports.iata", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    first_seen_at = Column(DateTime, server_default=func.now(), nullable=False)
+    last_seen_at = Column(DateTime, server_default=func.now(), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+
+    # Relationships
+    origin = relationship("Airport", foreign_keys=[origin_iata], back_populates="outgoing_routes")
+    destination = relationship("Airport", foreign_keys=[destination_iata], back_populates="incoming_routes")
+
+
+class RouteRefreshRun(Base):
+    """Bookkeeping for the weekly direct-destinations refresh job."""
+    __tablename__ = "route_refresh_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    origin_iata = Column(
+        String(3),
+        ForeignKey("airports.iata", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    started_at = Column(DateTime, server_default=func.now(), nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+    routes_found = Column(Integer, nullable=True)
+    success = Column(Boolean, nullable=False, default=False)
+    error_message = Column(Text, nullable=True)
