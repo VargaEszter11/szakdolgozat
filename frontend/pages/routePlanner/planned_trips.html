@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/visited-places.css">
     <link rel="stylesheet" href="../../styles/planned-trips.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" href="../../pictures/marker.png">
     <title>Planned Trips – TravelApp</title>
 
@@ -95,6 +96,12 @@
                         </p>
                     </div>
 
+                    <div id="tripDetailsMapSection" class="trip-details-map-section hidden">
+                        <h3 id="tripDetailsMapHeading" class="trip-details-map-heading" data-i18n="plannedTrips.mapRouteHeading">Route map</h3>
+                        <div id="tripDetailsMap" class="trip-details-map" role="img" aria-labelledby="tripDetailsMapHeading"></div>
+                        <p id="tripDetailsMapNote" class="trip-details-map-note muted hidden"></p>
+                    </div>
+
                     <h3 id="tripDetailsStopsHeading">
                         Trip Stops (<span id="tripDetailsStopsCount">0</span>)
                     </h3>
@@ -105,6 +112,7 @@
         </div>
     </template>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../scripts/loginRegister/modal.js"></script>
     <script src="../../scripts/routePlanner/loadPlans.js" defer></script>
 

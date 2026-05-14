@@ -157,7 +157,14 @@ window.I18N_TRANSLATIONS = {
       viewDetails: 'View Details',
       shareItinerary: 'Share Itinerary',
       stopsOne: '1 stop',
-      stopsMany: '{{n}} stops'
+      stopsMany: '{{n}} stops',
+      mapRouteHeading: 'Route map',
+      mapLoading: 'Locating cities on the map…',
+      mapStartCityLabel: 'Start',
+      mapStartLegend: 'Starting city: {{city}}',
+      mapStartMarkerSubtitle: 'Starting city',
+      mapPartialRoute: 'Some stops could not be located; the line shows the cities we could find, in visit order.',
+      mapUnavailable: 'Map could not be loaded. Check your connection or try again later.'
     },
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
@@ -386,7 +393,14 @@ window.I18N_TRANSLATIONS = {
       viewDetails: 'Részletek megtekintése',
       shareItinerary: 'Útiterv megosztása',
       stopsOne: '1 megálló',
-      stopsMany: '{{n}} megálló'
+      stopsMany: '{{n}} megálló',
+      mapRouteHeading: 'Útvonal térképen',
+      mapLoading: 'Városok megkeresése a térképen…',
+      mapStartCityLabel: 'Indulás',
+      mapStartLegend: 'Indulási város: {{city}}',
+      mapStartMarkerSubtitle: 'Indulási város',
+      mapPartialRoute: 'Néhány megállót nem sikerült megtalálni; a vonal a megtalált városokat köti össze a sorrendben.',
+      mapUnavailable: 'A térkép nem töltődött be. Ellenőrizd az internetet, vagy próbáld újra később.'
     },
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
@@ -615,7 +629,14 @@ window.I18N_TRANSLATIONS = {
       viewDetails: 'Details anzeigen',
       shareItinerary: 'Reiseplan teilen',
       stopsOne: '1 Zwischenstopp',
-      stopsMany: '{{n}} Zwischenstopps'
+      stopsMany: '{{n}} Zwischenstopps',
+      mapRouteHeading: 'Routenkarte',
+      mapLoading: 'Städte werden auf der Karte gesucht…',
+      mapStartCityLabel: 'Start',
+      mapStartLegend: 'Startstadt: {{city}}',
+      mapStartMarkerSubtitle: 'Startstadt',
+      mapPartialRoute: 'Einige Stopps konnten nicht gefunden werden; die Linie zeigt die gefundenen Städte in Reihenfolge.',
+      mapUnavailable: 'Karte konnte nicht geladen werden. Bitte Verbindung prüfen oder später erneut versuchen.'
     },
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',

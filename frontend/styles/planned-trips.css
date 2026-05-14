@@ -219,7 +219,7 @@
     color: var(--pt-popup-text);
     border-radius: 16px;
     border: 1px solid var(--pt-popup-border);
-    max-width: 640px;
+    max-width: min(92vw, 720px);
     width: 100%;
     max-height: min(90vh, 720px);
     overflow: hidden;
@@ -303,6 +303,88 @@
 .planned-trips-trip-popup .trip-details-info strong {
     color: var(--pt-popup-muted);
     font-weight: 600;
+}
+
+.planned-trips-trip-popup .trip-details-map-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.15rem;
+    background: var(--pt-popup-surface);
+    border-radius: 12px;
+    border: 1px solid var(--pt-popup-border);
+}
+
+.planned-trips-trip-popup .trip-details-map-heading {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--pt-popup-text);
+}
+
+/* Permanent “Start + city” label on the map (Leaflet tooltip) */
+.planned-trips-trip-popup .leaflet-tooltip.trip-map-start-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-top: -4px !important;
+    pointer-events: none;
+}
+
+.planned-trips-trip-popup .leaflet-tooltip.trip-map-start-tooltip::before {
+    display: none !important;
+}
+
+.planned-trips-trip-popup .trip-map-onmap-start-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    background: var(--pt-popup-surface);
+    color: var(--pt-popup-text);
+    border: 1px solid var(--pt-popup-border);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+    white-space: nowrap;
+    max-width: min(220px, 46vw);
+}
+
+.planned-trips-trip-popup .trip-map-onmap-start-label .trip-map-onmap-start-k {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--pt-popup-muted);
+}
+
+.planned-trips-trip-popup .trip-map-onmap-start-label .trip-map-onmap-start-city {
+    font-weight: 700;
+    color: var(--pt-popup-accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.planned-trips-trip-popup .trip-details-map {
+    height: min(280px, 42vw);
+    min-height: 200px;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--pt-popup-border);
+    background: var(--color-page-bg);
+    z-index: 0;
+}
+
+.planned-trips-trip-popup .trip-details-map .leaflet-container {
+    font-family: inherit;
+}
+
+.planned-trips-trip-popup .trip-details-map-note {
+    margin: 0.65rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 .planned-trips-trip-popup .trip-details-content>h3,
