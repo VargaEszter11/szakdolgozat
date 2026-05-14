@@ -279,22 +279,42 @@
     var previewObjectUrls = [];
     var removeExistingPhoto = false;
 
+    document.querySelectorAll('.visited-place-details-overlay').forEach(function (el) {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+
     var overlay = document.createElement('div');
-    overlay.className = 'custom-modal-overlay edit-place-modal-overlay';
+    overlay.className = 'place-details-overlay edit-place-modal-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', uid + '-edit-title');
 
     var modal = document.createElement('div');
-    modal.className = 'custom-modal edit-place-modal';
+    modal.className = 'place-details-panel edit-place-modal';
 
-    var titleEl = document.createElement('h3');
-    titleEl.className = 'custom-modal-title edit-place-modal-title';
+    var titleEl = document.createElement('h2');
+    titleEl.className = 'place-details-title edit-place-modal-title';
+    titleEl.id = uid + '-edit-title';
     titleEl.textContent = t('visitedPlaces.editTitle', 'Edit place');
 
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'place-details-close';
+    closeBtn.setAttribute('aria-label', t('visitedPlaces.detailsClose', 'Close'));
+    closeBtn.innerHTML =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>';
+
     var header = document.createElement('div');
-    header.className = 'custom-modal-header edit-place-modal-header';
+    header.className = 'place-details-header edit-place-modal-header';
     header.appendChild(titleEl);
+    header.appendChild(closeBtn);
 
     var form = document.createElement('form');
-    form.className = 'add-place-form edit-place-form';
+    form.className = 'add-place-form edit-place-form edit-place-modal-form';
+
+    var bodyWrap = document.createElement('div');
+    bodyWrap.className = 'place-details-body edit-place-modal-body';
 
     function formGroup(labelForId, labelText, control) {
       var group = document.createElement('div');
@@ -357,10 +377,10 @@
     syncHasValue(descInput);
     descInput.addEventListener('input', function () { syncHasValue(descInput); });
 
-    form.appendChild(formGroup(nameId, t('addNewPlace.placeName', 'Place name'), nameInput));
-    form.appendChild(formGroup(countryId, t('addNewPlace.country', 'Country'), countryInput));
-    form.appendChild(formGroup(dateId, t('addNewPlace.visitedDate', 'Date visited'), dateInput));
-    form.appendChild(formGroup(descId, t('addNewPlace.description', 'Description'), descInput));
+    bodyWrap.appendChild(formGroup(nameId, t('addNewPlace.placeName', 'Place name'), nameInput));
+    bodyWrap.appendChild(formGroup(countryId, t('addNewPlace.country', 'Country'), countryInput));
+    bodyWrap.appendChild(formGroup(dateId, t('addNewPlace.visitedDate', 'Date visited'), dateInput));
+    bodyWrap.appendChild(formGroup(descId, t('addNewPlace.description', 'Description'), descInput));
 
     var photoGroup = document.createElement('div');
     photoGroup.className = 'form-group';
@@ -440,7 +460,7 @@
     photoShell.appendChild(newPreviewGrid);
     photoShell.appendChild(photoErrors);
     photoGroup.appendChild(photoShell);
-    form.appendChild(photoGroup);
+    bodyWrap.appendChild(photoGroup);
 
     function revokePreviewUrls() {
       previewObjectUrls.forEach(function (u) {
@@ -538,31 +558,41 @@
       renderNewFilePreview();
     });
 
-    var actions = document.createElement('div');
-    actions.className = 'custom-modal-actions edit-place-modal-actions';
+    var footer = document.createElement('div');
+    footer.className = 'edit-place-modal-footer';
 
-    var cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
-    cancelBtn.textContent = t('settings.cancel', 'Cancel');
+    var actions = document.createElement('div');
+    actions.className = 'form-actions edit-place-modal-actions';
 
     var saveBtn = document.createElement('button');
     saveBtn.type = 'submit';
-    saveBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+    saveBtn.className = 'btn-add';
     saveBtn.textContent = t('visitedPlaces.saveChanges', 'Save changes');
 
-    actions.appendChild(cancelBtn);
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn-cancel';
+    cancelBtn.textContent = t('settings.cancel', 'Cancel');
+
     actions.appendChild(saveBtn);
+    actions.appendChild(cancelBtn);
+    footer.appendChild(actions);
+
+    form.appendChild(bodyWrap);
+    form.appendChild(footer);
 
     modal.appendChild(header);
     modal.appendChild(form);
-    modal.appendChild(actions);
     overlay.appendChild(modal);
 
     function cleanupOverlay() {
       revokePreviewUrls();
       closeEditModal(overlay);
     }
+
+    closeBtn.addEventListener('click', function () {
+      cleanupOverlay();
+    });
 
     cancelBtn.addEventListener('click', function () {
       cleanupOverlay();
@@ -630,9 +660,6 @@
         })
         .then(function () {
           cleanupOverlay();
-          if (typeof showSuccess === 'function') {
-            showSuccess(t('visitedPlaces.editSuccess', 'Place updated.'));
-          }
           loadPlaces();
         })
         .catch(function (err) {
@@ -678,7 +705,7 @@
     var rawId = parseInt(placeId, 10);
     if (Number.isNaN(rawId)) return;
 
-    document.querySelectorAll('.place-details-overlay').forEach(function (el) {
+    document.querySelectorAll('.visited-place-details-overlay').forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
 
@@ -697,7 +724,7 @@
         var template = document.getElementById('placeDetailsModalTemplate');
         if (!template || !template.content) return;
         var clone = document.importNode(template.content, true);
-        var modal = clone.querySelector('.place-details-overlay');
+        var modal = clone.querySelector('.visited-place-details-overlay');
         if (!modal) return;
         document.body.appendChild(clone);
 

@@ -1,9 +1,7 @@
 function saveSessionAndRedirect(data) {
     localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("username", data.username);
-    showSuccess("Login successful!", () => {
-        window.location.href = "../main_page.html";
-    });
+    window.location.href = "../main_page.html";
 }
 
 document.getElementById("loginForm").addEventListener("submit", async (e) => {

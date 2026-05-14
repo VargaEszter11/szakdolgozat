@@ -85,12 +85,9 @@ function showModal(options) {
 
 // Shorthand functions
 function showSuccess(message, onClose) {
-    showModal({
-        title: 'Success',
-        message,
-        type: 'success',
-        onClose
-    });
+    if (typeof onClose === 'function') {
+        onClose();
+    }
 }
 
 function showError(message, onClose) {

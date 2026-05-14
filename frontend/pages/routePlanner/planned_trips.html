@@ -16,7 +16,6 @@
     <script src="../../scripts/i18n/translations.js"></script>
     <script src="../../scripts/i18n/i18n.js"></script>
     <script src="../../scripts/utils/sidebarHeader.js"></script>
-    <script src="../../scripts/routePlanner/travelLogPlannerToggle.js" defer></script>
 </head>
 
 <body>
@@ -52,17 +51,6 @@
                                 <span data-i18n="plannedTrips.newTrip">New Trip</span>
                             </a>
                         </div>
-                    </div>
-
-                    <div class="card planner-db-toggle-wrap">
-                        <label class="planner-db-toggle" for="useTravelLogInPlanner">
-                            <input type="checkbox" id="useTravelLogInPlanner" checked />
-                            <span data-i18n="travelPlanner.useDbTravelLog">Use travel log from database</span>
-                        </label>
-                        <p class="muted planner-db-toggle-hint" data-i18n="travelPlanner.useDbTravelLogHint">
-                            When enabled, your saved visited places are merged into "visited" plans and excluded for
-                            "unvisited" plans.
-                        </p>
                     </div>
 
                     <div id="tripCards" class="travel-logs-list" aria-live="polite">

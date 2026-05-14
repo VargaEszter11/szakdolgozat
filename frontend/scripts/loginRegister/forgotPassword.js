@@ -234,7 +234,7 @@ function showResetStep(userId) {
 
             if (response.ok && data.success) {
                 overlay.remove();
-                showSuccess('Password reset successfully! You can now log in with your new password.');
+                window.location.href = 'loginPage.html';
             } else {
                 errorMsg.textContent = data.detail || 'Reset failed.';
                 errorMsg.style.display = 'block';

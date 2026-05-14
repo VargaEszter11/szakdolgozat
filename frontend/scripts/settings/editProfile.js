@@ -5,22 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var emailInput = document.getElementById('profileEmail');
     var newPasswordInput = document.getElementById('profileNewPassword');
     var confirmPasswordInput = document.getElementById('profileConfirmPassword');
-    var successEl = document.getElementById('editProfileSuccess');
     var errorEl = document.getElementById('editProfileError');
     var saveBtn = document.getElementById('saveProfileBtn');
 
     function hideMessages() {
-        successEl.hidden = true;
         errorEl.hidden = true;
-    }
-
-    function showSuccess(text) {
-        hideMessages();
-        successEl.textContent = text;
-        successEl.hidden = false;
-        setTimeout(function () {
-            successEl.hidden = true;
-        }, 4000);
     }
 
     function showError(text) {
@@ -123,7 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     localStorage.setItem('username', result.body.username || username);
                     if (newPasswordInput) newPasswordInput.value = '';
                     if (confirmPasswordInput) confirmPasswordInput.value = '';
-                    showSuccess(t('editProfile.savedMessage', 'Profile updated successfully.'));
                     if (window.i18n && typeof window.i18n.applyToPage === 'function') {
                         window.i18n.applyToPage();
                     }

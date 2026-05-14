@@ -73,7 +73,6 @@
         throw new Error('Failed to delete trip: ' + response.status);
       }
 
-      showSuccess('Trip deleted successfully');
       await render();
     } catch (error) {
       console.error('Error deleting trip:', error);

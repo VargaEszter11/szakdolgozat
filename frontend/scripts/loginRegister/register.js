@@ -36,9 +36,7 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
 
         if (data.success) {
 
-            showSuccess("Registration successful! You can now log in.", () => {
-                window.location.href = "loginPage.html";
-            });
+            window.location.href = "loginPage.html";
 
         } else {
 

@@ -77,10 +77,18 @@
     <script src="../../scripts/visitedPlaces/loadPlaces.js" defer></script>
 
     <template id="placeDetailsModalTemplate">
-        <div class="place-details-overlay" role="dialog" aria-modal="true" aria-labelledby="placeDetailsTitle">
-            <div class="place-details-panel" id="placeDetailsModalBox">
+        <div class="place-details-overlay visited-place-details-overlay" role="dialog" aria-modal="true"
+            aria-labelledby="placeDetailsTitle">
+            <div class="place-details-panel visited-place-details-panel" id="placeDetailsModalBox">
                 <div class="place-details-header">
-                    <h2 id="placeDetailsTitle" class="place-details-title"></h2>
+                    <div class="place-details-title-wrap">
+                        <svg class="place-details-pin" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z" />
+                            <circle cx="12" cy="11" r="2" />
+                        </svg>
+                        <h2 id="placeDetailsTitle" class="place-details-title"></h2>
+                    </div>
                     <button type="button" class="place-details-close" data-place-details-close aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">

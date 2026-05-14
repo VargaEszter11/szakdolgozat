@@ -164,9 +164,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             localStorage.removeItem('user_id');
             localStorage.removeItem('username');
             localStorage.removeItem('google_avatar_url');
-            showSuccess('Logged out successfully', function () {
-              window.location.href = 'loginPage.html';
-            });
+            window.location.href = 'loginPage.html';
           });
         });
       }

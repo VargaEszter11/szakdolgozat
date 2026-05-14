@@ -219,26 +219,38 @@
     outline: none;
 }
 
-.edit-place-modal {
-    max-width: min(480px, 100%);
-    max-height: min(90vh, 720px);
-    overflow-y: auto;
+/* Edit place dialog: same shell as place-details (panel + overlay tokens) */
+.place-details-panel.edit-place-modal {
+    max-width: min(560px, 100%);
 }
 
-.edit-place-modal-header {
-    margin-bottom: 1rem;
-}
-
-.edit-place-modal-title {
+.edit-place-modal-form {
+    display: flex;
+    flex-direction: column;
     flex: 1;
+    min-height: 0;
 }
 
-.edit-place-modal .add-place-form {
-    margin-bottom: 0.5rem;
-}
-
-.edit-place-modal .add-place-form .form-group:last-of-type {
+.edit-place-modal-body .add-place-form .form-group:last-of-type {
     margin-bottom: 0;
+}
+
+.edit-place-modal-footer {
+    flex-shrink: 0;
+    padding: 1rem 1.5rem 1.25rem;
+    border-top: 1px solid var(--color-surface-border);
+    background: var(--color-surface);
+}
+
+.edit-place-modal-footer .form-actions {
+    margin-top: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.edit-place-modal-footer .btn-cancel {
+    margin-left: 0;
 }
 
 .edit-place-current-photo {
@@ -253,8 +265,24 @@
     margin-top: 0;
 }
 
-.edit-place-modal-actions {
-    margin-top: 0.25rem;
+@media (max-width: 768px) {
+    .edit-place-modal-footer {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .edit-place-modal-footer .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .edit-place-modal-footer .btn-add,
+    .edit-place-modal-footer .btn-cancel {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
 }
 
 .visited-place-card {
@@ -316,6 +344,71 @@
     border: 1px solid var(--color-surface-border);
     box-shadow: var(--color-shadow-elevated);
     animation: place-details-panel-in 0.26s ease;
+}
+
+/* Visited places "more info" — match travel-log cards (flat surface, log-title typography) */
+.place-details-title-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.visited-place-details-overlay .place-details-pin {
+    flex-shrink: 0;
+    color: var(--color-accent);
+    margin-top: 0.14rem;
+}
+
+.visited-place-details-overlay .place-details-panel {
+    box-shadow: none;
+}
+
+.visited-place-details-overlay .place-details-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+    color: var(--color-text);
+}
+
+.visited-place-details-overlay .place-details-section {
+    padding: 1rem 1.15rem 1.15rem;
+    background: var(--color-surface);
+    border-radius: 16px;
+    border: 1px solid var(--color-surface-border);
+}
+
+.visited-place-details-overlay .place-details-meta + .place-details-section {
+    margin-top: 1rem;
+}
+
+.visited-place-details-overlay .place-details-section + .place-details-section {
+    margin-top: 1rem;
+}
+
+.visited-place-details-overlay .place-details-body h3,
+.visited-place-details-overlay .place-details-body #placeDetailsPhotosHeading {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.55rem;
+    color: var(--color-text);
+}
+
+.visited-place-details-overlay .place-details-meta p {
+    font-size: 0.875rem;
+}
+
+.visited-place-details-overlay .place-details-meta span {
+    font-size: 0.875rem;
+    color: var(--color-text);
+}
+
+.visited-place-details-overlay .place-details-description {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--color-text-card-notes);
 }
 
 .place-details-header {
@@ -551,5 +644,11 @@
 
     .place-details-title {
         font-size: 1.1rem;
+    }
+
+    .visited-place-details-overlay .place-details-title {
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 }

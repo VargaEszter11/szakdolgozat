@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('settingsForm');
     var themeSelect = document.getElementById('themeSelect');
     var languageSelect = document.getElementById('languageSelect');
-    var saveMessage = document.getElementById('saveMessage');
-
     var savedTheme = localStorage.getItem('theme') || 'light';
     var savedLanguage = localStorage.getItem('language') || 'en';
 
@@ -46,12 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.i18n) {
             window.i18n.setLanguage(newLang);
             window.i18n.applyToPage();
-            saveMessage.textContent = window.i18n.t('settings.savedMessage');
         }
-        saveMessage.hidden = false;
-        setTimeout(function () {
-            saveMessage.hidden = true;
-        }, 3000);
     }
 
     form.addEventListener('submit', function (e) {

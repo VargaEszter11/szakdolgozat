@@ -320,9 +320,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
 
         button.textContent = 'Saved ✓';
         button.style.backgroundColor = 'var(--success, #22c55e)';
-        window.showSuccess('Trip saved successfully!', function () {
-            window.location.href = 'planned_trips.html';
-        });
+        window.location.href = 'planned_trips.html';
 
     } catch (error) {
         console.error('Error saving trip:', error);
