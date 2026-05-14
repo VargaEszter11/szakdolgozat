@@ -254,7 +254,7 @@
 }
 
 .edit-place-current-photo .photo-preview-grid {
-    max-width: 120px;
+    max-width: 100%;
 }
 
 .edit-place-photo-shell .upload-zone {

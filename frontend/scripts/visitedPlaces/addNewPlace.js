@@ -119,6 +119,10 @@ document.addEventListener('DOMContentLoaded', function () {
     return false;
   }
 
+  function fileKey(f) {
+    return (f.name || '') + '|' + String(f.size) + '|' + String(f.lastModified);
+  }
+
   function syncSelectedFilesToInput() {
     if (!photosInput) return;
     var dt = new DataTransfer();
@@ -139,19 +143,12 @@ document.addEventListener('DOMContentLoaded', function () {
     previewObjectUrls = [];
   }
 
-  function updateUploadShellVisibility() {
-    var shell = document.querySelector('.photo-upload-shell');
-    if (!shell) return;
-    shell.classList.toggle('photo-upload-shell--has-file', selectedPhotoFiles.length > 0);
-  }
-
   function renderPhotoPreviews() {
     if (!photoPreviewGrid) return;
     revokePreviewUrls();
     photoPreviewGrid.innerHTML = '';
     if (selectedPhotoFiles.length === 0) {
       photoPreviewGrid.hidden = true;
-      updateUploadShellVisibility();
       return;
     }
     photoPreviewGrid.hidden = false;
@@ -185,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function () {
       item.appendChild(rm);
       photoPreviewGrid.appendChild(item);
     });
-    updateUploadShellVisibility();
   }
 
   function showPhotoFormatErrors(batchErrors) {
@@ -219,8 +215,11 @@ document.addEventListener('DOMContentLoaded', function () {
     photosInput.addEventListener('change', function () {
       var picked = Array.from(photosInput.files || []);
       photosInput.value = '';
-      selectedPhotoFiles = [];
       var batchErrors = [];
+      var prevKeys = {};
+      selectedPhotoFiles.forEach(function (f) {
+        prevKeys[fileKey(f)] = true;
+      });
       if (picked.length === 0) {
         syncSelectedFilesToInput();
         renderPhotoPreviews();
@@ -232,7 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
           batchErrors.push({ file: file, reason: 'format' });
         } else if (file.size > MAX_PHOTO_BYTES) {
           batchErrors.push({ file: file, reason: 'size' });
-        } else {
+        } else if (!prevKeys[fileKey(file)]) {
+          prevKeys[fileKey(file)] = true;
           selectedPhotoFiles.push(file);
         }
       });

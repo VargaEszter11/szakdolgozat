@@ -104,7 +104,12 @@ class Image(Base):
     __tablename__ = "images"
 
     id = Column(Integer, primary_key=True, index=True)
-    visited_place_id = Column(Integer, ForeignKey("visited_places.id", ondelete="CASCADE"), nullable=False)
+    visited_place_id = Column(
+        Integer,
+        ForeignKey("visited_places.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     # Persisted column name is `url` (existing PostgreSQL schema); attribute stays image_path in code.
     image_path = Column("url", Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now())

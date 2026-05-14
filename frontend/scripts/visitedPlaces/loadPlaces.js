@@ -96,27 +96,6 @@
       });
   }
 
-  function deleteAllPlaceImages(placeId) {
-    return fetch('/api/visited-places/' + placeId + '/images')
-      .then(function (res) {
-        return res.ok ? res.json() : [];
-      })
-      .then(function (imgs) {
-        if (!Array.isArray(imgs) || !imgs.length) return Promise.resolve();
-        return imgs.reduce(function (chain, im) {
-          return chain.then(function () {
-            return fetch('/api/images/' + im.id, { method: 'DELETE' }).then(function (res) {
-              if (!res.ok && res.status !== 404) {
-                return responseDetail(res).then(function (msg) {
-                  throw new Error(msg || 'Failed to remove a photo');
-                });
-              }
-            });
-          });
-        }, Promise.resolve());
-      });
-  }
-
   function starsHtml(placeId, rating) {
     rating = Math.min(5, Math.max(0, parseInt(rating, 10) || 0));
     var html = '';
@@ -139,6 +118,7 @@
     var d = dateValue ? new Date(dateValue) : null;
     var dateSortKey = d && !isNaN(d.getTime()) ? d.getTime() : 0;
     var rawDescription = item.description || item.notes || '';
+    var rawPhotoPath = item.photo_path != null && item.photo_path !== '' ? String(item.photo_path) : null;
     return {
       id: item.id != null && item.id !== '' ? item.id : (placeName + '-' + (dateValue || '') + '-' + index),
       name: name,
@@ -149,6 +129,7 @@
       dateSortKey: dateSortKey,
       rating: item.rating != null ? item.rating : 5,
       description: rawDescription,
+      photo_path: rawPhotoPath,
       image: item.image || item.photo_path || DEFAULT_IMAGE,
       coordinates: item.coordinates || null,
       latitude: item.latitude != null ? item.latitude : null,
@@ -267,17 +248,17 @@
     }
 
     fetchPlaceImages(rawId).then(function (images) {
-      var firstImg = Array.isArray(images) && images[0] ? images[0] : null;
-      var existingImageId = firstImg ? firstImg.id : null;
-      mountEditPlaceModal(place, rawId, existingImageId);
+      var arr = Array.isArray(images) ? images : [];
+      mountEditPlaceModal(place, rawId, arr);
     });
   }
 
-  function mountEditPlaceModal(place, rawId, existingImageId) {
+  function mountEditPlaceModal(place, rawId, existingImages) {
     var uid = 'ep-' + rawId + '-' + String(Date.now()).slice(-6);
-    var selectedNewFile = null;
+    var selectedNewFiles = [];
     var previewObjectUrls = [];
-    var removeExistingPhoto = false;
+    var removedImageIds = {};
+    var clearLegacyPhoto = false;
 
     document.querySelectorAll('.visited-place-details-overlay').forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
@@ -386,7 +367,7 @@
     photoGroup.className = 'form-group';
     var photoLabel = document.createElement('span');
     photoLabel.className = 'form-label';
-    photoLabel.textContent = t('addNewPlace.photos', 'Photo');
+    photoLabel.textContent = t('addNewPlace.photos', 'Photos');
     photoGroup.appendChild(photoLabel);
 
     var photoShell = document.createElement('div');
@@ -396,34 +377,77 @@
     currentWrap.className = 'edit-place-current-photo';
     var currentGrid = document.createElement('div');
     currentGrid.className = 'photo-preview-grid';
-    currentGrid.style.maxWidth = '140px';
+    currentWrap.appendChild(currentGrid);
 
-    var hasDisplayPhoto = place.image && place.image !== DEFAULT_IMAGE;
-    if (hasDisplayPhoto) {
-      var curItem = document.createElement('div');
-      curItem.className = 'photo-preview-item';
-      var curImg = document.createElement('img');
-      curImg.src = place.image;
-      curImg.alt = '';
-      var curRm = document.createElement('button');
-      curRm.type = 'button';
-      curRm.className = 'photo-preview-remove';
-      curRm.setAttribute('aria-label', t('visitedPlaces.removePhoto', 'Remove photo'));
-      curRm.appendChild(document.createTextNode('×'));
-      curRm.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        removeExistingPhoto = true;
-        currentWrap.hidden = true;
+    var sortedImages = (existingImages || []).slice().sort(function (a, b) {
+      return (a.id || 0) - (b.id || 0);
+    });
+
+    var legacyPath =
+      place.photo_path != null && place.photo_path !== '' ? String(place.photo_path) : null;
+
+    function galleryHasUrl(url) {
+      if (!url) return false;
+      return sortedImages.some(function (im) {
+        return im.image_path === url;
       });
-      curItem.appendChild(curImg);
-      curItem.appendChild(curRm);
-      currentGrid.appendChild(curItem);
-      currentWrap.appendChild(currentGrid);
-      currentWrap.hidden = false;
-    } else {
-      currentWrap.hidden = true;
     }
+
+    var orphanLegacy = !!legacyPath && !galleryHasUrl(legacyPath);
+
+    function refreshExistingPhotoGrid() {
+      currentGrid.innerHTML = '';
+      sortedImages.forEach(function (im) {
+        if (!im || im.id == null) return;
+        if (removedImageIds[im.id]) return;
+        var src = im.image_path || im.url || '';
+        if (!src) return;
+        var curItem = document.createElement('div');
+        curItem.className = 'photo-preview-item';
+        var curImg = document.createElement('img');
+        curImg.src = src;
+        curImg.alt = '';
+        var curRm = document.createElement('button');
+        curRm.type = 'button';
+        curRm.className = 'photo-preview-remove';
+        curRm.setAttribute('aria-label', t('visitedPlaces.removePhoto', 'Remove photo'));
+        curRm.appendChild(document.createTextNode('×'));
+        var idToRemove = im.id;
+        curRm.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          removedImageIds[idToRemove] = true;
+          refreshExistingPhotoGrid();
+        });
+        curItem.appendChild(curImg);
+        curItem.appendChild(curRm);
+        currentGrid.appendChild(curItem);
+      });
+      if (orphanLegacy && !clearLegacyPhoto) {
+        var legItem = document.createElement('div');
+        legItem.className = 'photo-preview-item';
+        var legImg = document.createElement('img');
+        legImg.src = legacyPath;
+        legImg.alt = '';
+        var legRm = document.createElement('button');
+        legRm.type = 'button';
+        legRm.className = 'photo-preview-remove';
+        legRm.setAttribute('aria-label', t('visitedPlaces.removePhoto', 'Remove photo'));
+        legRm.appendChild(document.createTextNode('×'));
+        legRm.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          clearLegacyPhoto = true;
+          refreshExistingPhotoGrid();
+        });
+        legItem.appendChild(legImg);
+        legItem.appendChild(legRm);
+        currentGrid.appendChild(legItem);
+      }
+      currentWrap.hidden = currentGrid.children.length === 0;
+    }
+
+    refreshExistingPhotoGrid();
 
     var photosInputId = uid + '-photos';
     var uploadLabel = document.createElement('label');
@@ -435,8 +459,8 @@
       '<polyline points="17 8 12 3 7 8"/>' +
       '<line x1="12" x2="12" y1="3" y2="15"/>' +
       '</svg>' +
-      '<p class="upload-text">' + escapeHtml(t('visitedPlaces.replacePhotoHint', 'Upload a new photo (PNG or JPG, max 10 MB)')) + '</p>' +
-      '<p class="upload-hint">' + escapeHtml(t('addNewPlace.photosHint', 'One PNG or JPG, max 10 MB')) + '</p>';
+      '<p class="upload-text">' + escapeHtml(t('visitedPlaces.addPhotosHint', 'Add photos (PNG or JPG, max 10 MB each). You can select several at once or add more in another step.')) + '</p>' +
+      '<p class="upload-hint">' + escapeHtml(t('addNewPlace.photosHint', 'PNG or JPG, max 10 MB each')) + '</p>';
 
     var photosInput = document.createElement('input');
     photosInput.type = 'file';
@@ -444,6 +468,7 @@
     photosInput.name = 'photos';
     photosInput.accept = 'image/png,image/jpeg,image/jpg';
     photosInput.className = 'upload-input';
+    photosInput.multiple = true;
     uploadLabel.appendChild(photosInput);
 
     var newPreviewGrid = document.createElement('div');
@@ -483,78 +508,84 @@
       photoErrors.textContent = lines.join('\n');
     }
 
+    function fileKey(f) {
+      return (f.name || '') + '|' + String(f.size) + '|' + String(f.lastModified);
+    }
+
     function renderNewFilePreview() {
       revokePreviewUrls();
       newPreviewGrid.innerHTML = '';
-      if (!selectedNewFile) {
+      if (!selectedNewFiles.length) {
         newPreviewGrid.hidden = true;
-        photoShell.classList.remove('photo-upload-shell--has-file');
         return;
       }
       newPreviewGrid.hidden = false;
-      photoShell.classList.add('photo-upload-shell--has-file');
-      var url = URL.createObjectURL(selectedNewFile);
-      previewObjectUrls.push(url);
-      var item = document.createElement('div');
-      item.className = 'photo-preview-item';
-      var img = document.createElement('img');
-      img.src = url;
-      img.alt = selectedNewFile.name || '';
-      var rm = document.createElement('button');
-      rm.type = 'button';
-      rm.className = 'photo-preview-remove';
-      rm.setAttribute('aria-label', t('visitedPlaces.clearNewPhoto', 'Remove new photo'));
-      rm.appendChild(document.createTextNode('×'));
-      rm.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        selectedNewFile = null;
-        photosInput.value = '';
-        renderNewFilePreview();
-        if (hasDisplayPhoto && !removeExistingPhoto) {
-          currentWrap.hidden = false;
-        }
-        showPhotoErrors([]);
+      selectedNewFiles.forEach(function (file) {
+        var url = URL.createObjectURL(file);
+        previewObjectUrls.push(url);
+        var item = document.createElement('div');
+        item.className = 'photo-preview-item';
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = file.name || '';
+        var rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'photo-preview-remove';
+        rm.setAttribute('aria-label', t('visitedPlaces.clearNewPhoto', 'Remove new photo'));
+        rm.appendChild(document.createTextNode('×'));
+        rm.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var ix = selectedNewFiles.indexOf(file);
+          if (ix >= 0) selectedNewFiles.splice(ix, 1);
+          photosInput.value = '';
+          renderNewFilePreview();
+          showPhotoErrors([]);
+        });
+        item.appendChild(img);
+        item.appendChild(rm);
+        newPreviewGrid.appendChild(item);
       });
-      item.appendChild(img);
-      item.appendChild(rm);
-      newPreviewGrid.appendChild(item);
     }
 
     photosInput.addEventListener('change', function () {
       var picked = Array.from(photosInput.files || []);
       photosInput.value = '';
-      selectedNewFile = null;
-      showPhotoErrors([]);
-      if (picked.length === 0) {
-        renderNewFilePreview();
-        return;
-      }
-      var file = picked[0];
-      if (!isAllowedImage(file)) {
-        var name = file.name || 'file';
-        var msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
-        if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-          msg = 'Only PNG or JPEG files are allowed: ' + name;
+      var batchErrors = [];
+      var prevKeys = {};
+      selectedNewFiles.forEach(function (f) {
+        prevKeys[fileKey(f)] = true;
+      });
+      picked.forEach(function (file) {
+        if (!isAllowedImage(file)) {
+          batchErrors.push({ file: file, reason: 'format' });
+          return;
         }
-        showPhotoErrors([msg]);
-        renderNewFilePreview();
-        return;
-      }
-      if (file.size > MAX_PHOTO_BYTES) {
-        var name2 = file.name || 'file';
-        var msg2 = tpl(t('addNewPlace.photoTooLarge'), { name: name2 });
-        if (msg2.indexOf('addNewPlace.') === 0 || msg2.indexOf('{{name}}') >= 0) {
-          msg2 = 'File too large (max 10 MB): ' + name2;
+        if (file.size > MAX_PHOTO_BYTES) {
+          batchErrors.push({ file: file, reason: 'size' });
+          return;
         }
-        showPhotoErrors([msg2]);
-        renderNewFilePreview();
-        return;
-      }
-      selectedNewFile = file;
-      if (hasDisplayPhoto) {
-        currentWrap.hidden = true;
-      }
+        if (prevKeys[fileKey(file)]) return;
+        prevKeys[fileKey(file)] = true;
+        selectedNewFiles.push(file);
+      });
+      var errLines = batchErrors.map(function (err) {
+        var name = err.file.name || 'file';
+        var msg;
+        if (err.reason === 'size') {
+          msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
+          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+            msg = 'File too large (max 10 MB): ' + name;
+          }
+        } else {
+          msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
+          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+            msg = 'Only PNG or JPEG files are allowed: ' + name;
+          }
+        }
+        return msg;
+      });
+      showPhotoErrors(errLines);
       renderNewFilePreview();
     });
 
@@ -602,10 +633,29 @@
     });
 
     function applyPhotoChangesAfterPut() {
-      if (selectedNewFile) {
-        return deleteAllPlaceImages(rawId).then(function () {
+      var chain = Promise.resolve();
+      var idsToDelete = Object.keys(removedImageIds)
+        .map(function (k) {
+          return parseInt(k, 10);
+        })
+        .filter(function (id) {
+          return !Number.isNaN(id);
+        });
+      idsToDelete.forEach(function (imageId) {
+        chain = chain.then(function () {
+          return fetch('/api/images/' + imageId, { method: 'DELETE' }).then(function (res) {
+            if (!res.ok && res.status !== 404) {
+              return responseDetail(res).then(function (msg) {
+                throw new Error(msg || 'Failed to remove a photo');
+              });
+            }
+          });
+        });
+      });
+      selectedNewFiles.forEach(function (file) {
+        chain = chain.then(function () {
           var fd = new FormData();
-          fd.append('file', selectedNewFile);
+          fd.append('file', file);
           return fetch('/api/visited-places/' + rawId + '/images/upload', {
             method: 'POST',
             body: fd
@@ -617,11 +667,8 @@
             }
           });
         });
-      }
-      if (removeExistingPhoto && !selectedNewFile) {
-        return deleteAllPlaceImages(rawId);
-      }
-      return Promise.resolve();
+      });
+      return chain;
     }
 
     form.addEventListener('submit', function (e) {
@@ -637,7 +684,7 @@
         date: (dateInput.value || '').trim() || null,
         description: (descInput.value || '').trim() || null
       };
-      if (removeExistingPhoto && !selectedNewFile) {
+      if (clearLegacyPhoto) {
         body.photo_path = null;
       }
       saveBtn.disabled = true;

@@ -297,12 +297,17 @@ def get_image(db: Session, image_id: int) -> Optional[models.Image]:
     return db.query(models.Image).filter(models.Image.id == image_id).first()
 
 def get_images(db: Session, visited_place_id: int) -> List[models.Image]:
-    """Get all images for a visited place"""
-    return db.query(models.Image).filter(models.Image.visited_place_id == visited_place_id).all()
+    """Get all images for a visited place (ordered by id)."""
+    return (
+        db.query(models.Image)
+        .filter(models.Image.visited_place_id == visited_place_id)
+        .order_by(models.Image.id)
+        .all()
+    )
 
 
 def count_images_for_visited_place(db: Session, visited_place_id: int) -> int:
-    """How many image rows exist for this place (expected at most one)."""
+    """How many image rows exist for this place."""
     return (
         db.query(models.Image)
         .filter(models.Image.visited_place_id == visited_place_id)

@@ -231,11 +231,6 @@ span.flatpickr-weekday {
     gap: 0.75rem;
 }
 
-/* Hide dashed drop zone once the single image is chosen (remove via × to show again). */
-.photo-upload-shell.photo-upload-shell--has-file .upload-zone {
-    display: none;
-}
-
 .photo-preview-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));

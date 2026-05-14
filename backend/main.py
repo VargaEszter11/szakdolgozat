@@ -53,6 +53,9 @@ attach_api_loggers_to_console()
 def startup_event():
     """Create database tables on application startup"""
     Base.metadata.create_all(bind=engine)
+    from database.schema_patches import apply_startup_schema_patches
+
+    apply_startup_schema_patches()
     from utils.place_image_upload import ensure_place_images_dir
 
     ensure_place_images_dir()
