@@ -115,42 +115,6 @@
     margin-bottom: 0.25rem;
 }
 
-.form-actions {
-    display: flex;
-    align-items: center;
-    margin-top: 1rem;
-}
-
-.btn-add {
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    border: none;
-    padding: 0.5rem 1.2rem;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-add:hover {
-    background: var(--color-btn-add-secondary-hover);
-}
-
-.btn-cancel {
-    background: none;
-    color: var(--color-text);
-    border: 1px solid var(--color-btn-cancel-border);
-    padding: 0.45rem 1rem;
-    border-radius: 12px;
-    margin-left: 0.5rem;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.btn-cancel:hover {
-    background: var(--color-btn-cancel-hover);
-}
-
 .flatpickr-calendar {
     background: var(--color-surface) !important;
     border: 1px solid var(--color-surface-border-medium) !important;
@@ -234,24 +198,6 @@ span.flatpickr-weekday {
 }
 
 @media (max-width: 768px) {
-    .form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .form-actions .btn-add,
-    .form-actions .btn-cancel {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .btn-cancel {
-        margin-left: 0;
-        margin-top: 0.5rem;
-    }
-
     .star-rating {
         justify-content: space-between;
     }

@@ -61,7 +61,7 @@
                         <p class="empty-state-text" data-i18n="plannedTrips.noTripsPlannedYet">
                             No trips planned yet
                         </p>
-                        <a href="plan_new_trip.html" class="btn-submit" data-i18n="plannedTrips.planFirstTrip">
+                        <a href="plan_new_trip.html" class="btn-add" data-i18n="plannedTrips.planFirstTrip">
                             Plan Your First Trip
                         </a>
                     </div>
@@ -107,6 +107,61 @@
                     </h3>
 
                     <div class="trip-stops-list" id="tripDetailsStopsList"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tripEditModalTemplate">
+        <div class="trip-details-modal-overlay planned-trips-trip-popup" id="tripEditModal" role="dialog"
+            aria-modal="true" aria-labelledby="tripEditHeading">
+            <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripEditModalBox">
+                <div class="trip-details-header planned-trips-trip-popup__header">
+                    <h2 id="tripEditHeading" class="trip-details-title" data-i18n="plannedTrips.editModalTitle">Edit trip</h2>
+                    <button type="button" class="trip-details-close" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="trip-details-content">
+                    <div class="trip-details-info trip-details-info--form">
+                        <div class="trip-details-form-field">
+                            <label for="editTripTitle" data-i18n="plannedTrips.editFieldTitle">Title</label>
+                            <input type="text" id="editTripTitle" class="trip-details-text-input" required maxlength="200" autocomplete="off" />
+                        </div>
+                        <div class="trip-details-form-field">
+                            <label for="editTripStartCity" data-i18n="plannedTrips.editFieldStartCity">Starting city</label>
+                            <input type="text" id="editTripStartCity" class="trip-details-text-input" maxlength="200" autocomplete="off" />
+                        </div>
+                        <div class="trip-details-form-row-2">
+                            <div class="trip-details-form-field">
+                                <label for="editTripStartDate" data-i18n="plannedTrips.editFieldStartDate">Start date</label>
+                                <input type="date" id="editTripStartDate" class="trip-details-text-input" />
+                            </div>
+                            <div class="trip-details-form-field">
+                                <label for="editTripEndDate" data-i18n="plannedTrips.editFieldEndDate">End date</label>
+                                <input type="date" id="editTripEndDate" class="trip-details-text-input" />
+                            </div>
+                        </div>
+                    </div>
+                    <h3 data-i18n="plannedTrips.editStopsHeading">Stops</h3>
+                    <div id="editStopsList" class="trip-stops-list"></div>
+                    <button type="button" id="editAddStopBtn" class="btn-add">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                        </svg>
+                        <span data-i18n="plannedTrips.editAddStop">Add stop</span>
+                    </button>
+                    <div class="trip-details-form-actions">
+                        <button type="button" id="tripEditSaveBtn" class="btn-add" data-i18n="plannedTrips.editSave">Save</button>
+                        <button type="button" id="tripEditCancelBtn" class="btn-cancel" data-i18n="plannedTrips.editCancel">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -307,8 +307,15 @@ body {
     line-height: 1.45;
 }
 
-/* ── Add Place button ── */
-.main-page-home .btn-add {
+/* ============================================================
+   App buttons — primary (accent). Use .btn-add or .btn-submit.
+   ============================================================ */
+.btn-add,
+a.btn-add,
+button.btn-add,
+.btn-submit,
+a.btn-submit,
+button.btn-submit {
     background: var(--color-accent);
     color: var(--color-on-accent);
     border: none;
@@ -318,15 +325,104 @@ body {
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.45rem;
     font-size: 0.875rem;
     cursor: pointer;
+    font-family: inherit;
+    line-height: 1.25;
+    box-sizing: border-box;
 }
 
-.main-page-home .btn-add:hover {
+.btn-add:hover,
+a.btn-add:hover,
+button.btn-add:hover,
+.btn-submit:hover,
+a.btn-submit:hover,
+button.btn-submit:hover {
     background: var(--color-accent-hover);
     color: var(--color-on-accent);
     filter: none;
+}
+
+.btn-add .icon,
+.btn-submit .icon {
+    flex-shrink: 0;
+}
+
+.btn-add.btn-add-outline,
+a.btn-add.btn-add-outline,
+button.btn-add.btn-add-outline {
+    background: transparent;
+    color: var(--color-accent);
+    border: 2px solid var(--color-accent);
+}
+
+.btn-add.btn-add-outline:hover,
+a.btn-add.btn-add-outline:hover,
+button.btn-add.btn-add-outline:hover {
+    background: var(--color-outline-accent-bg);
+    color: var(--color-accent);
+}
+
+.btn-add.btn-add-danger,
+a.btn-add.btn-add-danger,
+button.btn-add.btn-add-danger {
+    background: var(--color-danger);
+    color: #ffffff;
+}
+
+.btn-add.btn-add-danger:hover,
+a.btn-add.btn-add-danger:hover,
+button.btn-add.btn-add-danger:hover {
+    background: var(--color-danger-hover);
+    color: #ffffff;
+}
+
+/* ============================================================
+   App buttons — cancel (secondary outline). Own section.
+   ============================================================ */
+.btn-cancel,
+a.btn-cancel,
+button.btn-cancel {
+    background: none;
+    color: var(--color-text);
+    border: 1px solid var(--color-btn-cancel-border);
+    padding: 0.45rem 1rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.btn-cancel:hover,
+a.btn-cancel:hover,
+button.btn-cancel:hover {
+    background: var(--color-btn-cancel-hover);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Rows with gap: no extra inset on cancel */
+.form-actions .btn-cancel,
+.trip-details-form-actions .btn-cancel,
+.trip-details-edit-stop-actions .btn-cancel,
+.edit-place-modal-footer .btn-cancel {
+    margin-left: 0;
 }
 
 /* ── Travel log cards ── */
@@ -401,27 +497,6 @@ body.page-profile .main-page-home-content-inner>section.card {
     color: var(--color-text);
     border-bottom: 1px solid var(--color-surface-border-strong);
     padding-bottom: 0.5rem;
-}
-
-.main-page-home .btn-add.btn-add-outline {
-    background: transparent;
-    color: var(--color-accent);
-    border: 2px solid var(--color-accent);
-}
-
-.main-page-home .btn-add.btn-add-outline:hover {
-    background: var(--color-outline-accent-bg);
-    color: var(--color-accent);
-}
-
-.main-page-home .btn-add.btn-add-danger {
-    background: var(--color-danger);
-    color: #ffffff;
-}
-
-.main-page-home .btn-add.btn-add-danger:hover {
-    background: var(--color-danger-hover);
-    color: #ffffff;
 }
 
 .main-page-home .profile-actions-row {
@@ -627,21 +702,44 @@ body.page-profile .main-page-home-content-inner>section.card {
         justify-content: center;
     }
 
-    .main-page-home .btn-add,
-    .main-page-home a.btn-add,
-    .main-page-home button.btn-add,
-    .main-page-home .btn-cancel,
-    .main-page-home a.btn-cancel,
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-actions .btn-add,
+    .form-actions a.btn-add,
+    .form-actions button.btn-add,
+    .form-actions .btn-cancel,
+    .form-actions a.btn-cancel,
+    .form-actions button.btn-cancel,
+    .form-actions .btn-submit,
+    .form-actions a.btn-submit,
+    .form-actions button.btn-submit,
     .main-page-home .btn-trip,
     .main-page-home .btn-trip-secondary,
     .main-page-home .profile-actions-row .btn-add,
-    .main-page-home .empty-state .btn-submit,
     .main-page-home .add-place-form .btn-add,
-    .main-page-home .add-place-form .btn-cancel {
+    .main-page-home .add-place-form .btn-cancel,
+    .edit-place-modal-footer .btn-add,
+    .edit-place-modal-footer .btn-cancel,
+    .planned-trips-trip-popup .trip-details-form-actions .btn-add,
+    .planned-trips-trip-popup .trip-details-form-actions .btn-cancel {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         text-align: center;
+        width: 100%;
+    }
+
+    .planned-trips-trip-popup .trip-details-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .edit-place-modal-footer .form-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
 

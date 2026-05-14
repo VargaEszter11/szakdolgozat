@@ -106,27 +106,6 @@
     opacity: 0.5;
 }
 
-.form-actions {
-    display: flex;
-    align-items: center;
-    margin-top: 1rem;
-}
-
-.btn-cancel {
-    background: none;
-    color: var(--color-text);
-    border: 1px solid var(--color-btn-cancel-border);
-    padding: 0.45rem 1rem;
-    border-radius: 12px;
-    margin-left: 0.5rem;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.btn-cancel:hover {
-    background: var(--color-btn-cancel-hover);
-}
-
 .flatpickr-calendar {
     background: var(--color-surface) !important;
     border: 1px solid var(--color-surface-border-medium) !important;
@@ -426,24 +405,6 @@ html[data-theme="light"] .cost-over .cost-remaining {
 
     .route-option-card {
         width: 100%;
-    }
-
-    .form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .form-actions .btn-add,
-    .form-actions .btn-cancel {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .btn-cancel {
-        margin-left: 0;
-        margin-top: 0.5rem;
     }
 }
 

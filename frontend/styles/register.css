@@ -86,33 +86,6 @@ body.page-register .password-toggle .eye-icon {
     display: block;
 }
 
-body.page-register .form-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1rem;
-}
-
-body.page-register .form-actions .btn-cancel {
-    background: none;
-    color: var(--color-text);
-    border: 1px solid var(--color-btn-cancel-border);
-    padding: 0.45rem 1rem;
-    border-radius: 12px;
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-body.page-register .form-actions .btn-cancel:hover {
-    background: var(--color-btn-cancel-hover);
-}
-
 body.page-register .main-page-home-content-inner>p.muted {
     margin-top: 1.25rem;
     font-size: 0.9rem;
@@ -132,19 +105,5 @@ body.page-register .main-page-home-content-inner>p.muted a:hover {
 @media (max-width: 768px) {
     body.page-register .main-page-home-content-inner>.card {
         padding: 1.5rem 1.25rem;
-    }
-
-    body.page-register .form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    body.page-register .form-actions .btn-add,
-    body.page-register .form-actions .btn-cancel {
-        width: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
     }
 }

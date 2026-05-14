@@ -43,6 +43,24 @@
     return fallback;
   }
 
+  function toDateInputValue(d) {
+    if (!d) return '';
+    var s = String(d);
+    if (s.length >= 10) return s.slice(0, 10);
+    return s;
+  }
+
+  function fromDateInputVal(v) {
+    if (!v || !String(v).trim()) return null;
+    return String(v).trim().slice(0, 10);
+  }
+
+  function trimOrNull(v) {
+    if (v == null) return null;
+    var t = String(v).trim();
+    return t ? t : null;
+  }
+
   function sleep(ms) {
     return new Promise(function (resolve) {
       setTimeout(resolve, ms);
@@ -162,6 +180,14 @@
     }
     mapEl._leaflet_map = null;
     mapEl.innerHTML = '';
+  }
+
+  function destroyPlannedTripPopups() {
+    document.querySelectorAll('.trip-details-modal-overlay').forEach(function (el) {
+      var prevMap = el.querySelector('#tripDetailsMap');
+      if (prevMap) destroyTripMap(prevMap);
+      el.remove();
+    });
   }
 
   function initTripDetailsMap(modal, trip, orderedStops) {
@@ -495,7 +521,8 @@
         e.preventDefault();
         e.stopPropagation();
         var eid = editBtn.getAttribute('data-id');
-        if (eid) window.location.href = 'plan_new_trip.html?edit=' + eid;
+        var tid = eid ? parseInt(eid, 10) : NaN;
+        if (!Number.isNaN(tid)) openTripEditModal(tid);
         return;
       }
       var card = e.target.closest('.planned-trip-card');
@@ -504,6 +531,436 @@
         if (!Number.isNaN(cid)) showTripDetails(cid);
       }
     });
+  }
+
+  function renumberEditStops(listEl) {
+    if (!listEl) return;
+    var rows = listEl.querySelectorAll('.trip-stop-card');
+    for (var i = 0; i < rows.length; i++) {
+      var b = rows[i].querySelector('.trip-stop-number');
+      if (b) b.textContent = String(i + 1);
+    }
+  }
+
+  /** Trip start/end inputs follow first stop arrival (else departure) and last stop departure (else arrival). */
+  function syncTripBoundsFromStops(listEl) {
+    if (!listEl) return;
+    var modalRoot = listEl.closest('.trip-details-modal-overlay');
+    var tripStart = modalRoot ? modalRoot.querySelector('#editTripStartDate') : null;
+    var tripEnd = modalRoot ? modalRoot.querySelector('#editTripEndDate') : null;
+    if (!tripStart || !tripEnd) return;
+    var rows = listEl.querySelectorAll('.trip-stop-card');
+    if (!rows.length) return;
+    var first = rows[0];
+    var last = rows[rows.length - 1];
+    var fa = first.querySelector('[data-field="arrival_date"]');
+    var fd = first.querySelector('[data-field="departure_date"]');
+    var la = last.querySelector('[data-field="arrival_date"]');
+    var ld = last.querySelector('[data-field="departure_date"]');
+    var startVal = (fa && fa.value) ? fa.value : fd && fd.value ? fd.value : '';
+    var endVal = (ld && ld.value) ? ld.value : la && la.value ? la.value : '';
+    if (startVal) tripStart.value = String(startVal).slice(0, 10);
+    if (endVal) tripEnd.value = String(endVal).slice(0, 10);
+  }
+
+  /**
+   * After removing a stop, re-chain dates: each stop's arrival follows the previous
+   * stop's departure (or arrival if no departure). Preserves stay length when both dates exist.
+   */
+  function chainEditStopDates(listEl) {
+    if (!listEl) return;
+    var rows = listEl.querySelectorAll('.trip-stop-card');
+    if (rows.length <= 1) return;
+
+    function parseDay(s) {
+      if (!s || String(s).length < 10) return null;
+      var p = String(s).slice(0, 10).split('-');
+      var y = parseInt(p[0], 10);
+      var m = parseInt(p[1], 10) - 1;
+      var d = parseInt(p[2], 10);
+      if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+      var dt = new Date(Date.UTC(y, m, d));
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function fmt(dt) {
+      if (!dt) return '';
+      var mo = dt.getUTCMonth() + 1;
+      var day = dt.getUTCDate();
+      return dt.getUTCFullYear() + '-' + (mo < 10 ? '0' : '') + mo + '-' + (day < 10 ? '0' : '') + day;
+    }
+
+    function addDaysUTC(dt, n) {
+      var x = new Date(dt.getTime());
+      x.setUTCDate(x.getUTCDate() + n);
+      return x;
+    }
+
+    function dayDiff(a, b) {
+      if (!a || !b) return 0;
+      var ms = Math.round((b.getTime() - a.getTime()) / 86400000);
+      return ms >= 0 ? ms : 0;
+    }
+
+    var states = [];
+    for (var i = 0; i < rows.length; i++) {
+      var arrIn = rows[i].querySelector('[data-field="arrival_date"]');
+      var depIn = rows[i].querySelector('[data-field="departure_date"]');
+      states.push({
+        arrIn: arrIn,
+        depIn: depIn,
+        arrStr: fromDateInputVal(arrIn && arrIn.value) || '',
+        depStr: fromDateInputVal(depIn && depIn.value) || ''
+      });
+    }
+
+    var out = [];
+    for (var j = 0; j < states.length; j++) {
+      out.push({ arrStr: states[j].arrStr, depStr: states[j].depStr });
+    }
+
+    for (var k = 1; k < states.length; k++) {
+      var prevOut = out[k - 1];
+      var s = states[k];
+      var prevExit = prevOut.depStr ? parseDay(prevOut.depStr) : (prevOut.arrStr ? parseDay(prevOut.arrStr) : null);
+      if (!prevExit) continue;
+
+      if (!s.arrStr && !s.depStr) continue;
+
+      var oldArr = s.arrStr ? parseDay(s.arrStr) : null;
+      var oldDep = s.depStr ? parseDay(s.depStr) : null;
+      var newArr = prevExit;
+      var newDepStr = '';
+
+      if (oldArr && oldDep) {
+        newDepStr = fmt(addDaysUTC(newArr, dayDiff(oldArr, oldDep)));
+      } else if (oldDep && !oldArr) {
+        var newDep = oldDep >= newArr ? oldDep : newArr;
+        newDepStr = fmt(newDep);
+      } else {
+        newDepStr = '';
+      }
+
+      out[k].arrStr = fmt(newArr);
+      out[k].depStr = newDepStr;
+
+      var na = parseDay(out[k].arrStr);
+      var nd = out[k].depStr ? parseDay(out[k].depStr) : null;
+      if (na && nd && nd < na) {
+        out[k].depStr = out[k].arrStr;
+      }
+    }
+
+    for (var w = 0; w < states.length; w++) {
+      if (states[w].arrIn) states[w].arrIn.value = out[w].arrStr || '';
+      if (states[w].depIn) states[w].depIn.value = out[w].depStr || '';
+    }
+    syncTripBoundsFromStops(listEl);
+  }
+
+  function buildEditStopRowEl(stop) {
+    stop = stop || {};
+    var row = document.createElement('div');
+    row.className = 'trip-stop-card';
+    if (stop.id != null) row.setAttribute('data-stop-id', String(stop.id));
+
+    var num = document.createElement('div');
+    num.className = 'trip-stop-number';
+    num.textContent = '1';
+
+    var details = document.createElement('div');
+    details.className = 'trip-stop-details';
+
+    var actions = document.createElement('div');
+    actions.className = 'trip-details-edit-stop-actions';
+
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'btn-cancel';
+    rm.setAttribute('data-i18n', 'plannedTrips.editRemoveStop');
+    rm.textContent = plannedTripsT('editRemoveStop', 'Remove');
+    actions.appendChild(rm);
+
+    var grid = document.createElement('div');
+    grid.className = 'trip-details-form-grid';
+
+    function mkField(full, i18nSuffix, shortKey, fieldName, type, val, isTa) {
+      var wrap = document.createElement('div');
+      wrap.className = 'trip-details-form-field' + (full ? ' trip-details-form-field--full' : '');
+      var lab = document.createElement('label');
+      lab.setAttribute('data-i18n', 'plannedTrips.' + i18nSuffix);
+      lab.textContent = plannedTripsT(shortKey, fieldName);
+      var inp;
+      if (isTa) {
+        inp = document.createElement('textarea');
+        inp.className = 'trip-details-textarea';
+        inp.rows = 2;
+      } else {
+        inp = document.createElement('input');
+        inp.className = 'trip-details-text-input';
+        inp.type = type || 'text';
+      }
+      inp.setAttribute('data-field', fieldName);
+      if (val != null && val !== '') inp.value = String(val);
+      wrap.appendChild(lab);
+      wrap.appendChild(inp);
+      return wrap;
+    }
+
+    grid.appendChild(mkField(false, 'editFieldPlace', 'editFieldPlace', 'place_name', 'text', stop.place_name, false));
+    grid.appendChild(mkField(false, 'editFieldCountry', 'editFieldCountry', 'country', 'text', stop.country, false));
+    grid.appendChild(mkField(false, 'editFieldArrival', 'editFieldArrival', 'arrival_date', 'date', toDateInputValue(stop.arrival_date), false));
+    grid.appendChild(mkField(false, 'editFieldDeparture', 'editFieldDeparture', 'departure_date', 'date', toDateInputValue(stop.departure_date), false));
+    grid.appendChild(mkField(true, 'editFieldTransport', 'editFieldTransport', 'transport_from_last', 'text', stop.transport_from_last, false));
+    grid.appendChild(mkField(true, 'editFieldActivities', 'editFieldActivities', 'activities', null, stop.activities, true));
+
+    details.appendChild(actions);
+    details.appendChild(grid);
+
+    row.appendChild(num);
+    row.appendChild(details);
+
+    rm.addEventListener('click', function () {
+      var listEl = row.closest('#editStopsList');
+      row.remove();
+      renumberEditStops(listEl);
+      chainEditStopDates(listEl);
+    });
+
+    return row;
+  }
+
+  function readStopRow(row, orderIndex) {
+    var placeIn = row.querySelector('[data-field="place_name"]');
+    var place = placeIn && placeIn.value.trim();
+    var countryIn = row.querySelector('[data-field="country"]');
+    var transportIn = row.querySelector('[data-field="transport_from_last"]');
+    var activitiesIn = row.querySelector('[data-field="activities"]');
+    var arrIn = row.querySelector('[data-field="arrival_date"]');
+    var depIn = row.querySelector('[data-field="departure_date"]');
+    var sid = row.getAttribute('data-stop-id');
+    return {
+      id: sid ? parseInt(sid, 10) : null,
+      stop_order: orderIndex,
+      place_name: place,
+      country: trimOrNull(countryIn && countryIn.value),
+      arrival_date: fromDateInputVal(arrIn && arrIn.value),
+      departure_date: fromDateInputVal(depIn && depIn.value),
+      transport_from_last: trimOrNull(transportIn && transportIn.value),
+      activities: trimOrNull(activitiesIn && activitiesIn.value)
+    };
+  }
+
+  async function saveTripEdits(tripId, modal, originalStopIds) {
+    var titleIn = modal.querySelector('#editTripTitle');
+    var saveBtn = modal.querySelector('#tripEditSaveBtn');
+    var title = titleIn && titleIn.value.trim();
+    if (!title) {
+      showError(plannedTripsT('editTitleRequired', 'Trip title is required.'));
+      return false;
+    }
+
+    var listEl = modal.querySelector('#editStopsList');
+    var rows = listEl ? listEl.querySelectorAll('.trip-stop-card') : [];
+
+    var collected = [];
+    for (var i = 0; i < rows.length; i++) {
+      var data = readStopRow(rows[i], i + 1);
+      if (!data.place_name) {
+        showError(plannedTripsT('editStopPlaceRequired', 'Each stop must have a place name.'));
+        return false;
+      }
+      collected.push(data);
+    }
+
+    var startCityIn = modal.querySelector('#editTripStartCity');
+    var startDateIn = modal.querySelector('#editTripStartDate');
+    var endDateIn = modal.querySelector('#editTripEndDate');
+
+    var tripBody = {
+      title: title,
+      start_city: trimOrNull(startCityIn && startCityIn.value),
+      start_date: fromDateInputVal(startDateIn && startDateIn.value),
+      end_date: fromDateInputVal(endDateIn && endDateIn.value)
+    };
+
+    if (saveBtn) saveBtn.disabled = true;
+
+    try {
+      var putRes = await fetch('/api/planned-trips/' + tripId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tripBody)
+      });
+      if (!putRes.ok) throw new Error('trip ' + putRes.status);
+
+      var currentIds = collected
+        .filter(function (c) {
+          return c.id != null;
+        })
+        .map(function (c) {
+          return c.id;
+        });
+
+      for (var j = 0; j < originalStopIds.length; j++) {
+        var oid = originalStopIds[j];
+        if (currentIds.indexOf(oid) === -1) {
+          var delRes = await fetch('/api/trip-stops/' + oid, { method: 'DELETE' });
+          if (!delRes.ok && delRes.status !== 404) throw new Error('delete stop ' + oid);
+        }
+      }
+
+      for (var k = 0; k < collected.length; k++) {
+        var c = collected[k];
+        var body = {
+          place_name: c.place_name,
+          country: c.country,
+          stop_order: c.stop_order,
+          arrival_date: c.arrival_date,
+          departure_date: c.departure_date,
+          transport_from_last: c.transport_from_last,
+          activities: c.activities
+        };
+        if (c.id) {
+          var ur = await fetch('/api/trip-stops/' + c.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          if (!ur.ok) throw new Error('update stop ' + c.id);
+        } else {
+          var postBody = Object.assign({ trip_id: tripId }, body);
+          var pr = await fetch('/api/trip-stops', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(postBody)
+          });
+          if (!pr.ok) throw new Error('create stop');
+        }
+      }
+
+      await render();
+      return true;
+    } catch (e) {
+      console.error('saveTripEdits', e);
+      showError(plannedTripsT('editSaveError', 'Could not save changes.') + (e && e.message ? ' (' + e.message + ')' : ''));
+      return false;
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  async function openTripEditModal(tripId) {
+    try {
+      destroyPlannedTripPopups();
+
+      var response = await fetch('/api/planned-trips/' + tripId);
+      if (!response.ok) throw new Error('load');
+      var trip = await response.json();
+
+      var template = document.getElementById('tripEditModalTemplate');
+      if (!template || !template.content) return;
+      var clone = document.importNode(template.content, true);
+      var modal = clone.querySelector('.trip-details-modal-overlay');
+      if (!modal) return;
+      document.body.appendChild(clone);
+
+      var stops = (trip.stops || [])
+        .slice()
+        .sort(function (a, b) {
+          return (a.stop_order || 0) - (b.stop_order || 0);
+        });
+      var originalStopIds = stops
+        .map(function (s) {
+          return s.id;
+        })
+        .filter(function (id) {
+          return id != null;
+        });
+
+      var titleIn = modal.querySelector('#editTripTitle');
+      var startCityIn = modal.querySelector('#editTripStartCity');
+      var startDateIn = modal.querySelector('#editTripStartDate');
+      var endDateIn = modal.querySelector('#editTripEndDate');
+      var listEl = modal.querySelector('#editStopsList');
+      if (titleIn) titleIn.value = trip.title || '';
+      if (startCityIn) startCityIn.value = trip.start_city || '';
+      if (startDateIn) startDateIn.value = toDateInputValue(trip.start_date);
+      if (endDateIn) endDateIn.value = toDateInputValue(trip.end_date);
+
+      if (listEl) {
+        listEl.innerHTML = '';
+        stops.forEach(function (s) {
+          listEl.appendChild(buildEditStopRowEl(s));
+        });
+        renumberEditStops(listEl);
+        function onEditStopsDateField(e) {
+          var t = e.target;
+          if (!t.matches('input[data-field="arrival_date"], input[data-field="departure_date"]')) return;
+          syncTripBoundsFromStops(listEl);
+        }
+        listEl.addEventListener('change', onEditStopsDateField);
+        listEl.addEventListener('input', onEditStopsDateField);
+      }
+
+      if (window.i18n && typeof window.i18n.applyToPage === 'function') {
+        window.i18n.applyToPage(modal);
+      }
+
+      var closeBtn = modal.querySelector('.trip-details-close');
+      if (closeBtn && window.i18n && typeof window.i18n.t === 'function') {
+        closeBtn.setAttribute('aria-label', window.i18n.t('plannedTrips.editCloseAria'));
+      } else if (closeBtn) {
+        closeBtn.setAttribute('aria-label', 'Close');
+      }
+
+      var addBtn = modal.querySelector('#editAddStopBtn');
+      if (addBtn && listEl) {
+        addBtn.addEventListener('click', function () {
+          listEl.appendChild(buildEditStopRowEl(null));
+          renumberEditStops(listEl);
+          syncTripBoundsFromStops(listEl);
+          if (window.i18n && typeof window.i18n.applyToPage === 'function') {
+            window.i18n.applyToPage(listEl.lastChild);
+          }
+        });
+      }
+
+      function removeModal() {
+        document.removeEventListener('keydown', handleEsc);
+        modal.remove();
+      }
+
+      var saveBtn = modal.querySelector('#tripEditSaveBtn');
+      var cancelBtn = modal.querySelector('#tripEditCancelBtn');
+      var modalBox = modal.querySelector('#tripEditModalBox');
+      var origIdsCopy = originalStopIds.slice();
+
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          saveTripEdits(tripId, modal, origIdsCopy).then(function (ok) {
+            if (ok) removeModal();
+          });
+        });
+      }
+      if (cancelBtn) cancelBtn.addEventListener('click', removeModal);
+      if (closeBtn) closeBtn.addEventListener('click', removeModal);
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) removeModal();
+      });
+      if (modalBox) {
+        modalBox.addEventListener('click', function (e) {
+          e.stopPropagation();
+        });
+      }
+      function handleEsc(e) {
+        if (e.key === 'Escape') removeModal();
+      }
+      document.addEventListener('keydown', handleEsc);
+    } catch (err) {
+      console.error('openTripEditModal', err);
+      showError(plannedTripsT('editLoadError', 'Could not load trip for editing.'));
+    }
   }
 
   function buildStopCard(stop) {
@@ -552,12 +1009,7 @@
 
   async function showTripDetails(tripId) {
     try {
-      var existing = document.querySelectorAll('.trip-details-modal-overlay');
-      existing.forEach(function (el) {
-        var prevMap = el.querySelector('#tripDetailsMap');
-        if (prevMap) destroyTripMap(prevMap);
-        if (el.parentNode) el.parentNode.removeChild(el);
-      });
+      destroyPlannedTripPopups();
 
       var response = await fetch('/api/planned-trips/' + tripId);
       if (!response.ok) throw new Error('Failed to load trip details');
