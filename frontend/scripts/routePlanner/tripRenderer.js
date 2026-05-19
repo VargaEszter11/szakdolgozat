@@ -49,6 +49,15 @@ export function renderTripDetails(trip) {
         </div>
     `;
 
+    if (Array.isArray(trip.requestedPlacesMissing) && trip.requestedPlacesMissing.length) {
+        html += `
+            <p class="error-message">
+                Could not include these requested places with the current route data:
+                ${trip.requestedPlacesMissing.map(p => escapeHtml(p)).join(', ')}
+            </p>
+        `;
+    }
+
     // Destinations
     if (trip.plan && Array.isArray(trip.plan)) {
         html += '<div class="trip-destinations">';

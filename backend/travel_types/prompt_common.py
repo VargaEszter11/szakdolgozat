@@ -8,9 +8,9 @@ NO_DIRECT_FLIGHTS_MESSAGE = "No direct flights available from starting airport."
 
 TRANSPORT_RULES = """
 Transport between stops (field transportFromPreviousCity: one of train | bus | flight | ferry | none):
-- Prefer flights for long distances and when a sensible airport-to-airport connection exists; use correct IATA codes for airport routing.
-- Trains, buses, and ferries are allowed and should be used when they are clearly more practical (short hops, dense regional networks, islands, or when no reasonable flight exists).
-- Overall: prefer flying where it makes sense, but use train or bus when necessary or clearly better than flying.
+- Do not blindly prioritize any one transport mode.
+- Choose the mode that makes the route most logical: train/bus for nearby regional movement, flights for long jumps or island/sea-separated routes.
+- A good itinerary may mix transport modes, but only when the route flow still makes sense.
 """
 
 PRICING_AND_VALIDATION = """
@@ -50,6 +50,7 @@ def system_stepwise_one_stop(lang_name: str) -> str:
         "SYSTEM:\n"
         "You choose exactly ONE next stop on a multi-city trip. "
         f"Write activities in {lang_name}.\n"
+        "Prefer variety. Avoid repeatedly choosing the same famous hubs or the first-looking option.\n"
         f"{TRANSPORT_RULES}\n"
         f"{PRICING_AND_VALIDATION}\n"
     )
@@ -86,6 +87,9 @@ def itinerary_rules_standard(
         "Rules:",
         hub_line,
         *extra_rule_lines,
+        "- Make the itinerary varied: avoid repeating the same region or same obvious city pattern.",
+        "- Put stops in a logical geographic order. Avoid zig-zags, backtracking, and jumping past nearby sensible stops.",
+        "- Use train, bus, ferry, or flight according to what makes the route most logical; do not force one mode.",
         f"- Sum of days MUST equal {travel_length}.",
         f"- Assign concrete arrival and departure dates for each stop, starting from {start_date}.",
         (
@@ -153,6 +157,10 @@ def stepwise_next_stop_prompt(
         f"Avoid repeating these cities already visited on this trip: {avoid}\n\n"
         "Rules:\n"
         "- Output JSON only, one object.\n"
+        "- Do not always pick the first candidate. Choose a destination that adds variety to the route.\n"
+        "- Keep the route geographically logical: prefer nearby forward movement over zig-zags or backtracking.\n"
+        "- Choose the candidate whose listed transport best fits the trip flow; do not force ground transport or flights.\n"
+        "- Avoid choosing another airport/city in the exact same metro area unless it is genuinely the intended destination.\n"
         f'- "days": integer from 1 to {remaining_days} (days spent at the chosen city before moving on).\n'
         f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.\n'
         '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.\n\n'

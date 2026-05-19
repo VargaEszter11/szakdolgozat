@@ -55,10 +55,10 @@ async def generate_travel_plan_random(
     prompt = (
         f"{system_travel_planner(lang_name)}"
         f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
-        f"Available destinations with direct flights:\n{destinations_info}\n\n"
-        "TASK:\nGenerate 5 realistic random European itineraries using ONLY destinations with direct flights available.\n"
+        f"Available airport-linked destinations:\n{destinations_info}\n\n"
+        "TASK:\nGenerate a realistic random European itinerary using these destinations as possible anchors, but prefer sensible train/bus hops where geography supports it.\n"
         f"The trip must start on {start_date} and end on {end_date}.\n"
-        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- ONLY use cities from the available destinations list above.', '- Routes must be geographically reasonable.'))}"
+        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- Use cities from the available destinations list as anchors, but do not default to flights.', '- Routes must be geographically reasonable and varied.'))}"
         f"{output_json_random_five_trips(start_date, end_date)}"
     )
     return await call_llm_api(prompt, llm_provider)

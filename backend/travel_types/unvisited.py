@@ -149,7 +149,7 @@ async def generate_travel_plan_unvisited(
         f"{excluded_names}\n\n"
         "ALLOWED destinations (these are the ONLY cities you may use):\n"
         f"{destinations_info}\n\n"
-        "TASK:\nGenerate a realistic draft itinerary using ONLY cities from the ALLOWED list above.\n"
+        "TASK:\nGenerate a realistic draft itinerary using the ALLOWED cities as anchors. Prefer train/bus when practical; do not default to flights.\n"
         f"The trip must start on {start_date} and end on {end_date}.\n"
         "NEVER include any city from the FORBIDDEN list. If a city appears in both lists, it is FORBIDDEN.\n"
         f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- Pick cities ONLY from the ALLOWED destinations list — no exceptions.',))}"

@@ -60,12 +60,12 @@ async def generate_travel_plan_visited(
     prompt = (
         f"{system_travel_planner(lang_name)}"
         f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
-        f"Available destinations with direct flights:\n{direct_destinations_str}\n\n"
+        f"Available airport-linked destinations:\n{direct_destinations_str}\n\n"
         "Constraint:\nONLY choose destinations from this list:\n"
         f"{visitedPlaces}\n\n"
         "TASK:\nGenerate a realistic draft itinerary.\n"
         f"The trip must start on {start_date} and end on {end_date}.\n"
-        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- ONLY use cities from the available destinations list above.', '- Choose geographically reasonable routes.'))}"
+        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- Use cities from the available destinations list above.', '- Choose geographically reasonable routes and prefer train/bus when practical.'))}"
         f"{output_json_single_trip_schema(start_date, end_date, 'visited')}"
     )
     return await call_llm_api(prompt, llm_provider)
