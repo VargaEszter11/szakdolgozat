@@ -18,10 +18,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from utils.coordinates import geocode_place
-from utils.nearest_airport import nearest_airport, get_direct_destinations
+from utils.nearest_airport import nearest_airport
 from utils.direct_destinations_cache import get_direct_destinations_cached
-from utils.plan_validator import validate_travel_plan
-from utils.plan_enrichment import merge_validation_into_plan, normalize_planner_response
+from utils.plan_enrichment import normalize_planner_response
 from travel_types import (
     generate_travel_plan_visited,
     generate_travel_plan_unvisited,
@@ -53,6 +52,7 @@ attach_api_loggers_to_console()
 def startup_event():
     """Create database tables on application startup"""
     Base.metadata.create_all(bind=engine)
+    # AirLabs route imports are intentionally manual. Do not call data importers here.
     from database.schema_patches import apply_startup_schema_patches
 
     apply_startup_schema_patches()
@@ -162,15 +162,12 @@ async def generate_plan_with_location(
     **kwargs,
 ):
     lat, lon = await get_coordinates(starting_point)
-    airport = await nearest_airport(lat, lon)
+    airport = await nearest_airport(lat, lon, db=db)
     
     # Get direct destinations from the nearest airport (DB cache when session available)
     direct_destinations = []
     if airport and airport.get("iata"):
-        if db is not None:
-            direct_destinations = await get_direct_destinations_cached(db, airport["iata"])
-        else:
-            direct_destinations = await get_direct_destinations(airport["iata"])
+        direct_destinations = await get_direct_destinations_cached(db, airport["iata"])
     
     draft_plan_raw = await draft_plan_func(
         *args,
@@ -207,134 +204,13 @@ async def generate_plan_with_location(
             draft_plan["endDate"] = end_date
             draft_plan["tripLengthDays"] = travel_length_user
     
-    # Validate against Amadeus when we know the home airport (budget optional = pricing-only)
-    validation = None
-    if airport and airport.get("iata") and isinstance(draft_plan, dict):
-        # Get travelLength from args (it's the second positional argument after startingPoint)
-        travel_length = args[1] if len(args) > 1 else 7
-        
-        # Check if this is a random plan with multiple trips
-        if "trips" in draft_plan:
-            # Calculate prices for all trips first, then select the best one
-            trips = draft_plan.get("trips", [])
-            validated_trips = []
-            max_retries = 3
-            retry_count = 0
-            
-            while retry_count < max_retries:
-                # Calculate prices for all trips
-                for trip in trips:
-                    trip_validation = await validate_travel_plan(trip, airport["iata"], budget, travel_length, start_date)
-                    validated_trips.append({
-                        "trip": trip,
-                        "validation": trip_validation
-                    })
-                
-                # Check if we have at least one valid plan
-                valid_trips = [vt for vt in validated_trips if vt["validation"].get("valid", False)]
-                if valid_trips:
-                    break  # We have at least one valid plan, exit retry loop
-                
-                # If no valid plans, regenerate
-                if retry_count < max_retries - 1:
-                    validated_trips = []  # Clear previous attempts
-                    draft_plan_raw = await draft_plan_func(
-        *args,
-        direct_destinations=direct_destinations,
-        starting_airport_iata=(airport or {}).get("iata"),
-        start_date=start_date,
-        end_date=end_date,
-        **kwargs,
-    )
-                    try:
-                        draft_plan_text = draft_plan_raw.strip()
-                        if draft_plan_text.startswith("```"):
-                            lines = draft_plan_text.split("\n")
-                            draft_plan_text = "\n".join(lines[1:-1]) if len(lines) > 2 else draft_plan_text
-                        draft_plan = json.loads(draft_plan_text)
-                        trips = draft_plan.get("trips", [])
-                    except:
-                        break
-                
-                retry_count += 1
-            
-            # Sort by: validity first, then by score (highest first), then by total price (lowest first)
-            validated_trips.sort(
-                key=lambda x: (
-                    x["validation"].get("valid", False),
-                    x["validation"].get("score") or 0,
-                    -(x["validation"].get("total_price") or 0),
-                ),
-                reverse=True,
-            )
-
-            # Select the best trip
-            best_trip = validated_trips[0] if validated_trips else None
-            merged_plan = None
-            if best_trip and best_trip.get("trip"):
-                merged_plan = merge_validation_into_plan(best_trip["trip"], best_trip.get("validation"))
-            if merged_plan is None:
-                merged_plan = draft_plan
-            merged_plan = normalize_planner_response(merged_plan)
-
-            return {
-                "draft_plan": merged_plan,
-                "starting_point_coords": {"lat": lat, "lon": lon},
-                "nearest_airport": airport,
-                "validation": best_trip["validation"] if best_trip else None,
-            }
-        else:
-            # Single plan validation - retry until we get a valid plan
-            max_retries = 3
-            retry_count = 0
-            
-            while retry_count < max_retries:
-                validation = await validate_travel_plan(draft_plan, airport["iata"], budget, travel_length, start_date)
-                
-                # If plan is valid, break
-                if validation and validation.get("valid"):
-                    break
-                
-                # If invalid, regenerate plan
-                if retry_count < max_retries - 1:
-                    draft_plan_raw = await draft_plan_func(
-        *args,
-        direct_destinations=direct_destinations,
-        starting_airport_iata=(airport or {}).get("iata"),
-        start_date=start_date,
-        end_date=end_date,
-        **kwargs,
-    )
-                    try:
-                        draft_plan_text = draft_plan_raw.strip()
-                        if draft_plan_text.startswith("```"):
-                            lines = draft_plan_text.split("\n")
-                            draft_plan_text = "\n".join(lines[1:-1]) if len(lines) > 2 else draft_plan_text
-                        draft_plan = json.loads(draft_plan_text)
-                    except:
-                        break  # If parsing fails, break and use what we have
-                
-                retry_count += 1
-            
-            # If still invalid after retries, use the last validation
-            if not validation:
-                validation = {
-                    "valid": False,
-                    "reason": "Plan validation not completed",
-                    "total_price": 0,
-                    "score": 0
-                }
-
-    merged_plan = draft_plan
-    if validation and isinstance(draft_plan, dict):
-        merged_plan = merge_validation_into_plan(draft_plan, validation)
-    merged_plan = normalize_planner_response(merged_plan)
+    merged_plan = normalize_planner_response(draft_plan)
 
     return {
         "draft_plan": merged_plan,
         "starting_point_coords": {"lat": lat, "lon": lon},
         "nearest_airport": airport,
-        "validation": validation,
+        "validation": None,
     }
 
 

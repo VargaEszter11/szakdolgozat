@@ -23,7 +23,7 @@ The application is for people who travel often and want to keep **visited places
 | Backend  | Python, FastAPI                |
 | Database | PostgreSQL (via SQLAlchemy)    |
 
-External integrations (optional, via environment variables) include geocoding (Nominatim), Amadeus travel APIs, LLM providers (e.g. DeepSeek or local Ollama), and Google sign-in. See `.env.example` for variable names and short comments.
+External integrations (optional, via environment variables) include geocoding (Nominatim), LLM providers (e.g. DeepSeek or local Ollama), and Google sign-in. See `.env.example` for variable names and short comments.
 
 ## Prerequisites
 

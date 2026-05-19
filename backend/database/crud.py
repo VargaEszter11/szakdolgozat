@@ -377,10 +377,13 @@ def create_airport(db: Session, airport: schemas.AirportCreate) -> models.Airpor
     """Insert a new airport row. Fails if ``iata`` already exists."""
     data = airport.model_dump()
     data["iata"] = _norm_iata(data["iata"])
-    if data.get("country"):
-        data["country"] = _norm_country(data["country"])
+    legacy_country = data.pop("country", None)
+    if data.get("country_code") or legacy_country:
+        data["country_code"] = _norm_country(data.get("country_code") or legacy_country)
     if data.get("icao"):
         data["icao"] = str(data["icao"]).strip().upper()
+    if not data.get("name"):
+        data["name"] = data["iata"]
     db_airport = models.Airport(**data)
     db.add(db_airport)
     db.commit()
@@ -391,31 +394,38 @@ def create_airport(db: Session, airport: schemas.AirportCreate) -> models.Airpor
 def _upsert_airport_no_commit(db: Session, airport: schemas.AirportCreate) -> models.Airport:
     iata = _norm_iata(airport.iata)
     row = get_airport(db, iata)
-    country = _norm_country(airport.country) if airport.country else None
+    country = _norm_country(airport.country_code or airport.country)
     icao = airport.icao.strip().upper() if airport.icao else None
+    name = airport.name or iata
 
     if row is None:
         row = models.Airport(
             iata=iata,
             icao=icao,
+            name=name,
             city=airport.city,
-            country=country,
+            country_code=country,
             latitude=airport.latitude,
             longitude=airport.longitude,
+            timezone=airport.timezone,
         )
         db.add(row)
         return row
 
     if icao is not None:
         row.icao = icao
+    if airport.name is not None:
+        row.name = airport.name
     if airport.city is not None:
         row.city = airport.city
     if country is not None:
-        row.country = country
+        row.country_code = country
     if airport.latitude is not None:
         row.latitude = airport.latitude
     if airport.longitude is not None:
         row.longitude = airport.longitude
+    if airport.timezone is not None:
+        row.timezone = airport.timezone
     row.updated_at = _utcnow()
     return row
 
@@ -435,10 +445,13 @@ def update_airport(db: Session, iata: str, airport_update: schemas.AirportUpdate
         return None
 
     update_data = airport_update.model_dump(exclude_unset=True)
+    legacy_country = update_data.pop("country", None)
     if "icao" in update_data and update_data["icao"] is not None:
         update_data["icao"] = str(update_data["icao"]).strip().upper()
-    if "country" in update_data and update_data["country"] is not None:
-        update_data["country"] = _norm_country(update_data["country"])
+    if "country_code" in update_data and update_data["country_code"] is not None:
+        update_data["country_code"] = _norm_country(update_data["country_code"])
+    elif legacy_country is not None:
+        update_data["country_code"] = _norm_country(legacy_country)
 
     for key, value in update_data.items():
         setattr(row, key, value)
@@ -467,6 +480,10 @@ def create_direct_route(db: Session, route: schemas.DirectRouteCreate) -> models
     data = route.model_dump()
     data["origin_iata"] = _norm_iata(data["origin_iata"])
     data["destination_iata"] = _norm_iata(data["destination_iata"])
+    if data.get("airline_iata"):
+        data["airline_iata"] = str(data["airline_iata"]).strip().upper()
+    if not data.get("flight_number"):
+        data["flight_number"] = "DIRECT"
     db_route = models.DirectRoute(**data)
     db.add(db_route)
     db.commit()
@@ -488,22 +505,23 @@ def _upsert_direct_route_no_commit(
         row = models.DirectRoute(
             origin_iata=o,
             destination_iata=d,
+            flight_number="DIRECT",
             is_active=is_active,
-            first_seen_at=now,
-            last_seen_at=now,
+            created_at=now,
+            updated_at=now,
         )
         db.add(row)
         return row
 
     row.is_active = is_active
-    row.last_seen_at = now
+    row.updated_at = now
     return row
 
 
 def upsert_direct_route(
     db: Session, origin_iata: str, destination_iata: str, *, is_active: bool = True
 ) -> models.DirectRoute:
-    """Insert or touch a direct route (``last_seen_at`` always updated)."""
+    """Insert or touch a direct route (``updated_at`` always updated)."""
     row = _upsert_direct_route_no_commit(db, origin_iata, destination_iata, is_active=is_active)
     db.commit()
     db.refresh(row)
@@ -511,7 +529,7 @@ def upsert_direct_route(
 
 
 def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[Dict[str, Any]]:
-    """Return dicts compatible with ``get_direct_destinations`` (``iata``, ``city``, ``country``)."""
+    """Return active destination airports as ``iata``, ``city``, and ``country`` dicts."""
     o = _norm_iata(origin_iata)
     rows = (
         db.query(models.Airport)
@@ -526,7 +544,24 @@ def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[
         .order_by(models.Airport.iata)
         .all()
     )
-    return [{"iata": a.iata, "city": a.city, "country": a.country} for a in rows]
+    return [
+        {
+            "iata": a.iata,
+            "city": a.city or _airport_name_as_city(a.name, a.iata),
+            "country": a.country_code,
+        }
+        for a in rows
+    ]
+
+
+def _airport_name_as_city(name: Optional[str], iata: str) -> str:
+    label = (name or iata or "").strip()
+    if not label:
+        return iata
+    label = re.sub(r"\b(international|intl\.?|regional|municipal)\b", "", label, flags=re.I)
+    label = re.sub(r"\b(airport|aeroport|aeropuerto)\b", "", label, flags=re.I)
+    label = re.sub(r"\s+", " ", label).strip(" -")
+    return label or iata
 
 
 def sync_direct_routes_for_origin(
@@ -534,8 +569,8 @@ def sync_direct_routes_for_origin(
 ) -> int:
     """Upsert origin + destination airports and routes; deactivate missing edges.
 
-    ``destinations`` items should look like Amadeus direct-destination entries:
-    ``iata``, ``city``, ``country`` (ISO-2). Commits once. Returns active route count for this origin.
+    ``destinations`` items should contain ``iata``, ``city``, and ``country`` (ISO-2).
+    Commits once. Returns active route count for this origin.
     """
     o = _norm_iata(origin_iata)
     _upsert_airport_no_commit(db, schemas.AirportCreate(iata=o))

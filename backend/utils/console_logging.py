@@ -1,4 +1,4 @@
-"""Send ``api.inbound`` log lines to the process console (stderr)."""
+"""Send selected app log lines to the process console (stderr)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ _done = False
 
 
 def attach_api_loggers_to_console() -> None:
-    """Wire the inbound request logger to stderr so lines show in the terminal."""
+    """Wire important app loggers to stderr so lines show in the terminal."""
     global _done
     if _done:
         return
@@ -23,7 +23,7 @@ def attach_api_loggers_to_console() -> None:
     handler.setLevel(logging.INFO)
     handler.setFormatter(fmt)
 
-    for name in ("api.inbound",):
+    for name in ("api.inbound", "planner.airports", "planner.routes"):
         log = logging.getLogger(name)
         log.setLevel(logging.INFO)
         log.handlers.clear()

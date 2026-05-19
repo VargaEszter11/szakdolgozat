@@ -8,7 +8,7 @@ NO_DIRECT_FLIGHTS_MESSAGE = "No direct flights available from starting airport."
 
 TRANSPORT_RULES = """
 Transport between stops (field transportFromPreviousCity: one of train | bus | flight | ferry | none):
-- Prefer flights for long distances and when a sensible airport-to-airport connection exists; use correct IATA codes so pricing can be resolved.
+- Prefer flights for long distances and when a sensible airport-to-airport connection exists; use correct IATA codes for airport routing.
 - Trains, buses, and ferries are allowed and should be used when they are clearly more practical (short hops, dense regional networks, islands, or when no reasonable flight exists).
 - Overall: prefer flying where it makes sense, but use train or bus when necessary or clearly better than flying.
 """
@@ -16,7 +16,7 @@ Transport between stops (field transportFromPreviousCity: one of train | bus | f
 PRICING_AND_VALIDATION = """
 Pricing and costs:
 - Do NOT invent numeric prices or currency amounts in the JSON.
-- After your itinerary is generated, the server validates it and attaches cost estimates using Amadeus APIs: flight offers (and pricing where applicable), hotel offers by location, and activities/tours near each stop. Use realistic cities and IATA codes so those APIs can run.
+- Use realistic cities and IATA codes; the server uses local route data for airport routing.
 """
 
 ACTIVITY_SUGGESTION_RULE = (
@@ -147,15 +147,15 @@ def stepwise_next_stop_prompt(
         f"Preferences: {prefs}\n"
         "Total days still to assign (this stop + any later stops before return home): "
         f"{remaining_days}\n\n"
-        f"Candidate destinations (direct flights only from {current_airport}). "
-        "You MUST pick one row and copy city, country, IATA exactly:\n"
+        f"Candidate destinations reachable from {current_airport} by the listed transport. "
+        "You MUST pick one row and copy city, country, IATA, and transport exactly:\n"
         f"{cand_block}\n\n"
         f"Avoid repeating these cities already visited on this trip: {avoid}\n\n"
         "Rules:\n"
         "- Output JSON only, one object.\n"
         f'- "days": integer from 1 to {remaining_days} (days spent at the chosen city before moving on).\n'
         f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.\n'
-        f'- "transportFromPreviousCity": usually "flight" when flying from {current_airport} to the chosen IATA.\n\n'
+        '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.\n\n'
         "Return JSON only with this shape:\n"
         '{"city":"","country":"","iata":"","days":1,"transportFromPreviousCity":"flight","activities":["",""]}\n'
     )

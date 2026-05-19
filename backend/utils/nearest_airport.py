@@ -1,155 +1,101 @@
 import logging
-import os
+import math
+from typing import Optional
 
-import httpx
+from sqlalchemy.orm import Session
 
-logger = logging.getLogger(__name__)
+from database import models
 
-AMADEUS_CLIENT_ID = os.getenv("AMADEUS_CLIENT_ID", "")
-AMADEUS_CLIENT_SECRET = os.getenv("AMADEUS_CLIENT_SECRET", "")
-AMADEUS_BASE_URL = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com")
+logger = logging.getLogger("planner.airports")
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    earth_radius_km = 6371.0088
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lng2 - lng1)
+
+    a = (
+        math.sin(delta_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    )
+    return earth_radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-AMADEUS_JSON_HEADERS = {
-    "Accept": "application/json",
-}
-
-
-async def get_amadeus_token():
-    """Get OAuth2 access token from Amadeus API."""
-    url = f"{AMADEUS_BASE_URL}/v1/security/oauth2/token"
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": AMADEUS_CLIENT_ID,
-        "client_secret": AMADEUS_CLIENT_SECRET
-    }
-
-    async with httpx.AsyncClient(timeout=10) as client:
-        response = await client.post(url, data=data, headers=AMADEUS_JSON_HEADERS)
-        response.raise_for_status()
-        token_data = response.json()
-        return token_data["access_token"]
-
-async def nearest_airport(lat, lng, distance_km=200):
-    """Return the nearest European airport to given coordinates using Amadeus API."""
-    if not (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET):
-        logger.warning("Amadeus credentials missing; nearest airport lookup skipped")
+async def nearest_airport(lat, lng, db: Optional[Session] = None, distance_km: Optional[float] = None):
+    """Return the nearest airport to given coordinates using cached DB airport coordinates."""
+    if db is None:
+        logger.warning("Database session missing; nearest airport lookup skipped")
         return None
 
     try:
-        access_token = await get_amadeus_token()
-    except httpx.HTTPStatusError as e:
-        logger.warning(
-            "Amadeus OAuth failed (%s): %s",
-            e.response.status_code,
-            (e.response.text or "")[:300],
+        origin_lat = float(lat)
+        origin_lng = float(lng)
+    except (TypeError, ValueError):
+        logger.warning("Invalid coordinates for nearest airport lookup: %s, %s", lat, lng)
+        return None
+
+    airports = (
+        db.query(models.Airport)
+        .join(
+            models.DirectRoute,
+            models.DirectRoute.origin_iata == models.Airport.iata,
         )
-        return None
-    except httpx.RequestError as e:
-        logger.warning("Amadeus OAuth request failed: %s", e)
-        return None
-
-    url = f"{AMADEUS_BASE_URL}/v1/reference-data/locations/airports"
-    # API expects integer km, 0–500 (see Airport Nearest Relevant spec).
-    radius_km = max(0, min(500, int(round(float(distance_km)))))
-    params = {
-        "latitude": lat,
-        "longitude": lng,
-        "radius": radius_km,
-    }
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        **AMADEUS_JSON_HEADERS,
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-    except httpx.HTTPStatusError as e:
-        body = (e.response.text or "")[:500]
-        logger.warning(
-            "Amadeus airport lookup failed (%s): %s",
-            e.response.status_code,
-            body,
+        .filter(
+            models.Airport.latitude.isnot(None),
+            models.Airport.longitude.isnot(None),
+            models.DirectRoute.is_active.is_(True),
         )
-        if e.response.status_code >= 500:
-            logger.warning(
-                "Amadeus test data only covers airport search in US, ES, UK, DE, and IN; "
-                "other regions often return 5xx. Use production API (api.amadeus.com + prod keys) "
-                "or start from a city in those countries. See: "
-                "https://github.com/amadeus4dev/data-collection#testing-apis-data-collection"
-            )
-        return None
-    except httpx.RequestError as e:
-        logger.warning("Amadeus airport lookup request failed: %s", e)
-        return None
-    except ValueError as e:
-        logger.warning("Amadeus airport lookup returned invalid JSON: %s", e)
-        return None
-
-    airports = data.get("data", [])
+        .distinct()
+        .all()
+    )
     if not airports:
+        logger.warning("No cached route origins with coordinates available for nearest airport lookup")
         return None
-    
-    # Return the first (nearest) airport
-    airport = airports[0]
-    return {
-        "name": airport.get("name"),
-        "iata": airport.get("iataCode"),
-        "icao": airport.get("icaoCode"),
-        "city": airport.get("address", {}).get("cityName"),
-        "country": airport.get("address", {}).get("countryCode"),
-        "distance_km": airport.get("distance", {}).get("value") if airport.get("distance") else None
-    }
 
-async def get_direct_destinations(origin_airport_code: str):
-    """Get direct destinations from an airport using Amadeus Direct Destinations API."""
-    if not origin_airport_code or not (AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET):
-        return []
+    closest = None
+    closest_distance = None
+    for airport in airports:
+        try:
+            distance = _haversine_km(
+                origin_lat,
+                origin_lng,
+                float(airport.latitude),
+                float(airport.longitude),
+            )
+        except (TypeError, ValueError):
+            continue
+        if closest_distance is None or distance < closest_distance:
+            closest = airport
+            closest_distance = distance
 
-    try:
-        access_token = await get_amadeus_token()
-    except (httpx.HTTPStatusError, httpx.RequestError) as e:
-        logger.warning("Amadeus OAuth failed for direct destinations: %s", e)
-        return []
+    if closest is None or closest_distance is None:
+        return None
 
-    url = f"{AMADEUS_BASE_URL}/v1/airport/direct-destinations"
-    params = {"departureAirportCode": origin_airport_code}
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        **AMADEUS_JSON_HEADERS,
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-    except httpx.HTTPStatusError as e:
-        logger.warning(
-            "Amadeus direct-destinations failed (%s): %s",
-            e.response.status_code,
-            (e.response.text or "")[:500],
+    if distance_km is not None and closest_distance > float(distance_km):
+        logger.info(
+            "Nearest cached airport %s is %.1f km away, outside %.1f km preferred radius; using it anyway",
+            closest.iata,
+            closest_distance,
+            float(distance_km),
         )
-        return []
-    except httpx.RequestError as e:
-        logger.warning("Amadeus direct-destinations request failed: %s", e)
-        return []
-    except ValueError as e:
-        logger.warning("Amadeus direct-destinations invalid JSON: %s", e)
-        return []
 
-    destinations = data.get("data", [])
-    # Extract destination airport codes and cities
-    destination_list = []
-    for dest in destinations:
-        destination_list.append({
-            "iata": dest.get("iataCode"),
-            "city": dest.get("address", {}).get("cityName"),
-            "country": dest.get("address", {}).get("countryCode")
-        })
-    
-    return destination_list
+    logger.info(
+        "Closest airport found: %s (%s, %s) %.2f km from %.6f, %.6f",
+        closest.iata,
+        closest.city or "unknown city",
+        closest.country_code or "unknown country",
+        closest_distance,
+        origin_lat,
+        origin_lng,
+    )
+
+    return {
+        "name": closest.name,
+        "iata": closest.iata,
+        "icao": closest.icao,
+        "city": closest.city,
+        "country": closest.country_code,
+        "distance_km": round(closest_distance, 2),
+    }
 

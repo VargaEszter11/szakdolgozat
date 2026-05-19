@@ -1,17 +1,22 @@
-"""Build itineraries leg-by-leg: each hop loads direct destinations from DB cache or Amadeus."""
+"""Build itineraries leg-by-leg from locally cached direct destinations."""
 
 from __future__ import annotations
 
 import json
+import logging
+import math
 import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
+from database import crud, models
 from database.database import SessionLocal
 from utils.direct_destinations_cache import get_direct_destinations_cached
 
 from .llm_client import call_llm_api
 from .prompt_common import language_name, preferences_line, stepwise_next_stop_prompt
+
+logger = logging.getLogger("planner.routes")
 
 
 def _split_place_label(label: str):
@@ -86,12 +91,130 @@ def _filter_random(dests: List[dict]) -> List[dict]:
     return out
 
 
+def _filter_strategy_candidates(
+    strategy: str,
+    raw_dests: List[dict],
+    visited_places: List[str],
+    forbidden_places: List[str],
+) -> List[dict]:
+    if strategy == "visited":
+        return _filter_visited(raw_dests, visited_places)
+    if strategy == "unvisited":
+        return _filter_unvisited(raw_dests, forbidden_places)
+    return _filter_random(raw_dests)
+
+
+def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    earth_radius_km = 6371.0088
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lng2 - lng1)
+    a = (
+        math.sin(delta_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    )
+    return earth_radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+def _transport_for_ground_distance(distance_km: float) -> str:
+    return "bus" if distance_km <= 250 else "train"
+
+
+def _ground_transport_between_airports(db, origin_iata: str, destination_iata: str) -> Optional[str]:
+    origin = db.query(models.Airport).filter(models.Airport.iata == (origin_iata or "").strip().upper()).first()
+    destination = (
+        db.query(models.Airport)
+        .filter(models.Airport.iata == (destination_iata or "").strip().upper())
+        .first()
+    )
+    if (
+        not origin
+        or not destination
+        or origin.latitude is None
+        or origin.longitude is None
+        or destination.latitude is None
+        or destination.longitude is None
+    ):
+        return None
+    distance = _haversine_km(
+        float(origin.latitude),
+        float(origin.longitude),
+        float(destination.latitude),
+        float(destination.longitude),
+    )
+    if distance <= 650:
+        return _transport_for_ground_distance(distance)
+    return None
+
+
+def _ground_candidates_from_airport(
+    db,
+    origin_iata: str,
+    *,
+    excluded_iatas: set[str],
+    max_distance_km: float = 650,
+    limit: int = 12,
+) -> List[dict]:
+    origin_code = (origin_iata or "").strip().upper()
+    origin = db.query(models.Airport).filter(models.Airport.iata == origin_code).first()
+    if not origin or origin.latitude is None or origin.longitude is None:
+        return []
+
+    origin_lat = float(origin.latitude)
+    origin_lng = float(origin.longitude)
+    candidates = []
+    airports = (
+        db.query(models.Airport)
+        .filter(
+            models.Airport.latitude.isnot(None),
+            models.Airport.longitude.isnot(None),
+        )
+        .all()
+    )
+    for airport in airports:
+        iata = (airport.iata or "").strip().upper()
+        if not iata or iata == origin_code or iata in excluded_iatas:
+            continue
+        distance = _haversine_km(
+            origin_lat,
+            origin_lng,
+            float(airport.latitude),
+            float(airport.longitude),
+        )
+        if distance > max_distance_km:
+            continue
+        candidates.append(
+            {
+                "iata": airport.iata,
+                "city": airport.city or crud._airport_name_as_city(airport.name, airport.iata),
+                "country": airport.country_code,
+                "transport": _transport_for_ground_distance(distance),
+                "distance_km": round(distance, 1),
+            }
+        )
+
+    candidates.sort(key=lambda c: c["distance_km"])
+    return candidates[:limit]
+
+
+def _with_transport(candidates: List[dict], transport: str) -> List[dict]:
+    out = []
+    for c in candidates:
+        item = dict(c)
+        item.setdefault("transport", transport)
+        out.append(item)
+    return out
+
+
 def _format_candidates(dests: List[dict]) -> str:
     lines = []
     for d in dests:
         c, co, i = d.get("city"), d.get("country"), d.get("iata")
         if c and i:
-            lines.append(f"- {c}, {co} (IATA: {i})")
+            transport = d.get("transport") or "flight"
+            distance = f", {d.get('distance_km')} km" if d.get("distance_km") is not None else ""
+            lines.append(f"- {c}, {co} (IATA: {i}, transport: {transport}{distance})")
     return "\n".join(lines) if lines else "(no direct destinations from this airport)"
 
 
@@ -143,7 +266,7 @@ def _pick_fallback(candidates: List[dict], remaining_days: int) -> Dict[str, Any
         "country": d.get("country") or "",
         "iata": d.get("iata"),
         "days": days,
-        "transportFromPreviousCity": "flight",
+        "transportFromPreviousCity": d.get("transport") or "flight",
         "activities": ["City walk", "Local sights"],
     }
 
@@ -196,7 +319,7 @@ async def _llm_pick_next_stop(
         "country": d.get("country") or obj.get("country") or "",
         "iata": d.get("iata"),
         "days": days,
-        "transportFromPreviousCity": obj.get("transportFromPreviousCity") or "flight",
+        "transportFromPreviousCity": d.get("transport") or obj.get("transportFromPreviousCity") or "flight",
         "activities": acts or ["City exploration"],
     }
 
@@ -234,12 +357,9 @@ async def build_plan_stepwise(
                 break
 
             raw_dests = await get_direct_destinations_cached(db, current_airport)
-            if strategy == "visited":
-                candidates = _filter_visited(raw_dests, visited_places)
-            elif strategy == "unvisited":
-                candidates = _filter_unvisited(raw_dests, forbidden_places)
-            else:
-                candidates = _filter_random(raw_dests)
+            candidates = _with_transport(_filter_strategy_candidates(
+                strategy, raw_dests, visited_places, forbidden_places
+            ), "flight")
 
             # Do not bounce back to the same IATA as home hub mid-trip
             hub = (starting_airport_iata or "").strip().upper()
@@ -250,6 +370,63 @@ async def build_plan_stepwise(
             # Drop already visited IATAs on this trip
             used_iata = {(p.get("iata") or "").strip().upper() for p in plan if p.get("iata")}
             candidates = [c for c in candidates if (c.get("iata") or "").strip().upper() not in used_iata]
+            excluded_iatas = set(used_iata)
+            excluded_iatas.add(hub)
+            excluded_iatas.add((current_airport or "").strip().upper())
+
+            ground_candidates = _filter_strategy_candidates(
+                strategy,
+                _ground_candidates_from_airport(db, current_airport, excluded_iatas=excluded_iatas),
+                visited_places,
+                forbidden_places,
+            )
+            if ground_candidates:
+                logger.info(
+                    "Loaded %d nearby train/bus candidates from %s",
+                    len(ground_candidates),
+                    current_airport,
+                )
+                candidates.extend(ground_candidates)
+
+            onward_candidates = []
+            if remaining > 1:
+                for c in candidates:
+                    c_iata = (c.get("iata") or "").strip().upper()
+                    if not c_iata:
+                        continue
+                    next_raw_dests = await get_direct_destinations_cached(db, c_iata)
+                    next_candidates = _with_transport(_filter_strategy_candidates(
+                        strategy, next_raw_dests, visited_places, forbidden_places
+                    ), "flight")
+                    next_excluded_iatas = set(used_iata)
+                    next_excluded_iatas.update({hub, c_iata})
+                    next_ground_candidates = _filter_strategy_candidates(
+                        strategy,
+                        _ground_candidates_from_airport(
+                            db, c_iata, excluded_iatas=next_excluded_iatas
+                        ),
+                        visited_places,
+                        forbidden_places,
+                    )
+                    next_candidates.extend(next_ground_candidates)
+                    next_candidates = [
+                        n
+                        for n in next_candidates
+                        if n.get("iata")
+                        and (n.get("iata") or "").strip().upper() != hub
+                        and (n.get("iata") or "").strip().upper() != c_iata
+                        and (n.get("iata") or "").strip().upper() not in used_iata
+                    ]
+                    if next_candidates:
+                        onward_candidates.append(c)
+
+            if onward_candidates:
+                logger.info(
+                    "Preferring %d onward-capable destinations from %s",
+                    len(onward_candidates),
+                    current_airport,
+                )
+                candidates = onward_candidates
 
             if not candidates:
                 break
@@ -274,6 +451,8 @@ async def build_plan_stepwise(
 
             days = int(choice.get("days") or 1)
             days = max(1, min(days, remaining))
+            if remaining > 1 and onward_candidates:
+                days = min(days, remaining - 1)
 
             arrival = cursor.strftime("%Y-%m-%d")
             departure_dt = cursor + timedelta(days=days)
@@ -303,7 +482,20 @@ async def build_plan_stepwise(
     if remaining > 0 and plan:
         plan[-1]["days"] = int(plan[-1].get("days") or 1) + remaining
 
-    # Return leg to hub
+    return_transport = "flight"
+    if plan:
+        db = SessionLocal()
+        try:
+            return_transport = (
+                _ground_transport_between_airports(
+                    db, plan[-1].get("iata"), starting_airport_iata
+                )
+                or "flight"
+            )
+        finally:
+            db.close()
+
+    # Return leg to hub. We do not require a locally cached return route yet.
     plan.append(
         {
             "city": home_city,
@@ -312,9 +504,9 @@ async def build_plan_stepwise(
             "days": 0,
             "arrivalDate": end_date,
             "departureDate": end_date,
-            "transportFromPreviousCity": "flight",
+            "transportFromPreviousCity": return_transport,
             "activities": [],
-            "direct_flights_queried_from": None,
+            "direct_flights_queried_from": plan[-1].get("iata") if plan else None,
         }
     )
 
