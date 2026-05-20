@@ -185,6 +185,29 @@ def with_transport(candidates: List[dict], transport: str) -> List[dict]:
     return out
 
 
+def dedupe_candidates(candidates: List[dict]) -> List[dict]:
+    out = []
+    seen_iatas: set[str] = set()
+    seen_places: set[tuple[str, str]] = set()
+    for candidate in candidates:
+        iata = (candidate.get("iata") or "").strip().upper()
+        city = (candidate.get("city") or "").strip().lower()
+        country = (candidate.get("country") or "").strip().upper()
+        place_key = (city, country)
+
+        if iata and iata in seen_iatas:
+            continue
+        if city and place_key in seen_places:
+            continue
+
+        if iata:
+            seen_iatas.add(iata)
+        if city:
+            seen_places.add(place_key)
+        out.append(candidate)
+    return out
+
+
 def annotate_distances(db, origin_iata: str, candidates: List[dict]) -> List[dict]:
     out = []
     for c in candidates:
@@ -224,9 +247,10 @@ async def build_candidates(
     visited_places: List[str],
     forbidden_places: List[str],
 ) -> List[dict]:
+    candidate_strategy = "random" if strategy == "visited" else strategy
     direct_dests = await get_direct_destinations_cached(db, current_airport)
     flight_candidates = with_transport(
-        filter_strategy_candidates(strategy, direct_dests, visited_places, forbidden_places),
+        filter_strategy_candidates(candidate_strategy, direct_dests, visited_places, forbidden_places),
         "flight",
     )
 
@@ -235,20 +259,20 @@ async def build_candidates(
     excluded_iatas.add((current_airport or "").strip().upper())
 
     ground_candidates = filter_strategy_candidates(
-        strategy,
+        candidate_strategy,
         ground_candidates_from_airport(db, current_airport, excluded_iatas=excluded_iatas),
         visited_places,
         forbidden_places,
     )
 
-    candidates = ground_candidates + flight_candidates
-    return [
+    candidates = [
         c
-        for c in candidates
+        for c in ground_candidates + flight_candidates
         if c.get("iata")
         and is_plannable_place_label(c.get("city"))
         and (c.get("iata") or "").strip().upper() != (hub_iata or "").strip().upper()
         and (c.get("iata") or "").strip().upper() not in used_iatas
     ]
+    return dedupe_candidates(candidates)
 
 

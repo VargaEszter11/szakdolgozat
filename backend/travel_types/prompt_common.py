@@ -19,6 +19,14 @@ Pricing and costs:
 - Use realistic cities and IATA codes; the server uses local route data for airport routing.
 """
 
+ROUTE_DATA_RULES = """
+Route data:
+- The same city or airport may appear more than once because several airlines can serve the same route.
+- Treat duplicate candidate rows with the same IATA or same city as one destination option.
+- Do not repeat the same city, same IATA, or same metro area as separate trip stops.
+- Use the route data only to prove reachability; the itinerary should still be city-based, not airport-based.
+"""
+
 ACTIVITY_SUGGESTION_RULE = (
     '- For each destination, suggest 1-2 realistic activities/programs '
     '(e.g., "Museum visit", "City tour", "Beach day", "Historical site", "Local cuisine experience").'
@@ -41,6 +49,7 @@ def system_travel_planner(lang_name: str) -> str:
         "You are a travel planning AI.\n"
         f"Write ALL text values (country names, activities) in {lang_name}.\n"
         f"{TRANSPORT_RULES}\n"
+        f"{ROUTE_DATA_RULES}\n"
         f"{PRICING_AND_VALIDATION}\n"
     )
 
@@ -52,6 +61,7 @@ def system_stepwise_one_stop(lang_name: str) -> str:
         f"Write activities in {lang_name}.\n"
         "Prefer variety. Avoid repeatedly choosing the same famous hubs or the first-looking option.\n"
         f"{TRANSPORT_RULES}\n"
+        f"{ROUTE_DATA_RULES}\n"
         f"{PRICING_AND_VALIDATION}\n"
     )
 
@@ -88,6 +98,8 @@ def itinerary_rules_standard(
         hub_line,
         *extra_rule_lines,
         "- Make the itinerary varied: avoid repeating the same region or same obvious city pattern.",
+        "- If route data contains duplicate routes for the same city/IATA, treat them as one option.",
+        "- Never use duplicate airport rows or multiple airports in the same metro area as separate stops.",
         "- Put stops in a logical geographic order. Avoid zig-zags, backtracking, and jumping past nearby sensible stops.",
         "- Use train, bus, ferry, or flight according to what makes the route most logical; do not force one mode.",
         f"- Sum of days MUST equal {travel_length}.",
@@ -158,6 +170,7 @@ def stepwise_next_stop_prompt(
         "Rules:\n"
         "- Output JSON only, one object.\n"
         "- Do not always pick the first candidate. Choose a destination that adds variety to the route.\n"
+        "- If multiple candidates represent the same city/IATA/metro area, treat them as duplicates and pick only one.\n"
         "- Keep the route geographically logical: prefer nearby forward movement over zig-zags or backtracking.\n"
         "- Choose the candidate whose listed transport best fits the trip flow; do not force ground transport or flights.\n"
         "- Avoid choosing another airport/city in the exact same metro area unless it is genuinely the intended destination.\n"
