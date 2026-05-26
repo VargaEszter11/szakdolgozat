@@ -292,19 +292,19 @@
       }
       var markerOpts = isStart
         ? {
-            radius: 11,
-            color: '#ffffff',
-            weight: 3,
-            fillColor: accent,
-            fillOpacity: 1
-          }
+          radius: 11,
+          color: '#ffffff',
+          weight: 3,
+          fillColor: accent,
+          fillOpacity: 1
+        }
         : {
-            radius: 8,
-            color: accent,
-            weight: 2,
-            fillColor: '#ffffff',
-            fillOpacity: 1
-          };
+          radius: 8,
+          color: accent,
+          weight: 2,
+          fillColor: '#ffffff',
+          fillOpacity: 1
+        };
       var marker = L.circleMarker([p.lat, p.lng], markerOpts)
         .addTo(map)
         .bindPopup(popupEl, { maxWidth: 260 });
@@ -989,6 +989,14 @@
       var pTrans = document.createElement('p');
       pTrans.innerHTML = '<strong>Transport:</strong> ' + escapeHtml(stop.transport_from_last);
       info.appendChild(pTrans);
+    }
+    if (stop.booking_url) {
+      var pBooking = document.createElement('p');
+      var linkText = stop.flight_availability_verified ? 'Book this flight' : 'Check flight availability';
+      pBooking.innerHTML = '<a class="btn-add" href="' + escapeHtml(stop.booking_url) + '" target="_blank" rel="noopener noreferrer">' +
+        escapeHtml(linkText) +
+        '</a>';
+      info.appendChild(pBooking);
     }
     if (stop.activities) {
       var pAct = document.createElement('p');

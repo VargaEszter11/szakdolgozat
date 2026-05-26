@@ -31,6 +31,7 @@ def normalize_ryanair_route(item):
         "airline_iata": airline,
         "origin_iata": origin,
         "destination_iata": destination,
+        "is_seasonal": bool(item.get("seasonalRoute")),
     }
 
 

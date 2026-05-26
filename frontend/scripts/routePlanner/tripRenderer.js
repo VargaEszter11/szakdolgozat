@@ -70,17 +70,17 @@ export function renderTripDetails(trip) {
                         <h4 class="destination-city">${cityLine}</h4>
                         <p class="destination-info">
                             ${destination.arrivalDate && destination.departureDate
-                                ? `<strong>Dates:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)} (${destination.days} days)`
-                                : `<strong>Days:</strong> ${destination.days}`}
+                    ? `<strong>Dates:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)} (${destination.days} days)`
+                    : `<strong>Days:</strong> ${destination.days}`}
                              | <strong>Transport:</strong> ${escapeHtml(destination.transportFromPreviousCity || 'N/A')}
-                            ${destination.iata ? ` | <strong>Airport:</strong> ${escapeHtml(destination.iata)}` : ''}
-                            ${destination.origin_airport_iata && destination.destination_airport_iata
-                                ? ` | <strong>Flight route:</strong> ${escapeHtml(destination.origin_airport_iata)} → ${escapeHtml(destination.destination_airport_iata)}`
-                                : ''}
-                            ${destination.direct_flights_queried_from
-                                ? ` | <strong>Direct destinations from:</strong> ${escapeHtml(destination.direct_flights_queried_from)}`
-                                : ''}
                         </p>
+                        ${destination.booking_url ? `
+                            <p>
+                                <a class="btn-add" href="${escapeHtml(destination.booking_url)}" target="_blank" rel="noopener noreferrer">
+                                    ${destination.flight_availability_verified ? 'Book this flight' : 'Check flight availability'}
+                                </a>
+                            </p>
+                        ` : ''}
                         ${destination.activities && destination.activities.length > 0 ? `
                             <div class="activities">
                                 <strong>Planned activities:</strong>

@@ -193,15 +193,17 @@ def dedupe_candidates(candidates: List[dict]) -> List[dict]:
         iata = (candidate.get("iata") or "").strip().upper()
         city = (candidate.get("city") or "").strip().lower()
         country = (candidate.get("country") or "").strip().upper()
-        place_key = (city, country)
+        airline = (candidate.get("airline_iata") or "").strip().upper()
+        place_key = (airline, city, country)
 
-        if iata and iata in seen_iatas:
+        iata_key = f"{airline}:{iata}"
+        if iata and iata_key in seen_iatas:
             continue
         if city and place_key in seen_places:
             continue
 
         if iata:
-            seen_iatas.add(iata)
+            seen_iatas.add(iata_key)
         if city:
             seen_places.add(place_key)
         out.append(candidate)

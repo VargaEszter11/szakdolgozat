@@ -2,7 +2,12 @@ import requests
 
 from scrapers.base import save_routes
 
-WIZZAIR_URL = "https://be.wizzair.com/28.9.0/Api/asset/map"
+WIZZAIR_API_VERSIONS = (
+    "28.10.0",
+    "28.9.0",
+    "28.8.0",
+    "28.7.0",
+)
 
 
 HEADERS = {
@@ -25,17 +30,30 @@ def normalize_wizzair_route(origin, connection):
     return {
         "airline_iata": "W6",
         "origin_iata": origin,
-        "destination_iata": destination
+        "destination_iata": destination,
+        "effective_from": connection.get("operationStartDate"),
+        "effective_to": connection.get("operationEndDate"),
+        "is_seasonal": None,
     }
 
 def get_wizzair_routes():
-    response = requests.get(
-        WIZZAIR_URL,
-        headers=HEADERS,
-        timeout=30
-    )
+    response = None
+    last_error = None
+    for version in WIZZAIR_API_VERSIONS:
+        try:
+            response = requests.get(
+                f"https://be.wizzair.com/{version}/Api/asset/map",
+                headers=HEADERS,
+                timeout=30
+            )
+            response.raise_for_status()
+            break
+        except requests.RequestException as exc:
+            response = None
+            last_error = exc
 
-    response.raise_for_status()
+    if response is None:
+        raise last_error or RuntimeError("No Wizz Air map API version worked")
 
     data = response.json()
     if not isinstance(data, dict):

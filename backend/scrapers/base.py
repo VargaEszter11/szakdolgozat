@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from database import models
 from database.database import SessionLocal
 
@@ -20,6 +22,23 @@ def _ensure_airline(db, airline_iata: str, airline_names: dict | None = None):
     return airline
 
 
+def _parse_date(value):
+    if not value:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
+    except ValueError:
+        try:
+            return date.fromisoformat(text[:10])
+        except ValueError:
+            return None
+
+
 def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=None):
     owns_session = db is None
     db = db or SessionLocal()
@@ -38,7 +57,7 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
             origin_iata = (route.get("origin_iata") or "").strip().upper()
             destination_iata = (route.get("destination_iata") or "").strip().upper()
 
-            key = (origin_iata, destination_iata)
+            key = (airline_iata, origin_iata, destination_iata)
             if (
                 not airline_iata
                 or not origin_iata
@@ -55,6 +74,9 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
                     "airline_iata": airline_iata,
                     "origin_iata": origin_iata,
                     "destination_iata": destination_iata,
+                    "is_seasonal": route.get("is_seasonal"),
+                    "effective_from": _parse_date(route.get("effective_from")),
+                    "effective_to": _parse_date(route.get("effective_to")),
                 }
             )
 
@@ -86,6 +108,7 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
             db_route = (
                 db.query(models.DirectRoute)
                 .filter(
+                    models.DirectRoute.airline_iata == airline_iata,
                     models.DirectRoute.origin_iata == origin_iata,
                     models.DirectRoute.destination_iata == destination_iata,
                 )
@@ -95,6 +118,9 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
                 db_route.airline_iata = airline_iata
                 db_route.airline_name = _airline_name(airline_iata, airline_names)
                 db_route.flight_number = db_route.flight_number or "DIRECT"
+                db_route.is_seasonal = route["is_seasonal"]
+                db_route.effective_from = route["effective_from"]
+                db_route.effective_to = route["effective_to"]
                 db_route.is_active = True
                 stats["updated"] += 1
             else:
@@ -105,6 +131,9 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
                         flight_number="DIRECT",
                         origin_iata=origin_iata,
                         destination_iata=destination_iata,
+                        is_seasonal=route["is_seasonal"],
+                        effective_from=route["effective_from"],
+                        effective_to=route["effective_to"],
                         is_active=True,
                     )
                 )

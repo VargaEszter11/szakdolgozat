@@ -23,6 +23,7 @@ def _route(origin, destination):
         "airline_iata": "LH",
         "origin_iata": origin,
         "destination_iata": destination,
+        "is_seasonal": None,
     }
 
 

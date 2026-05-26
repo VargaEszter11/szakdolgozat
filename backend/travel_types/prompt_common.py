@@ -7,7 +7,7 @@ LANG_NAMES = {"en": "English", "hu": "Hungarian", "de": "German"}
 NO_DIRECT_FLIGHTS_MESSAGE = "No direct flights available from starting airport."
 
 TRANSPORT_RULES = """
-Transport between stops (field transportFromPreviousCity: one of train | bus | flight | ferry | none):
+Transport between stops (field transportFromPreviousCity: one of train | bus | flight | ferry):
 - Do not blindly prioritize any one transport mode.
 - Choose the mode that makes the route most logical: train/bus for nearby regional movement, flights for long jumps or island/sea-separated routes.
 - A good itinerary may mix transport modes, but only when the route flow still makes sense.
@@ -25,6 +25,10 @@ Route data:
 - Treat duplicate candidate rows with the same IATA or same city as one destination option.
 - Do not repeat the same city, same IATA, or same metro area as separate trip stops.
 - Use the route data only to prove reachability; the itinerary should still be city-based, not airport-based.
+- Flight candidates may include seasonality: seasonal, year_round, or unknown.
+- If a seasonal flight is listed, the backend has already checked the known effective date range for the current travel date.
+- If seasonality is unknown, do not invent operating seasons or dates; use it as a reachable but unverified flight option.
+- Never claim that a seasonal/unknown flight operates outside the dates shown in the candidate row.
 """
 
 ACTIVITY_SUGGESTION_RULE = (
@@ -102,6 +106,7 @@ def itinerary_rules_standard(
         "- Never use duplicate airport rows or multiple airports in the same metro area as separate stops.",
         "- Put stops in a logical geographic order. Avoid zig-zags, backtracking, and jumping past nearby sensible stops.",
         "- Use train, bus, ferry, or flight according to what makes the route most logical; do not force one mode.",
+        "- Give each stop enough time. Avoid rushed one-night/one-day stops unless the whole trip is very short.",
         f"- Sum of days MUST equal {travel_length}.",
         f"- Assign concrete arrival and departure dates for each stop, starting from {start_date}.",
         (
@@ -125,7 +130,7 @@ OUTPUT:Return JSON ONLY using this structure:
   "tripLengthDays": number,
   "strategy": "{strategy}",
   "plan": [
-    {{"city": string,"country": string,"iata": string,"days": number,"arrivalDate": "YYYY-MM-DD","departureDate": "YYYY-MM-DD","transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}
+    {{"city": string,"country": string,"iata": string,"days": number,"arrivalDate": "YYYY-MM-DD","departureDate": "YYYY-MM-DD","transportFromPreviousCity": "train | bus | flight | ferry","activities": [string]}}
   ]
 }}
 """
@@ -137,7 +142,7 @@ OUTPUT:Return JSON ONLY using this structure:
 
 {{
 "trips": [
-  {{"startingPoint": string,"startDate": "{start_date}","endDate": "{end_date}","tripLengthDays": number,"strategy": "random","plan": [{{"city": string,"country": string,"iata": string,"days": number,"arrivalDate": "YYYY-MM-DD","departureDate": "YYYY-MM-DD","transportFromPreviousCity": "train | bus | flight | ferry | none","activities": [string]}}]}}
+  {{"startingPoint": string,"startDate": "{start_date}","endDate": "{end_date}","tripLengthDays": number,"strategy": "random","plan": [{{"city": string,"country": string,"iata": string,"days": number,"arrivalDate": "YYYY-MM-DD","departureDate": "YYYY-MM-DD","transportFromPreviousCity": "train | bus | flight | ferry","activities": [string]}}]}}
   ]
 }}
 """
@@ -151,6 +156,7 @@ def stepwise_next_stop_prompt(
     current_city_label: str,
     prefs: str,
     remaining_days: int,
+    min_stop_days: int,
     cand_block: str,
     avoid: str,
 ) -> str:
@@ -173,8 +179,11 @@ def stepwise_next_stop_prompt(
         "- If multiple candidates represent the same city/IATA/metro area, treat them as duplicates and pick only one.\n"
         "- Keep the route geographically logical: prefer nearby forward movement over zig-zags or backtracking.\n"
         "- Choose the candidate whose listed transport best fits the trip flow; do not force ground transport or flights.\n"
+        "- For flight candidates, respect the listed seasonality/effective dates. Do not invent missing operating dates.\n"
+        "- Unknown seasonality means the route is reachable but date details are not verified by the source.\n"
         "- Avoid choosing another airport/city in the exact same metro area unless it is genuinely the intended destination.\n"
-        f'- "days": integer from 1 to {remaining_days} (days spent at the chosen city before moving on).\n'
+        f'- "days": integer from {min_stop_days} to {remaining_days} (days spent at the chosen city before moving on).\n'
+        "- Prefer fewer well-paced stops over many rushed stops; do not leave a single leftover day for another city.\n"
         f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.\n'
         '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.\n\n'
         "Return JSON only with this shape:\n"

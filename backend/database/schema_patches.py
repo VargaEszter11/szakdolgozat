@@ -25,9 +25,20 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE direct_routes
+                    ADD COLUMN IF NOT EXISTS is_seasonal BOOLEAN NULL,
+                    ADD COLUMN IF NOT EXISTS effective_from DATE NULL,
+                    ADD COLUMN IF NOT EXISTS effective_to DATE NULL
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     DELETE FROM route_days rd
                     USING direct_routes duplicate, direct_routes keep
                     WHERE rd.route_id = duplicate.id
+                      AND COALESCE(duplicate.airline_iata, '') = COALESCE(keep.airline_iata, '')
                       AND duplicate.origin_iata = keep.origin_iata
                       AND duplicate.destination_iata = keep.destination_iata
                       AND duplicate.id > keep.id
@@ -40,6 +51,7 @@ def apply_startup_schema_patches() -> None:
                     DELETE FROM route_prices rp
                     USING direct_routes duplicate, direct_routes keep
                     WHERE rp.route_id = duplicate.id
+                      AND COALESCE(duplicate.airline_iata, '') = COALESCE(keep.airline_iata, '')
                       AND duplicate.origin_iata = keep.origin_iata
                       AND duplicate.destination_iata = keep.destination_iata
                       AND duplicate.id > keep.id
@@ -51,18 +63,20 @@ def apply_startup_schema_patches() -> None:
                     """
                     DELETE FROM direct_routes duplicate
                     USING direct_routes keep
-                    WHERE duplicate.origin_iata = keep.origin_iata
+                    WHERE COALESCE(duplicate.airline_iata, '') = COALESCE(keep.airline_iata, '')
+                      AND duplicate.origin_iata = keep.origin_iata
                       AND duplicate.destination_iata = keep.destination_iata
                       AND duplicate.id > keep.id
                     """
                 )
             )
             conn.execute(text("DROP INDEX IF EXISTS uniq_route"))
+            conn.execute(text("DROP INDEX IF EXISTS uniq_route_airline_origin_destination"))
             conn.execute(
                 text(
                     """
                     CREATE UNIQUE INDEX IF NOT EXISTS uniq_route
-                    ON direct_routes (origin_iata, destination_iata)
+                    ON direct_routes (COALESCE(airline_iata, ''), origin_iata, destination_iata)
                     """
                 )
             )

@@ -24,6 +24,7 @@ def _route(origin, destination):
         "airline_iata": "KL",
         "origin_iata": origin,
         "destination_iata": destination,
+        "is_seasonal": None,
     }
 
 
@@ -88,7 +89,10 @@ def _get_klm_routes_from_openflights():
     return routes
 
 
-def get_klm_routes():
+def get_klm_routes(*, try_site: bool = False):
+    if not try_site:
+        return _get_klm_routes_from_openflights()
+
     try:
         return _get_klm_routes_from_site()
     except requests.RequestException:

@@ -186,6 +186,7 @@ class DirectRoute(Base):
         Index("idx_routes_active", "is_active"),
         Index(
             "uniq_route",
+            "airline_iata",
             "origin_iata",
             "destination_iata",
             unique=True,
@@ -215,6 +216,7 @@ class DirectRoute(Base):
     aircraft = Column(Text, nullable=True)
     effective_from = Column(Date, nullable=True)
     effective_to = Column(Date, nullable=True)
+    is_seasonal = Column(Boolean, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -532,7 +532,7 @@ def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[
     """Return active destination airports as ``iata``, ``city``, and ``country`` dicts."""
     o = _norm_iata(origin_iata)
     rows = (
-        db.query(models.Airport)
+        db.query(models.Airport, models.DirectRoute)
         .join(
             models.DirectRoute,
             models.DirectRoute.destination_iata == models.Airport.iata,
@@ -546,11 +546,16 @@ def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[
     )
     return [
         {
-            "iata": a.iata,
-            "city": a.city or _airport_name_as_city(a.name, a.iata),
-            "country": a.country_code,
+            "iata": airport.iata,
+            "city": airport.city or _airport_name_as_city(airport.name, airport.iata),
+            "country": airport.country_code,
+            "airline_iata": route.airline_iata,
+            "airline_name": route.airline_name,
+            "is_seasonal": route.is_seasonal,
+            "effective_from": route.effective_from.isoformat() if route.effective_from else None,
+            "effective_to": route.effective_to.isoformat() if route.effective_to else None,
         }
-        for a in rows
+        for airport, route in rows
     ]
 
 
