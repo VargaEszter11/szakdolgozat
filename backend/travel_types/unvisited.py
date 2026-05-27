@@ -12,6 +12,7 @@ from .prompt_common import (
     language_name,
     NO_DIRECT_FLIGHTS_MESSAGE,
     output_json_single_trip_schema,
+    places_context_block,
     system_travel_planner,
     user_trip_header,
 )
@@ -145,6 +146,7 @@ async def generate_travel_plan_unvisited(
     prompt = (
         f"{system_travel_planner(lang_name)}"
         f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
+        f"{places_context_block(forbidden_places=forbidden_places, extra_places=forbidden_places)}"
         "ALREADY VISITED (FORBIDDEN — do NOT include any of these cities):\n"
         f"{excluded_names}\n\n"
         "ALLOWED destinations (these are the ONLY cities you may use):\n"

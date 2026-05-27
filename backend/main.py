@@ -81,6 +81,7 @@ app.include_router(visited_places.router, prefix="/api", tags=["places"])
 
 class GenerationRequest(BaseModel):
     visitedPlaces: List[str]
+    extraPlaces: List[str] = []
     startingPoint: str
     budget: Optional[int] = None
     startDate: str
@@ -237,6 +238,7 @@ async def travel_plans_visited(request: GenerationRequest, db: Session = Depends
         end_date=request.endDate,
         language=request.language,
         llm_provider=llm_provider,
+        extra_places=request.extraPlaces,
         db=db,
     )
 

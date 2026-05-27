@@ -101,6 +101,22 @@ def _requested_candidate_matches(
     ]
 
 
+def _merge_place_lists(*groups: Optional[List[str]]) -> List[str]:
+    seen = set()
+    out: List[str] = []
+    for group in groups:
+        for place in group or []:
+            text = str(place).strip()
+            if not text:
+                continue
+            key = text.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(text)
+    return out
+
+
 def _merge_requested_with_ranked(requested_matches: List[dict], ranked: List[dict]) -> List[dict]:
     out = []
     seen: set[str] = set()
@@ -358,6 +374,9 @@ async def _ask_ai_to_pick_candidate(
     remaining_days: int,
     preferences: List[str],
     plan: List[Dict[str, Any]],
+    requested_places: List[str],
+    forbidden_places: List[str],
+    extra_places: List[str],
     language: str,
     llm_provider: str,
 ) -> Optional[Dict[str, Any]]:
@@ -371,6 +390,9 @@ async def _ask_ai_to_pick_candidate(
         min_stop_days=_minimum_stop_days(remaining_days),
         cand_block=_format_candidates(candidates),
         avoid=", ".join(str(stop.get("city") or "") for stop in plan) or "none",
+        requested_places=requested_places,
+        forbidden_places=forbidden_places,
+        extra_places=extra_places,
     )
     raw = await call_llm_api(prompt, llm_provider)
     choice = _parse_json_object(raw)
@@ -419,10 +441,13 @@ async def build_plan_stepwise(
     llm_provider: str,
     visited_places: Optional[List[str]] = None,
     forbidden_places: Optional[List[str]] = None,
+    extra_places: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     home_city, home_country = split_place_label(starting_point)
-    visited_places = visited_places or []
+    requested_places = _merge_place_lists(visited_places, extra_places)
+    visited_places = requested_places
     forbidden_places = forbidden_places or []
+    extra_places = extra_places or []
 
     plan: List[Dict[str, Any]] = []
     current_airport = starting_airport_iata
@@ -457,6 +482,8 @@ async def build_plan_stepwise(
                 requested_matches = _requested_candidate_matches(
                     candidates, visited_places, plan
                 )
+                if not requested_matches:
+                    break
             ranked_candidates = rank_candidates(
                 candidates,
                 previous_iata=(previous_iata or "").strip().upper() or None,
@@ -513,6 +540,9 @@ async def build_plan_stepwise(
                 remaining_days=remaining_days,
                 preferences=preferences,
                 plan=plan,
+                requested_places=requested_places,
+                forbidden_places=forbidden_places,
+                extra_places=extra_places,
                 language=language,
                 llm_provider=llm_provider,
             )
@@ -613,9 +643,11 @@ async def build_plan_stepwise(
         db.close()
 
     requested_missing = []
-    if strategy == "visited":
+    if strategy == "visited" and requested_places and not any(
+        place_used_in_plan(place, plan) for place in requested_places
+    ):
         requested_missing = [
-            place for place in visited_places if not place_used_in_plan(place, plan)
+            place for place in requested_places if not place_used_in_plan(place, plan)
         ]
 
     return {

@@ -47,6 +47,25 @@ def preferences_line(preferences: list | None) -> str:
     return ", ".join(str(p).strip() for p in preferences if str(p).strip())
 
 
+def _list_line(values: list | None) -> str:
+    cleaned = [str(value).strip() for value in values or [] if str(value).strip()]
+    return ", ".join(cleaned) if cleaned else "none"
+
+
+def places_context_block(
+    *,
+    requested_places: list | None = None,
+    forbidden_places: list | None = None,
+    extra_places: list | None = None,
+) -> str:
+    return (
+        "User place constraints:\n"
+        f"- Places the user wants considered/included: {_list_line(requested_places)}\n"
+        f"- Extra places typed in the form: {_list_line(extra_places)}\n"
+        f"- Places the user wants excluded: {_list_line(forbidden_places)}\n\n"
+    )
+
+
 def system_travel_planner(lang_name: str) -> str:
     return (
         "SYSTEM:\n"
@@ -159,6 +178,9 @@ def stepwise_next_stop_prompt(
     min_stop_days: int,
     cand_block: str,
     avoid: str,
+    requested_places: list | None = None,
+    forbidden_places: list | None = None,
+    extra_places: list | None = None,
 ) -> str:
     return (
         f"{system_stepwise_one_stop(lang_name)}"
@@ -167,6 +189,7 @@ def stepwise_next_stop_prompt(
         f"Current departure airport (IATA): {current_airport}\n"
         f"Current location label: {current_city_label}\n"
         f"Preferences: {prefs}\n"
+        f"{places_context_block(requested_places=requested_places, forbidden_places=forbidden_places, extra_places=extra_places)}"
         "Total days still to assign (this stop + any later stops before return home): "
         f"{remaining_days}\n\n"
         f"Candidate destinations reachable from {current_airport} by the listed transport. "
@@ -177,6 +200,8 @@ def stepwise_next_stop_prompt(
         "- Output JSON only, one object.\n"
         "- Do not always pick the first candidate. Choose a destination that adds variety to the route.\n"
         "- If multiple candidates represent the same city/IATA/metro area, treat them as duplicates and pick only one.\n"
+        "- If any requested/extra place appears in the candidate list, strongly prefer choosing it before unrelated places.\n"
+        "- Never choose a candidate that matches the excluded places list.\n"
         "- Keep the route geographically logical: prefer nearby forward movement over zig-zags or backtracking.\n"
         "- Choose the candidate whose listed transport best fits the trip flow; do not force ground transport or flights.\n"
         "- For flight candidates, respect the listed seasonality/effective dates. Do not invent missing operating dates.\n"

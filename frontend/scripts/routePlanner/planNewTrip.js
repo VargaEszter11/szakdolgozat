@@ -189,8 +189,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (selectedPlan === 'visited') {
             const fromDb = useDb ? savedVisitedPlaces : [];
-            body.visitedPlaces = [...new Set([...fromDb, ...manualPlaces])];
-            if (!body.visitedPlaces.length) {
+            body.visitedPlaces = fromDb;
+            body.extraPlaces = manualPlaces;
+            if (!body.visitedPlaces.length && !body.extraPlaces.length) {
                 const msg = window.i18n && window.i18n.t
                     ? window.i18n.t('planNewTrip.manualPlacesRequired')
                     : 'Add at least one place below, or turn on using your travel log from the database.';

@@ -12,6 +12,19 @@ from utils.direct_destinations_cache import get_direct_destinations_cached
 from .place_matching import filter_strategy_candidates
 
 
+EUROPE_COUNTRY_CODES = {
+    "AL", "AD", "AT", "BE", "BA", "BG", "HR", "CY", "CZ", "DK",
+    "EE", "FI", "FR", "DE", "GR", "HU", "IS", "IE", "IT", "XK",
+    "LV", "LI", "LT", "LU", "MT", "MD", "MC", "ME", "NL", "MK",
+    "NO", "PL", "PT", "RO", "SM", "RS", "SK", "SI", "ES", "SE",
+    "CH", "GB", "VA",
+}
+
+
+def is_europe_country(country_code: Optional[str]) -> bool:
+    return (country_code or "").strip().upper() in EUROPE_COUNTRY_CODES
+
+
 def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     earth_radius_km = 6371.0088
     phi1 = math.radians(lat1)
@@ -149,6 +162,8 @@ def ground_candidates_from_airport(
         iata = (airport.iata or "").strip().upper()
         if not iata or iata == origin_code or iata in excluded_iatas:
             continue
+        if not is_europe_country(airport.country_code):
+            continue
         city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
         if not is_plannable_place_label(city):
             continue
@@ -183,6 +198,10 @@ def with_transport(candidates: List[dict], transport: str) -> List[dict]:
         item.setdefault("transport", transport)
         out.append(item)
     return out
+
+
+def europe_candidates(candidates: List[dict]) -> List[dict]:
+    return [candidate for candidate in candidates if is_europe_country(candidate.get("country"))]
 
 
 def dedupe_candidates(candidates: List[dict]) -> List[dict]:
@@ -251,6 +270,7 @@ async def build_candidates(
 ) -> List[dict]:
     candidate_strategy = "random" if strategy == "visited" else strategy
     direct_dests = await get_direct_destinations_cached(db, current_airport)
+    direct_dests = europe_candidates(direct_dests)
     flight_candidates = with_transport(
         filter_strategy_candidates(candidate_strategy, direct_dests, visited_places, forbidden_places),
         "flight",
