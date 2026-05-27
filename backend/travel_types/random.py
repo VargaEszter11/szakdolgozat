@@ -1,15 +1,18 @@
-import json
 from typing import List
 
-from .llm_client import call_llm_api
-from .prompt_common import (
+from .common import (
+    as_json,
+    destination_label,
+    destinations_text,
+    from_json,
     itinerary_rules_standard,
     language_name,
-    NO_DIRECT_FLIGHTS_MESSAGE,
     output_json_random_five_trips,
+    run_db_planner,
     system_travel_planner,
     user_trip_header,
 )
+from .llm_client import call_llm_api
 
 
 async def generate_travel_plan_random(
@@ -23,11 +26,9 @@ async def generate_travel_plan_random(
     llm_provider: str = "deepseek",
     starting_airport_iata: str = None,
 ) -> str:
-    """Generate random itineraries (stepwise: each leg loads direct destinations from current airport)."""
+    """Generate random itineraries where each leg loads direct destinations from the current airport."""
     if starting_airport_iata:
-        from .stepwise_planner import build_plan_stepwise
-
-        trip = await build_plan_stepwise(
+        trip_json = await run_db_planner(
             strategy="random",
             starting_point=startingPoint,
             starting_airport_iata=starting_airport_iata,
@@ -40,17 +41,12 @@ async def generate_travel_plan_random(
             visited_places=None,
             forbidden_places=None,
         )
-        return json.dumps({"trips": [trip]}, ensure_ascii=False)
+        return as_json({"trips": [from_json(trip_json)]})
 
     lang_name = language_name(language)
-    available_destinations = []
-    if direct_destinations:
-        for dest in direct_destinations:
-            city = dest.get("city")
-            if city:
-                available_destinations.append(f"{city}, {dest.get('country')} (IATA: {dest.get('iata')})")
-
-    destinations_info = "\n".join(available_destinations) if available_destinations else NO_DIRECT_FLIGHTS_MESSAGE
+    destinations_info = destinations_text(
+        [destination_label(dest) for dest in direct_destinations or [] if dest.get("city")]
+    )
 
     prompt = (
         f"{system_travel_planner(lang_name)}"

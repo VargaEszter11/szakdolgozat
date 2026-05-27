@@ -1,4 +1,4 @@
-"""Route candidate construction and ranking for stepwise planning."""
+"""Route candidate construction and ranking for travel planning."""
 
 from __future__ import annotations
 
@@ -20,9 +20,42 @@ EUROPE_COUNTRY_CODES = {
     "CH", "GB", "VA",
 }
 
+GROUND_MAX_DISTANCE_KM = 650
+GROUND_CANDIDATE_LIMIT = 12
+RANKED_CANDIDATE_LIMIT = 18
+
+BLOCKED_PLACE_PATTERNS = (
+    r"\bairport\b",
+    r"\baerodrome\b",
+    r"\bheliport\b",
+    r"\bhelipad\b",
+    r"\bstation\b",
+    r"\bterminal\b",
+    r"\bferry\b",
+    r"\bport\b",
+    r"\bharbou?r\b",
+    r"\bmarina\b",
+)
+
 
 def is_europe_country(country_code: Optional[str]) -> bool:
     return (country_code or "").strip().upper() in EUROPE_COUNTRY_CODES
+
+
+def _iata(value: Optional[str]) -> str:
+    return (value or "").strip().upper()
+
+
+def _airport_by_iata(db, iata: str):
+    return db.query(models.Airport).filter(models.Airport.iata == _iata(iata)).first()
+
+
+def _has_coordinates(airport) -> bool:
+    return bool(
+        airport
+        and airport.latitude is not None
+        and airport.longitude is not None
+    )
 
 
 def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -65,37 +98,13 @@ def is_plannable_place_label(label: Optional[str]) -> bool:
     text = (label or "").strip().lower()
     if not text:
         return False
-
-    blocked_patterns = (
-        r"\bairport\b",
-        r"\baerodrome\b",
-        r"\bheliport\b",
-        r"\bhelipad\b",
-        r"\bstation\b",
-        r"\bterminal\b",
-        r"\bferry\b",
-        r"\bport\b",
-        r"\bharbou?r\b",
-        r"\bmarina\b",
-    )
-    return not any(re.search(pattern, text) for pattern in blocked_patterns)
+    return not any(re.search(pattern, text) for pattern in BLOCKED_PLACE_PATTERNS)
 
 
 def airport_distance(db, origin_iata: str, destination_iata: str) -> Optional[float]:
-    origin = db.query(models.Airport).filter(models.Airport.iata == (origin_iata or "").strip().upper()).first()
-    destination = (
-        db.query(models.Airport)
-        .filter(models.Airport.iata == (destination_iata or "").strip().upper())
-        .first()
-    )
-    if (
-        not origin
-        or not destination
-        or origin.latitude is None
-        or origin.longitude is None
-        or destination.latitude is None
-        or destination.longitude is None
-    ):
+    origin = _airport_by_iata(db, origin_iata)
+    destination = _airport_by_iata(db, destination_iata)
+    if not _has_coordinates(origin) or not _has_coordinates(destination):
         return None
     return haversine_km(
         float(origin.latitude),
@@ -106,21 +115,11 @@ def airport_distance(db, origin_iata: str, destination_iata: str) -> Optional[fl
 
 
 def ground_transport_between_airports(db, origin_iata: str, destination_iata: str) -> Optional[str]:
-    origin = db.query(models.Airport).filter(models.Airport.iata == (origin_iata or "").strip().upper()).first()
-    destination = (
-        db.query(models.Airport)
-        .filter(models.Airport.iata == (destination_iata or "").strip().upper())
-        .first()
-    )
-    if (
-        not origin
-        or not destination
-        or origin.latitude is None
-        or origin.longitude is None
-        or destination.latitude is None
-        or destination.longitude is None
-        or not can_use_ground_transport(origin, destination)
-    ):
+    origin = _airport_by_iata(db, origin_iata)
+    destination = _airport_by_iata(db, destination_iata)
+    if not _has_coordinates(origin) or not _has_coordinates(destination):
+        return None
+    if not can_use_ground_transport(origin, destination):
         return None
 
     distance = haversine_km(
@@ -129,7 +128,7 @@ def ground_transport_between_airports(db, origin_iata: str, destination_iata: st
         float(destination.latitude),
         float(destination.longitude),
     )
-    if distance is not None and distance <= 650:
+    if distance <= GROUND_MAX_DISTANCE_KM:
         return transport_for_ground_distance(distance)
     return None
 
@@ -139,12 +138,12 @@ def ground_candidates_from_airport(
     origin_iata: str,
     *,
     excluded_iatas: set[str],
-    max_distance_km: float = 650,
-    limit: int = 12,
+    max_distance_km: float = GROUND_MAX_DISTANCE_KM,
+    limit: int = GROUND_CANDIDATE_LIMIT,
 ) -> List[dict]:
-    origin_code = (origin_iata or "").strip().upper()
-    origin = db.query(models.Airport).filter(models.Airport.iata == origin_code).first()
-    if not origin or origin.latitude is None or origin.longitude is None:
+    origin_code = _iata(origin_iata)
+    origin = _airport_by_iata(db, origin_code)
+    if not _has_coordinates(origin):
         return []
 
     origin_lat = float(origin.latitude)
@@ -159,15 +158,17 @@ def ground_candidates_from_airport(
         .all()
     )
     for airport in airports:
-        iata = (airport.iata or "").strip().upper()
-        if not iata or iata == origin_code or iata in excluded_iatas:
-            continue
-        if not is_europe_country(airport.country_code):
+        iata = _iata(airport.iata)
+        if (
+            not iata
+            or iata == origin_code
+            or iata in excluded_iatas
+            or not is_europe_country(airport.country_code)
+            or not can_use_ground_transport(origin, airport)
+        ):
             continue
         city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
         if not is_plannable_place_label(city):
-            continue
-        if not can_use_ground_transport(origin, airport):
             continue
         distance = haversine_km(
             origin_lat,
@@ -193,8 +194,8 @@ def ground_candidates_from_airport(
 
 def with_transport(candidates: List[dict], transport: str) -> List[dict]:
     out = []
-    for c in candidates:
-        item = dict(c)
+    for candidate in candidates:
+        item = dict(candidate)
         item.setdefault("transport", transport)
         out.append(item)
     return out
@@ -209,10 +210,10 @@ def dedupe_candidates(candidates: List[dict]) -> List[dict]:
     seen_iatas: set[str] = set()
     seen_places: set[tuple[str, str]] = set()
     for candidate in candidates:
-        iata = (candidate.get("iata") or "").strip().upper()
+        iata = _iata(candidate.get("iata"))
         city = (candidate.get("city") or "").strip().lower()
-        country = (candidate.get("country") or "").strip().upper()
-        airline = (candidate.get("airline_iata") or "").strip().upper()
+        country = _iata(candidate.get("country"))
+        airline = _iata(candidate.get("airline_iata"))
         place_key = (airline, city, country)
 
         iata_key = f"{airline}:{iata}"
@@ -231,8 +232,8 @@ def dedupe_candidates(candidates: List[dict]) -> List[dict]:
 
 def annotate_distances(db, origin_iata: str, candidates: List[dict]) -> List[dict]:
     out = []
-    for c in candidates:
-        item = dict(c)
+    for candidate in candidates:
+        item = dict(candidate)
         if item.get("distance_km") is None:
             distance = airport_distance(db, origin_iata, item.get("iata"))
             if distance is not None:
@@ -245,14 +246,14 @@ def rank_candidates(
     candidates: List[dict],
     *,
     previous_iata: Optional[str] = None,
-    limit: int = 18,
+    limit: int = RANKED_CANDIDATE_LIMIT,
 ) -> List[dict]:
-    def score(c: dict) -> tuple:
-        distance = c.get("distance_km")
+    previous = _iata(previous_iata)
+
+    def score(candidate: dict) -> tuple:
+        distance = candidate.get("distance_km")
         distance_score = distance if distance is not None else 10**9
-        backtrack_penalty = 0
-        if previous_iata and (c.get("iata") or "").strip().upper() == previous_iata:
-            backtrack_penalty = 10**9
+        backtrack_penalty = 10**9 if previous and _iata(candidate.get("iata")) == previous else 0
         return (distance_score + backtrack_penalty, distance_score)
 
     return sorted(candidates, key=score)[:limit]
@@ -269,20 +270,23 @@ async def build_candidates(
     forbidden_places: List[str],
 ) -> List[dict]:
     candidate_strategy = "random" if strategy == "visited" else strategy
-    direct_dests = await get_direct_destinations_cached(db, current_airport)
-    direct_dests = europe_candidates(direct_dests)
     flight_candidates = with_transport(
-        filter_strategy_candidates(candidate_strategy, direct_dests, visited_places, forbidden_places),
+        filter_strategy_candidates(
+            candidate_strategy,
+            europe_candidates(await get_direct_destinations_cached(db, current_airport)),
+            visited_places,
+            forbidden_places,
+        ),
         "flight",
     )
 
-    excluded_iatas = set(used_iatas)
-    excluded_iatas.add((hub_iata or "").strip().upper())
-    excluded_iatas.add((current_airport or "").strip().upper())
-
     ground_candidates = filter_strategy_candidates(
         candidate_strategy,
-        ground_candidates_from_airport(db, current_airport, excluded_iatas=excluded_iatas),
+        ground_candidates_from_airport(
+            db,
+            current_airport,
+            excluded_iatas={*used_iatas, _iata(hub_iata), _iata(current_airport)},
+        ),
         visited_places,
         forbidden_places,
     )
@@ -292,8 +296,8 @@ async def build_candidates(
         for c in ground_candidates + flight_candidates
         if c.get("iata")
         and is_plannable_place_label(c.get("city"))
-        and (c.get("iata") or "").strip().upper() != (hub_iata or "").strip().upper()
-        and (c.get("iata") or "").strip().upper() not in used_iatas
+        and _iata(c.get("iata")) != _iata(hub_iata)
+        and _iata(c.get("iata")) not in used_iatas
     ]
     return dedupe_candidates(candidates)
 

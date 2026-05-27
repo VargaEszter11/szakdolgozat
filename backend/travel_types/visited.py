@@ -1,18 +1,18 @@
-# TODO: better date handling, realistic travel mode
-
-import json
 from typing import List
 
-from .llm_client import call_llm_api
-from .prompt_common import (
+from .common import (
+    destination_label,
+    destinations_text,
     itinerary_rules_standard,
     language_name,
-    NO_DIRECT_FLIGHTS_MESSAGE,
+    merge_place_lists,
     output_json_single_trip_schema,
     places_context_block,
+    run_db_planner,
     system_travel_planner,
     user_trip_header,
 )
+from .llm_client import call_llm_api
 
 
 async def generate_travel_plan_visited(
@@ -28,12 +28,10 @@ async def generate_travel_plan_visited(
     starting_airport_iata: str = None,
     extra_places: List[str] = None,
 ) -> str:
-    """Generate travel plan for visited places (stepwise hub → next hub → …)."""
-    requested_places = _merge_place_lists(visitedPlaces, extra_places or [])
+    """Generate a travel plan from requested visited places."""
+    requested_places = merge_place_lists(visitedPlaces, extra_places)
     if starting_airport_iata:
-        from .stepwise_planner import build_plan_stepwise
-
-        data = await build_plan_stepwise(
+        return await run_db_planner(
             strategy="visited",
             starting_point=startingPoint,
             starting_airport_iata=starting_airport_iata,
@@ -47,25 +45,14 @@ async def generate_travel_plan_visited(
             forbidden_places=None,
             extra_places=extra_places,
         )
-        return json.dumps(data, ensure_ascii=False)
 
     lang_name = language_name(language)
-    available_places = []
-    if direct_destinations:
-        dest_cities = {(dest.get("city") or "").lower(): dest for dest in direct_destinations if dest.get("city")}
-        for place in requested_places:
-            place_lower = place.lower()
-            for city_key, dest in dest_cities.items():
-                if city_key and (place_lower in city_key or city_key in place_lower):
-                    available_places.append(f"{dest.get('city')}, {dest.get('country')} (IATA: {dest.get('iata')})")
-
-    direct_destinations_str = "\n".join(available_places) if available_places else NO_DIRECT_FLIGHTS_MESSAGE
-
+    available_places = _matching_destinations(direct_destinations or [], requested_places)
     prompt = (
         f"{system_travel_planner(lang_name)}"
         f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
         f"{places_context_block(requested_places=requested_places, extra_places=extra_places)}"
-        f"Available airport-linked destinations:\n{direct_destinations_str}\n\n"
+        f"Available airport-linked destinations:\n{destinations_text(available_places)}\n\n"
         "Constraint:\nONLY choose destinations from this list:\n"
         f"{requested_places}\n\n"
         "TASK:\nGenerate a realistic draft itinerary.\n"
@@ -76,17 +63,16 @@ async def generate_travel_plan_visited(
     return await call_llm_api(prompt, llm_provider)
 
 
-def _merge_place_lists(*groups: List[str] | None) -> List[str]:
-    seen = set()
-    out: List[str] = []
-    for group in groups:
-        for place in group or []:
-            text = str(place).strip()
-            if not text:
-                continue
-            key = text.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(text)
+def _matching_destinations(destinations: List[dict], requested_places: List[str]) -> List[str]:
+    out = []
+    city_map = {
+        (dest.get("city") or "").lower(): dest
+        for dest in destinations
+        if dest.get("city")
+    }
+    for place in requested_places:
+        place_lower = place.lower()
+        for city_key, dest in city_map.items():
+            if city_key and (place_lower in city_key or city_key in place_lower):
+                out.append(destination_label(dest))
     return out

@@ -1,21 +1,22 @@
-# TODO: better date handling, realistic travel mode
-
-import json
 from typing import List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from .llm_client import call_llm_api
-from .prompt_common import (
+from .common import (
+    destination_label,
+    destinations_text,
     itinerary_rules_standard,
     language_name,
-    NO_DIRECT_FLIGHTS_MESSAGE,
+    merge_place_lists,
     output_json_single_trip_schema,
+    place_label,
     places_context_block,
+    run_db_planner,
     system_travel_planner,
     user_trip_header,
 )
+from .llm_client import call_llm_api
 
 
 class UnvisitedGenerationRequest(BaseModel):
@@ -34,33 +35,11 @@ class UnvisitedGenerationRequest(BaseModel):
 
 def format_user_visited_place_strings(places) -> List[str]:
     """Match frontend convention: 'City, Country' when country is set."""
-    seen = set()
-    out: List[str] = []
-    for p in places:
-        name = (getattr(p, "place_name", None) or "").strip()
-        country = (getattr(p, "country", None) or "").strip()
-        s = f"{name}, {country}" if country else name
-        s = s.strip().strip(",")
-        if not s:
-            continue
-        key = s.lower()
-        if key not in seen:
-            seen.add(key)
-            out.append(s)
-    return out
+    return merge_place_lists([place_label(place) for place in places])
 
 
 def merge_exclusion_lists(from_db: List[str], extras: List[str]) -> List[str]:
-    cleaned = [x.strip() for x in extras if x and str(x).strip()]
-    merged = from_db + cleaned
-    seen = set()
-    result: List[str] = []
-    for item in merged:
-        k = item.lower()
-        if k not in seen:
-            seen.add(k)
-            result.append(item)
-    return result
+    return merge_place_lists(from_db, extras)
 
 
 def build_unvisited_forbidden_places(
@@ -107,9 +86,7 @@ async def generate_travel_plan_unvisited(
 ) -> str:
     """Generate travel plan that avoids cities in ``forbidden_places`` (visited / excluded)."""
     if starting_airport_iata:
-        from .stepwise_planner import build_plan_stepwise
-
-        data = await build_plan_stepwise(
+        return await run_db_planner(
             strategy="unvisited",
             starting_point=startingPoint,
             starting_airport_iata=starting_airport_iata,
@@ -122,26 +99,20 @@ async def generate_travel_plan_unvisited(
             visited_places=None,
             forbidden_places=forbidden_places,
         )
-        return json.dumps(data, ensure_ascii=False)
 
     lang_name = language_name(language)
-
     visited_cities = {_extract_city(p) for p in forbidden_places}
     visited_full = [p.lower() for p in forbidden_places]
     excluded_display = {place_str.split(",")[0].strip() for place_str in forbidden_places}
     excluded_names = ", ".join(sorted(excluded_display)) if excluded_display else "none"
-
-    available_destinations = []
-    if direct_destinations:
-        for dest in direct_destinations:
-            city = dest.get("city", "")
-            country = dest.get("country", "")
-            if city and not _is_visited(city, country, visited_cities, visited_full):
-                available_destinations.append(
-                    f"{city}, {country} (IATA: {dest.get('iata')})"
-                )
-
-    destinations_info = "\n".join(available_destinations) if available_destinations else NO_DIRECT_FLIGHTS_MESSAGE
+    destinations_info = destinations_text(
+        [
+            destination_label(dest)
+            for dest in direct_destinations or []
+            if dest.get("city")
+            and not _is_visited(dest.get("city", ""), dest.get("country", ""), visited_cities, visited_full)
+        ]
+    )
 
     prompt = (
         f"{system_travel_planner(lang_name)}"
