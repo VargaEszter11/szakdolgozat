@@ -143,6 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const budgetRaw = (document.getElementById('budget').value || '').trim();
         const budgetParsed = budgetRaw === '' ? NaN : parseInt(budgetRaw, 10);
         const budget = Number.isFinite(budgetParsed) ? budgetParsed : null;
+        const peopleRaw = (document.getElementById('people').value || '').trim();
+        const peopleParsed = peopleRaw === '' ? NaN : parseInt(peopleRaw, 10);
+        const people = Number.isFinite(peopleParsed) && peopleParsed > 0 ? peopleParsed : 1;
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
@@ -164,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             startingPoint: startingCity,
             startDate: startDate,
             endDate: endDate,
+            people: people,
             preferences: preferences,
             language: localStorage.getItem('language') || 'en'
         };
@@ -246,6 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             data.userStartDate = startDate;
             data.userEndDate = endDate;
+            data.userPeople = people;
             displayResults(data, tripResults, resultsContainer);
 
         } catch (error) {

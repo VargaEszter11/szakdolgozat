@@ -56,6 +56,7 @@ class PlannedTrip(Base):
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     start_city = Column(Text, nullable=True)
+    people = Column(Integer, nullable=False, default=1, server_default="1")
 
     # Relationships
     user = relationship("User", back_populates="planned_trips")

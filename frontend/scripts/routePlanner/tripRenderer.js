@@ -26,6 +26,19 @@ function transportLabel(transport) {
     return label && !label.startsWith('plannedTrips.') ? label : transport;
 }
 
+function accommodationBookingUrl(city, country, checkin, checkout, people) {
+    if (!city || !checkin || !checkout || checkin === checkout) return null;
+    const params = new URLSearchParams({
+        ss: [city, country].filter(Boolean).join(', '),
+        checkin: checkin,
+        checkout: checkout,
+        group_adults: String(Math.max(1, parseInt(people, 10) || 1)),
+        no_rooms: '1',
+        group_children: '0'
+    });
+    return `https://www.booking.com/searchresults.html?${params.toString()}`;
+}
+
 export function displayResults(data, tripResults, resultsContainer) {
     if (!data.draft_plan) {
         tripResults.innerHTML = '<p class="error-message">No trip plan was generated. Please try again.</p>';
@@ -33,7 +46,7 @@ export function displayResults(data, tripResults, resultsContainer) {
         return;
     }
 
-    const html = renderTripDetails(data.draft_plan);
+    const html = renderTripDetails(data.draft_plan, data.userPeople || 1);
 
     tripResults.innerHTML = html;
     resultsContainer.style.display = 'block';
@@ -41,12 +54,12 @@ export function displayResults(data, tripResults, resultsContainer) {
     const saveTripBtn = tripResults.querySelector('#saveTripBtn');
     if (saveTripBtn) {
         saveTripBtn.addEventListener('click', async () => {
-            await saveTripToDatabase(data.draft_plan, saveTripBtn, data.userStartDate, data.userEndDate);
+            await saveTripToDatabase(data.draft_plan, saveTripBtn, data.userStartDate, data.userEndDate, data.userPeople);
         });
     }
 }
 
-export function renderTripDetails(trip) {
+export function renderTripDetails(trip, people = 1) {
     const dateRange = trip.startDate && trip.endDate
         ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}`
         : `${trip.tripLengthDays || 0} days`;
@@ -72,6 +85,13 @@ export function renderTripDetails(trip) {
         html += '<div class="trip-destinations">';
         trip.plan.forEach((destination, idx) => {
             const cityLine = escapeHtml(destination.city || '') + ', ' + escapeHtml(destination.country || '');
+            const accommodationUrl = accommodationBookingUrl(
+                destination.city,
+                destination.country,
+                destination.arrivalDate,
+                destination.departureDate,
+                people
+            );
             html += `
                 <div class="destination-card">
                     <div class="destination-number">${idx + 1}</div>
@@ -83,12 +103,19 @@ export function renderTripDetails(trip) {
                     : `<strong>${window.i18n.t('plannedTrips.days')}:</strong> ${destination.days}`}
                              | <strong>${window.i18n.t('plannedTrips.transport')}:</strong> ${escapeHtml(transportLabel(destination.transportFromPreviousCity))}
                         </p>
-                        ${destination.booking_url ? `
-                            <p>
-                                <a class="btn-add" href="${escapeHtml(destination.booking_url)}" target="_blank" rel="noopener noreferrer">
-                                    ${destination.flight_availability_verified ? window.i18n.t('plannedTrips.bookThisFlight') : window.i18n.t('plannedTrips.checkFlightAvailability')}
-                                </a>
-                            </p>
+                        ${destination.booking_url || accommodationUrl ? `
+                            <div class="trip-stop-actions">
+                                ${destination.booking_url ? `
+                                    <a class="btn-add trip-stop-action-link" href="${escapeHtml(destination.booking_url)}" target="_blank" rel="noopener noreferrer">
+                                        ${destination.flight_availability_verified ? window.i18n.t('plannedTrips.bookThisFlight') : window.i18n.t('plannedTrips.checkFlightAvailability')}
+                                    </a>
+                                ` : ''}
+                                ${accommodationUrl ? `
+                                    <a class="btn-add trip-stop-action-link" href="${escapeHtml(accommodationUrl)}" target="_blank" rel="noopener noreferrer">
+                                        ${window.i18n.t('plannedTrips.findAccommodation')}
+                                    </a>
+                                ` : ''}
+                            </div>
                         ` : ''}
                         ${destination.activities && destination.activities.length > 0 ? `
                             <div class="activities">
@@ -122,7 +149,7 @@ export function renderTripDetails(trip) {
     return html;
 }
 
-async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
+async function saveTripToDatabase(trip, button, userStartDate, userEndDate, userPeople) {
     const userId = localStorage.getItem('user_id');
     if (!userId) {
         window.showError('Please log in to save trips.', function () {
@@ -144,7 +171,8 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate) {
             title: trip.startingPoint || 'My Trip',
             start_date: startDate.toISOString().split('T')[0],
             end_date: endDate.toISOString().split('T')[0],
-            start_city: trip.startingPoint || null
+            start_city: trip.startingPoint || null,
+            people: userPeople || trip.people || 1
         };
 
         const base = window.API_BASE_URL || '';

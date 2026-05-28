@@ -16,34 +16,51 @@ def seasonality_status(is_seasonal: Optional[bool]) -> str:
     return "unknown"
 
 
-def booking_url(airline_iata: Optional[str], origin: str, destination: str, departure_date: str) -> Optional[str]:
+def _people_count(people: int = 1) -> int:
+    try:
+        count = int(people)
+    except (TypeError, ValueError):
+        count = 1
+    return max(1, count)
+
+
+def booking_url(
+    airline_iata: Optional[str],
+    origin: str,
+    destination: str,
+    departure_date: str,
+    people: int = 1,
+) -> Optional[str]:
     airline = (airline_iata or "").strip().upper()
     origin = (origin or "").strip().upper()
     destination = (destination or "").strip().upper()
+    people = _people_count(people)
     if not airline or not origin or not destination or not departure_date:
         return None
 
     if airline == "FR":
         return (
             "https://www.ryanair.com/gb/en/trip/flights/select"
-            f"?adults=1&teens=0&children=0&infants=0&dateOut={departure_date}"
+            f"?adults={people}&teens=0&children=0&infants=0&dateOut={departure_date}"
             f"&originIata={origin}&destinationIata={destination}"
             "&isConnectedFlight=false&discount=0&promoCode="
         )
     if airline == "W6":
         return (
             "https://wizzair.com/en-gb/booking/select-flight/"
-            f"{origin}/{destination}/{departure_date}/null/1/0/0/null"
+            f"{origin}/{destination}/{departure_date}/null/{people}/0/0/null"
         )
     if airline == "KL":
         return (
             "https://www.klm.com/search/offers"
             f"?origin={origin}&destination={destination}&departureDate={departure_date}"
+            f"&adults={people}"
         )
     if airline == "LH":
         return (
             "https://www.lufthansa.com/xx/en/flight-search"
             f"?origin={origin}&destination={destination}&departureDate={departure_date}"
+            f"&adults={people}"
         )
     return None
 
@@ -115,6 +132,7 @@ def flight_booking_details(
     destination: str,
     departure_date: str,
     airline_iata: Optional[str] = None,
+    people: int = 1,
 ) -> dict:
     route = direct_route_for_leg(db, origin, destination, airline_iata)
     if not route_operates_on_date(route, departure_date):
@@ -134,6 +152,7 @@ def flight_booking_details(
             route.origin_iata,
             route.destination_iata,
             departure_date,
+            people,
         ),
         "flight_availability_verified": route_availability_verified(route),
     }
@@ -143,6 +162,7 @@ def refresh_booking_details(
     db,
     plan: List[Dict[str, Any]],
     starting_airport_iata: str,
+    people: int = 1,
 ) -> None:
     previous_iata = starting_airport_iata
     for stop in plan:
@@ -160,6 +180,7 @@ def refresh_booking_details(
                     destination_iata,
                     travel_date,
                     selected_airline_iata,
+                    people,
                 )
             )
 

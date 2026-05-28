@@ -35,6 +35,17 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE planned_trips
+                    ADD COLUMN IF NOT EXISTS people INTEGER DEFAULT 1
+                    """
+                )
+            )
+            conn.execute(text("UPDATE planned_trips SET people = 1 WHERE people IS NULL"))
+            conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN people SET DEFAULT 1"))
+            conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN people SET NOT NULL"))
+            conn.execute(
+                text(
+                    """
                     DELETE FROM route_days rd
                     USING direct_routes duplicate, direct_routes keep
                     WHERE rd.route_id = duplicate.id

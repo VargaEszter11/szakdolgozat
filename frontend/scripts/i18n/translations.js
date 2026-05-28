@@ -127,6 +127,7 @@ window.I18N_TRANSLATIONS = {
       startDate: 'Start Date *',
       endDate: 'End Date *',
       budget: 'Budget (€) *',
+      people: 'People *',
       preferences: 'Preferences (comma-separated)',
       placesLabel: 'Places you would like to visit (comma-separated)',
       placesLabelUnvisited: 'Places to exclude (comma-separated)',
@@ -139,6 +140,7 @@ window.I18N_TRANSLATIONS = {
       getStarted: 'Get started →',
       startingCityPlaceholder: 'e.g. Budapest',
       budgetPlaceholder: 'e.g. 1000',
+      peoplePlaceholder: 'e.g. 2',
       preferencesPlaceholder: 'e.g. museums, hiking',
       placesPlaceholder: 'e.g. Paris, Berlin, Rome',
       unvisitedRequiresLogin:
@@ -204,7 +206,9 @@ window.I18N_TRANSLATIONS = {
       arrival: 'Arrival',
       departure: 'Departure',
       tripStops: 'Trip stops',
-      noStopsAdded: 'No stops added yet.'
+      noStopsAdded: 'No stops added yet.',
+      people: 'People',
+      findAccommodation: 'Find accommodation'
     },
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
@@ -403,6 +407,7 @@ window.I18N_TRANSLATIONS = {
       startDate: 'Kezdő dátum *',
       endDate: 'Záró dátum *',
       budget: 'Keret (€) *',
+      people: 'Személyek *',
       preferences: 'Preferenciák (vesszővel elválasztva)',
       placesLabel: 'Felkeresni kívánt úticélok (vesszővel elválasztva)',
       placesLabelUnvisited: 'Kizárandó helyek (vesszővel elválasztva)',
@@ -415,6 +420,7 @@ window.I18N_TRANSLATIONS = {
       getStarted: 'Kezdés →',
       startingCityPlaceholder: 'pl. Budapest',
       budgetPlaceholder: 'pl. 1000',
+      peoplePlaceholder: 'pl. 2',
       preferencesPlaceholder: 'pl. múzeumok, túrázás',
       placesPlaceholder: 'pl. Párizs, Berlin, Róma',
       unvisitedRequiresLogin:
@@ -480,7 +486,9 @@ window.I18N_TRANSLATIONS = {
       arrival: 'Érkezés',
       departure: 'Indulás',
       tripStops: 'Megállók',
-      noStopsAdded: 'Még nincsenek megállók.'
+      noStopsAdded: 'Még nincsenek megállók.',
+      people: 'Személyek',
+      findAccommodation: 'Szállás keresése'
     },
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
@@ -679,6 +687,7 @@ window.I18N_TRANSLATIONS = {
       startDate: 'Startdatum *',
       endDate: 'Enddatum *',
       budget: 'Budget (€) *',
+      people: 'Personen *',
       preferences: 'Präferenzen (kommagetrennt)',
       placesLabel: 'Orte, die du besuchen möchtest (kommagetrennt)',
       placesLabelUnvisited: 'Auszuschließende Orte (kommagetrennt)',
@@ -691,6 +700,7 @@ window.I18N_TRANSLATIONS = {
       getStarted: 'Loslegen →',
       startingCityPlaceholder: 'z. B. Budapest',
       budgetPlaceholder: 'z. B. 1000',
+      peoplePlaceholder: 'z. B. 2',
       preferencesPlaceholder: 'z. B. Museen, Wandern',
       placesPlaceholder: 'z. B. Paris, Berlin, Rom',
       unvisitedRequiresLogin:
@@ -756,7 +766,9 @@ window.I18N_TRANSLATIONS = {
       arrival: 'Ankunft',
       departure: 'Abreise',
       tripStops: 'Reisestopps',
-      noStopsAdded: 'Noch keine Stopps hinzugefügt.'
+      noStopsAdded: 'Noch keine Stopps hinzugefügt.',
+      people: 'Personen',
+      findAccommodation: 'Unterkunft suchen'
     },
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',

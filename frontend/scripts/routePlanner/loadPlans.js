@@ -10,6 +10,7 @@
       startDate: formatApiDate(trip.start_date),
       endDate: formatApiDate(trip.end_date),
       startDateSort: trip.start_date || null,
+      people: trip.people || 1,
       stopCount: trip.stops ? trip.stops.length : 0,
       image: DEFAULT_IMAGE
     };
@@ -48,6 +49,35 @@
     var key = String(transport).trim().toLowerCase();
     var label = plannedTripsT('transportTypes.' + key, null);
     return label || transport;
+  }
+
+  function accommodationBookingUrl(city, country, checkin, checkout, people) {
+    if (!city || !checkin || !checkout || checkin === checkout) return null;
+    var params = new URLSearchParams({
+      ss: [city, country].filter(Boolean).join(', '),
+      checkin: checkin,
+      checkout: checkout,
+      group_adults: String(Math.max(1, parseInt(people, 10) || 1)),
+      no_rooms: '1',
+      group_children: '0'
+    });
+    return 'https://www.booking.com/searchresults.html?' + params.toString();
+  }
+
+  function flightSearchUrl(origin, destination, departureDate, people) {
+    if (!origin || !destination || !departureDate) return null;
+    var query = [
+      'Flights from',
+      origin,
+      'to',
+      destination,
+      'on',
+      String(departureDate).slice(0, 10),
+      'for',
+      String(Math.max(1, parseInt(people, 10) || 1)),
+      'adults'
+    ].join(' ');
+    return 'https://www.google.com/travel/flights?' + new URLSearchParams({ q: query }).toString();
   }
 
   function toDateInputValue(d) {
@@ -476,7 +506,7 @@
       '</div>' +
       '</div>' +
       '<div class="log-date">' + escapeHtml(trip.startDate) + ' – ' + escapeHtml(trip.endDate) + '</div>' +
-      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + '</p>' +
+      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + ' · ' + escapeHtml(plannedTripsT('people', 'People')) + ': ' + escapeHtml(trip.people || 1) + '</p>' +
       '</div>' +
       '</div>'
     );
@@ -970,7 +1000,7 @@
     }
   }
 
-  function buildStopCard(stop) {
+  function buildStopCard(stop, people, previousPlace, isLastStop) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
     var num = document.createElement('div');
@@ -997,15 +1027,33 @@
       pTrans.innerHTML = '<strong>' + escapeHtml(plannedTripsT('transport', 'Transport')) + ':</strong> ' + escapeHtml(transportLabel(stop.transport_from_last));
       info.appendChild(pTrans);
     }
-    if (stop.booking_url) {
-      var pBooking = document.createElement('p');
-      var linkText = stop.flight_availability_verified
-        ? plannedTripsT('bookThisFlight', 'Book this flight')
-        : plannedTripsT('checkFlightAvailability', 'Check flight availability');
-      pBooking.innerHTML = '<a class="btn-add" href="' + escapeHtml(stop.booking_url) + '" target="_blank" rel="noopener noreferrer">' +
-        escapeHtml(linkText) +
+    var actions = document.createElement('div');
+    actions.className = 'trip-stop-actions';
+    var transportValue = String(stop.transport_from_last || '').trim().toLowerCase();
+    var flightLabel = String(plannedTripsT('transportTypes.flight', 'Flight')).trim().toLowerCase();
+    var destinationPlace = stop.place_name + (stop.country ? ', ' + stop.country : '');
+    var flightUrl = (transportValue === 'flight' || transportValue === flightLabel)
+      ? flightSearchUrl(previousPlace, destinationPlace, stop.arrival_date, people)
+      : null;
+    if (flightUrl) {
+      actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(flightUrl) + '" target="_blank" rel="noopener noreferrer">' +
+        escapeHtml(plannedTripsT('checkFlightAvailability', 'Check flight availability')) +
         '</a>';
-      info.appendChild(pBooking);
+    }
+    var accommodationUrl = accommodationBookingUrl(
+      isLastStop ? null : stop.place_name,
+      stop.country,
+      stop.arrival_date,
+      stop.departure_date,
+      people
+    );
+    if (accommodationUrl) {
+      actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(accommodationUrl) + '" target="_blank" rel="noopener noreferrer">' +
+        escapeHtml(plannedTripsT('findAccommodation', 'Find accommodation')) +
+        '</a>';
+    }
+    if (actions.children.length) {
+      info.appendChild(actions);
     }
     if (stop.activities) {
       var pAct = document.createElement('p');
@@ -1037,6 +1085,7 @@
       var titleEl = modal.querySelector('#tripDetailsTitle');
       var startDateEl = modal.querySelector('#tripDetailsStartDate');
       var endDateEl = modal.querySelector('#tripDetailsEndDate');
+      var peopleEl = modal.querySelector('#tripDetailsPeople');
       var startCityWrap = modal.querySelector('#tripDetailsStartCityWrap');
       var startCityEl = modal.querySelector('#tripDetailsStartCity');
       var stopsCountEl = modal.querySelector('#tripDetailsStopsCount');
@@ -1045,6 +1094,7 @@
       if (titleEl) titleEl.textContent = trip.title || '';
       if (startDateEl) startDateEl.textContent = formatApiDate(trip.start_date);
       if (endDateEl) endDateEl.textContent = formatApiDate(trip.end_date);
+      if (peopleEl) peopleEl.textContent = String(trip.people || 1);
       if (trip.start_city) {
         if (startCityWrap) startCityWrap.classList.remove('hidden');
         if (startCityEl) startCityEl.textContent = trip.start_city;
@@ -1062,7 +1112,11 @@
           empty.textContent = plannedTripsT('noStopsAdded', 'No stops added yet.');
           stopsListEl.appendChild(empty);
         } else {
-          stops.forEach(function (stop) { stopsListEl.appendChild(buildStopCard(stop)); });
+          var previousPlace = trip.start_city || '';
+          stops.forEach(function (stop, index) {
+            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, previousPlace, index === stops.length - 1));
+            previousPlace = stop.place_name + (stop.country ? ', ' + stop.country : '');
+          });
         }
       }
 

@@ -28,6 +28,7 @@ class UnvisitedGenerationRequest(BaseModel):
     budget: Optional[int] = None
     startDate: str
     endDate: str
+    people: int = 1
     preferences: List[str] = []
     additionalExclusions: List[str] = []
     language: str = "en"

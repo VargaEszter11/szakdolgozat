@@ -477,6 +477,20 @@
     font-weight: 600;
 }
 
+.planned-trips-trip-popup .trip-stop-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.25rem 0;
+}
+
+.planned-trips-trip-popup .trip-stop-action-link.btn-add {
+    border-radius: 999px;
+    padding: 0.38rem 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
 .planned-trips-trip-popup .muted {
     color: var(--pt-popup-muted);
     font-size: 0.9rem;

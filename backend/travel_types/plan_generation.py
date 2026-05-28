@@ -16,6 +16,7 @@ from travel_types import (
     generate_travel_plan_visited,
     merge_exclusion_lists,
 )
+from travel_types.booking import booking_url
 from utils.coordinates import geocode_place
 from utils.direct_destinations_cache import get_direct_destinations_cached
 from utils.nearest_airport import nearest_airport
@@ -28,6 +29,7 @@ class GenerationRequest(BaseModel):
     startingPoint: str
     startDate: str
     endDate: str
+    people: int = 1
     preferences: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
@@ -38,6 +40,7 @@ class RandomGenerationRequest(BaseModel):
     startingPoint: str
     startDate: str
     endDate: str
+    people: int = 1
     preferences: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
@@ -75,6 +78,7 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
         start_date=request.startDate,
         end_date=request.endDate,
         travel_length=travel_length,
+        people=request.people,
         language=request.language,
         llm_provider=llm_provider,
         extra_places=request.extraPlaces,
@@ -99,6 +103,7 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
         start_date=request.startDate,
         end_date=request.endDate,
         travel_length=travel_length,
+        people=request.people,
         language=request.language,
         llm_provider=llm_provider,
         db=db,
@@ -116,6 +121,7 @@ async def generate_random_plan(request: RandomGenerationRequest, db: Session) ->
         start_date=request.startDate,
         end_date=request.endDate,
         travel_length=travel_length,
+        people=request.people,
         language=request.language,
         llm_provider=llm_provider,
         db=db,
@@ -167,6 +173,7 @@ async def generate_plan_with_location(
     starting_point: str,
     start_date: str = None,
     end_date: str = None,
+    people: int = 1,
     travel_length: int,
     db: Optional[Session] = None,
     **kwargs,
@@ -194,12 +201,29 @@ async def generate_plan_with_location(
         end_date=end_date,
         travel_length=travel_length,
     )
+    apply_people_to_booking_links(draft_plan, people)
     return {
         "draft_plan": normalize_planner_response(draft_plan),
         "starting_point_coords": {"lat": lat, "lon": lon},
         "nearest_airport": airport,
         "validation": None,
     }
+
+
+def apply_people_to_booking_links(plan: dict, people: int = 1) -> None:
+    for trip in plan.get("trips", [plan]):
+        for stop in trip.get("plan", []):
+            if not stop.get("booking_url"):
+                continue
+            updated_url = booking_url(
+                stop.get("airline_iata"),
+                stop.get("origin_airport_iata"),
+                stop.get("destination_airport_iata"),
+                stop.get("arrivalDate"),
+                people,
+            )
+            if updated_url:
+                stop["booking_url"] = updated_url
 
 
 def parse_planner_json(raw: str) -> dict:
