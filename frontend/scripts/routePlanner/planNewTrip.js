@@ -120,8 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.onTravelLogPlannerPrefChanged = () => refreshPlannerDbHints();
     window.onTravelLogPlannerPrefLoaded = () => refreshPlannerDbHints();
 
-    await loadSavedPlaces();
-
     planCards.forEach(card => {
         card.addEventListener('click', () => {
             planCards.forEach(c => c.classList.remove('selected'));
@@ -132,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     updatePlacesField();
+    loadSavedPlaces();
     const dbToggle = document.getElementById('useTravelLogInPlanner');
     if (dbToggle) {
         dbToggle.addEventListener('change', () => refreshPlannerDbHints());

@@ -218,6 +218,7 @@ def next_stop_prompt(
         "- Prefer fewer well-paced stops over many rushed stops; do not leave a single leftover day for another city.",
         f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.',
         '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.',
+        f'- "preferences": choose from the preferences listed in {prefs} when selecting the activities, but not only from them.',
         "",
         "Return JSON only with this shape:",
         '{"city":"","country":"","iata":"","days":1,"transportFromPreviousCity":"flight","activities":["",""]}',

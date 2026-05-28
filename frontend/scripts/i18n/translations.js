@@ -187,7 +187,19 @@ window.I18N_TRANSLATIONS = {
       editTitleRequired: 'Trip title is required.',
       editStopPlaceRequired: 'Each stop must have a place name.',
       editSaveError: 'Could not save changes.',
-      editLoadError: 'Could not load trip for editing.'
+      editLoadError: 'Could not load trip for editing.',
+      suggestedActivities: 'Suggested activities',
+      dates: 'Dates',
+      transport: 'Transport',
+      transportTypes: {
+        flight: 'Flight',
+        train: 'Train',
+        bus: 'Bus',
+        ferry: 'Ferry'
+      },
+      checkFlightAvailability: 'Check flight availability',
+      bookThisFlight: 'Book this flight',
+      days: 'Days'
     },
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
@@ -446,7 +458,19 @@ window.I18N_TRANSLATIONS = {
       editTitleRequired: 'Az utazás címe kötelező.',
       editStopPlaceRequired: 'Minden megállónak kell helyneve.',
       editSaveError: 'A mentés sikertelen.',
-      editLoadError: 'Az utazás betöltése szerkesztéshez sikertelen.'
+      editLoadError: 'Az utazás betöltése szerkesztéshez sikertelen.',
+      suggestedActivities: 'Ajánlott programok',
+      dates: 'Dátumok',
+      transport: 'Közlekedés',
+      transportTypes: {
+        flight: 'Repülő',
+        train: 'Vonat',
+        bus: 'Busz',
+        ferry: 'Komp'
+      },
+      checkFlightAvailability: 'Repülőjegy elérhetőségének ellenőrzése',
+      bookThisFlight: 'Repülőjegy foglalása',
+      days: 'Napok'
     },
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
@@ -705,7 +729,19 @@ window.I18N_TRANSLATIONS = {
       editTitleRequired: 'Ein Reisetitel ist erforderlich.',
       editStopPlaceRequired: 'Jeder Stopp braucht einen Ortsnamen.',
       editSaveError: 'Speichern fehlgeschlagen.',
-      editLoadError: 'Reise konnte nicht zum Bearbeiten geladen werden.'
+      editLoadError: 'Reise konnte nicht zum Bearbeiten geladen werden.',
+      suggestedActivities: 'Vorgeschlagene Aktivitäten',
+      dates: 'Daten',
+      transport: 'Verkehr',
+      transportTypes: {
+        flight: 'Flug',
+        train: 'Zug',
+        bus: 'Bus',
+        ferry: 'Fähre'
+      },
+      checkFlightAvailability: 'Flugverfügbarkeit prüfen',
+      bookThisFlight: 'Flug buchen',
+      days: 'Tage'
     },
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',

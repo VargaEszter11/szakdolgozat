@@ -17,6 +17,15 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+function transportLabel(transport) {
+    if (!transport) return 'N/A';
+    const key = String(transport).trim().toLowerCase();
+    const label = window.i18n && window.i18n.t
+        ? window.i18n.t(`plannedTrips.transportTypes.${key}`)
+        : null;
+    return label && !label.startsWith('plannedTrips.') ? label : transport;
+}
+
 export function displayResults(data, tripResults, resultsContainer) {
     if (!data.draft_plan) {
         tripResults.innerHTML = '<p class="error-message">No trip plan was generated. Please try again.</p>';
@@ -70,20 +79,20 @@ export function renderTripDetails(trip) {
                         <h4 class="destination-city">${cityLine}</h4>
                         <p class="destination-info">
                             ${destination.arrivalDate && destination.departureDate
-                    ? `<strong>Dates:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)} (${destination.days} days)`
-                    : `<strong>Days:</strong> ${destination.days}`}
-                             | <strong>Transport:</strong> ${escapeHtml(destination.transportFromPreviousCity || 'N/A')}
+                    ? `<strong>${window.i18n.t('plannedTrips.dates')}:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)}`
+                    : `<strong>${window.i18n.t('plannedTrips.days')}:</strong> ${destination.days}`}
+                             | <strong>${window.i18n.t('plannedTrips.transport')}:</strong> ${escapeHtml(transportLabel(destination.transportFromPreviousCity))}
                         </p>
                         ${destination.booking_url ? `
                             <p>
                                 <a class="btn-add" href="${escapeHtml(destination.booking_url)}" target="_blank" rel="noopener noreferrer">
-                                    ${destination.flight_availability_verified ? 'Book this flight' : 'Check flight availability'}
+                                    ${destination.flight_availability_verified ? window.i18n.t('plannedTrips.bookThisFlight') : window.i18n.t('plannedTrips.checkFlightAvailability')}
                                 </a>
                             </p>
                         ` : ''}
                         ${destination.activities && destination.activities.length > 0 ? `
                             <div class="activities">
-                                <strong>Planned activities:</strong>
+                                <strong>${window.i18n.t('plannedTrips.suggestedActivities')}:</strong>
                                 <ul>
                                     ${destination.activities.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
                                 </ul>

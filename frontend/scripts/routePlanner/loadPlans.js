@@ -43,6 +43,13 @@
     return fallback;
   }
 
+  function transportLabel(transport) {
+    if (!transport) return 'N/A';
+    var key = String(transport).trim().toLowerCase();
+    var label = plannedTripsT('transportTypes.' + key, null);
+    return label || transport;
+  }
+
   function toDateInputValue(d) {
     if (!d) return '';
     var s = String(d);
@@ -987,7 +994,7 @@
     }
     if (stop.transport_from_last) {
       var pTrans = document.createElement('p');
-      pTrans.innerHTML = '<strong>Transport:</strong> ' + escapeHtml(stop.transport_from_last);
+      pTrans.innerHTML = '<strong>' + escapeHtml(plannedTripsT('transport', 'Transport')) + ':</strong> ' + escapeHtml(transportLabel(stop.transport_from_last));
       info.appendChild(pTrans);
     }
     if (stop.booking_url) {
