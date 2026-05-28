@@ -984,12 +984,12 @@
     info.className = 'trip-stop-info';
     if (stop.arrival_date) {
       var pArr = document.createElement('p');
-      pArr.innerHTML = '<strong>Arrival:</strong> ' + formatApiDate(stop.arrival_date);
+      pArr.innerHTML = '<strong>' + window.i18n.t('plannedTrips.arrival') + ':</strong> ' + formatApiDate(stop.arrival_date);
       info.appendChild(pArr);
     }
     if (stop.departure_date) {
       var pDep = document.createElement('p');
-      pDep.innerHTML = '<strong>Departure:</strong> ' + formatApiDate(stop.departure_date);
+      pDep.innerHTML = '<strong>' + window.i18n.t('plannedTrips.departure') + ':</strong> ' + formatApiDate(stop.departure_date);
       info.appendChild(pDep);
     }
     if (stop.transport_from_last) {
@@ -999,7 +999,9 @@
     }
     if (stop.booking_url) {
       var pBooking = document.createElement('p');
-      var linkText = stop.flight_availability_verified ? 'Book this flight' : 'Check flight availability';
+      var linkText = stop.flight_availability_verified
+        ? plannedTripsT('bookThisFlight', 'Book this flight')
+        : plannedTripsT('checkFlightAvailability', 'Check flight availability');
       pBooking.innerHTML = '<a class="btn-add" href="' + escapeHtml(stop.booking_url) + '" target="_blank" rel="noopener noreferrer">' +
         escapeHtml(linkText) +
         '</a>';
@@ -1007,13 +1009,8 @@
     }
     if (stop.activities) {
       var pAct = document.createElement('p');
-      pAct.innerHTML = '<strong>Activities:</strong> ' + escapeHtml(stop.activities);
+      pAct.innerHTML = '<strong>' + window.i18n.t('plannedTrips.activities') + ':</strong> ' + escapeHtml(stop.activities);
       info.appendChild(pAct);
-    }
-    if (stop.estimated_price != null) {
-      var pPrice = document.createElement('p');
-      pPrice.innerHTML = '<strong>Estimated Price:</strong> $' + escapeHtml(String(stop.estimated_price));
-      info.appendChild(pPrice);
     }
     details.appendChild(h4);
     details.appendChild(info);
@@ -1062,7 +1059,7 @@
         if (stops.length === 0) {
           var empty = document.createElement('p');
           empty.className = 'muted';
-          empty.textContent = 'No stops added yet.';
+          empty.textContent = plannedTripsT('noStopsAdded', 'No stops added yet.');
           stopsListEl.appendChild(empty);
         } else {
           stops.forEach(function (stop) { stopsListEl.appendChild(buildStopCard(stop)); });

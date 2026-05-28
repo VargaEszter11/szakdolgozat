@@ -199,7 +199,12 @@ window.I18N_TRANSLATIONS = {
       },
       checkFlightAvailability: 'Check flight availability',
       bookThisFlight: 'Book this flight',
-      days: 'Days'
+      days: 'Days',
+      activities: 'Activities',
+      arrival: 'Arrival',
+      departure: 'Departure',
+      tripStops: 'Trip stops',
+      noStopsAdded: 'No stops added yet.'
     },
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
@@ -470,7 +475,12 @@ window.I18N_TRANSLATIONS = {
       },
       checkFlightAvailability: 'Repülőjegy elérhetőségének ellenőrzése',
       bookThisFlight: 'Repülőjegy foglalása',
-      days: 'Napok'
+      days: 'Napok',
+      activities: 'Programok',
+      arrival: 'Érkezés',
+      departure: 'Indulás',
+      tripStops: 'Megállók',
+      noStopsAdded: 'Még nincsenek megállók.'
     },
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
@@ -741,7 +751,12 @@ window.I18N_TRANSLATIONS = {
       },
       checkFlightAvailability: 'Flugverfügbarkeit prüfen',
       bookThisFlight: 'Flug buchen',
-      days: 'Tage'
+      days: 'Tage',
+      activities: 'Programme',
+      arrival: 'Ankunft',
+      departure: 'Abreise',
+      tripStops: 'Reisestopps',
+      noStopsAdded: 'Noch keine Stopps hinzugefügt.'
     },
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',
