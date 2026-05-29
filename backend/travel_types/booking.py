@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode
 
 from database import models
 
@@ -24,6 +25,13 @@ def _people_count(people: int = 1) -> int:
     return max(1, count)
 
 
+def _skyscanner_date(departure_date: str) -> Optional[str]:
+    try:
+        return date.fromisoformat(str(departure_date)).strftime("%y%m%d")
+    except (TypeError, ValueError):
+        return None
+
+
 def booking_url(
     airline_iata: Optional[str],
     origin: str,
@@ -35,7 +43,7 @@ def booking_url(
     origin = (origin or "").strip().upper()
     destination = (destination or "").strip().upper()
     people = _people_count(people)
-    if not airline or not origin or not destination or not departure_date:
+    if not origin or not destination or not departure_date:
         return None
 
     if airline == "FR":
@@ -50,19 +58,28 @@ def booking_url(
             "https://wizzair.com/en-gb/booking/select-flight/"
             f"{origin}/{destination}/{departure_date}/null/{people}/0/0/null"
         )
-    if airline == "KL":
-        return (
-            "https://www.klm.com/search/offers"
-            f"?origin={origin}&destination={destination}&departureDate={departure_date}"
-            f"&adults={people}"
-        )
-    if airline == "LH":
-        return (
-            "https://www.lufthansa.com/xx/en/flight-search"
-            f"?origin={origin}&destination={destination}&departureDate={departure_date}"
-            f"&adults={people}"
-        )
-    return None
+
+    skyscanner_date = _skyscanner_date(departure_date)
+    if not skyscanner_date:
+        return None
+    params = urlencode(
+        {
+            "adultsv2": people,
+            "adults": people,
+            "cabinclass": "economy",
+            "childrenv2": "",
+            "children": 0,
+            "inboundaltsenabled": "false",
+            "outboundaltsenabled": "false",
+            "preferdirects": "false",
+            "ref": "home",
+            "rtn": 0,
+        }
+    )
+    return (
+        "https://www.skyscanner.net/transport/flights/"
+        f"{origin.lower()}/{destination.lower()}/{skyscanner_date}/?{params}"
+    )
 
 
 def direct_route_for_leg(db, origin: str, destination: str, airline_iata: Optional[str] = None):
