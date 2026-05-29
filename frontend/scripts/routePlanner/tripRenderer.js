@@ -214,7 +214,9 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
                     arrival_date: arrivalStr,
                     departure_date: departureStr,
                     transport_from_last: destination.transportFromPreviousCity || null,
-                    activities: destination.activities ? destination.activities.join(', ') : null
+                    activities: destination.activities ? destination.activities.join(', ') : null,
+                    booking_url: destination.booking_url || null,
+                    flight_availability_verified: destination.flight_availability_verified ?? null
                 };
 
                 await fetch(base + '/api/trip-stops', {

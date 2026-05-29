@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from database import crud
+from database import crud, models
 from travel_types import (
     UnvisitedGenerationRequest,
     build_unvisited_forbidden_places,
@@ -201,6 +201,7 @@ async def generate_plan_with_location(
         end_date=end_date,
         travel_length=travel_length,
     )
+    clean_plan_city_names(draft_plan, db)
     apply_people_to_booking_links(draft_plan, people)
     return {
         "draft_plan": normalize_planner_response(draft_plan),
@@ -224,6 +225,19 @@ def apply_people_to_booking_links(plan: dict, people: int = 1) -> None:
             )
             if updated_url:
                 stop["booking_url"] = updated_url
+
+
+def clean_plan_city_names(plan: dict, db: Session) -> None:
+    for trip in plan.get("trips", [plan]):
+        for stop in trip.get("plan", []):
+            if not isinstance(stop, dict):
+                continue
+            iata = (stop.get("iata") or "").strip().upper()
+            if not iata:
+                continue
+            airport = db.query(models.Airport).filter(models.Airport.iata == iata).first()
+            if airport and airport.city:
+                stop["city"] = airport.city
 
 
 def parse_planner_json(raw: str) -> dict:

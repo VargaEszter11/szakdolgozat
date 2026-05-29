@@ -79,6 +79,8 @@ class PlannedTripStop(Base):
     estimated_price = Column(Numeric(10, 2), nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    booking_url = Column(Text, nullable=True)
+    flight_availability_verified = Column(Boolean, nullable=True)
 
     # Relationships
     trip = relationship("PlannedTrip", back_populates="stops")

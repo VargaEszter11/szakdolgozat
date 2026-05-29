@@ -64,22 +64,6 @@
     return 'https://www.booking.com/searchresults.html?' + params.toString();
   }
 
-  function flightSearchUrl(origin, destination, departureDate, people) {
-    if (!origin || !destination || !departureDate) return null;
-    var query = [
-      'Flights from',
-      origin,
-      'to',
-      destination,
-      'on',
-      String(departureDate).slice(0, 10),
-      'for',
-      String(Math.max(1, parseInt(people, 10) || 1)),
-      'adults'
-    ].join(' ');
-    return 'https://www.google.com/travel/flights?' + new URLSearchParams({ q: query }).toString();
-  }
-
   function toDateInputValue(d) {
     if (!d) return '';
     var s = String(d);
@@ -1000,7 +984,7 @@
     }
   }
 
-  function buildStopCard(stop, people, previousPlace, isLastStop) {
+  function buildStopCard(stop, people, isLastStop) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
     var num = document.createElement('div');
@@ -1029,15 +1013,13 @@
     }
     var actions = document.createElement('div');
     actions.className = 'trip-stop-actions';
-    var transportValue = String(stop.transport_from_last || '').trim().toLowerCase();
-    var flightLabel = String(plannedTripsT('transportTypes.flight', 'Flight')).trim().toLowerCase();
-    var destinationPlace = stop.place_name + (stop.country ? ', ' + stop.country : '');
-    var flightUrl = (transportValue === 'flight' || transportValue === flightLabel)
-      ? flightSearchUrl(previousPlace, destinationPlace, stop.arrival_date, people)
-      : null;
+    var flightUrl = stop.booking_url || null;
     if (flightUrl) {
+      var flightLinkText = stop.booking_url && stop.flight_availability_verified
+        ? plannedTripsT('bookThisFlight', 'Book this flight')
+        : plannedTripsT('checkFlightAvailability', 'Check flight availability');
       actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(flightUrl) + '" target="_blank" rel="noopener noreferrer">' +
-        escapeHtml(plannedTripsT('checkFlightAvailability', 'Check flight availability')) +
+        escapeHtml(flightLinkText) +
         '</a>';
     }
     var accommodationUrl = accommodationBookingUrl(
@@ -1112,10 +1094,8 @@
           empty.textContent = plannedTripsT('noStopsAdded', 'No stops added yet.');
           stopsListEl.appendChild(empty);
         } else {
-          var previousPlace = trip.start_city || '';
           stops.forEach(function (stop, index) {
-            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, previousPlace, index === stops.length - 1));
-            previousPlace = stop.place_name + (stop.country ? ', ' + stop.country : '');
+            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1));
           });
         }
       }

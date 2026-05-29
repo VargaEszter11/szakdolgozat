@@ -46,6 +46,26 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE planned_trip_stops
+                    ADD COLUMN IF NOT EXISTS booking_url TEXT NULL,
+                    ADD COLUMN IF NOT EXISTS flight_availability_verified BOOLEAN NULL
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE planned_trip_stops
+                    DROP COLUMN IF EXISTS origin_airport_iata,
+                    DROP COLUMN IF EXISTS destination_airport_iata,
+                    DROP COLUMN IF EXISTS airline_iata,
+                    DROP COLUMN IF EXISTS airline_name
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     DELETE FROM route_days rd
                     USING direct_routes duplicate, direct_routes keep
                     WHERE rd.route_id = duplicate.id

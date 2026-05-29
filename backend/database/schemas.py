@@ -139,6 +139,8 @@ class TripStopBase(BaseModel):
     estimated_price: Optional[Decimal] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    booking_url: Optional[str] = None
+    flight_availability_verified: Optional[bool] = None
 
 
 class TripStopCreate(TripStopBase):
@@ -156,6 +158,8 @@ class TripStopUpdate(BaseModel):
     estimated_price: Optional[Decimal] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    booking_url: Optional[str] = None
+    flight_availability_verified: Optional[bool] = None
 
 
 class TripStopResponse(TripStopBase):
