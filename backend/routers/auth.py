@@ -66,7 +66,7 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     return schemas.LoginResponse(
         success=True,
         user_id=user.id,
-        username=user.username
+        username=user.username,
     )
 
 
@@ -117,7 +117,7 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
     return schemas.LoginResponse(
         success=True,
         user_id=user.id,
-        username=user.username
+        username=user.username,
     )
 
 

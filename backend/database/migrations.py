@@ -25,6 +25,15 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE users
+                    DROP COLUMN IF EXISTS profile_picture_url,
+                    DROP COLUMN IF EXISTS use_travel_log_in_planner
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     ALTER TABLE direct_routes
                     ADD COLUMN IF NOT EXISTS is_seasonal BOOLEAN NULL,
                     ADD COLUMN IF NOT EXISTS effective_from DATE NULL,

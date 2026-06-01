@@ -39,28 +39,11 @@ def booking_url(
     departure_date: str,
     people: int = 1,
 ) -> Optional[str]:
-    airline = (airline_iata or "").strip().upper()
     origin = (origin or "").strip().upper()
     destination = (destination or "").strip().upper()
     people = _people_count(people)
-    if not origin or not destination or not departure_date:
-        return None
-
-    if airline == "FR":
-        return (
-            "https://www.ryanair.com/gb/en/trip/flights/select"
-            f"?adults={people}&teens=0&children=0&infants=0&dateOut={departure_date}"
-            f"&originIata={origin}&destinationIata={destination}"
-            "&isConnectedFlight=false&discount=0&promoCode="
-        )
-    if airline == "W6":
-        return (
-            "https://wizzair.com/en-gb/booking/select-flight/"
-            f"{origin}/{destination}/{departure_date}/null/{people}/0/0/null"
-        )
-
     skyscanner_date = _skyscanner_date(departure_date)
-    if not skyscanner_date:
+    if not origin or not destination or not skyscanner_date:
         return None
     params = urlencode(
         {

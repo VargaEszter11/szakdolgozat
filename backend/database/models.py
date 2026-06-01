@@ -30,11 +30,6 @@ class User(Base):
     email = Column(Text, unique=True, nullable=False, index=True)
     password = Column(Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
-    use_travel_log_in_planner = Column(
-        Boolean,
-        nullable=False,
-        server_default=text("true"),
-    )
     preferred_llm_provider = Column(
         Text,
         nullable=False,
