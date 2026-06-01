@@ -208,7 +208,13 @@ window.I18N_TRANSLATIONS = {
       tripStops: 'Trip stops',
       noStopsAdded: 'No stops added yet.',
       people: 'People',
-      findAccommodation: 'Find accommodation'
+      findAccommodation: 'Find accommodation',
+      booked: 'Booked',
+      notBooked: 'Not booked',
+      bookingStatus: 'Booking status',
+      markBooked: 'Mark as booked',
+      markNotBooked: 'Mark as not booked',
+      bookedSaveError: 'Could not update booking status.'
     },
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
@@ -488,7 +494,13 @@ window.I18N_TRANSLATIONS = {
       tripStops: 'Megállók',
       noStopsAdded: 'Még nincsenek megállók.',
       people: 'Személyek',
-      findAccommodation: 'Szállás keresése'
+      findAccommodation: 'Szállás keresése',
+      booked: 'Lefoglalva',
+      notBooked: 'Nincs lefoglalva',
+      bookingStatus: 'Foglalási állapot',
+      markBooked: 'Megjelölés lefoglaltként',
+      markNotBooked: 'Megjelölés nem lefoglaltként',
+      bookedSaveError: 'Nem sikerült frissíteni a foglalási állapotot.'
     },
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
@@ -768,7 +780,13 @@ window.I18N_TRANSLATIONS = {
       tripStops: 'Reisestopps',
       noStopsAdded: 'Noch keine Stopps hinzugefügt.',
       people: 'Personen',
-      findAccommodation: 'Unterkunft suchen'
+      findAccommodation: 'Unterkunft suchen',
+      booked: 'Gebucht',
+      notBooked: 'Nicht gebucht',
+      bookingStatus: 'Buchungsstatus',
+      markBooked: 'Als gebucht markieren',
+      markNotBooked: 'Als nicht gebucht markieren',
+      bookedSaveError: 'Buchungsstatus konnte nicht aktualisiert werden.'
     },
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',

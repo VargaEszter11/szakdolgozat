@@ -11,6 +11,7 @@
       endDate: formatApiDate(trip.end_date),
       startDateSort: trip.start_date || null,
       people: trip.people || 1,
+      isBooked: !!trip.is_booked,
       stopCount: trip.stops ? trip.stops.length : 0,
       image: DEFAULT_IMAGE
     };
@@ -458,6 +459,25 @@
     }
   }
 
+  async function toggleTripBooked(id, isBooked) {
+    try {
+      var response = await fetch('/api/planned-trips/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_booked: !isBooked })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update trip: ' + response.status);
+      }
+
+      await render();
+    } catch (error) {
+      console.error('Error updating trip:', error);
+      showError(plannedTripsT('bookedSaveError', 'Could not update booking status.'));
+    }
+  }
+
   function escapeHtml(str) {
     if (!str) return '';
     var div = document.createElement('div');
@@ -481,6 +501,11 @@
       '<h3 class="log-title">' + escapeHtml(trip.destination) + '</h3>' +
       '</div>' +
       '<div class="visited-places-card-actions">' +
+      '<button type="button" class="place-delete-btn trip-booked" data-id="' + trip.id + '" data-booked="' + (trip.isBooked ? '1' : '0') + '" title="' + escapeHtml(trip.isBooked ? plannedTripsT('markNotBooked', 'Mark as not booked') : plannedTripsT('markBooked', 'Mark as booked')) + '" aria-label="' + escapeHtml(trip.isBooked ? plannedTripsT('markNotBooked', 'Mark as not booked') : plannedTripsT('markBooked', 'Mark as booked')) + '">' +
+      (trip.isBooked
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>'
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/><path d="m9 11 3 3L22 4"/></svg>') +
+      '</button>' +
       '<button type="button" class="place-delete-btn trip-edit" data-id="' + trip.id + '" title="Edit" aria-label="Edit trip">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>' +
       '</button>' +
@@ -490,7 +515,7 @@
       '</div>' +
       '</div>' +
       '<div class="log-date">' + escapeHtml(trip.startDate) + ' – ' + escapeHtml(trip.endDate) + '</div>' +
-      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + ' · ' + escapeHtml(plannedTripsT('people', 'People')) + ': ' + escapeHtml(trip.people || 1) + '</p>' +
+      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + ' · ' + escapeHtml(plannedTripsT('people', 'People')) + ': ' + escapeHtml(trip.people || 1) + (trip.isBooked ? ' · ' + escapeHtml(plannedTripsT('booked', 'Booked')) : '') + '</p>' +
       '</div>' +
       '</div>'
     );
@@ -535,6 +560,15 @@
         var did = parseInt(delBtn.getAttribute('data-id'), 10);
         if (Number.isNaN(did)) return;
         showConfirm('Delete this trip?', function () { deleteTrip(did); });
+        return;
+      }
+      var bookedBtn = e.target.closest('.trip-booked');
+      if (bookedBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var bid = parseInt(bookedBtn.getAttribute('data-id'), 10);
+        if (Number.isNaN(bid)) return;
+        toggleTripBooked(bid, bookedBtn.getAttribute('data-booked') === '1');
         return;
       }
       var editBtn = e.target.closest('.trip-edit');
@@ -984,7 +1018,7 @@
     }
   }
 
-  function buildStopCard(stop, people, isLastStop) {
+  function buildStopCard(stop, people, isLastStop, isBooked) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
     var num = document.createElement('div');
@@ -1011,31 +1045,33 @@
       pTrans.innerHTML = '<strong>' + escapeHtml(plannedTripsT('transport', 'Transport')) + ':</strong> ' + escapeHtml(transportLabel(stop.transport_from_last));
       info.appendChild(pTrans);
     }
-    var actions = document.createElement('div');
-    actions.className = 'trip-stop-actions';
-    var flightUrl = stop.booking_url || null;
-    if (flightUrl) {
-      var flightLinkText = stop.booking_url && stop.flight_availability_verified
-        ? plannedTripsT('bookThisFlight', 'Book this flight')
-        : plannedTripsT('checkFlightAvailability', 'Check flight availability');
-      actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(flightUrl) + '" target="_blank" rel="noopener noreferrer">' +
-        escapeHtml(flightLinkText) +
-        '</a>';
-    }
-    var accommodationUrl = accommodationBookingUrl(
-      isLastStop ? null : stop.place_name,
-      stop.country,
-      stop.arrival_date,
-      stop.departure_date,
-      people
-    );
-    if (accommodationUrl) {
-      actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(accommodationUrl) + '" target="_blank" rel="noopener noreferrer">' +
-        escapeHtml(plannedTripsT('findAccommodation', 'Find accommodation')) +
-        '</a>';
-    }
-    if (actions.children.length) {
-      info.appendChild(actions);
+    if (!isBooked) {
+      var actions = document.createElement('div');
+      actions.className = 'trip-stop-actions';
+      var flightUrl = stop.booking_url || null;
+      if (flightUrl) {
+        var flightLinkText = stop.booking_url && stop.flight_availability_verified
+          ? plannedTripsT('bookThisFlight', 'Book this flight')
+          : plannedTripsT('checkFlightAvailability', 'Check flight availability');
+        actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(flightUrl) + '" target="_blank" rel="noopener noreferrer">' +
+          escapeHtml(flightLinkText) +
+          '</a>';
+      }
+      var accommodationUrl = accommodationBookingUrl(
+        isLastStop ? null : stop.place_name,
+        stop.country,
+        stop.arrival_date,
+        stop.departure_date,
+        people
+      );
+      if (accommodationUrl) {
+        actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(accommodationUrl) + '" target="_blank" rel="noopener noreferrer">' +
+          escapeHtml(plannedTripsT('findAccommodation', 'Find accommodation')) +
+          '</a>';
+      }
+      if (actions.children.length) {
+        info.appendChild(actions);
+      }
     }
     if (stop.activities) {
       var pAct = document.createElement('p');
@@ -1068,6 +1104,7 @@
       var startDateEl = modal.querySelector('#tripDetailsStartDate');
       var endDateEl = modal.querySelector('#tripDetailsEndDate');
       var peopleEl = modal.querySelector('#tripDetailsPeople');
+      var bookedEl = modal.querySelector('#tripDetailsBookedStatus');
       var startCityWrap = modal.querySelector('#tripDetailsStartCityWrap');
       var startCityEl = modal.querySelector('#tripDetailsStartCity');
       var stopsCountEl = modal.querySelector('#tripDetailsStopsCount');
@@ -1077,6 +1114,7 @@
       if (startDateEl) startDateEl.textContent = formatApiDate(trip.start_date);
       if (endDateEl) endDateEl.textContent = formatApiDate(trip.end_date);
       if (peopleEl) peopleEl.textContent = String(trip.people || 1);
+      if (bookedEl) bookedEl.textContent = trip.is_booked ? plannedTripsT('booked', 'Booked') : plannedTripsT('notBooked', 'Not booked');
       if (trip.start_city) {
         if (startCityWrap) startCityWrap.classList.remove('hidden');
         if (startCityEl) startCityEl.textContent = trip.start_city;
@@ -1095,7 +1133,7 @@
           stopsListEl.appendChild(empty);
         } else {
           stops.forEach(function (stop, index) {
-            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1));
+            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1, !!trip.is_booked));
           });
         }
       }

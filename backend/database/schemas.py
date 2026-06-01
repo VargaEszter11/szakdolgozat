@@ -178,6 +178,7 @@ class PlannedTripBase(BaseModel):
     end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
     people: int = 1
+    is_booked: bool = False
 
 
 class PlannedTripCreate(PlannedTripBase):
@@ -190,6 +191,7 @@ class PlannedTripUpdate(BaseModel):
     end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
     people: Optional[int] = None
+    is_booked: Optional[bool] = None
 
 
 class PlannedTripResponse(PlannedTripBase):

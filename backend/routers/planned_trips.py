@@ -1,10 +1,56 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import date
 from database import crud, schemas, get_db
 from utils.coordinates import geocode_place
 
 router = APIRouter()
+
+
+def _place_key(place_name: str, country: Optional[str]) -> tuple[str, str]:
+    return ((place_name or "").strip().lower(), (country or "").strip().lower())
+
+
+def _sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
+    if not trip or not trip.is_booked or not trip.end_date or trip.end_date >= date.today():
+        return
+
+    existing = {
+        _place_key(place.place_name, place.country)
+        for place in crud.get_user_visited_places(db, trip.user_id)
+    }
+    stops = sorted(trip.stops or [], key=lambda stop: stop.stop_order or 0)
+    for index, stop in enumerate(stops):
+        if not stop.place_name:
+            continue
+        is_return_home = index == len(stops) - 1 and trip.start_city and (
+            stop.place_name.strip().lower() == trip.start_city.strip().lower()
+        )
+        if is_return_home:
+            continue
+
+        key = _place_key(stop.place_name, stop.country)
+        if key in existing:
+            continue
+
+        crud.create_visited_place(
+            db,
+            schemas.VisitedPlaceCreate(
+                user_id=trip.user_id,
+                place_name=stop.place_name,
+                country=stop.country,
+                date=stop.arrival_date or trip.end_date,
+                latitude=stop.latitude,
+                longitude=stop.longitude,
+            ),
+        )
+        existing.add(key)
+
+
+def _sync_completed_booked_trips_to_visited(db: Session, trips) -> None:
+    for trip in trips or []:
+        _sync_completed_booked_trip_to_visited(db, trip)
 
 
 @router.post("/planned-trips", response_model=schemas.PlannedTripResponse, status_code=status.HTTP_201_CREATED)
@@ -46,6 +92,7 @@ def get_planned_trip(trip_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Planned trip not found"
         )
+    _sync_completed_booked_trip_to_visited(db, db_trip)
     return db_trip
 
 
@@ -65,9 +112,13 @@ def list_planned_trips(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        return crud.get_user_planned_trips(db, user_id=user_id)
+        trips = crud.get_user_planned_trips(db, user_id=user_id)
+        _sync_completed_booked_trips_to_visited(db, trips)
+        return trips
     
-    return crud.get_planned_trips(db, skip=skip, limit=limit)
+    trips = crud.get_planned_trips(db, skip=skip, limit=limit)
+    _sync_completed_booked_trips_to_visited(db, trips)
+    return trips
 
 
 @router.put("/planned-trips/{trip_id}", response_model=schemas.PlannedTripResponse)
@@ -79,6 +130,7 @@ def update_planned_trip(trip_id: int, trip: schemas.PlannedTripUpdate, db: Sessi
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Planned trip not found"
         )
+    _sync_completed_booked_trip_to_visited(db, db_trip)
     return db_trip
 
 

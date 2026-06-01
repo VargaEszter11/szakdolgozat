@@ -36,13 +36,17 @@ def apply_startup_schema_patches() -> None:
                 text(
                     """
                     ALTER TABLE planned_trips
-                    ADD COLUMN IF NOT EXISTS people INTEGER DEFAULT 1
+                    ADD COLUMN IF NOT EXISTS people INTEGER DEFAULT 1,
+                    ADD COLUMN IF NOT EXISTS is_booked BOOLEAN DEFAULT FALSE
                     """
                 )
             )
             conn.execute(text("UPDATE planned_trips SET people = 1 WHERE people IS NULL"))
             conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN people SET DEFAULT 1"))
             conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN people SET NOT NULL"))
+            conn.execute(text("UPDATE planned_trips SET is_booked = FALSE WHERE is_booked IS NULL"))
+            conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN is_booked SET DEFAULT FALSE"))
+            conn.execute(text("ALTER TABLE planned_trips ALTER COLUMN is_booked SET NOT NULL"))
             conn.execute(
                 text(
                     """
