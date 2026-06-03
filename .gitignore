@@ -29,4 +29,3 @@ uploads/
 tests/__pycache__/
 tests/backend/__pycache__/
 .coverage
-pytest.ini
