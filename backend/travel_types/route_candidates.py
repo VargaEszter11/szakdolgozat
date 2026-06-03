@@ -58,7 +58,7 @@ def _has_coordinates(airport) -> bool:
     )
 
 
-def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+def calculate_distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     earth_radius_km = 6371.0088
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
@@ -106,7 +106,7 @@ def airport_distance(db, origin_iata: str, destination_iata: str) -> Optional[fl
     destination = _airport_by_iata(db, destination_iata)
     if not _has_coordinates(origin) or not _has_coordinates(destination):
         return None
-    return haversine_km(
+    return calculate_distance_km(
         float(origin.latitude),
         float(origin.longitude),
         float(destination.latitude),
@@ -122,7 +122,7 @@ def ground_transport_between_airports(db, origin_iata: str, destination_iata: st
     if not can_use_ground_transport(origin, destination):
         return None
 
-    distance = haversine_km(
+    distance = calculate_distance_km(
         float(origin.latitude),
         float(origin.longitude),
         float(destination.latitude),
@@ -170,7 +170,7 @@ def ground_candidates_from_airport(
         city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
         if not is_plannable_place_label(city):
             continue
-        distance = haversine_km(
+        distance = calculate_distance_km(
             origin_lat,
             origin_lng,
             float(airport.latitude),

@@ -24,3 +24,9 @@ backend/.env
 
 # Uploaded visit photos (created at runtime)
 uploads/
+
+# Tests 
+tests/__pycache__/
+tests/backend/__pycache__/
+.coverage
+pytest.ini

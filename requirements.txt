@@ -9,3 +9,6 @@ python-dotenv
 bcrypt
 python-multipart
 google-auth
+pytest
+pytest-asyncio
+pytest-cov

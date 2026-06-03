@@ -8,7 +8,7 @@ from database import models
 
 logger = logging.getLogger("planner.airports")
 
-def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+def calculate_distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     earth_radius_km = 6371.0088
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
@@ -57,7 +57,7 @@ async def nearest_airport(lat, lng, db: Optional[Session] = None, distance_km: O
     closest_distance = None
     for airport in airports:
         try:
-            distance = _haversine_km(
+            distance = calculate_distance_km(
                 origin_lat,
                 origin_lng,
                 float(airport.latitude),

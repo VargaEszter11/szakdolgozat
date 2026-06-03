@@ -27,8 +27,7 @@ class UserResponse(UserBase):
     created_at: dt.datetime
     preferred_llm_provider: str = "deepseek"
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Authentication Schemas =============
@@ -120,8 +119,7 @@ class VisitedPlaceResponse(BaseModel):
     longitude: Optional[float] = None
     image: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Trip Stop Schemas =============
@@ -164,8 +162,7 @@ class TripStopResponse(TripStopBase):
     id: int
     trip_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Planned Trip Schemas =============
@@ -197,8 +194,7 @@ class PlannedTripResponse(PlannedTripBase):
     user_id: int
     stops: List[TripStopResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Extended User Response with Relations =============
@@ -207,8 +203,7 @@ class UserWithRelationsResponse(UserResponse):
     planned_trips: List[PlannedTripResponse] = []
     visited_places: List[VisitedPlaceResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ============= Image Schemas =============
 
@@ -235,8 +230,7 @@ class ImageResponse(ImageBase):
     visited_place_id: int
     created_at: dt.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Airline Schemas =============
@@ -262,8 +256,7 @@ class AirlineResponse(AirlineBase):
     created_at: dt.datetime
     updated_at: dt.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Airport Schemas =============
@@ -301,8 +294,7 @@ class AirportResponse(AirportBase):
     created_at: dt.datetime
     updated_at: dt.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Direct Route Schemas =============
@@ -344,8 +336,7 @@ class DirectRouteResponse(DirectRouteBase):
     created_at: dt.datetime
     updated_at: dt.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RouteDayBase(BaseModel):
@@ -358,8 +349,7 @@ class RouteDayCreate(RouteDayBase):
 
 
 class RouteDayResponse(RouteDayBase):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Route Price Schemas =============
@@ -389,8 +379,7 @@ class RoutePriceResponse(RoutePriceBase):
     id: int
     fetched_at: dt.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============= Route Refresh Run Schemas =============
@@ -411,5 +400,4 @@ class RouteRefreshRunResponse(RouteRefreshRunBase):
     started_at: dt.datetime
     finished_at: Optional[dt.datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
