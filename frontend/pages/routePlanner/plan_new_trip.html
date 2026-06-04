@@ -88,17 +88,20 @@
                                 <input type="text" id="endDate" name="endDate" required class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="budget" class="form-label" data-i18n="planNewTrip.budget">Budget (€)
-                                    *</label>
-                                <input type="number" id="budget" name="budget"
-                                    data-i18n-placeholder="planNewTrip.budgetPlaceholder" placeholder="e.g. 1000"
-                                    required class="form-input">
-                            </div>
-                            <div class="form-group">
                                 <label for="people" class="form-label" data-i18n="planNewTrip.people">People *</label>
                                 <input type="number" id="people" name="people" min="1" value="1"
-                                    data-i18n-placeholder="planNewTrip.peoplePlaceholder" placeholder="e.g. 2"
-                                    required class="form-input">
+                                    data-i18n-placeholder="planNewTrip.peoplePlaceholder" placeholder="e.g. 2" required
+                                    class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="preferredTransport" class="form-label"
+                                    data-i18n="planNewTrip.preferredTransport">Preferred Transport</label>
+                                <select id="preferredTransport" name="preferredTransport" required class="form-input">
+                                    <option value="allModes" data-i18n="planNewTrip.allModes">All modes</option>
+                                    <option value="flight" data-i18n="planNewTrip.flight">Flight</option>
+                                    <option value="trainBus" data-i18n="planNewTrip.trainBus">Train/Bus</option>
+                                    <option value="trainBusFerry" data-i18n="planNewTrip.trainBusFerry">Train/Bus/Ferry</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="preferences" class="form-label"

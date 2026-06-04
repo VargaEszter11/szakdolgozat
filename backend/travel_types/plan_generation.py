@@ -30,6 +30,7 @@ class GenerationRequest(BaseModel):
     startDate: str
     endDate: str
     people: int = 1
+    preferredTransport: str = "allModes"
     preferences: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
@@ -41,6 +42,7 @@ class RandomGenerationRequest(BaseModel):
     startDate: str
     endDate: str
     people: int = 1
+    preferredTransport: str = "allModes"
     preferences: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
@@ -79,6 +81,7 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
         end_date=request.endDate,
         travel_length=travel_length,
         people=request.people,
+        preferredTransport=request.preferredTransport,
         language=request.language,
         llm_provider=llm_provider,
         extra_places=request.extraPlaces,
@@ -104,6 +107,7 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
         end_date=request.endDate,
         travel_length=travel_length,
         people=request.people,
+        preferredTransport=request.preferredTransport,
         language=request.language,
         llm_provider=llm_provider,
         db=db,
@@ -122,6 +126,7 @@ async def generate_random_plan(request: RandomGenerationRequest, db: Session) ->
         end_date=request.endDate,
         travel_length=travel_length,
         people=request.people,
+        preferredTransport=request.preferredTransport,
         language=request.language,
         llm_provider=llm_provider,
         db=db,
@@ -180,9 +185,11 @@ async def generate_plan_with_location(
 ):
     lat, lon = await get_coordinates(starting_point)
     airport = await nearest_airport(lat, lon, db=db)
+    preferred_transport = kwargs.get("preferredTransport") or "allModes"
+    should_load_direct_destinations = preferred_transport not in {"trainBus", "trainBusFerry"}
     direct_destinations = (
         await get_direct_destinations_cached(db, airport["iata"])
-        if airport and airport.get("iata")
+        if should_load_direct_destinations and airport and airport.get("iata")
         else []
     )
 

@@ -150,7 +150,12 @@ window.I18N_TRANSLATIONS = {
       placesHintUnvisitedNoDb:
         'Only the exclusions you type below apply; your saved visited places are not loaded from the server.',
       manualPlacesRequired:
-        'Add at least one place in the field above, or turn on using your travel log from the database.'
+        'Add at least one place in the field above, or turn on using your travel log from the database.',
+      preferredTransport: 'Preferred transport mode',
+      flight: 'Flight',
+      trainBus: 'Train/Bus',
+      trainBusFerry: 'Train/Bus/Ferry',
+      allModes: 'All modes'
     },
     plannedTrips: {
       title: 'Planned Trips',
@@ -436,7 +441,12 @@ window.I18N_TRANSLATIONS = {
       placesHintUnvisitedNoDb:
         'Csak az alább megadott kizárások érvényesek; a meglátogatott helyeid nem töltődnek be a szerverről.',
       manualPlacesRequired:
-        'Adj meg legalább egy helyet a mezőben, vagy kapcsold be az adatbázisból származó utazási napló használatát.'
+        'Adj meg legalább egy helyet a mezőben, vagy kapcsold be az adatbázisból származó utazási napló használatát.',
+      preferredTransport: 'Preferált közlekedési mód',
+      flight: 'Repülő',
+      trainBus: 'Vonat/Busz',
+      trainBusFerry: 'Vonat/Busz/Komp',
+      allModes: 'Minden mód'
     },
     plannedTrips: {
       title: 'Tervezett utak',
@@ -722,7 +732,12 @@ window.I18N_TRANSLATIONS = {
       placesHintUnvisitedNoDb:
         'Es gelten nur die unten angegebenen Ausschlüsse; besuchte Orte werden nicht vom Server geladen.',
       manualPlacesRequired:
-        'Gib mindestens einen Ort oben ein oder aktiviere die Nutzung deines Reisetagebuchs aus der Datenbank.'
+        'Gib mindestens einen Ort oben ein oder aktiviere die Nutzung deines Reisetagebuchs aus der Datenbank.',
+      preferredTransport: 'Bevorzugter Transport',
+      flight: 'Flug',
+      trainBus: 'Zug/Bus',
+      trainBusFerry: 'Zug/Bus/Fähre',
+      allModes: 'Alle Möglichkeiten'
     },
     plannedTrips: {
       title: 'Geplante Reisen',

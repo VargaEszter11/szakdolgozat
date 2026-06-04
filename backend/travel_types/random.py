@@ -25,6 +25,7 @@ async def generate_travel_plan_random(
     language: str = "en",
     llm_provider: str = "deepseek",
     starting_airport_iata: str = None,
+    preferredTransport: str = "allModes",
 ) -> str:
     """Generate random itineraries where each leg loads direct destinations from the current airport."""
     if starting_airport_iata:
@@ -40,6 +41,7 @@ async def generate_travel_plan_random(
             llm_provider=llm_provider,
             visited_places=None,
             forbidden_places=None,
+            preferred_transport=preferredTransport,
         )
         return as_json({"trips": [from_json(trip_json)]})
 

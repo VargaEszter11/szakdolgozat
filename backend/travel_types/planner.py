@@ -1,5 +1,3 @@
-"""Build itineraries leg-by-leg from validated local route candidates."""
-
 from __future__ import annotations
 
 import json
@@ -26,6 +24,7 @@ from .common import language_name, next_stop_prompt, preferences_line
 from .route_candidates import (
     annotate_distances,
     build_candidates,
+    ferry_transport_between_airports,
     ground_transport_between_airports,
     rank_candidates,
 )
@@ -89,6 +88,31 @@ def _prefer_next_transport(candidates: List[dict], previous_transport: Optional[
         seen.add(marker)
         out.append(candidate)
     return out
+
+
+def _allowed_transport_modes(preferred_transport: str) -> Optional[set[str]]:
+    preference = (preferred_transport or "allModes").strip()
+    if preference == "flight":
+        return {"flight"}
+    if preference == "trainBus":
+        return {"train", "bus"}
+    if preference == "trainBusFerry":
+        return {"train", "bus", "ferry"}
+    return None
+
+
+def _filter_by_preferred_transport(
+    candidates: List[dict],
+    preferred_transport: str,
+) -> List[dict]:
+    allowed = _allowed_transport_modes(preferred_transport)
+    if allowed is None:
+        return candidates
+    return [
+        candidate
+        for candidate in candidates
+        if (candidate.get("transport") or "flight") in allowed
+    ]
 
 
 def _requested_candidate_matches(
@@ -193,6 +217,7 @@ async def _ask_ai_to_pick_candidate(
     requested_places: List[str],
     forbidden_places: List[str],
     extra_places: List[str],
+    preferred_transport: str,
     language: str,
     llm_provider: str,
 ) -> Optional[Dict[str, Any]]:
@@ -209,6 +234,7 @@ async def _ask_ai_to_pick_candidate(
         requested_places=requested_places,
         forbidden_places=forbidden_places,
         extra_places=extra_places,
+        preferred_transport=preferred_transport,
     )
     raw = await call_llm_api(prompt, llm_provider)
     choice = _parse_json_object(raw)
@@ -261,6 +287,7 @@ async def _ranked_step_candidates(
     plan: List[Dict[str, Any]],
     requested_places: List[str],
     forbidden_places: List[str],
+    preferred_transport: str = "allModes",
 ) -> tuple[List[dict], List[dict]]:
     candidates = await build_candidates(
         db,
@@ -270,6 +297,7 @@ async def _ranked_step_candidates(
         used_iatas=_used_iatas(plan),
         visited_places=requested_places,
         forbidden_places=forbidden_places,
+        preferred_transport=preferred_transport,
     )
     candidates = annotate_distances(db, current_airport, candidates)
 
@@ -402,21 +430,41 @@ def _append_return_home(
     home_city: str,
     home_country: str,
     end_date: str,
+    preferred_transport: str = "allModes",
 ) -> None:
     if not plan:
         return
 
     return_origin = plan[-1].get("iata")
-    return_flight_details = (
-        flight_booking_details(db, return_origin, starting_airport_iata, end_date)
-        if return_origin
-        else {}
-    )
-    return_transport = ground_transport_between_airports(
-        db, plan[-1].get("iata"), starting_airport_iata
-    )
-    if return_flight_details:
-        return_transport = "flight"
+    allowed_modes = _allowed_transport_modes(preferred_transport)
+    return_transport = None
+    return_flight_details = {}
+
+    if allowed_modes is None or "flight" in allowed_modes:
+        return_flight_details = (
+            flight_booking_details(db, return_origin, starting_airport_iata, end_date)
+            if return_origin
+            else {}
+        )
+        if return_flight_details:
+            return_transport = "flight"
+
+    if return_transport is None and (allowed_modes is None or {"train", "bus"} & allowed_modes):
+        ground_transport = ground_transport_between_airports(
+            db, plan[-1].get("iata"), starting_airport_iata
+        )
+        if ground_transport and (allowed_modes is None or ground_transport in allowed_modes):
+            return_transport = ground_transport
+
+    if return_transport is None and (allowed_modes is None or "ferry" in allowed_modes):
+        ferry_transport = ferry_transport_between_airports(
+            db, plan[-1].get("iata"), starting_airport_iata
+        )
+        if ferry_transport:
+            return_transport = ferry_transport
+
+    if return_transport is None:
+        return
 
     plan.append(
         {
@@ -426,7 +474,7 @@ def _append_return_home(
             "days": 0,
             "arrivalDate": end_date,
             "departureDate": end_date,
-            "transportFromPreviousCity": return_transport or "flight",
+            "transportFromPreviousCity": return_transport,
             "activities": [],
             "direct_flights_queried_from": plan[-1].get("iata"),
             **return_flight_details,
@@ -463,6 +511,7 @@ async def build_plan(
     visited_places: Optional[List[str]] = None,
     forbidden_places: Optional[List[str]] = None,
     extra_places: Optional[List[str]] = None,
+    preferred_transport: str = "allModes",
 ) -> Dict[str, Any]:
     home_city, home_country = split_place_label(starting_point)
     requested_places = _merge_place_lists(visited_places, extra_places)
@@ -490,6 +539,14 @@ async def build_plan(
                 plan=plan,
                 requested_places=requested_places,
                 forbidden_places=forbidden_places,
+                preferred_transport=preferred_transport,
+            )
+            if not candidates:
+                break
+            candidates = _filter_by_preferred_transport(candidates, preferred_transport)
+            requested_matches = _filter_by_preferred_transport(
+                requested_matches,
+                preferred_transport,
             )
             if not candidates:
                 break
@@ -521,6 +578,7 @@ async def build_plan(
                 requested_places=requested_places,
                 forbidden_places=forbidden_places,
                 extra_places=extra_places,
+                preferred_transport=preferred_transport,
                 language=language,
                 llm_provider=llm_provider,
             )
@@ -556,6 +614,7 @@ async def build_plan(
             home_city=home_city,
             home_country=home_country,
             end_date=end_date,
+            preferred_transport=preferred_transport,
         )
     finally:
         db.close()

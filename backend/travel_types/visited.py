@@ -27,6 +27,7 @@ async def generate_travel_plan_visited(
     llm_provider: str = "deepseek",
     starting_airport_iata: str = None,
     extra_places: List[str] = None,
+    preferredTransport: str = "allModes",
 ) -> str:
     """Generate a travel plan from requested visited places."""
     requested_places = merge_place_lists(visitedPlaces, extra_places)
@@ -44,6 +45,7 @@ async def generate_travel_plan_visited(
             visited_places=requested_places,
             forbidden_places=None,
             extra_places=extra_places,
+            preferred_transport=preferredTransport,
         )
 
     lang_name = language_name(language)

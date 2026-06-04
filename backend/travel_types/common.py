@@ -9,7 +9,7 @@ LANG_NAMES = {"en": "English", "hu": "Hungarian", "de": "German"}
 NO_DIRECT_FLIGHTS_MESSAGE = "No direct flights available from starting airport."
 
 TRANSPORT_RULES = (
-    "Transport between stops (field transportFromPreviousCity: one of train | bus | flight | ferry):",
+    "Transport between stops (field transportFromPreviousCity: one of train | bus | flight ):",
     "- Do not blindly prioritize any one transport mode.",
     "- Choose the mode that makes the route most logical: train/bus for nearby regional movement, flights for long jumps or island/sea-separated routes.",
     "- A good itinerary may mix transport modes, but only when the route flow still makes sense.",
@@ -184,6 +184,7 @@ def next_stop_prompt(
     requested_places: list | None = None,
     forbidden_places: list | None = None,
     extra_places: list | None = None,
+    preferred_transport: str = "allModes",
 ) -> str:
     return _block(
         system_next_stop(lang_name),
@@ -222,6 +223,12 @@ def next_stop_prompt(
         f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.',
         '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.',
         f'- "preferences": choose from the preferences listed in {prefs} when selecting the activities, but not only from them.',
+        (
+            "- Only plan with the following transport mode: "
+            f"{preferred_transport}. flight means flight only; trainBus means train or bus only; "
+            "trainBusFerry means train, bus, or ferry only; "
+            "allModes means all transport modes are allowed."
+        ),
         "",
         "Return JSON only with this shape:",
         '{"city":"","country":"","iata":"","days":1,"transportFromPreviousCity":"flight","activities":["",""]}',
@@ -283,6 +290,7 @@ async def run_db_planner(
     visited_places: List[str] | None = None,
     forbidden_places: List[str] | None = None,
     extra_places: List[str] | None = None,
+    preferred_transport: str = "allModes",
 ) -> str:
     from .planner import build_plan
 
@@ -299,5 +307,6 @@ async def run_db_planner(
         visited_places=visited_places,
         forbidden_places=forbidden_places,
         extra_places=extra_places,
+        preferred_transport=preferred_transport,
     )
     return as_json(data)

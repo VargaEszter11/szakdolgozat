@@ -41,6 +41,30 @@ def test_place_matches_candidate_exact_match():
     )
 
 
+def test_place_matches_candidate_country_name_against_code():
+    candidate = {
+        "city": "Rome",
+        "country": "IT",
+    }
+
+    assert place_matches_candidate(
+        "Italy",
+        candidate,
+    )
+
+
+def test_place_matches_candidate_country_code_against_name():
+    candidate = {
+        "city": "Rome",
+        "country": "Italy",
+    }
+
+    assert place_matches_candidate(
+        "IT",
+        candidate,
+    )
+
+
 def test_place_matches_candidate_no_match():
     candidate = {
         "city": "Rome",
@@ -63,6 +87,20 @@ def test_place_used_in_plan_returns_true():
 
     assert place_used_in_plan(
         "Budapest",
+        plan,
+    )
+
+
+def test_place_used_in_plan_returns_true_for_country():
+    plan = [
+        {
+            "city": "Rome",
+            "country": "IT",
+        }
+    ]
+
+    assert place_used_in_plan(
+        "Italy",
         plan,
     )
 
@@ -111,6 +149,21 @@ def test_filter_visited_returns_matching_places():
     assert result[0]["iata"] == "BUD"
 
 
+def test_filter_visited_returns_places_matching_requested_country():
+    destinations = [
+        {"city": "Budapest", "country": "HU", "iata": "BUD"},
+        {"city": "Rome", "country": "IT", "iata": "FCO"},
+        {"city": "Milan", "country": "IT", "iata": "MXP"},
+    ]
+
+    result = filter_visited(
+        destinations,
+        ["Italy"],
+    )
+
+    assert [item["iata"] for item in result] == ["FCO", "MXP"]
+
+
 def test_filter_unvisited_removes_forbidden_places():
     destinations = [
         {
@@ -132,6 +185,29 @@ def test_filter_unvisited_removes_forbidden_places():
 
     assert len(result) == 1
     assert result[0]["iata"] == "FCO"
+
+
+def test_filter_unvisited_removes_forbidden_country():
+    destinations = [
+        {
+            "city": "Budapest",
+            "country": "HU",
+            "iata": "BUD",
+        },
+        {
+            "city": "Rome",
+            "country": "IT",
+            "iata": "FCO",
+        },
+    ]
+
+    result = filter_unvisited(
+        destinations,
+        ["Italy"],
+    )
+
+    assert len(result) == 1
+    assert result[0]["iata"] == "BUD"
 
 
 def test_filter_random_removes_duplicate_iatas():

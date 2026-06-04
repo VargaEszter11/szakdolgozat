@@ -21,6 +21,7 @@ EUROPE_COUNTRY_CODES = {
 }
 
 GROUND_MAX_DISTANCE_KM = 650
+FERRY_MAX_DISTANCE_KM = 450
 GROUND_CANDIDATE_LIMIT = 12
 RANKED_CANDIDATE_LIMIT = 18
 
@@ -94,6 +95,10 @@ def can_use_ground_transport(origin, destination) -> bool:
     return ground_area(origin) == ground_area(destination)
 
 
+def can_use_ferry_transport(origin, destination) -> bool:
+    return ground_area(origin) != ground_area(destination)
+
+
 def is_plannable_place_label(label: Optional[str]) -> bool:
     text = (label or "").strip().lower()
     if not text:
@@ -131,6 +136,23 @@ def ground_transport_between_airports(db, origin_iata: str, destination_iata: st
     if distance <= GROUND_MAX_DISTANCE_KM:
         return transport_for_ground_distance(distance)
     return None
+
+
+def ferry_transport_between_airports(db, origin_iata: str, destination_iata: str) -> Optional[str]:
+    origin = _airport_by_iata(db, origin_iata)
+    destination = _airport_by_iata(db, destination_iata)
+    if not _has_coordinates(origin) or not _has_coordinates(destination):
+        return None
+    if not can_use_ferry_transport(origin, destination):
+        return None
+
+    distance = calculate_distance_km(
+        float(origin.latitude),
+        float(origin.longitude),
+        float(destination.latitude),
+        float(destination.longitude),
+    )
+    return "ferry" if distance <= FERRY_MAX_DISTANCE_KM else None
 
 
 def ground_candidates_from_airport(
@@ -184,6 +206,65 @@ def ground_candidates_from_airport(
                 "city": city,
                 "country": airport.country_code,
                 "transport": transport_for_ground_distance(distance),
+                "distance_km": round(distance, 1),
+            }
+        )
+
+    candidates.sort(key=lambda c: c["distance_km"])
+    return candidates[:limit]
+
+
+def ferry_candidates_from_airport(
+    db,
+    origin_iata: str,
+    *,
+    excluded_iatas: set[str],
+    max_distance_km: float = FERRY_MAX_DISTANCE_KM,
+    limit: int = GROUND_CANDIDATE_LIMIT,
+) -> List[dict]:
+    origin_code = _iata(origin_iata)
+    origin = _airport_by_iata(db, origin_code)
+    if not _has_coordinates(origin):
+        return []
+
+    origin_lat = float(origin.latitude)
+    origin_lng = float(origin.longitude)
+    candidates = []
+    airports = (
+        db.query(models.Airport)
+        .filter(
+            models.Airport.latitude.isnot(None),
+            models.Airport.longitude.isnot(None),
+        )
+        .all()
+    )
+    for airport in airports:
+        iata = _iata(airport.iata)
+        if (
+            not iata
+            or iata == origin_code
+            or iata in excluded_iatas
+            or not is_europe_country(airport.country_code)
+            or not can_use_ferry_transport(origin, airport)
+        ):
+            continue
+        city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
+        if not is_plannable_place_label(city):
+            continue
+        distance = calculate_distance_km(
+            origin_lat,
+            origin_lng,
+            float(airport.latitude),
+            float(airport.longitude),
+        )
+        if distance > max_distance_km:
+            continue
+        candidates.append(
+            {
+                "iata": airport.iata,
+                "city": city,
+                "country": airport.country_code,
+                "transport": "ferry",
                 "distance_km": round(distance, 1),
             }
         )
@@ -268,17 +349,21 @@ async def build_candidates(
     used_iatas: set[str],
     visited_places: List[str],
     forbidden_places: List[str],
+    preferred_transport: str = "allModes",
 ) -> List[dict]:
     candidate_strategy = "random" if strategy == "visited" else strategy
-    flight_candidates = with_transport(
-        filter_strategy_candidates(
-            candidate_strategy,
-            europe_candidates(await get_direct_destinations_cached(db, current_airport)),
-            visited_places,
-            forbidden_places,
-        ),
-        "flight",
-    )
+    include_flights = preferred_transport not in {"trainBus", "trainBusFerry"}
+    flight_candidates = []
+    if include_flights:
+        flight_candidates = with_transport(
+            filter_strategy_candidates(
+                candidate_strategy,
+                europe_candidates(await get_direct_destinations_cached(db, current_airport)),
+                visited_places,
+                forbidden_places,
+            ),
+            "flight",
+        )
 
     ground_candidates = filter_strategy_candidates(
         candidate_strategy,
@@ -290,10 +375,20 @@ async def build_candidates(
         visited_places,
         forbidden_places,
     )
+    ferry_candidates = filter_strategy_candidates(
+        candidate_strategy,
+        ferry_candidates_from_airport(
+            db,
+            current_airport,
+            excluded_iatas={*used_iatas, _iata(hub_iata), _iata(current_airport)},
+        ),
+        visited_places,
+        forbidden_places,
+    )
 
     candidates = [
         c
-        for c in ground_candidates + flight_candidates
+        for c in ground_candidates + ferry_candidates + flight_candidates
         if c.get("iata")
         and is_plannable_place_label(c.get("city"))
         and _iata(c.get("iata")) != _iata(hub_iata)

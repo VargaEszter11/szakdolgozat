@@ -9,11 +9,14 @@ from backend.travel_types.route_candidates import (
     transport_for_ground_distance,
     ground_area,
     can_use_ground_transport,
+    can_use_ferry_transport,
     is_europe_country,
     is_plannable_place_label,
     airport_distance,
     ground_transport_between_airports,
+    ferry_transport_between_airports,
     ground_candidates_from_airport,
+    ferry_candidates_from_airport,
     with_transport,
     europe_candidates,
     dedupe_candidates,
@@ -135,6 +138,20 @@ def test_can_use_ground_transport_different_area():
     destination = FakeAirport(country_code="FR", latitude=48.8, longitude=2.3)
 
     assert can_use_ground_transport(origin, destination) is False
+
+
+def test_can_use_ferry_transport_different_area():
+    origin = FakeAirport(country_code="GB", latitude=51.5, longitude=-0.1)
+    destination = FakeAirport(country_code="FR", latitude=48.8, longitude=2.3)
+
+    assert can_use_ferry_transport(origin, destination) is True
+
+
+def test_can_use_ferry_transport_same_area():
+    origin = FakeAirport(country_code="HU", latitude=47.4, longitude=19.2)
+    destination = FakeAirport(country_code="AT", latitude=48.2, longitude=16.3)
+
+    assert can_use_ferry_transport(origin, destination) is False
 
 
 def test_is_plannable_place_label_accepts_city():
@@ -398,6 +415,46 @@ def test_ground_transport_between_airports_returns_none_when_too_far(monkeypatch
     assert result is None
 
 
+def test_ferry_transport_between_airports_returns_ferry(monkeypatch):
+    airports = {
+        "DUB": FakeAirport(iata="DUB", country_code="IE", latitude=53.4, longitude=-6.2),
+        "LPL": FakeAirport(iata="LPL", country_code="GB", latitude=53.3, longitude=-2.8),
+    }
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates._airport_by_iata",
+        lambda db, iata: airports.get(iata),
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.calculate_distance_km",
+        lambda *args: 260,
+    )
+
+    result = ferry_transport_between_airports(None, "DUB", "LPL")
+
+    assert result == "ferry"
+
+
+def test_ferry_transport_between_airports_returns_none_when_too_far(monkeypatch):
+    airports = {
+        "DUB": FakeAirport(iata="DUB", country_code="IE", latitude=53.4, longitude=-6.2),
+        "LPL": FakeAirport(iata="LPL", country_code="GB", latitude=53.3, longitude=-2.8),
+    }
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates._airport_by_iata",
+        lambda db, iata: airports.get(iata),
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.calculate_distance_km",
+        lambda *args: 900,
+    )
+
+    result = ferry_transport_between_airports(None, "DUB", "LPL")
+
+    assert result is None
+
+
 def test_ground_candidates_from_airport(monkeypatch):
     origin = FakeAirport(iata="BUD", city="Budapest", country_code="HU", latitude=47.439, longitude=19.261)
     vienna = FakeAirport(iata="VIE", city="Vienna", country_code="AT", latitude=48.1103, longitude=16.5697)
@@ -448,6 +505,48 @@ def test_ground_candidates_from_airport(monkeypatch):
             "country": "AT",
             "transport": "bus",
             "distance_km": 220,
+        }
+    ]
+
+
+def test_ferry_candidates_from_airport(monkeypatch):
+    origin = FakeAirport(iata="DUB", city="Dublin", country_code="IE", latitude=53.4, longitude=-6.2)
+    liverpool = FakeAirport(iata="LPL", city="Liverpool", country_code="GB", latitude=53.3, longitude=-2.8)
+    cork = FakeAirport(iata="ORK", city="Cork", country_code="IE", latitude=51.8, longitude=-8.5)
+
+    class Query:
+        def filter(self, *args, **kwargs):
+            return self
+
+        def all(self):
+            return [origin, liverpool, cork]
+
+    class DB:
+        def query(self, model):
+            return Query()
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates._airport_by_iata",
+        lambda db, iata: origin if iata == "DUB" else None,
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.calculate_distance_km",
+        lambda *args: 250,
+    )
+
+    result = ferry_candidates_from_airport(
+        DB(),
+        "DUB",
+        excluded_iatas=set(),
+    )
+
+    assert result == [
+        {
+            "iata": "LPL",
+            "city": "Liverpool",
+            "country": "GB",
+            "transport": "ferry",
+            "distance_km": 250,
         }
     ]
 
@@ -534,6 +633,10 @@ async def test_build_candidates_combines_ground_and_flight_candidates(monkeypatc
             },
         ],
     )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ferry_candidates_from_airport",
+        lambda *args, **kwargs: [],
+    )
 
     result = await build_candidates(
         db=None,
@@ -563,6 +666,102 @@ async def test_build_candidates_combines_ground_and_flight_candidates(monkeypatc
 
 
 @pytest.mark.asyncio
+async def test_build_candidates_skips_direct_routes_for_train_bus(monkeypatch):
+    async def fail_if_called(db, current_airport):
+        raise AssertionError("direct routes should not be loaded for trainBus")
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.get_direct_destinations_cached",
+        fail_if_called,
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ground_candidates_from_airport",
+        lambda *args, **kwargs: [
+            {
+                "iata": "VIE",
+                "city": "Vienna",
+                "country": "AT",
+                "transport": "bus",
+                "distance_km": 220,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ferry_candidates_from_airport",
+        lambda *args, **kwargs: [],
+    )
+
+    result = await build_candidates(
+        db=None,
+        strategy="random",
+        current_airport="BUD",
+        hub_iata="HUB",
+        used_iatas=set(),
+        visited_places=[],
+        forbidden_places=[],
+        preferred_transport="trainBus",
+    )
+
+    assert result == [
+        {
+            "iata": "VIE",
+            "city": "Vienna",
+            "country": "AT",
+            "transport": "bus",
+            "distance_km": 220,
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_build_candidates_skips_direct_routes_for_train_bus_ferry(monkeypatch):
+    async def fail_if_called(db, current_airport):
+        raise AssertionError("direct routes should not be loaded for trainBusFerry")
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.get_direct_destinations_cached",
+        fail_if_called,
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ground_candidates_from_airport",
+        lambda *args, **kwargs: [],
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ferry_candidates_from_airport",
+        lambda *args, **kwargs: [
+            {
+                "iata": "LPL",
+                "city": "Liverpool",
+                "country": "GB",
+                "transport": "ferry",
+                "distance_km": 250,
+            }
+        ],
+    )
+
+    result = await build_candidates(
+        db=None,
+        strategy="random",
+        current_airport="DUB",
+        hub_iata="HUB",
+        used_iatas=set(),
+        visited_places=[],
+        forbidden_places=[],
+        preferred_transport="trainBusFerry",
+    )
+
+    assert result == [
+        {
+            "iata": "LPL",
+            "city": "Liverpool",
+            "country": "GB",
+            "transport": "ferry",
+            "distance_km": 250,
+        }
+    ]
+
+
+@pytest.mark.asyncio
 async def test_build_candidates_uses_random_filter_when_strategy_is_visited(monkeypatch):
     captured = {}
 
@@ -582,6 +781,10 @@ async def test_build_candidates_uses_random_filter_when_strategy_is_visited(monk
         lambda *args, **kwargs: [],
     )
     monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ferry_candidates_from_airport",
+        lambda *args, **kwargs: [],
+    )
+    monkeypatch.setattr(
         "backend.travel_types.route_candidates.filter_strategy_candidates",
         fake_filter_strategy_candidates,
     )
@@ -596,4 +799,4 @@ async def test_build_candidates_uses_random_filter_when_strategy_is_visited(monk
         forbidden_places=[],
     )
 
-    assert captured["strategies"] == ["random", "random"]
+    assert captured["strategies"] == ["random", "random", "random"]
