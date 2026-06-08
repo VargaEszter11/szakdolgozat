@@ -5,6 +5,8 @@ import re
 import secrets
 from typing import Any, Dict, List, Optional, Set
 from . import models, schemas
+from .airport_city import airport_name_as_city
+from .airport_regions import is_europe_country
 from utils.place_image_upload import delete_file_for_public_path
 
 
@@ -560,13 +562,7 @@ def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[
 
 
 def _airport_name_as_city(name: Optional[str], iata: str) -> str:
-    label = (name or iata or "").strip()
-    if not label:
-        return iata
-    label = re.sub(r"\b(international|intl\.?|regional|municipal)\b", "", label, flags=re.I)
-    label = re.sub(r"\b(airport|aeroport|aeropuerto)\b", "", label, flags=re.I)
-    label = re.sub(r"\s+", " ", label).strip(" -")
-    return label or iata
+    return airport_name_as_city(name, iata)
 
 
 def sync_direct_routes_for_origin(
@@ -583,7 +579,8 @@ def sync_direct_routes_for_origin(
     seen: Set[str] = set()
     for dest in destinations:
         d_iata = _norm_iata(dest.get("iata"))
-        if not d_iata or d_iata == o:
+        country = _norm_country(dest.get("country"))
+        if not d_iata or d_iata == o or not is_europe_country(country):
             continue
         seen.add(d_iata)
         _upsert_airport_no_commit(
@@ -591,7 +588,7 @@ def sync_direct_routes_for_origin(
             schemas.AirportCreate(
                 iata=d_iata,
                 city=dest.get("city"),
-                country=_norm_country(dest.get("country")),
+                country=country,
             ),
         )
         _upsert_direct_route_no_commit(db, o, d_iata, is_active=True)

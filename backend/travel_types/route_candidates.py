@@ -7,18 +7,11 @@ import re
 from typing import List, Optional
 
 from database import crud, models
+from database.airport_regions import EUROPE_COUNTRY_CODES, is_europe_country
 from utils.direct_destinations_cache import get_direct_destinations_cached
 
 from .place_matching import filter_strategy_candidates
 
-
-EUROPE_COUNTRY_CODES = {
-    "AL", "AD", "AT", "BE", "BA", "BG", "HR", "CY", "CZ", "DK",
-    "EE", "FI", "FR", "DE", "GR", "HU", "IS", "IE", "IT", "XK",
-    "LV", "LI", "LT", "LU", "MT", "MD", "MC", "ME", "NL", "MK",
-    "NO", "PL", "PT", "RO", "SM", "RS", "SK", "SI", "ES", "SE",
-    "CH", "GB", "VA",
-}
 
 GROUND_MAX_DISTANCE_KM = 650
 FERRY_MAX_DISTANCE_KM = 450
@@ -37,11 +30,6 @@ BLOCKED_PLACE_PATTERNS = (
     r"\bharbou?r\b",
     r"\bmarina\b",
 )
-
-
-def is_europe_country(country_code: Optional[str]) -> bool:
-    return (country_code or "").strip().upper() in EUROPE_COUNTRY_CODES
-
 
 def _iata(value: Optional[str]) -> str:
     return (value or "").strip().upper()

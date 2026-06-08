@@ -5,9 +5,13 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from database.airport_city import CITY_OVERRIDES_BY_IATA, airport_name_as_city
+from database.airport_regions import EUROPE_COUNTRY_CODES
 from database.database import engine
 
 logger = logging.getLogger(__name__)
+
+EUROPE_COUNTRY_SQL = ", ".join(f"'{code}'" for code in sorted(EUROPE_COUNTRY_CODES))
 
 
 def apply_startup_schema_patches() -> None:
@@ -124,5 +128,106 @@ def apply_startup_schema_patches() -> None:
                     """
                 )
             )
+
+            airport_rows = conn.execute(
+                text(
+                    """
+                    SELECT iata, name
+                    FROM airports
+                    WHERE city IS NULL OR btrim(city) = '' OR city = iata
+                    """
+                )
+            ).mappings()
+            for airport in airport_rows:
+                city = airport_name_as_city(airport["name"], airport["iata"])
+                if city:
+                    conn.execute(
+                        text(
+                            """
+                            UPDATE airports
+                            SET city = :city,
+                                updated_at = NOW()
+                            WHERE iata = :iata
+                              AND (city IS NULL OR btrim(city) = '' OR city = iata)
+                            """
+                        ),
+                        {"city": city, "iata": airport["iata"]},
+                    )
+
+            for iata, city in CITY_OVERRIDES_BY_IATA.items():
+                conn.execute(
+                    text(
+                        """
+                        UPDATE airports
+                        SET city = :city,
+                            updated_at = NOW()
+                        WHERE iata = :iata
+                          AND city IS DISTINCT FROM :city
+                        """
+                    ),
+                    {"city": city, "iata": iata},
+                )
+
+            def non_europe_airport_condition(alias: str) -> str:
+                return (
+                    f"{alias}.country_code IS NULL "
+                    f"OR upper({alias}.country_code) NOT IN ({EUROPE_COUNTRY_SQL})"
+                )
+
+            conn.execute(
+                text(
+                    f"""
+                    DELETE FROM route_days rd
+                    USING direct_routes route
+                    LEFT JOIN airports origin ON origin.iata = route.origin_iata
+                    LEFT JOIN airports destination ON destination.iata = route.destination_iata
+                    WHERE rd.route_id = route.id
+                      AND (
+                        {non_europe_airport_condition("origin")}
+                        OR {non_europe_airport_condition("destination")}
+                      )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    f"""
+                    DELETE FROM route_prices rp
+                    USING direct_routes route
+                    LEFT JOIN airports origin ON origin.iata = route.origin_iata
+                    LEFT JOIN airports destination ON destination.iata = route.destination_iata
+                    WHERE rp.route_id = route.id
+                      AND (
+                        {non_europe_airport_condition("origin")}
+                        OR {non_europe_airport_condition("destination")}
+                      )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    f"""
+                    DELETE FROM direct_routes route
+                    USING airports origin, airports destination
+                    WHERE origin.iata = route.origin_iata
+                      AND destination.iata = route.destination_iata
+                      AND (
+                        {non_europe_airport_condition("origin")}
+                        OR {non_europe_airport_condition("destination")}
+                      )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    f"""
+                    DELETE FROM route_refresh_runs run
+                    USING airports airport
+                    WHERE airport.iata = run.origin_iata
+                      AND {non_europe_airport_condition("airport")}
+                    """
+                )
+            )
+            conn.execute(text(f"DELETE FROM airports airport WHERE {non_europe_airport_condition('airport')}"))
     except SQLAlchemyError as exc:
         logger.warning("Could not apply startup schema patch: %s", exc)

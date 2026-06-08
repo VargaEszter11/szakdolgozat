@@ -435,7 +435,7 @@ def _append_return_home(
     if not plan:
         return
 
-    return_origin = plan[-1].get("iata")
+    return_origin = str(plan[-1].get("iata") or "").strip().upper()
     allowed_modes = _allowed_transport_modes(preferred_transport)
     return_transport = None
     return_flight_details = {}
@@ -451,14 +451,14 @@ def _append_return_home(
 
     if return_transport is None and (allowed_modes is None or {"train", "bus"} & allowed_modes):
         ground_transport = ground_transport_between_airports(
-            db, plan[-1].get("iata"), starting_airport_iata
+            db, return_origin, starting_airport_iata
         )
         if ground_transport and (allowed_modes is None or ground_transport in allowed_modes):
             return_transport = ground_transport
 
     if return_transport is None and (allowed_modes is None or "ferry" in allowed_modes):
         ferry_transport = ferry_transport_between_airports(
-            db, plan[-1].get("iata"), starting_airport_iata
+            db, return_origin, starting_airport_iata
         )
         if ferry_transport:
             return_transport = ferry_transport
