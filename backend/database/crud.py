@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 import bcrypt
 import re
 import secrets
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, cast
 from . import models, schemas
 from .airport_city import airport_name_as_city
 from .airport_regions import is_europe_country
@@ -321,11 +321,12 @@ def update_image(db: Session, image_id: int, image_update: schemas.ImageUpdate) 
     db_image = get_image(db, image_id)
     if not db_image:
         return None
+    image_row = cast(Any, db_image)
 
     update_data = image_update.model_dump(exclude_unset=True)
-    old_path = None
+    old_path: Optional[str] = None
     if "image_path" in update_data:
-        old_path = db_image.image_path
+        old_path = image_row.image_path
 
     for key, value in update_data.items():
         setattr(db_image, key, value)
@@ -333,7 +334,7 @@ def update_image(db: Session, image_id: int, image_update: schemas.ImageUpdate) 
     db.commit()
     db.refresh(db_image)
 
-    if old_path and old_path != db_image.image_path:
+    if old_path and old_path != image_row.image_path:
         delete_file_for_public_path(old_path)
 
     return db_image
@@ -345,7 +346,7 @@ def delete_image(db: Session, image_id: int) -> bool:
     if not db_image:
         return False
 
-    path = db_image.image_path
+    path = cast(Any, db_image).image_path
     db.delete(db_image)
     db.commit()
     delete_file_for_public_path(path)
@@ -414,21 +415,22 @@ def _upsert_airport_no_commit(db: Session, airport: schemas.AirportCreate) -> mo
         db.add(row)
         return row
 
+    airport_row = cast(Any, row)
     if icao is not None:
-        row.icao = icao
+        airport_row.icao = icao
     if airport.name is not None:
-        row.name = airport.name
+        airport_row.name = airport.name
     if airport.city is not None:
-        row.city = airport.city
+        airport_row.city = airport.city
     if country is not None:
-        row.country_code = country
+        airport_row.country_code = country
     if airport.latitude is not None:
-        row.latitude = airport.latitude
+        airport_row.latitude = airport.latitude
     if airport.longitude is not None:
-        row.longitude = airport.longitude
+        airport_row.longitude = airport.longitude
     if airport.timezone is not None:
-        row.timezone = airport.timezone
-    row.updated_at = _utcnow()
+        airport_row.timezone = airport.timezone
+    airport_row.updated_at = _utcnow()
     return row
 
 
@@ -457,7 +459,7 @@ def update_airport(db: Session, iata: str, airport_update: schemas.AirportUpdate
 
     for key, value in update_data.items():
         setattr(row, key, value)
-    row.updated_at = _utcnow()
+    cast(Any, row).updated_at = _utcnow()
 
     db.commit()
     db.refresh(row)
@@ -515,8 +517,9 @@ def _upsert_direct_route_no_commit(
         db.add(row)
         return row
 
-    row.is_active = is_active
-    row.updated_at = now
+    route_row = cast(Any, row)
+    route_row.is_active = is_active
+    route_row.updated_at = now
     return row
 
 
@@ -574,7 +577,15 @@ def sync_direct_routes_for_origin(
     Commits once. Returns active route count for this origin.
     """
     o = _norm_iata(origin_iata)
-    _upsert_airport_no_commit(db, schemas.AirportCreate(iata=o))
+    _upsert_airport_no_commit(
+        db,
+        schemas.AirportCreate(
+            iata=o,
+            icao=None,
+            country_code=None,
+            country=None,
+        ),
+    )
 
     seen: Set[str] = set()
     for dest in destinations:
@@ -587,7 +598,9 @@ def sync_direct_routes_for_origin(
             db,
             schemas.AirportCreate(
                 iata=d_iata,
+                icao=None,
                 city=dest.get("city"),
+                country_code=None,
                 country=country,
             ),
         )
@@ -635,10 +648,11 @@ def complete_route_refresh_run(
     run = db.query(models.RouteRefreshRun).filter(models.RouteRefreshRun.id == run_id).first()
     if not run:
         return None
-    run.finished_at = _utcnow()
-    run.success = success
-    run.routes_found = routes_found
-    run.error_message = error_message
+    run_row = cast(Any, run)
+    run_row.finished_at = _utcnow()
+    run_row.success = success
+    run_row.routes_found = routes_found
+    run_row.error_message = error_message
     db.commit()
     db.refresh(run)
     return run

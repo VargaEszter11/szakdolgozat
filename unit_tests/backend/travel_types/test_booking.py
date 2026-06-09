@@ -1,4 +1,5 @@
 from datetime import date
+from typing import cast
 
 import pytest
 
@@ -30,7 +31,7 @@ def test_people_count_returns_value():
 
 
 def test_people_count_defaults_to_one():
-    assert _people_count(None) == 1
+    assert _people_count(cast(int, None)) == 1
 
 
 def test_people_count_never_returns_less_than_one():
@@ -73,9 +74,9 @@ def test_booking_url_returns_none_for_invalid_date():
 
 
 class Route:
-    effective_from = None
-    effective_to = None
-    operating_days = []
+    effective_from: date | None = None
+    effective_to: date | None = None
+    operating_days: list = []
 
 
 def test_route_operates_on_date_with_no_operating_days():

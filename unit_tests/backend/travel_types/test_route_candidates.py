@@ -29,12 +29,12 @@ from backend.travel_types.route_candidates import (
 class FakeAirport:
     def __init__(
         self,
-        iata="BUD",
-        name="Budapest Airport",
-        city="Budapest",
-        country_code="HU",
-        latitude=47.439,
-        longitude=19.261,
+        iata: str = "BUD",
+        name: str = "Budapest Airport",
+        city: str | None = "Budapest",
+        country_code: str | None = "HU",
+        latitude: float | None = 47.439,
+        longitude: float | None = 19.261,
     ):
         self.iata = iata
         self.name = name

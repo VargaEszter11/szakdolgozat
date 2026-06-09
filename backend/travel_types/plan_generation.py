@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -176,8 +176,8 @@ async def generate_plan_with_location(
     draft_plan_func,
     *args,
     starting_point: str,
-    start_date: str = None,
-    end_date: str = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     people: int = 1,
     travel_length: int,
     db: Optional[Session] = None,
@@ -208,7 +208,8 @@ async def generate_plan_with_location(
         end_date=end_date,
         travel_length=travel_length,
     )
-    clean_plan_city_names(draft_plan, db)
+    if db is not None:
+        clean_plan_city_names(draft_plan, db)
     apply_people_to_booking_links(draft_plan, people)
     return {
         "draft_plan": normalize_planner_response(draft_plan),
@@ -243,8 +244,10 @@ def clean_plan_city_names(plan: dict, db: Session) -> None:
             if not iata:
                 continue
             airport = db.query(models.Airport).filter(models.Airport.iata == iata).first()
-            if airport and airport.city:
-                stop["city"] = airport.city
+            if airport is not None:
+                airport_row = cast(Any, airport)
+                if airport_row.city:
+                    stop["city"] = airport_row.city
 
 
 def parse_planner_json(raw: str) -> dict:
@@ -259,7 +262,13 @@ def parse_planner_json(raw: str) -> dict:
         return {"raw": raw}
 
 
-def set_requested_dates(plan: dict, *, start_date: str, end_date: str, travel_length: int) -> dict:
+def set_requested_dates(
+    plan: dict,
+    *,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    travel_length: int,
+) -> dict:
     if "trips" in plan:
         for trip in plan.get("trips", []):
             trip["startDate"] = start_date

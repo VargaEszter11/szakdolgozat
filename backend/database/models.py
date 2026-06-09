@@ -18,6 +18,8 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import relationship
+from typing import Any, cast
+
 from .database import Base
 
 
@@ -150,7 +152,6 @@ class Airport(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    # Relationships
     outgoing_routes = relationship(
         "DirectRoute",
         foreign_keys="DirectRoute.origin_iata",
@@ -167,11 +168,11 @@ class Airport(Base):
     @property
     def country(self) -> str | None:
         """Compatibility for older cache code that still reads airport.country."""
-        return self.country_code
+        return cast(str | None, self.country_code)
 
     @country.setter
     def country(self, value: str | None) -> None:
-        self.country_code = value
+        cast(Any, self).country_code = value
 
 
 class DirectRoute(Base):
@@ -220,7 +221,6 @@ class DirectRoute(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    # Relationships
     airline = relationship("Airline", back_populates="routes")
     origin = relationship("Airport", foreign_keys=[origin_iata], back_populates="outgoing_routes")
     destination = relationship("Airport", foreign_keys=[destination_iata], back_populates="incoming_routes")

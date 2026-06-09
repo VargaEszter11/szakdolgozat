@@ -1,4 +1,6 @@
 import pytest
+from sqlalchemy.orm import Session
+from typing import Any, cast
 
 from backend.utils.nearest_airport import calculate_distance_km, nearest_airport
 
@@ -6,13 +8,13 @@ from backend.utils.nearest_airport import calculate_distance_km, nearest_airport
 class FakeAirport:
     def __init__(
         self,
-        name="Budapest Airport",
-        iata="BUD",
-        icao="LHBP",
-        city="Budapest",
-        country_code="HU",
-        latitude=47.439,
-        longitude=19.261,
+        name: str = "Budapest Airport",
+        iata: str = "BUD",
+        icao: str = "LHBP",
+        city: str = "Budapest",
+        country_code: str = "HU",
+        latitude: Any = 47.439,
+        longitude: Any = 19.261,
     ):
         self.name = name
         self.iata = iata
@@ -48,6 +50,10 @@ class FakeDB:
         return FakeQuery(self.airports)
 
 
+def fake_session(airports) -> Session:
+    return cast(Session, FakeDB(airports))
+
+
 def test_calculate_distance_km_same_point_is_zero():
     distance = calculate_distance_km(47.4979, 19.0402, 47.4979, 19.0402)
 
@@ -74,7 +80,7 @@ async def test_nearest_airport_returns_none_without_db():
 
 @pytest.mark.asyncio
 async def test_nearest_airport_returns_none_for_invalid_coordinates():
-    db = FakeDB([FakeAirport()])
+    db = fake_session([FakeAirport()])
 
     result = await nearest_airport("bad-lat", 19.0402, db=db)
 
@@ -83,7 +89,7 @@ async def test_nearest_airport_returns_none_for_invalid_coordinates():
 
 @pytest.mark.asyncio
 async def test_nearest_airport_returns_none_when_no_airports_exist():
-    db = FakeDB([])
+    db = fake_session([])
 
     result = await nearest_airport(47.4979, 19.0402, db=db)
 
@@ -112,7 +118,7 @@ async def test_nearest_airport_returns_closest_airport():
         longitude=16.5697,
     )
 
-    db = FakeDB([vienna_airport, budapest_airport])
+    db = fake_session([vienna_airport, budapest_airport])
 
     result = await nearest_airport(47.4979, 19.0402, db=db)
 
@@ -142,10 +148,11 @@ async def test_nearest_airport_skips_airports_with_invalid_coordinates():
         longitude=19.261,
     )
 
-    db = FakeDB([invalid_airport, valid_airport])
+    db = fake_session([invalid_airport, valid_airport])
 
     result = await nearest_airport(47.4979, 19.0402, db=db)
 
+    assert result is not None
     assert result["iata"] == "BUD"
 
 
@@ -158,7 +165,7 @@ async def test_nearest_airport_returns_none_when_all_airport_coordinates_are_inv
         longitude=19.0,
     )
 
-    db = FakeDB([invalid_airport])
+    db = fake_session([invalid_airport])
 
     result = await nearest_airport(47.4979, 19.0402, db=db)
 
@@ -177,7 +184,7 @@ async def test_distance_km_limit_does_not_prevent_returning_airport():
         longitude=16.5697,
     )
 
-    db = FakeDB([vienna_airport])
+    db = fake_session([vienna_airport])
 
     result = await nearest_airport(
         47.4979,
@@ -186,5 +193,6 @@ async def test_distance_km_limit_does_not_prevent_returning_airport():
         distance_km=1,
     )
 
+    assert result is not None
     assert result["iata"] == "VIE"
     assert result["distance_km"] > 1

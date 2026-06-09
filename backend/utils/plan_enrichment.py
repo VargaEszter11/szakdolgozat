@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict, Optional
+from typing import Any
 
 
-def normalize_planner_response(plan: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def normalize_planner_response(plan: Any) -> Any:
     """Random-mode LLM output uses a ``trips`` array; the UI expects one object with ``plan``."""
     if not plan or not isinstance(plan, dict):
         return plan

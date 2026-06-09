@@ -277,7 +277,7 @@ def europe_candidates(candidates: List[dict]) -> List[dict]:
 def dedupe_candidates(candidates: List[dict]) -> List[dict]:
     out = []
     seen_iatas: set[str] = set()
-    seen_places: set[tuple[str, str]] = set()
+    seen_places: set[tuple[str, str, str]] = set()
     for candidate in candidates:
         iata = _iata(candidate.get("iata"))
         city = (candidate.get("city") or "").strip().lower()
@@ -304,9 +304,11 @@ def annotate_distances(db, origin_iata: str, candidates: List[dict]) -> List[dic
     for candidate in candidates:
         item = dict(candidate)
         if item.get("distance_km") is None:
-            distance = airport_distance(db, origin_iata, item.get("iata"))
-            if distance is not None:
-                item["distance_km"] = round(distance, 1)
+            destination_iata = _iata(item.get("iata"))
+            if destination_iata:
+                distance = airport_distance(db, origin_iata, destination_iata)
+                if distance is not None:
+                    item["distance_km"] = round(distance, 1)
         out.append(item)
     return out
 

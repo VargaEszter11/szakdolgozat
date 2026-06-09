@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 
 from database import crud, schemas, get_db, models
 
@@ -13,7 +13,7 @@ def _cover_image_url(place: models.VisitedPlace) -> Optional[str]:
     if imgs:
         first = sorted(imgs, key=lambda im: im.id)[0]
         return first.image_path
-    return place.photo_path
+    return cast(str | None, place.photo_path)
 
 
 @router.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
@@ -63,7 +63,7 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(ge
     # Check if username is being changed and if it already exists
     if user.username:
         existing_user = crud.get_user_by_username(db, username=user.username)
-        if existing_user and existing_user.id != user_id:
+        if existing_user is not None and cast(Any, existing_user).id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Username already taken"
@@ -72,7 +72,7 @@ def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(ge
     # Check if email is being changed and if it already exists
     if user.email:
         existing_user = crud.get_user_by_email(db, email=user.email)
-        if existing_user and existing_user.id != user_id:
+        if existing_user is not None and cast(Any, existing_user).id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"

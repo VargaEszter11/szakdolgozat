@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import crud, schemas, get_db
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from typing import Any, cast
 import os
 
 router = APIRouter()
@@ -55,9 +56,10 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password"
         )
+    user_row = cast(Any, user)
     
     # Verify password
-    if not crud.verify_password(request.password, user.password):
+    if not crud.verify_password(request.password, user_row.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password"
@@ -65,8 +67,8 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     
     return schemas.LoginResponse(
         success=True,
-        user_id=user.id,
-        username=user.username,
+        user_id=user_row.id,
+        username=user_row.username,
     )
 
 
@@ -113,11 +115,12 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
             email=email,
             display_name=id_info.get("name"),
         )
+    user_row = cast(Any, user)
 
     return schemas.LoginResponse(
         success=True,
-        user_id=user.id,
-        username=user.username,
+        user_id=user_row.id,
+        username=user_row.username,
     )
 
 
@@ -133,19 +136,25 @@ def google_config():
 def forgot_password_verify(request: schemas.ForgotPasswordVerifyRequest, db: Session = Depends(get_db)):
     """Verify username + email combination for password reset"""
     user = crud.get_user_by_username(db, username=request.username)
-    if not user or user.email != request.email:
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with that username and email combination"
+        )
+    user_row = cast(Any, user)
+    if user_row.email != request.email:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No account found with that username and email combination"
         )
 
-    return schemas.ForgotPasswordVerifyResponse(success=True, user_id=user.id)
+    return schemas.ForgotPasswordVerifyResponse(success=True, user_id=user_row.id)
 
 
 @router.post("/forgot-password/reset", response_model=schemas.ForgotPasswordResetResponse)
 def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Session = Depends(get_db)):
     """Reset password for a verified user"""
-    user_update = schemas.UserUpdate(password=request.new_password)
+    user_update = schemas.UserUpdate(username=None, password=request.new_password)
     updated_user = crud.update_user(db, user_id=request.user_id, user_update=user_update)
     if not updated_user:
         raise HTTPException(

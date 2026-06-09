@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Optional
+from typing import Any, Optional, cast
 
 from sqlalchemy.orm import Session
 
@@ -56,12 +56,13 @@ async def nearest_airport(lat, lng, db: Optional[Session] = None, distance_km: O
     closest = None
     closest_distance = None
     for airport in airports:
+        airport_row = cast(Any, airport)
         try:
             distance = calculate_distance_km(
                 origin_lat,
                 origin_lng,
-                float(airport.latitude),
-                float(airport.longitude),
+                float(airport_row.latitude),
+                float(airport_row.longitude),
             )
         except (TypeError, ValueError):
             continue
@@ -82,20 +83,21 @@ async def nearest_airport(lat, lng, db: Optional[Session] = None, distance_km: O
 
     logger.info(
         "Closest airport found: %s (%s, %s) %.2f km from %.6f, %.6f",
-        closest.iata,
-        closest.city or "unknown city",
-        closest.country_code or "unknown country",
+        cast(Any, closest).iata,
+        cast(Any, closest).city or "unknown city",
+        cast(Any, closest).country_code or "unknown country",
         closest_distance,
         origin_lat,
         origin_lng,
     )
 
+    closest_row = cast(Any, closest)
     return {
-        "name": closest.name,
-        "iata": closest.iata,
-        "icao": closest.icao,
-        "city": closest.city,
-        "country": closest.country_code,
+        "name": closest_row.name,
+        "iata": closest_row.iata,
+        "icao": closest_row.icao,
+        "city": closest_row.city,
+        "country": closest_row.country_code,
         "distance_km": round(closest_distance, 2),
     }
 

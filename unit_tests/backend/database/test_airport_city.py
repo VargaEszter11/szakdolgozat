@@ -1,36 +1,120 @@
+import pytest
+
 from database.airport_city import airport_name_as_city
 
 
-def test_airport_name_as_city_removes_common_facility_suffixes():
-    assert airport_name_as_city("Tirana International Airport Nene Tereza", "TIA") == "Tirana"
-    assert airport_name_as_city("Andorra la Vella Heliport", "ALV") == "Andorra la Vella"
-    assert airport_name_as_city("Flugplatz Wiener Neustadt/Ost", "QEW") == "Wiener Neustadt"
+@pytest.mark.parametrize(
+    ("iata", "expected"),
+    [
+        ("BUD", "Budapest"),
+        ("bud", "Budapest"),
+        ("PRG", "Prague"),
+        ("TXL", "Berlin"),
+        ("WMI", "Warsaw"),
+    ],
+)
+def test_iata_overrides_take_precedence(iata, expected):
+    assert airport_name_as_city("Completely Different Name", iata) == expected
 
 
-def test_airport_name_as_city_cleans_ground_station_labels():
-    assert airport_name_as_city("Aachen Bf West Bus Station", "AAW") == "Aachen Bf West"
-    assert airport_name_as_city("Cologne central station", "QKL") == "Cologne"
-    assert airport_name_as_city("Rostock Hauptbahnhof", "RTK") == "Rostock"
+def test_empty_name_returns_code():
+    assert airport_name_as_city(None, "BUD") == "Budapest"
+    assert airport_name_as_city(None, "ABC") == "ABC"
 
 
-def test_airport_name_as_city_uses_overrides_for_named_airports():
-    assert airport_name_as_city("Estacion de Autobuses Benidorm", "BBF") == "Benidorm"
-    assert airport_name_as_city("George Best Belfast City Airport", "BHD") == "Belfast"
-    assert airport_name_as_city("Bologna Guglielmo Marconi Airport", "BLQ") == "Bologna"
-    assert airport_name_as_city("Budapest Ferenc Liszt International Airport", "BUD") == "Budapest"
-    assert airport_name_as_city("Helsinki-Malmi Airport", "HEM") == "Helsinki"
-    assert airport_name_as_city("Helsinki-Vantaa Airport", "HEL") == "Helsinki"
-    assert airport_name_as_city("Haskovo Malevo Airport", "HKV") == "Haskovo"
-    assert airport_name_as_city("Gdansk Lech Walesa Airport", "GDN") == "Gdansk"
-    assert airport_name_as_city("Prague Vaclav Havel Airport", "PRG") == "Prague"
-    assert airport_name_as_city("John Paul II International Airport Krakow-Balice", "KRK") == "Krakow"
-    assert airport_name_as_city("Lyon-Saint Exupery Airport", "LYS") == "Lyon"
-    assert airport_name_as_city("Mannheim City Airport", "MHG") == "Mannheim"
-    assert airport_name_as_city("Federico Garcia Lorca Airport", "GRX") == "Granada"
-    assert airport_name_as_city("Henri Coanda International Airport", "OTP") == "Bucharest"
-    assert airport_name_as_city("Falcone-Borsellino Airport", "PMO") == "Palermo"
-    assert airport_name_as_city("Targovishte Bukhovtsi Airport", "TGV") == "Targovishte"
+def test_empty_name_and_code_returns_empty_string():
+    assert airport_name_as_city(None, None) == ""
+    assert airport_name_as_city("", "") == ""
 
 
-def test_airport_name_as_city_keeps_iata_when_no_real_name_exists():
-    assert airport_name_as_city("DXB", "DXB") == "DXB"
+def test_label_equal_to_code_returns_code():
+    assert airport_name_as_city("ABC", "ABC") == "ABC"
+    assert airport_name_as_city("abc", "ABC") == "ABC"
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("London Heathrow Airport", "London Heathrow"),
+        ("Paris Charles de Gaulle Airport", "Paris Charles de Gaulle"),
+        ("Madrid-Barajas Airport", "Madrid-Barajas"),
+        ("Oslo Lufthavn", "Oslo"),
+        ("Berlin Flughafen Brandenburg", "Berlin"),
+        ("Springfield Airfield", "Springfield"),
+    ],
+)
+def test_facility_words_are_removed(name, expected):
+    assert airport_name_as_city(name, None) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("Paris Central Station", "Paris"),
+        ("Berlin Hauptbahnhof", "Berlin"),
+        ("Lyon SNCF Station", "Lyon"),
+        ("Avignon TGV Station", "Avignon"),
+        ("Rome Railway Station", "Rome"),
+    ],
+)
+def test_transport_words_and_following_text_are_removed(name, expected):
+    assert airport_name_as_city(name, None) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("Nice International Airport", "Nice"),
+        ("Austin Municipal Airport", "Austin"),
+        ("Belfast City Regional Airport", "Belfast City"),
+        ("Capital National Airport", "Capital"),
+        ("Springfield Public Airport", "Springfield"),
+    ],
+)
+def test_descriptive_words_are_removed(name, expected):
+    assert airport_name_as_city(name, None) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("Rome/Fiumicino Airport", "Rome"),
+        ("Bergamo - Orio al Serio Airport", "Bergamo"),
+        ("Bristol / Bath", "Bristol"),
+        ("Belfast - City", "Belfast"),
+    ],
+)
+def test_first_place_part_is_used(name, expected):
+    assert airport_name_as_city(name, None) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("Budapest Airport (Terminal 2)", "Budapest"),
+        ("John F. Kennedy Airport (JFK)", "John F. Kennedy"),
+        ('Paris Airport "Charles de Gaulle"', "Paris"),
+        ("Rome Airport 'Leonardo da Vinci'", "Rome"),
+    ],
+)
+def test_parentheses_and_quoted_suffixes_are_removed(name, expected):
+    assert airport_name_as_city(name, None) == expected
+
+
+def test_facility_word_uses_text_after_if_before_is_empty():
+    assert airport_name_as_city("Airport Split", None) == "Split"
+
+
+def test_whitespace_is_normalized():
+    assert airport_name_as_city(
+        "  New   York   International   Airport  ",
+        None,
+    ) == "New York"
+
+
+def test_result_falls_back_to_code_if_label_becomes_empty():
+    assert airport_name_as_city("International Airport", "XYZ") == "XYZ"
+
+
+def test_result_can_be_empty_without_code():
+    assert airport_name_as_city("International Airport", None) == ""

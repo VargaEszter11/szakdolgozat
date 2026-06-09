@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from .common import (
     destination_label,
@@ -20,16 +20,18 @@ async def generate_travel_plan_visited(
     travelLength: int,
     preferences: List[str],
     visitedPlaces: List[str],
-    direct_destinations: List[dict] = None,
-    start_date: str = None,
-    end_date: str = None,
+    direct_destinations: Optional[List[dict]] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     language: str = "en",
     llm_provider: str = "deepseek",
-    starting_airport_iata: str = None,
-    extra_places: List[str] = None,
+    starting_airport_iata: Optional[str] = None,
+    extra_places: Optional[List[str]] = None,
     preferredTransport: str = "allModes",
 ) -> str:
     """Generate a travel plan from requested visited places."""
+    start_date_value = start_date or ""
+    end_date_value = end_date or ""
     requested_places = merge_place_lists(visitedPlaces, extra_places)
     if starting_airport_iata:
         return await run_db_planner(
@@ -38,8 +40,8 @@ async def generate_travel_plan_visited(
             starting_airport_iata=starting_airport_iata,
             travel_length=travelLength,
             preferences=preferences,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=start_date_value,
+            end_date=end_date_value,
             language=language,
             llm_provider=llm_provider,
             visited_places=requested_places,
@@ -52,15 +54,15 @@ async def generate_travel_plan_visited(
     available_places = _matching_destinations(direct_destinations or [], requested_places)
     prompt = (
         f"{system_travel_planner(lang_name)}"
-        f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
+        f"{user_trip_header(startingPoint, start_date_value, end_date_value, travelLength, preferences)}"
         f"{places_context_block(requested_places=requested_places, extra_places=extra_places)}"
         f"Available airport-linked destinations:\n{destinations_text(available_places)}\n\n"
         "Constraint:\nONLY choose destinations from this list:\n"
         f"{requested_places}\n\n"
         "TASK:\nGenerate a realistic draft itinerary.\n"
-        f"The trip must start on {start_date} and end on {end_date}.\n"
-        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- Use cities from the available destinations list above.', '- Choose geographically reasonable routes and prefer train/bus when practical.'))}"
-        f"{output_json_single_trip_schema(start_date, end_date, 'visited')}"
+        f"The trip must start on {start_date_value} and end on {end_date_value}.\n"
+        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date_value, end_date=end_date_value, starting_point=startingPoint, extra_rule_lines=('- Use cities from the available destinations list above.', '- Choose geographically reasonable routes and prefer train/bus when practical.'))}"
+        f"{output_json_single_trip_schema(start_date_value, end_date_value, 'visited')}"
     )
     return await call_llm_api(prompt, llm_provider)
 

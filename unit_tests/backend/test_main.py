@@ -1,0 +1,61 @@
+import main
+from fastapi.testclient import TestClient
+from middleware.request_logging import RequestLoggingMiddleware
+
+
+client = TestClient(main.app)
+
+def test_app_is_created():
+    assert main.app is not None
+
+def test_root_redirects_to_frontend():
+    response = client.get("/", follow_redirects=False)
+
+    assert response.status_code in (301, 302, 307, 308)
+    assert "location" in response.headers
+    assert "/pages/main_page.html" in response.headers["location"]
+
+def test_routers_are_attached():
+    routes = [path for route in main.app.routes if isinstance(path := getattr(route, "path", None), str)]
+
+    assert any("/api" in route for route in routes)
+
+
+def test_expected_route_groups_exist():
+    route_strings = [str(route) for route in main.app.routes]
+
+    assert any("auth" in r for r in route_strings)
+    assert any("users" in r for r in route_strings)
+    assert any("planned_trips" in r for r in route_strings)
+    assert any("stops" in r or "trip_stops" in r for r in route_strings)
+    assert any("places" in r or "visited" in r for r in route_strings)
+
+def test_request_logging_middleware_is_registered():
+    middleware_classes = [m.cls for m in main.app.user_middleware]
+
+    assert RequestLoggingMiddleware in middleware_classes
+
+def test_static_mounts_exist():
+    mount_paths = []
+
+    for route in main.app.routes:
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            mount_paths.append(path)
+
+    assert "/uploads" in mount_paths
+    assert "/" in mount_paths
+
+def test_startup_event_exists():
+    assert hasattr(main, "startup_event")
+    assert callable(main.startup_event)
+
+def test_uploads_endpoint_accessible():
+    response = client.get("/uploads")
+
+    assert response.status_code in (200, 404, 405)
+
+def test_app_metadata():
+    assert main.app.title == "TravelApp API"
+    assert main.app.version == "1.0.0"
+    assert "travel planning" in main.app.description.lower()

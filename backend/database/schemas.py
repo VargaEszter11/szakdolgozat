@@ -274,9 +274,17 @@ class AirportBase(BaseModel):
     timezone: Optional[str] = None
 
 
-class AirportCreate(AirportBase):
+class AirportCreate(BaseModel):
     # Cache callers may only know the IATA code; CRUD fills name with the code.
+    iata: str = Field(..., min_length=3, max_length=3)
+    icao: Optional[str] = Field(None, min_length=4, max_length=4)
     name: Optional[str] = None
+    city: Optional[str] = None
+    country_code: Optional[str] = Field(None, min_length=2, max_length=2)
+    country: Optional[str] = Field(None, min_length=2, max_length=2)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    timezone: Optional[str] = None
 
 
 class AirportUpdate(BaseModel):

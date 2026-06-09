@@ -17,7 +17,7 @@ def seasonality_status(is_seasonal: Optional[bool]) -> str:
     return "unknown"
 
 
-def _people_count(people: int = 1) -> int:
+def _people_count(people: Optional[int] = 1) -> int:
     try:
         count = int(people)
     except (TypeError, ValueError):

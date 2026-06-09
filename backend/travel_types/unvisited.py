@@ -79,15 +79,18 @@ async def generate_travel_plan_unvisited(
     travelLength: int,
     preferences: List[str],
     forbidden_places: List[str],
-    direct_destinations: List[dict] = None,
-    start_date: str = None,
-    end_date: str = None,
+    direct_destinations: Optional[List[dict]] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     language: str = "en",
     llm_provider: str = "deepseek",
-    starting_airport_iata: str = None,
+    starting_airport_iata: Optional[str] = None,
     preferredTransport: str = "allModes",
 ) -> str:
     """Generate travel plan that avoids cities in ``forbidden_places`` (visited / excluded)."""
+    start_date_value = start_date or ""
+    end_date_value = end_date or ""
+
     if starting_airport_iata:
         return await run_db_planner(
             strategy="unvisited",
@@ -95,8 +98,8 @@ async def generate_travel_plan_unvisited(
             starting_airport_iata=starting_airport_iata,
             travel_length=travelLength,
             preferences=preferences,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=start_date_value,
+            end_date=end_date_value,
             language=language,
             llm_provider=llm_provider,
             visited_places=None,
@@ -120,16 +123,16 @@ async def generate_travel_plan_unvisited(
 
     prompt = (
         f"{system_travel_planner(lang_name)}"
-        f"{user_trip_header(startingPoint, start_date, end_date, travelLength, preferences)}"
+        f"{user_trip_header(startingPoint, start_date_value, end_date_value, travelLength, preferences)}"
         f"{places_context_block(forbidden_places=forbidden_places, extra_places=forbidden_places)}"
         "ALREADY VISITED (FORBIDDEN — do NOT include any of these cities):\n"
         f"{excluded_names}\n\n"
         "ALLOWED destinations (these are the ONLY cities you may use):\n"
         f"{destinations_info}\n\n"
         "TASK:\nGenerate a realistic draft itinerary using the ALLOWED cities as anchors. Prefer train/bus when practical; do not default to flights.\n"
-        f"The trip must start on {start_date} and end on {end_date}.\n"
+        f"The trip must start on {start_date_value} and end on {end_date_value}.\n"
         "NEVER include any city from the FORBIDDEN list. If a city appears in both lists, it is FORBIDDEN.\n"
-        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date, end_date=end_date, starting_point=startingPoint, extra_rule_lines=('- Pick cities ONLY from the ALLOWED destinations list — no exceptions.',))}"
-        f"{output_json_single_trip_schema(start_date, end_date, 'unvisited')}"
+        f"{itinerary_rules_standard(travel_length=travelLength, start_date=start_date_value, end_date=end_date_value, starting_point=startingPoint, extra_rule_lines=('- Pick cities ONLY from the ALLOWED destinations list — no exceptions.',))}"
+        f"{output_json_single_trip_schema(start_date_value, end_date_value, 'unvisited')}"
     )
     return await call_llm_api(prompt, llm_provider)

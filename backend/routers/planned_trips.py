@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 from datetime import date
 from database import crud, schemas, get_db
 from utils.coordinates import geocode_place
@@ -17,7 +17,7 @@ def _sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
         return
 
     existing = {
-        _place_key(place.place_name, place.country)
+        _place_key(cast(Any, place).place_name, cast(Any, place).country)
         for place in crud.get_user_visited_places(db, trip.user_id)
     }
     stops = sorted(trip.stops or [], key=lambda stop: stop.stop_order or 0)
@@ -41,6 +41,7 @@ def _sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
                 place_name=stop.place_name,
                 country=stop.country,
                 date=stop.arrival_date or trip.end_date,
+                rating=None,
                 latitude=stop.latitude,
                 longitude=stop.longitude,
             ),
