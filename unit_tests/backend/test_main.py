@@ -16,9 +16,9 @@ def test_root_redirects_to_frontend():
     assert "/pages/main_page.html" in response.headers["location"]
 
 def test_routers_are_attached():
-    routes = [path for route in main.app.routes if isinstance(path := getattr(route, "path", None), str)]
+    openapi_paths = main.app.openapi()["paths"]
 
-    assert any("/api" in route for route in routes)
+    assert any(path.startswith("/api/") for path in openapi_paths)
 
 
 def test_expected_route_groups_exist():

@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -14,17 +15,9 @@ from routers import users, planned_trips, trip_stops, visited_places, auth, rout
 from middleware.request_logging import RequestLoggingMiddleware
 from utils.console_logging import attach_api_loggers_to_console
 
-app = FastAPI(
-    title="TravelApp API",
-    description="API for travel planning and visited places tracking",
-    version="1.0.0"
-)
 
-attach_api_loggers_to_console()
-
-@app.on_event("startup")
 def startup_event():
-    """Create database tables on application startup"""
+    """Create database tables on application startup."""
     Base.metadata.create_all(bind=engine)
     # AirLabs route imports are intentionally manual. Do not call data importers here.
     from database.migrations import apply_startup_schema_patches
@@ -33,6 +26,22 @@ def startup_event():
     from utils.place_image_upload import ensure_place_images_dir
 
     ensure_place_images_dir()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    startup_event()
+    yield
+
+
+app = FastAPI(
+    title="TravelApp API",
+    description="API for travel planning and visited places tracking",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+attach_api_loggers_to_console()
 
 app.add_middleware(RequestLoggingMiddleware)
 
