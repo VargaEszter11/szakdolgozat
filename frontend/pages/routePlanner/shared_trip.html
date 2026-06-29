@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/visited-places.css">
+    <link rel="stylesheet" href="../../styles/planned-trips.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="icon" href="../../pictures/marker.png">
+    <title>Shared Trip – TravelApp</title>
+
+    <script src="../../scripts/utils/apiConfig.js"></script>
+    <script src="../../scripts/i18n/translations.js"></script>
+    <script src="../../scripts/i18n/i18n.js"></script>
+</head>
+
+<body class="shared-trip-body">
+    <main class="main-content planned-trips-page shared-trip-page">
+        <div class="main-page-home-content-inner">
+
+            <div class="main-page-home-content-header">
+                <div>
+                    <h1 class="main-page-home-title" id="sharedTripTitle" data-i18n="plannedTrips.sharedTripTitle">
+                        Shared itinerary
+                    </h1>
+                    <p class="muted" id="sharedTripSubtitle" data-i18n="plannedTrips.sharedTripReadOnly">
+                        Read-only shared trip
+                    </p>
+                </div>
+            </div>
+
+            <div id="sharedTripError" class="card empty-state hidden">
+                <p class="empty-state-text" id="sharedTripErrorText"></p>
+            </div>
+
+            <div id="sharedTripContent" class="shared-trip-view planned-trips-trip-popup hidden">
+                <div class="shared-trip-view-panel">
+                    <div class="trip-details-content">
+                        <div class="trip-details-info">
+                            <p><strong data-i18n="plannedTrips.editFieldStartDate">Start date</strong>: <span id="sharedStartDate"></span></p>
+                            <p><strong data-i18n="plannedTrips.editFieldEndDate">End date</strong>: <span id="sharedEndDate"></span></p>
+                            <p><strong data-i18n="plannedTrips.people">People</strong>: <span id="sharedPeople">1</span></p>
+                            <p id="sharedStartCityWrap" class="hidden">
+                                <strong data-i18n="plannedTrips.editFieldStartCity">Starting city</strong>:
+                                <span id="sharedStartCity"></span>
+                            </p>
+                        </div>
+
+                        <div id="sharedTripMapSection" class="trip-details-map-section hidden">
+                            <h3 class="trip-details-map-heading" data-i18n="plannedTrips.mapRouteHeading">Route map</h3>
+                            <div id="sharedTripMap" class="trip-details-map" role="img"></div>
+                            <p id="sharedTripMapNote" class="trip-details-map-note muted hidden"></p>
+                        </div>
+
+                        <h3 class="shared-trip-stops-heading">
+                            <span data-i18n="plannedTrips.tripStops">Trip stops</span>
+                            (<span id="sharedStopsCount">0</span>)
+                        </h3>
+                        <div class="trip-stops-list" id="sharedStopsList"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="../../scripts/routePlanner/sharedTrip.js" defer></script>
+</body>
+
+</html>

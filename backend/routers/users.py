@@ -51,9 +51,24 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/users", response_model=List[schemas.UserResponse])
-def list_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """List all users"""
-    users = crud.get_users(db, skip=skip, limit=limit)
+def list_users(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    exclude_user_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    """List or search users by username."""
+    if search or exclude_user_id is not None:
+        users = crud.search_users(
+            db,
+            search=search,
+            exclude_user_id=exclude_user_id,
+            skip=skip,
+            limit=min(limit, 100),
+        )
+    else:
+        users = crud.get_users(db, skip=skip, limit=limit)
     return users
 
 

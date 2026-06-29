@@ -54,6 +54,11 @@
                         </div>
                     </div>
 
+                    <section id="shareInboxSection" class="share-inbox-section hidden">
+                        <h2 class="share-inbox-title" data-i18n="plannedTrips.shareInboxTitle">Shared with you</h2>
+                        <div id="shareInbox" class="share-inbox-list" aria-live="polite"></div>
+                    </section>
+
                     <div id="tripCards" class="travel-logs-list" aria-live="polite">
                     </div>
 
@@ -163,6 +168,41 @@
                     <div class="trip-details-form-actions">
                         <button type="button" id="tripEditSaveBtn" class="btn-add" data-i18n="plannedTrips.editSave">Save</button>
                         <button type="button" id="tripEditCancelBtn" class="btn-cancel" data-i18n="plannedTrips.editCancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tripShareModalTemplate">
+        <div class="trip-details-modal-overlay planned-trips-trip-popup" id="tripShareModal" role="dialog"
+            aria-modal="true" aria-labelledby="tripShareTitle">
+            <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripShareModalBox">
+                <div class="trip-details-header planned-trips-trip-popup__header">
+                    <h2 id="tripShareTitle" class="trip-details-title" data-i18n="plannedTrips.shareTrip">Share trip</h2>
+                    <button type="button" class="trip-details-close" aria-label="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="trip-details-content">
+                    <div class="trip-share-section">
+                        <h3 data-i18n="plannedTrips.copyLink">Copy link</h3>
+                        <p class="muted" data-i18n="plannedTrips.copyLinkHint">Anyone with this link can view the itinerary (no login required).</p>
+                        <div class="trip-share-link-row">
+                            <input type="text" id="tripShareLinkInput" class="trip-details-text-input" readonly />
+                            <button type="button" id="tripShareCopyBtn" class="btn-add" data-i18n="plannedTrips.copyLink">Copy link</button>
+                        </div>
+                    </div>
+                    <div class="trip-share-section">
+                        <h3 data-i18n="plannedTrips.sendToUser">Send to user</h3>
+                        <label for="tripShareUserSearch" data-i18n="plannedTrips.searchUser">Search by username</label>
+                        <input type="text" id="tripShareUserSearch" class="trip-details-text-input" autocomplete="off" />
+                        <div id="tripShareUserResults" class="trip-share-user-results"></div>
+                        <button type="button" id="tripShareSendBtn" class="btn-add" disabled data-i18n="plannedTrips.sendToUser">Send to user</button>
                     </div>
                 </div>
             </div>

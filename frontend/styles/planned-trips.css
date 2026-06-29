@@ -543,3 +543,115 @@
     font-size: 0.9rem;
     line-height: 1.45;
 }
+
+.share-inbox-section {
+    margin-bottom: 1.5rem;
+}
+
+.share-inbox-title {
+    font-size: 1.15rem;
+    margin: 0 0 0.75rem;
+}
+
+.share-inbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.share-inbox-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, rgba(148, 163, 184, 0.35));
+    background: var(--card-bg, rgba(255, 255, 255, 0.04));
+}
+
+.share-inbox-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.trip-share-section {
+    margin-bottom: 1.5rem;
+}
+
+.trip-share-section h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.trip-share-link-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.trip-share-link-row input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.trip-share-user-results {
+    margin: 0.5rem 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.trip-share-user-option {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color, rgba(148, 163, 184, 0.35));
+    background: transparent;
+    cursor: pointer;
+}
+
+.trip-share-user-option.selected,
+.trip-share-user-option:hover {
+    border-color: var(--pt-popup-accent, #6366f1);
+}
+
+.shared-trip-body {
+    background: var(--color-page-bg);
+    color: var(--color-text);
+}
+
+.shared-trip-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.shared-trip-view {
+    width: 100%;
+}
+
+.shared-trip-view-panel {
+    background: var(--pt-popup-surface);
+    color: var(--pt-popup-text);
+    border-radius: 16px;
+    border: 1px solid var(--pt-popup-border);
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.shared-trip-view .trip-details-content {
+    padding: 1.5rem;
+}
+
+.shared-trip-stops-heading {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--pt-popup-text);
+}

@@ -88,6 +88,25 @@ def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[models.User]
     return db.query(models.User).offset(skip).limit(limit).all()
 
 
+def search_users(
+    db: Session,
+    *,
+    search: Optional[str] = None,
+    exclude_user_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 20,
+) -> List[models.User]:
+    """Search users by username substring."""
+    query = db.query(models.User)
+    if exclude_user_id is not None:
+        query = query.filter(models.User.id != exclude_user_id)
+    if search:
+        term = search.strip()
+        if term:
+            query = query.filter(models.User.username.ilike(f"%{term}%"))
+    return query.order_by(models.User.username).offset(skip).limit(limit).all()
+
+
 def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> Optional[models.User]:
     """Update a user's information"""
     db_user = get_user(db, user_id)
@@ -668,3 +687,236 @@ def get_route_refresh_runs_for_origin(
         .limit(limit)
         .all()
     )
+
+
+# ============= Trip Sharing CRUD =============
+
+def _utcnow_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _assert_trip_owner(trip: Optional[models.PlannedTrip], user_id: int) -> models.PlannedTrip:
+    if trip is None:
+        raise ValueError("trip_not_found")
+    trip_row = cast(Any, trip)
+    if int(trip_row.user_id) != int(user_id):
+        raise ValueError("not_owner")
+    return trip
+
+
+def share_url_for_token(share_token: str) -> str:
+    return f"/share?token={share_token}"
+
+
+def create_or_get_trip_share_link(
+    db: Session, trip_id: int, user_id: int
+) -> models.TripShareLink:
+    """Create or reuse an active public share link for a trip."""
+    trip = _assert_trip_owner(get_planned_trip(db, trip_id), user_id)
+
+    existing = (
+        db.query(models.TripShareLink)
+        .filter(
+            models.TripShareLink.trip_id == trip.id,
+            models.TripShareLink.is_active.is_(True),
+        )
+        .first()
+    )
+    if existing:
+        return existing
+
+    link = models.TripShareLink(
+        trip_id=trip.id,
+        created_by_user_id=user_id,
+        share_token=secrets.token_urlsafe(24),
+        is_active=True,
+    )
+    db.add(link)
+    db.commit()
+    db.refresh(link)
+    return link
+
+
+def revoke_trip_share_link(db: Session, trip_id: int, user_id: int) -> bool:
+    """Deactivate all active share links for a trip owned by the user."""
+    _assert_trip_owner(get_planned_trip(db, trip_id), user_id)
+    links = (
+        db.query(models.TripShareLink)
+        .filter(
+            models.TripShareLink.trip_id == trip_id,
+            models.TripShareLink.is_active.is_(True),
+        )
+        .all()
+    )
+    if not links:
+        return False
+    for link in links:
+        cast(Any, link).is_active = False
+    db.commit()
+    return True
+
+
+def get_active_share_link_by_token(
+    db: Session, token: str
+) -> Optional[models.TripShareLink]:
+    if not token or not token.strip():
+        return None
+    return (
+        db.query(models.TripShareLink)
+        .filter(
+            models.TripShareLink.share_token == token.strip(),
+            models.TripShareLink.is_active.is_(True),
+        )
+        .first()
+    )
+
+
+def copy_planned_trip_for_user(
+    db: Session,
+    source_trip: models.PlannedTrip,
+    recipient_user_id: int,
+    *,
+    title_prefix: str = "Shared: ",
+) -> models.PlannedTrip:
+    """Duplicate a planned trip and its stops for another user."""
+    source_row = cast(Any, source_trip)
+    title = str(source_row.title or "Trip")
+    if title_prefix and not title.startswith(title_prefix):
+        title = f"{title_prefix}{title}"
+
+    new_trip = models.PlannedTrip(
+        user_id=recipient_user_id,
+        title=title,
+        start_date=source_row.start_date,
+        end_date=source_row.end_date,
+        start_city=source_row.start_city,
+        people=source_row.people or 1,
+        is_booked=False,
+    )
+    db.add(new_trip)
+    db.flush()
+
+    for stop in get_trip_stops(db, int(source_row.id)):
+        stop_row = cast(Any, stop)
+        db.add(
+            models.PlannedTripStop(
+                trip_id=new_trip.id,
+                place_name=stop_row.place_name,
+                country=stop_row.country,
+                stop_order=stop_row.stop_order,
+                arrival_date=stop_row.arrival_date,
+                departure_date=stop_row.departure_date,
+                transport_from_last=stop_row.transport_from_last,
+                activities=stop_row.activities,
+                estimated_price=stop_row.estimated_price,
+                latitude=stop_row.latitude,
+                longitude=stop_row.longitude,
+                booking_url=stop_row.booking_url,
+                flight_availability_verified=stop_row.flight_availability_verified,
+            )
+        )
+
+    db.commit()
+    db.refresh(new_trip)
+    return new_trip
+
+
+def create_trip_share_invitation(
+    db: Session, trip_id: int, from_user_id: int, to_user_id: int
+) -> models.TripShareInvitation:
+    if from_user_id == to_user_id:
+        raise ValueError("cannot_share_with_self")
+
+    _assert_trip_owner(get_planned_trip(db, trip_id), from_user_id)
+
+    recipient = get_user(db, to_user_id)
+    if recipient is None:
+        raise ValueError("recipient_not_found")
+
+    pending = (
+        db.query(models.TripShareInvitation)
+        .filter(
+            models.TripShareInvitation.source_trip_id == trip_id,
+            models.TripShareInvitation.to_user_id == to_user_id,
+            models.TripShareInvitation.status == "pending",
+        )
+        .first()
+    )
+    if pending:
+        raise ValueError("invitation_already_pending")
+
+    invitation = models.TripShareInvitation(
+        source_trip_id=trip_id,
+        from_user_id=from_user_id,
+        to_user_id=to_user_id,
+        status="pending",
+    )
+    db.add(invitation)
+    db.commit()
+    db.refresh(invitation)
+    return invitation
+
+
+def get_trip_share_invitation(db: Session, invitation_id: int) -> Optional[models.TripShareInvitation]:
+    return (
+        db.query(models.TripShareInvitation)
+        .filter(models.TripShareInvitation.id == invitation_id)
+        .first()
+    )
+
+
+def list_trip_share_invitations_for_user(
+    db: Session, user_id: int, status: str = "pending"
+) -> List[models.TripShareInvitation]:
+    query = db.query(models.TripShareInvitation).filter(
+        models.TripShareInvitation.to_user_id == user_id
+    )
+    if status:
+        query = query.filter(models.TripShareInvitation.status == status)
+    return query.order_by(models.TripShareInvitation.created_at.desc()).all()
+
+
+def accept_trip_share_invitation(
+    db: Session, invitation_id: int, user_id: int
+) -> models.TripShareInvitation:
+    invitation = get_trip_share_invitation(db, invitation_id)
+    if invitation is None:
+        raise ValueError("invitation_not_found")
+
+    inv_row = cast(Any, invitation)
+    if int(inv_row.to_user_id) != int(user_id):
+        raise ValueError("not_recipient")
+    if inv_row.status != "pending":
+        raise ValueError("invitation_not_pending")
+
+    source_trip = get_planned_trip(db, int(inv_row.source_trip_id))
+    if source_trip is None:
+        raise ValueError("source_trip_not_found")
+
+    new_trip = copy_planned_trip_for_user(db, source_trip, user_id)
+    inv_row.status = "accepted"
+    inv_row.responded_at = _utcnow_naive()
+    inv_row.result_trip_id = new_trip.id
+    db.commit()
+    db.refresh(invitation)
+    return invitation
+
+
+def decline_trip_share_invitation(
+    db: Session, invitation_id: int, user_id: int
+) -> models.TripShareInvitation:
+    invitation = get_trip_share_invitation(db, invitation_id)
+    if invitation is None:
+        raise ValueError("invitation_not_found")
+
+    inv_row = cast(Any, invitation)
+    if int(inv_row.to_user_id) != int(user_id):
+        raise ValueError("not_recipient")
+    if inv_row.status != "pending":
+        raise ValueError("invitation_not_pending")
+
+    inv_row.status = "declined"
+    inv_row.responded_at = _utcnow_naive()
+    db.commit()
+    db.refresh(invitation)
+    return invitation

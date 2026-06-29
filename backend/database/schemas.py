@@ -197,6 +197,58 @@ class PlannedTripResponse(PlannedTripBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# ============= Trip Sharing Schemas =============
+
+class TripShareLinkRequest(BaseModel):
+    user_id: int
+
+
+class TripShareLinkResponse(BaseModel):
+    share_token: str
+    share_url: str
+
+
+class TripShareInvitationCreate(BaseModel):
+    from_user_id: int
+    to_user_id: int
+
+
+class TripShareInvitationAction(BaseModel):
+    user_id: int
+
+
+class TripShareSourceSummary(BaseModel):
+    id: int
+    title: str
+    start_date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
+    start_city: Optional[str] = None
+
+
+class TripShareInvitationResponse(BaseModel):
+    id: int
+    source_trip_id: int
+    from_user_id: int
+    to_user_id: int
+    status: str
+    created_at: dt.datetime
+    responded_at: Optional[dt.datetime] = None
+    result_trip_id: Optional[int] = None
+    from_username: Optional[str] = None
+    source_trip: Optional[TripShareSourceSummary] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SharedTripPublicResponse(BaseModel):
+    title: str
+    start_date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
+    start_city: Optional[str] = None
+    people: int = 1
+    stops: List[TripStopResponse] = []
+
+
 # ============= Extended User Response with Relations =============
 
 class UserWithRelationsResponse(UserResponse):

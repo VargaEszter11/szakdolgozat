@@ -84,6 +84,47 @@ class PlannedTripStop(Base):
     trip = relationship("PlannedTrip", back_populates="stops")
 
 
+class TripShareLink(Base):
+    """Public read-only share link for a planned trip."""
+    __tablename__ = "trip_share_links"
+    __table_args__ = (
+        Index("idx_trip_share_links_token", "share_token", unique=True),
+        Index("idx_trip_share_links_trip_active", "trip_id", "is_active"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    trip_id = Column(Integer, ForeignKey("planned_trips.id", ondelete="CASCADE"), nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    share_token = Column(Text, nullable=False, unique=True)
+    is_active = Column(Boolean, nullable=False, default=True, server_default="true")
+    created_at = Column(DateTime, server_default=func.now())
+
+    trip = relationship("PlannedTrip", foreign_keys=[trip_id])
+    created_by = relationship("User", foreign_keys=[created_by_user_id])
+
+
+class TripShareInvitation(Base):
+    """In-app trip share invitation (inbox accept/decline flow)."""
+    __tablename__ = "trip_share_invitations"
+    __table_args__ = (
+        Index("idx_trip_share_invitations_to_status", "to_user_id", "status"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_trip_id = Column(Integer, ForeignKey("planned_trips.id", ondelete="CASCADE"), nullable=False)
+    from_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    to_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    status = Column(Text, nullable=False, default="pending", server_default=text("'pending'"))
+    created_at = Column(DateTime, server_default=func.now())
+    responded_at = Column(DateTime, nullable=True)
+    result_trip_id = Column(Integer, ForeignKey("planned_trips.id", ondelete="SET NULL"), nullable=True)
+
+    source_trip = relationship("PlannedTrip", foreign_keys=[source_trip_id])
+    from_user = relationship("User", foreign_keys=[from_user_id])
+    to_user = relationship("User", foreign_keys=[to_user_id])
+    result_trip = relationship("PlannedTrip", foreign_keys=[result_trip_id])
+
+
 class VisitedPlace(Base):
     """Visited place model for places users have already visited"""
     __tablename__ = "visited_places"

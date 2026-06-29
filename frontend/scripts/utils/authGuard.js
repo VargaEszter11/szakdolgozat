@@ -1,7 +1,7 @@
 (function () {
     var userId = localStorage.getItem("user_id");
     var path = location.pathname;
-    var isPublicPage = /(loginPage|registerPage)\.html/.test(path);
+    var isPublicPage = /(loginPage|registerPage|shared_trip)\.html/.test(path);
 
     var scriptEl = document.currentScript;
     var src = scriptEl ? scriptEl.getAttribute("src") : "";

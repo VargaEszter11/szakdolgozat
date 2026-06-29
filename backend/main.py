@@ -8,10 +8,10 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 
 from database.database import engine, Base
-from routers import users, planned_trips, trip_stops, visited_places, auth, route_planner
+from routers import users, planned_trips, trip_stops, visited_places, auth, route_planner, trip_sharing
 from middleware.request_logging import RequestLoggingMiddleware
 from utils.console_logging import attach_api_loggers_to_console
 
@@ -59,6 +59,9 @@ app.include_router(planned_trips.router, prefix="/api", tags=["trips"])
 app.include_router(trip_stops.router, prefix="/api", tags=["stops"])
 app.include_router(visited_places.router, prefix="/api", tags=["places"])
 app.include_router(route_planner.router, tags=["planner"])
+app.include_router(trip_sharing.router, prefix="/api", tags=["sharing"])
+
+_frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
 
 @app.get("/")
@@ -66,9 +69,15 @@ async def root():
     return RedirectResponse(url="/pages/main_page.html")
 
 
+@app.get("/share")
+async def share_trip_page():
+    """Public entry point for shared trips (served by backend, not dependent on static mount path)."""
+    page = os.path.join(_frontend_dir, "pages", "routePlanner", "shared_trip.html")
+    return FileResponse(page)
+
+
 _uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
 os.makedirs(_uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
 
-_frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")

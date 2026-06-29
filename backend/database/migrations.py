@@ -229,5 +229,60 @@ def apply_startup_schema_patches() -> None:
                 )
             )
             conn.execute(text(f"DELETE FROM airports airport WHERE {non_europe_airport_condition('airport')}"))
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS trip_share_links (
+                        id SERIAL PRIMARY KEY,
+                        trip_id INTEGER NOT NULL REFERENCES planned_trips(id) ON DELETE CASCADE,
+                        created_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        share_token TEXT NOT NULL UNIQUE,
+                        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_trip_share_links_trip_active
+                    ON trip_share_links (trip_id, is_active)
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS trip_share_invitations (
+                        id SERIAL PRIMARY KEY,
+                        source_trip_id INTEGER NOT NULL REFERENCES planned_trips(id) ON DELETE CASCADE,
+                        from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        to_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        status TEXT NOT NULL DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        responded_at TIMESTAMP NULL,
+                        result_trip_id INTEGER NULL REFERENCES planned_trips(id) ON DELETE SET NULL
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_trip_share_invitations_to_status
+                    ON trip_share_invitations (to_user_id, status)
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE UNIQUE INDEX IF NOT EXISTS uniq_trip_share_invitation_pending
+                    ON trip_share_invitations (source_trip_id, to_user_id)
+                    WHERE status = 'pending'
+                    """
+                )
+            )
     except SQLAlchemyError as exc:
         logger.warning("Could not apply startup schema patch: %s", exc)

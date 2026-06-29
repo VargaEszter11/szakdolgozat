@@ -57,7 +57,7 @@ def test_get_user_success(db):
 
 def test_list_users(db):
     with patch("routers.users.crud.get_users", return_value=[1, 2, 3]):
-        result = users_router.list_users(0, 10, db)
+        result = users_router.list_users(skip=0, limit=10, db=db)
 
     assert result == [1, 2, 3]
 
