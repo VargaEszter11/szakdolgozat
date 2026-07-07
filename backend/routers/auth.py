@@ -154,7 +154,7 @@ def forgot_password_verify(request: schemas.ForgotPasswordVerifyRequest, db: Ses
 @router.post("/forgot-password/reset", response_model=schemas.ForgotPasswordResetResponse)
 def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Session = Depends(get_db)):
     """Reset password for a verified user"""
-    user_update = schemas.UserUpdate(username=None, password=request.new_password)
+    user_update = schemas.UserUpdate(password=request.new_password)
     updated_user = crud.update_user(db, user_id=request.user_id, user_update=user_update)
     if not updated_user:
         raise HTTPException(
