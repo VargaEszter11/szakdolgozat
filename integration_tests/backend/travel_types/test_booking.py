@@ -6,7 +6,6 @@ from travel_types.booking import (
     direct_route_for_leg,
     flight_booking_details,
     refresh_booking_details,
-    route_operates_on_date,
 )
 
 
@@ -31,10 +30,6 @@ class TestBookingWithDatabase:
 
         assert missing is None
 
-    def test_route_operates_on_date_with_database_schedule(self, db, bud_fco_route):
-        assert route_operates_on_date(bud_fco_route, "2026-08-12") is True
-        assert route_operates_on_date(bud_fco_route, "2026-08-13") is False
-
     def test_flight_booking_details_from_database(self, db, bud_fco_route):
         details = flight_booking_details(
             db,
@@ -48,21 +43,11 @@ class TestBookingWithDatabase:
         assert details["destination_airport_iata"] == "FCO"
         assert details["airline_iata"] == "FR"
         assert details["seasonality_status"] == "year_round"
-        assert details["flight_availability_verified"] is True
+        assert details["flight_availability_verified"] is False
         assert "bud/fco/260812" in details["booking_url"]
         assert "adultsv2=2" in details["booking_url"]
 
-    def test_flight_booking_details_empty_when_route_not_operating(self, db, bud_fco_route):
-        details = flight_booking_details(
-            db,
-            origin="BUD",
-            destination="FCO",
-            departure_date="2026-08-13",
-        )
-
-        assert details == {}
-
-    def test_available_flight_candidates_filters_by_operating_days(self, db, bud_fco_route):
+    def test_available_flight_candidates_filters_by_existing_route(self, db, bud_fco_route):
         candidates = [
             {"iata": "FCO", "transport": "flight", "airline_iata": "FR"},
             {"iata": "VIE", "transport": "flight", "airline_iata": "FR"},
@@ -89,5 +74,5 @@ class TestBookingWithDatabase:
         assert stop["origin_airport_iata"] == "BUD"
         assert stop["destination_airport_iata"] == "FCO"
         assert stop["airline_iata"] == "FR"
-        assert stop["flight_availability_verified"] is True
+        assert stop["flight_availability_verified"] is False
         assert "booking_url" in stop

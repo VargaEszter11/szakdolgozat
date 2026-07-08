@@ -93,15 +93,7 @@ def route_operates_on_date(route, departure_date: str) -> bool:
     if route.effective_to and parsed_date > route.effective_to:
         return False
 
-    operating_days = list(route.operating_days or [])
-    if not operating_days:
-        return True
-
-    return any(day.weekday == parsed_date.isoweekday() for day in operating_days)
-
-
-def route_availability_verified(route) -> bool:
-    return bool(route and list(route.operating_days or []))
+    return True
 
 
 def available_flight_candidates(
@@ -154,7 +146,7 @@ def flight_booking_details(
             departure_date,
             people,
         ),
-        "flight_availability_verified": route_availability_verified(route),
+        "flight_availability_verified": False,
     }
 
 

@@ -218,7 +218,6 @@ def bud_fco_route(db, european_airports):
     )
     db.add(route)
     db.flush()
-    db.add(models.RouteDay(route_id=route.id, weekday=3))
     db.commit()
     db.refresh(route)
     return route

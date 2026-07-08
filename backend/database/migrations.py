@@ -45,6 +45,9 @@ def apply_startup_schema_patches() -> None:
                     """
                 )
             )
+            conn.execute(text("DROP TABLE IF EXISTS route_days"))
+            conn.execute(text("DROP TABLE IF EXISTS route_prices"))
+            conn.execute(text("DROP TABLE IF EXISTS route_refresh_runs"))
             conn.execute(
                 text(
                     """
@@ -77,32 +80,6 @@ def apply_startup_schema_patches() -> None:
                     DROP COLUMN IF EXISTS destination_airport_iata,
                     DROP COLUMN IF EXISTS airline_iata,
                     DROP COLUMN IF EXISTS airline_name
-                    """
-                )
-            )
-            conn.execute(
-                text(
-                    """
-                    DELETE FROM route_days rd
-                    USING direct_routes duplicate, direct_routes keep
-                    WHERE rd.route_id = duplicate.id
-                      AND COALESCE(duplicate.airline_iata, '') = COALESCE(keep.airline_iata, '')
-                      AND duplicate.origin_iata = keep.origin_iata
-                      AND duplicate.destination_iata = keep.destination_iata
-                      AND duplicate.id > keep.id
-                    """
-                )
-            )
-            conn.execute(
-                text(
-                    """
-                    DELETE FROM route_prices rp
-                    USING direct_routes duplicate, direct_routes keep
-                    WHERE rp.route_id = duplicate.id
-                      AND COALESCE(duplicate.airline_iata, '') = COALESCE(keep.airline_iata, '')
-                      AND duplicate.origin_iata = keep.origin_iata
-                      AND duplicate.destination_iata = keep.destination_iata
-                      AND duplicate.id > keep.id
                     """
                 )
             )
@@ -177,36 +154,6 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     f"""
-                    DELETE FROM route_days rd
-                    USING direct_routes route
-                    LEFT JOIN airports origin ON origin.iata = route.origin_iata
-                    LEFT JOIN airports destination ON destination.iata = route.destination_iata
-                    WHERE rd.route_id = route.id
-                      AND (
-                        {non_europe_airport_condition("origin")}
-                        OR {non_europe_airport_condition("destination")}
-                      )
-                    """
-                )
-            )
-            conn.execute(
-                text(
-                    f"""
-                    DELETE FROM route_prices rp
-                    USING direct_routes route
-                    LEFT JOIN airports origin ON origin.iata = route.origin_iata
-                    LEFT JOIN airports destination ON destination.iata = route.destination_iata
-                    WHERE rp.route_id = route.id
-                      AND (
-                        {non_europe_airport_condition("origin")}
-                        OR {non_europe_airport_condition("destination")}
-                      )
-                    """
-                )
-            )
-            conn.execute(
-                text(
-                    f"""
                     DELETE FROM direct_routes route
                     USING airports origin, airports destination
                     WHERE origin.iata = route.origin_iata
@@ -215,16 +162,6 @@ def apply_startup_schema_patches() -> None:
                         {non_europe_airport_condition("origin")}
                         OR {non_europe_airport_condition("destination")}
                       )
-                    """
-                )
-            )
-            conn.execute(
-                text(
-                    f"""
-                    DELETE FROM route_refresh_runs run
-                    USING airports airport
-                    WHERE airport.iata = run.origin_iata
-                      AND {non_europe_airport_condition("airport")}
                     """
                 )
             )

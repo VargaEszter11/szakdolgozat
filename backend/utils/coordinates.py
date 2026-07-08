@@ -1,5 +1,6 @@
 import os
 import httpx
+from fastapi import HTTPException
 from typing import Tuple
 
 # Nominatim requires a descriptive User-Agent (no generic library defaults). See:
@@ -22,8 +23,19 @@ async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, f
         "Accept": "application/json",
     }
     async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.get(url, params=params, headers=headers)
-        resp.raise_for_status()
+        try:
+            resp = await client.get(url, params=params, headers=headers)
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Geocoding service is rate-limited, please try again shortly.",
+                ) from exc
+            raise HTTPException(status_code=502, detail="Geocoding service error.") from exc
+        except httpx.RequestError as exc:
+            raise HTTPException(status_code=502, detail="Could not reach geocoding service.") from exc
+
         results = resp.json()
         if not results:
             raise ValueError(f"Place '{place_name}' not found online")
@@ -31,5 +43,5 @@ async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, f
         lon = float(results[0]["lon"])
 
         print(f"Geocoded '{place_name}' to coordinates: ({lat}, {lon})")
-        
+
         return lat, lon

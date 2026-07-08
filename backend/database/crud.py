@@ -648,45 +648,6 @@ def distinct_route_origins(db: Session) -> List[str]:
     return [r[0] for r in rows]
 
 
-def start_route_refresh_run(db: Session, origin_iata: str) -> models.RouteRefreshRun:
-    run = models.RouteRefreshRun(origin_iata=_norm_iata(origin_iata))
-    db.add(run)
-    db.commit()
-    db.refresh(run)
-    return run
-
-
-def complete_route_refresh_run(
-    db: Session,
-    run_id: int,
-    *,
-    success: bool,
-    routes_found: Optional[int] = None,
-    error_message: Optional[str] = None,
-) -> Optional[models.RouteRefreshRun]:
-    run = db.query(models.RouteRefreshRun).filter(models.RouteRefreshRun.id == run_id).first()
-    if not run:
-        return None
-    run_row = cast(Any, run)
-    run_row.finished_at = _utcnow()
-    run_row.success = success
-    run_row.routes_found = routes_found
-    run_row.error_message = error_message
-    db.commit()
-    db.refresh(run)
-    return run
-
-
-def get_route_refresh_runs_for_origin(
-    db: Session, origin_iata: str, limit: int = 50
-) -> List[models.RouteRefreshRun]:
-    return (
-        db.query(models.RouteRefreshRun)
-        .filter(models.RouteRefreshRun.origin_iata == _norm_iata(origin_iata))
-        .order_by(models.RouteRefreshRun.started_at.desc())
-        .limit(limit)
-        .all()
-    )
 
 
 # ============= Trip Sharing CRUD =============

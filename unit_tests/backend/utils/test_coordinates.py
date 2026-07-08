@@ -1,4 +1,6 @@
+import httpx
 import pytest
+from fastapi import HTTPException
 
 from backend.utils.coordinates import geocode_place
 
@@ -112,6 +114,39 @@ async def test_geocode_place_propagates_http_errors(monkeypatch):
 
     with pytest.raises(Exception, match="HTTP error"):
         await geocode_place("Budapest")
+
+@pytest.mark.asyncio
+async def test_geocode_place_raises_503_when_rate_limited(monkeypatch):
+    class RateLimitedResponse:
+        status_code = 429
+
+        def raise_for_status(self):
+            raise httpx.HTTPStatusError(
+                "429 Too Many Requests",
+                request=httpx.Request("GET", "https://nominatim.openstreetmap.org/search"),
+                response=httpx.Response(429, request=httpx.Request("GET", "https://nominatim.openstreetmap.org/search")),
+            )
+
+    class Client:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def get(self, *args, **kwargs):
+            return RateLimitedResponse()
+
+    monkeypatch.setattr(
+        "backend.utils.coordinates.httpx.AsyncClient",
+        lambda **kwargs: Client(),
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await geocode_place("Budapest")
+
+    assert exc_info.value.status_code == 503
+
 
 @pytest.mark.asyncio
 async def test_geocode_place_passes_language(monkeypatch):

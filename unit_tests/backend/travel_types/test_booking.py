@@ -76,10 +76,9 @@ def test_booking_url_returns_none_for_invalid_date():
 class Route:
     effective_from: date | None = None
     effective_to: date | None = None
-    operating_days: list = []
 
 
-def test_route_operates_on_date_with_no_operating_days():
+def test_route_operates_on_date_with_no_constraints():
     route = Route()
 
     assert route_operates_on_date(route, "2026-08-15") is True
@@ -137,7 +136,6 @@ def test_flight_booking_details(monkeypatch):
         is_seasonal = False
         effective_from = None
         effective_to = None
-        operating_days = []
 
     monkeypatch.setattr(
         "backend.travel_types.booking.direct_route_for_leg",

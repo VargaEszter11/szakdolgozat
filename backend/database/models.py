@@ -2,7 +2,6 @@ from sqlalchemy import (
     BigInteger,
     Column,
     Integer,
-    SmallInteger,
     String,
     Text,
     Date,
@@ -265,65 +264,3 @@ class DirectRoute(Base):
     airline = relationship("Airline", back_populates="routes")
     origin = relationship("Airport", foreign_keys=[origin_iata], back_populates="outgoing_routes")
     destination = relationship("Airport", foreign_keys=[destination_iata], back_populates="incoming_routes")
-    operating_days = relationship("RouteDay", back_populates="route", cascade="all, delete-orphan")
-    price_cache = relationship("RoutePrice", back_populates="route", cascade="all, delete-orphan")
-
-
-class RouteDay(Base):
-    """Operating weekday for a direct route (1=Monday, 7=Sunday)."""
-    __tablename__ = "route_days"
-    __table_args__ = (
-        CheckConstraint("weekday BETWEEN 1 AND 7", name="chk_weekday"),
-        Index("idx_route_days_weekday", "weekday"),
-    )
-
-    route_id = Column(
-        BigInteger,
-        ForeignKey("direct_routes.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    weekday = Column(SmallInteger, primary_key=True)
-
-    route = relationship("DirectRoute", back_populates="operating_days")
-
-
-class RoutePrice(Base):
-    """Cached provider price for a route/date pair."""
-    __tablename__ = "route_prices"
-    __table_args__ = (
-        Index("idx_route_prices_route", "route_id"),
-        Index("idx_route_prices_departure", "departure_date"),
-    )
-
-    id = Column(BigInteger, primary_key=True, index=True)
-    route_id = Column(
-        BigInteger,
-        ForeignKey("direct_routes.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    departure_date = Column(Date, nullable=False)
-    currency = Column(String(3), nullable=False)
-    price = Column(Numeric(10, 2), nullable=False)
-    booking_url = Column(Text, nullable=True)
-    provider = Column(Text, nullable=True)
-    fetched_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-
-    route = relationship("DirectRoute", back_populates="price_cache")
-
-
-class RouteRefreshRun(Base):
-    """Bookkeeping for the weekly direct-destinations refresh job."""
-    __tablename__ = "route_refresh_runs"
-
-    id = Column(Integer, primary_key=True, index=True)
-    origin_iata = Column(
-        String(3),
-        ForeignKey("airports.iata", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    started_at = Column(DateTime, server_default=func.now(), nullable=False)
-    finished_at = Column(DateTime, nullable=True)
-    routes_found = Column(Integer, nullable=True)
-    success = Column(Boolean, nullable=False, default=False)
-    error_message = Column(Text, nullable=True)
