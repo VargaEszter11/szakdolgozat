@@ -76,6 +76,13 @@ async def share_trip_page():
     return FileResponse(page)
 
 
+@app.get("/reset-password")
+async def reset_password_page():
+    """Public entry point for emailed password reset links."""
+    page = os.path.join(_frontend_dir, "pages", "loginRegister", "resetPassword.html")
+    return FileResponse(page)
+
+
 _uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
 os.makedirs(_uploads_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")

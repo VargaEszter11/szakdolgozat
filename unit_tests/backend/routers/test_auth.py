@@ -191,62 +191,73 @@ def test_google_config(mock_client_id):
     assert response.status_code == 200
     assert response.json()["client_id"] == "abc123"
 
-@patch("routers.auth.crud.get_user_by_username")
-def test_forgot_password_verify_success(mock_get_user):
-    mock_get_user.return_value = MagicMock(id=1, email="a@b.com")
+@patch("routers.auth.send_password_reset_email")
+@patch("routers.auth.crud.create_password_reset_token")
+@patch("routers.auth.crud.get_user_by_email")
+def test_forgot_password_request_known_email(mock_get_email, mock_create_token, mock_send_email):
+    mock_get_email.return_value = MagicMock(id=1, email="a@b.com")
+    mock_create_token.return_value = "raw-token"
 
     response = client.post(
-        "/api/forgot-password/verify",
-        json={
-            "username": "test",
-            "email": "a@b.com"
-        }
+        "/api/forgot-password/request",
+        json={"email": "a@b.com"}
     )
 
     assert response.status_code == 200
     assert response.json()["success"] is True
+    mock_create_token.assert_called_once()
+    mock_send_email.assert_called_once()
 
 
-@patch("routers.auth.crud.get_user_by_username")
-def test_forgot_password_verify_fail(mock_get_user):
-    mock_get_user.return_value = None
+@patch("routers.auth.send_password_reset_email")
+@patch("routers.auth.crud.create_password_reset_token")
+@patch("routers.auth.crud.get_user_by_email")
+def test_forgot_password_request_unknown_email_still_returns_generic_success(
+    mock_get_email, mock_create_token, mock_send_email
+):
+    mock_get_email.return_value = None
 
     response = client.post(
-        "/api/forgot-password/verify",
-        json={
-            "username": "test",
-            "email": "wrong@b.com"
-        }
+        "/api/forgot-password/request",
+        json={"email": "nobody@example.com"}
     )
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    mock_create_token.assert_not_called()
+    mock_send_email.assert_not_called()
 
+
+@patch("routers.auth.crud.consume_password_reset_token")
 @patch("routers.auth.crud.update_user")
-def test_forgot_password_reset_success(mock_update):
+@patch("routers.auth.crud.get_valid_password_reset_token")
+def test_forgot_password_reset_success(mock_get_token, mock_update, mock_consume):
+    mock_get_token.return_value = MagicMock(user_id=1)
     mock_update.return_value = MagicMock(id=1)
 
     response = client.post(
         "/api/forgot-password/reset",
         json={
-            "user_id": 1,
+            "token": "valid-token",
             "new_password": "newsecret"
         }
     )
 
     assert response.status_code == 200
     assert response.json()["success"] is True
+    mock_consume.assert_called_once()
 
 
-@patch("routers.auth.crud.update_user")
-def test_forgot_password_reset_user_not_found(mock_update):
-    mock_update.return_value = None
+@patch("routers.auth.crud.get_valid_password_reset_token")
+def test_forgot_password_reset_invalid_token(mock_get_token):
+    mock_get_token.return_value = None
 
     response = client.post(
         "/api/forgot-password/reset",
         json={
-            "user_id": 999,
+            "token": "bad-token",
             "new_password": "newsecret"
         }
     )
 
-    assert response.status_code == 404
+    assert response.status_code == 400

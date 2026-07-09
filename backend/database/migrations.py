@@ -221,5 +221,19 @@ def apply_startup_schema_patches() -> None:
                     """
                 )
             )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        token_hash TEXT NOT NULL UNIQUE,
+                        expires_at TIMESTAMP NOT NULL,
+                        used_at TIMESTAMP NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                    """
+                )
+            )
     except SQLAlchemyError as exc:
         logger.warning("Could not apply startup schema patch: %s", exc)

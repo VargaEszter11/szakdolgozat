@@ -58,18 +58,17 @@ class RegisterResponse(BaseModel):
     message: str
 
 
-class ForgotPasswordVerifyRequest(BaseModel):
-    username: str
+class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 
-class ForgotPasswordVerifyResponse(BaseModel):
+class ForgotPasswordRequestResponse(BaseModel):
     success: bool
-    user_id: int
+    message: str
 
 
 class ForgotPasswordResetRequest(BaseModel):
-    user_id: int
+    token: str
     new_password: str = Field(..., min_length=6)
 
 

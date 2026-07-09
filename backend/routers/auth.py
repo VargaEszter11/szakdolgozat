@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from database import crud, schemas, get_db
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from typing import Any, cast
+from utils.email import send_password_reset_email
 import os
 
 router = APIRouter()
@@ -11,6 +12,13 @@ router = APIRouter()
 
 def get_google_client_id() -> str:
     return os.getenv("GOOGLE_CLIENT_ID", "")
+
+
+def _public_base_url(request: Request) -> str:
+    override = os.getenv("PUBLIC_BASE_URL", "").strip()
+    if override:
+        return override.rstrip("/")
+    return str(request.base_url).rstrip("/")
 
 
 @router.post("/register", response_model=schemas.RegisterResponse)
@@ -132,34 +140,53 @@ def google_config():
     }
 
 
-@router.post("/forgot-password/verify", response_model=schemas.ForgotPasswordVerifyResponse)
-def forgot_password_verify(request: schemas.ForgotPasswordVerifyRequest, db: Session = Depends(get_db)):
-    """Verify username + email combination for password reset"""
-    user = crud.get_user_by_username(db, username=request.username)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No account found with that username and email combination"
-        )
-    user_row = cast(Any, user)
-    if user_row.email != request.email:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No account found with that username and email combination"
+_FORGOT_PASSWORD_GENERIC_MESSAGE = (
+    "If an account with that email exists, we've sent a password reset link to it."
+)
+
+
+@router.post("/forgot-password/request", response_model=schemas.ForgotPasswordRequestResponse)
+def forgot_password_request(
+    request: schemas.ForgotPasswordRequest, http_request: Request, db: Session = Depends(get_db)
+):
+    """Email a password reset link if the address belongs to an account.
+
+    Always responds with the same generic message regardless of whether the
+    email is registered, so this endpoint can't be used to enumerate accounts.
+    """
+    user = crud.get_user_by_email(db, email=request.email)
+    if user:
+        user_row = cast(Any, user)
+        raw_token = crud.create_password_reset_token(db, user_id=user_row.id)
+        reset_url = f"{_public_base_url(http_request)}/reset-password?token={raw_token}"
+        send_password_reset_email(
+            user_row.email, reset_url, crud.PASSWORD_RESET_TOKEN_TTL_MINUTES
         )
 
-    return schemas.ForgotPasswordVerifyResponse(success=True, user_id=user_row.id)
+    return schemas.ForgotPasswordRequestResponse(
+        success=True, message=_FORGOT_PASSWORD_GENERIC_MESSAGE
+    )
 
 
 @router.post("/forgot-password/reset", response_model=schemas.ForgotPasswordResetResponse)
 def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Session = Depends(get_db)):
-    """Reset password for a verified user"""
+    """Reset a password using a token issued by /forgot-password/request."""
+    token_row = crud.get_valid_password_reset_token(db, raw_token=request.token)
+    if not token_row:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This password reset link is invalid or has expired.",
+        )
+
+    token_row_data = cast(Any, token_row)
     user_update = schemas.UserUpdate(password=request.new_password)
-    updated_user = crud.update_user(db, user_id=request.user_id, user_update=user_update)
+    updated_user = crud.update_user(db, user_id=token_row_data.user_id, user_update=user_update)
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
+
+    crud.consume_password_reset_token(db, token_row)
 
     return schemas.ForgotPasswordResetResponse(success=True, message="Password reset successfully")

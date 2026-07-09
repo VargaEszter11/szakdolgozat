@@ -307,6 +307,35 @@ window.I18N_TRANSLATIONS = {
       register: 'Register',
       cancel: 'Cancel'
     },
+    forgotPassword: {
+      title: 'Reset Password',
+      description: "Enter your account's email and we'll send you a link to reset your password.",
+      emailPlaceholder: 'Your registered email',
+      send: 'Send reset link',
+      sending: 'Sending...',
+      cancel: 'Cancel',
+      checkEmailTitle: 'Check your email',
+      genericSuccessMessage: "If an account with that email exists, we've sent a password reset link to it.",
+      sendFailed: 'Could not send reset email.',
+      serverError: 'Server error. Please try again later.'
+    },
+    resetPassword: {
+      title: 'Set new password',
+      subtitle: 'Choose a new password for your account',
+      newPassword: 'New password *',
+      newPasswordPlaceholder: 'New password (min. 6 characters)',
+      confirmPassword: 'Confirm new password *',
+      confirmPasswordPlaceholder: 'Confirm new password',
+      submit: 'Reset password',
+      cancel: 'Cancel',
+      invalidLinkMessage: 'This password reset link is invalid or has expired. Please request a new one from the login page.',
+      backToLogin: 'Back to login',
+      passwordMismatch: 'Passwords do not match.',
+      passwordTooShort: 'Password must be at least 6 characters.',
+      resetFailed: 'Reset failed.',
+      serverError: 'Server error. Please try again later.',
+      successMessage: 'Your password has been reset. You can now log in.'
+    },
     map: { listView: 'List View' }
   },
   hu: {
@@ -617,6 +646,35 @@ window.I18N_TRANSLATIONS = {
       register: 'Regisztráció',
       cancel: 'Mégse'
     },
+    forgotPassword: {
+      title: 'Jelszó visszaállítása',
+      description: 'Add meg a fiókodhoz tartozó e-mail címet, és küldünk egy linket a jelszavad visszaállításához.',
+      emailPlaceholder: 'Regisztrált e-mail címed',
+      send: 'Link küldése',
+      sending: 'Küldés...',
+      cancel: 'Mégse',
+      checkEmailTitle: 'Nézd meg az e-mailjeidet',
+      genericSuccessMessage: 'Ha létezik fiók ezzel az e-mail címmel, elküldtük rá a jelszó-visszaállító linket.',
+      sendFailed: 'Nem sikerült elküldeni a visszaállító e-mailt.',
+      serverError: 'Szerverhiba történt. Kérjük, próbáld újra később.'
+    },
+    resetPassword: {
+      title: 'Új jelszó beállítása',
+      subtitle: 'Válassz új jelszót a fiókodhoz',
+      newPassword: 'Új jelszó *',
+      newPasswordPlaceholder: 'Új jelszó (min. 6 karakter)',
+      confirmPassword: 'Új jelszó megerősítése *',
+      confirmPasswordPlaceholder: 'Erősítsd meg az új jelszót',
+      submit: 'Jelszó visszaállítása',
+      cancel: 'Mégse',
+      invalidLinkMessage: 'Ez a jelszó-visszaállító link érvénytelen vagy lejárt. Kérj újat a bejelentkezési oldalon.',
+      backToLogin: 'Vissza a bejelentkezéshez',
+      passwordMismatch: 'A jelszavak nem egyeznek.',
+      passwordTooShort: 'A jelszónak legalább 6 karakter hosszúnak kell lennie.',
+      resetFailed: 'A visszaállítás sikertelen.',
+      serverError: 'Szerverhiba történt. Kérjük, próbáld újra később.',
+      successMessage: 'A jelszavad sikeresen megváltozott. Most már bejelentkezhetsz.'
+    },
     map: { listView: 'Lista nézet' }
   },
   de: {
@@ -926,6 +984,35 @@ window.I18N_TRANSLATIONS = {
       confirmPasswordPlaceholder: 'Passwort bestätigen',
       register: 'Registrieren',
       cancel: 'Abbrechen'
+    },
+    forgotPassword: {
+      title: 'Passwort zurücksetzen',
+      description: 'Gib die E-Mail-Adresse deines Kontos ein, wir senden dir einen Link zum Zurücksetzen des Passworts.',
+      emailPlaceholder: 'Deine registrierte E-Mail',
+      send: 'Link senden',
+      sending: 'Wird gesendet...',
+      cancel: 'Abbrechen',
+      checkEmailTitle: 'Prüfe deine E-Mails',
+      genericSuccessMessage: 'Falls ein Konto mit dieser E-Mail existiert, haben wir einen Link zum Zurücksetzen des Passworts gesendet.',
+      sendFailed: 'E-Mail zum Zurücksetzen konnte nicht gesendet werden.',
+      serverError: 'Serverfehler. Bitte versuche es später erneut.'
+    },
+    resetPassword: {
+      title: 'Neues Passwort festlegen',
+      subtitle: 'Wähle ein neues Passwort für dein Konto',
+      newPassword: 'Neues Passwort *',
+      newPasswordPlaceholder: 'Neues Passwort (mind. 6 Zeichen)',
+      confirmPassword: 'Neues Passwort bestätigen *',
+      confirmPasswordPlaceholder: 'Neues Passwort bestätigen',
+      submit: 'Passwort zurücksetzen',
+      cancel: 'Abbrechen',
+      invalidLinkMessage: 'Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Fordere einen neuen auf der Anmeldeseite an.',
+      backToLogin: 'Zurück zur Anmeldung',
+      passwordMismatch: 'Die Passwörter stimmen nicht überein.',
+      passwordTooShort: 'Das Passwort muss mindestens 6 Zeichen haben.',
+      resetFailed: 'Zurücksetzen fehlgeschlagen.',
+      serverError: 'Serverfehler. Bitte versuche es später erneut.',
+      successMessage: 'Dein Passwort wurde zurückgesetzt. Du kannst dich jetzt anmelden.'
     },
     map: { listView: 'Listenansicht' }
   }

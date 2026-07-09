@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session, joinedload
 import bcrypt
+import hashlib
 import re
 import secrets
 from typing import Any, Dict, List, Optional, Set, cast
@@ -132,10 +133,63 @@ def delete_user(db: Session, user_id: int) -> bool:
     db_user = get_user(db, user_id)
     if not db_user:
         return False
-    
+
     db.delete(db_user)
     db.commit()
     return True
+
+
+# ============= Password Reset Token CRUD Operations =============
+
+PASSWORD_RESET_TOKEN_TTL_MINUTES = 30
+
+
+def _hash_reset_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def create_password_reset_token(db: Session, user_id: int) -> str:
+    """Issue a single-use password reset token, invalidating any prior unused ones.
+
+    Returns the raw token; only this call ever sees it in plaintext (only its
+    hash is persisted), so it must be emailed to the user immediately.
+    """
+    db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.user_id == user_id,
+        models.PasswordResetToken.used_at.is_(None),
+    ).delete()
+
+    raw_token = secrets.token_urlsafe(32)
+    db_token = models.PasswordResetToken(
+        user_id=user_id,
+        token_hash=_hash_reset_token(raw_token),
+        expires_at=_utcnow_naive() + timedelta(minutes=PASSWORD_RESET_TOKEN_TTL_MINUTES),
+    )
+    db.add(db_token)
+    db.commit()
+    return raw_token
+
+
+def get_valid_password_reset_token(db: Session, raw_token: str) -> Optional[models.PasswordResetToken]:
+    """Look up an unused, unexpired password reset token by its raw value."""
+    token_row = (
+        db.query(models.PasswordResetToken)
+        .filter(models.PasswordResetToken.token_hash == _hash_reset_token(raw_token))
+        .first()
+    )
+    if not token_row:
+        return None
+    row = cast(Any, token_row)
+    if row.used_at is not None or row.expires_at < _utcnow_naive():
+        return None
+    return token_row
+
+
+def consume_password_reset_token(db: Session, token_row: models.PasswordResetToken) -> None:
+    """Mark a password reset token as used so it cannot be replayed."""
+    row = cast(Any, token_row)
+    row.used_at = _utcnow_naive()
+    db.commit()
 
 
 # ============= Planned Trip CRUD Operations =============

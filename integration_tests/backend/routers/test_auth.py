@@ -127,53 +127,46 @@ class TestGoogleAuth:
 
 
 class TestForgotPassword:
-    """Integration tests for password reset flow."""
+    """Integration tests for the email-based password reset flow."""
 
-    def test_forgot_password_verify_success(self, client, test_user):
-        response = client.post(
-            "/api/forgot-password/verify",
-            json={
-                "username": test_user["username"],
-                "email": test_user["email"],
-            },
-        )
+    @staticmethod
+    def _request_reset_token(client, email):
+        """Request a reset email and pull the raw token out of the mocked send call."""
+        with patch("routers.auth.send_password_reset_email") as mock_send:
+            response = client.post("/api/forgot-password/request", json={"email": email})
+        return response, mock_send
+
+    def test_forgot_password_request_known_email_sends_token(self, client, test_user):
+        response, mock_send = self._request_reset_token(client, test_user["email"])
 
         assert response.status_code == 200
-        data = response.json()
-        assert data["success"] is True
-        assert data["user_id"] == test_user["id"]
+        assert response.json()["success"] is True
+        mock_send.assert_called_once()
+        reset_url = mock_send.call_args.args[1]
+        assert "token=" in reset_url
 
-    def test_forgot_password_verify_wrong_email(self, client, test_user):
-        response = client.post(
-            "/api/forgot-password/verify",
-            json={
-                "username": test_user["username"],
-                "email": "wrong@example.com",
-            },
-        )
+    def test_forgot_password_request_unknown_email_still_returns_generic_success(self, client):
+        response, mock_send = self._request_reset_token(client, "nobody@example.com")
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+        mock_send.assert_not_called()
 
     def test_forgot_password_reset_success(self, client, test_user):
-        verify_response = client.post(
-            "/api/forgot-password/verify",
-            json={
-                "username": test_user["username"],
-                "email": test_user["email"],
-            },
-        )
-        user_id = verify_response.json()["user_id"]
+        response, mock_send = self._request_reset_token(client, test_user["email"])
+        reset_url = mock_send.call_args.args[1]
+        token = reset_url.split("token=", 1)[1]
 
-        response = client.post(
+        reset_response = client.post(
             "/api/forgot-password/reset",
             json={
-                "user_id": user_id,
+                "token": token,
                 "new_password": "NewPassword789",
             },
         )
 
-        assert response.status_code == 200
-        assert response.json()["success"] is True
+        assert reset_response.status_code == 200
+        assert reset_response.json()["success"] is True
 
         login_response = client.post(
             "/api/login",
@@ -184,13 +177,30 @@ class TestForgotPassword:
         )
         assert login_response.status_code == 200
 
-    def test_forgot_password_reset_user_not_found(self, client):
+    def test_forgot_password_reset_token_cannot_be_reused(self, client, test_user):
+        response, mock_send = self._request_reset_token(client, test_user["email"])
+        reset_url = mock_send.call_args.args[1]
+        token = reset_url.split("token=", 1)[1]
+
+        first = client.post(
+            "/api/forgot-password/reset",
+            json={"token": token, "new_password": "NewPassword789"},
+        )
+        assert first.status_code == 200
+
+        second = client.post(
+            "/api/forgot-password/reset",
+            json={"token": token, "new_password": "AnotherPassword123"},
+        )
+        assert second.status_code == 400
+
+    def test_forgot_password_reset_invalid_token(self, client):
         response = client.post(
             "/api/forgot-password/reset",
             json={
-                "user_id": 9999,
+                "token": "not-a-real-token",
                 "new_password": "NewPassword789",
             },
         )
 
-        assert response.status_code == 404
+        assert response.status_code == 400
