@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/login.css">
+    <link rel="icon" href="../../pictures/marker.png">
+    <title>Admin – TravelApp</title>
+
+    <script src="../../scripts/utils/apiConfig.js"></script>
+    <script src="../../scripts/utils/themeLoader.js"></script>
+</head>
+
+<body class="page-login">
+    <div class="main-page main-page-home">
+
+        <header id="app-header" class="main-header main-page-home-header" style="display:none"></header>
+
+        <div class="main-page-home-body">
+
+            <aside id="app-sidebar" class="main-page-home-sidebar" style="display:none"></aside>
+
+            <main class="main-content main-page-home-content">
+                <div class="main-page-home-content-inner">
+
+                    <div class="main-page-home-content-header">
+                        <div class="main-page-home-intro">
+                            <h1 class="main-page-home-title">Admin: data export / import</h1>
+                            <p class="main-page-home-subtitle muted">
+                                Migrate database contents between environments as a JSON file.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div id="adminLoginCard" class="card">
+                        <form id="adminLoginForm" class="login-form">
+                            <div class="form-group">
+                                <label for="adminSecret" class="form-label">Admin secret</label>
+                                <input type="password" id="adminSecret" name="adminSecret" required
+                                    class="form-input" placeholder="Enter the admin secret">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" id="adminLoginSubmit" class="btn-add">Unlock</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="adminPanel" class="card hidden">
+                        <p class="muted">Unlocked. Be careful — importing overwrites <strong>all</strong> current
+                            data in this environment's database.</p>
+
+                        <div class="form-group">
+                            <h3>Export</h3>
+                            <p class="muted">Downloads a JSON snapshot of every table plus uploaded photo files.</p>
+                            <button type="button" id="adminExportBtn" class="btn-add">Export data (.json)</button>
+                        </div>
+
+                        <hr>
+
+                        <div class="form-group">
+                            <h3>Import</h3>
+                            <p class="muted" style="color:#dc3545;">
+                                This permanently deletes all existing data in this environment and replaces it
+                                with the contents of the selected file. This cannot be undone.
+                            </p>
+                            <div class="form-group">
+                                <label for="adminImportFile" class="form-label">Export file (.json)</label>
+                                <input type="file" id="adminImportFile" accept="application/json,.json"
+                                    class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="adminImportConfirm" class="form-label">
+                                    Type <strong>DELETE EVERYTHING</strong> to confirm
+                                </label>
+                                <input type="text" id="adminImportConfirm" class="form-input"
+                                    placeholder="DELETE EVERYTHING" autocomplete="off">
+                            </div>
+                            <button type="button" id="adminImportBtn" class="btn-cancel" disabled>Import (overwrite
+                                all data)</button>
+                        </div>
+
+                        <p id="adminStatus" class="muted" style="white-space:pre-wrap;"></p>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../scripts/loginRegister/modal.js"></script>
+    <script src="../../scripts/admin/admin.js"></script>
+
+</body>
+
+</html>
