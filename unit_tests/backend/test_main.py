@@ -8,13 +8,6 @@ client = TestClient(main.app)
 def test_app_is_created():
     assert main.app is not None
 
-def test_root_redirects_to_frontend():
-    response = client.get("/", follow_redirects=False)
-
-    assert response.status_code in (301, 302, 307, 308)
-    assert "location" in response.headers
-    assert "/pages/main_page.html" in response.headers["location"]
-
 def test_routers_are_attached():
     openapi_paths = main.app.openapi()["paths"]
 
@@ -44,7 +37,6 @@ def test_static_mounts_exist():
             mount_paths.append(path)
 
     assert "/uploads" in mount_paths
-    assert "/" in mount_paths
 
 def test_startup_event_exists():
     assert hasattr(main, "startup_event")

@@ -25,6 +25,11 @@ backend/.env
 # Uploaded visit photos (created at runtime)
 uploads/
 
+# Local-only Docker Compose override (e.g. exposing db port for pgAdmin).
+# docker compose auto-merges this file, so committing it would also affect
+# the Coolify deployment (which would expose the db port publicly).
+docker-compose.override.yml
+
 # Tests 
 tests/__pycache__/
 tests/backend/__pycache__/
