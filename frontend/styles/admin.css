@@ -1,0 +1,63 @@
+body.page-admin #adminPanel .section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem 0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-surface-border-strong);
+    padding-bottom: 0.5rem;
+}
+
+body.page-admin #adminPanel .section-title:first-of-type {
+    margin-top: 0.25rem;
+}
+
+body.page-admin #adminPanel .form-hint {
+    font-size: 0.8125rem;
+    color: var(--color-text-subtle);
+    line-height: 1.4;
+    margin: 0 0 1rem 0;
+}
+
+body.page-admin #adminPanel .form-hint--danger {
+    color: #fca5a5;
+}
+
+html[data-theme="light"] body.page-admin #adminPanel .form-hint--danger {
+    color: #b91c1c;
+}
+
+body.page-admin .admin-message {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+}
+
+body.page-admin .admin-message[hidden] {
+    display: none !important;
+}
+
+body.page-admin .admin-message--success {
+    background: var(--color-settings-success-bg);
+    color: var(--color-settings-success-text);
+    border: 1px solid var(--color-settings-success-border);
+}
+
+body.page-admin .admin-message--error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+html[data-theme="light"] body.page-admin .admin-message--error {
+    color: #b91c1c;
+    border-color: rgba(185, 28, 28, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+body.page-admin #adminPanel hr {
+    border: none;
+    border-top: 1px solid var(--color-surface-border-strong);
+    margin: 1.5rem 0;
+}

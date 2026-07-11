@@ -206,7 +206,8 @@ async function initGoogleLogin() {
             size: "large",
             text: "continue_with",
             shape: "pill",
-            width: "280"
+            width: "280",
+            locale: getGoogleSignInLocale()
         });
     } catch (error) {
         console.error(error);

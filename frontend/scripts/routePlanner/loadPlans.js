@@ -1,6 +1,4 @@
 (function () {
-  var DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
-
   function normalizeTrip(trip) {
     // Map API response fields to frontend fields
     // API provides: id, user_id, title, start_date, end_date, start_city, stops
@@ -12,8 +10,7 @@
       startDateSort: trip.start_date || null,
       people: trip.people || 1,
       isBooked: !!trip.is_booked,
-      stopCount: trip.stops ? trip.stops.length : 0,
-      image: DEFAULT_IMAGE
+      stopCount: trip.stops ? trip.stops.length : 0
     };
   }
 
@@ -488,9 +485,6 @@
   function renderCard(trip) {
     return (
       '<div class="travel-log-card planned-trip-card" data-id="' + trip.id + '">' +
-      '<div class="log-image-wrapper">' +
-      '<img src="' + escapeHtml(trip.image || '') + '" alt="' + escapeHtml(trip.destination) + '" class="log-image" onerror="this.src=\'' + escapeHtml(DEFAULT_IMAGE) + '\';">' +
-      '</div>' +
       '<div class="log-content">' +
       '<div class="log-header">' +
       '<div class="log-dest">' +
@@ -629,14 +623,11 @@
     if (endVal) tripEnd.value = String(endVal).slice(0, 10);
   }
 
-  /**
-   * After removing a stop, re-chain dates: each stop's arrival follows the previous
-   * stop's departure (or arrival if no departure). Preserves stay length when both dates exist.
-   */
-  function chainEditStopDates(listEl) {
+  function chainEditStopDates(listEl, fromIndex) {
     if (!listEl) return;
     var rows = listEl.querySelectorAll('.trip-stop-card');
     if (rows.length <= 1) return;
+    fromIndex = (typeof fromIndex === 'number' && fromIndex >= 1) ? fromIndex : 1;
 
     function parseDay(s) {
       if (!s || String(s).length < 10) return null;
@@ -685,7 +676,7 @@
       out.push({ arrStr: states[j].arrStr, depStr: states[j].depStr });
     }
 
-    for (var k = 1; k < states.length; k++) {
+    for (var k = fromIndex; k < states.length; k++) {
       var prevOut = out[k - 1];
       var s = states[k];
       var prevExit = prevOut.depStr ? parseDay(prevOut.depStr) : (prevOut.arrStr ? parseDay(prevOut.arrStr) : null);
@@ -963,11 +954,41 @@
         function onEditStopsDateField(e) {
           var t = e.target;
           if (!t.matches('input[data-field="arrival_date"], input[data-field="departure_date"]')) return;
-          syncTripBoundsFromStops(listEl);
+          var row = t.closest('.trip-stop-card');
+          var rows = Array.prototype.slice.call(listEl.querySelectorAll('.trip-stop-card'));
+          var idx = rows.indexOf(row);
+          if (idx === -1) {
+            syncTripBoundsFromStops(listEl);
+            return;
+          }
+          // Cascade the edit forward onto later stops (chainEditStopDates also
+          // syncs the trip start/end fields at the end, so no separate call needed).
+          chainEditStopDates(listEl, idx + 1);
         }
         listEl.addEventListener('change', onEditStopsDateField);
         listEl.addEventListener('input', onEditStopsDateField);
       }
+
+      /** Trip start/end inputs are the flip side of syncTripBoundsFromStops:
+       * editing them directly must push the change onto the first/last stop,
+       * or that stop's date silently goes stale. */
+      function onEditTripBoundsField(e) {
+        var rows = listEl ? listEl.querySelectorAll('.trip-stop-card') : [];
+        if (!rows.length) return;
+        if (e.target === startDateIn) {
+          var first = rows[0];
+          var firstField = first.querySelector('[data-field="arrival_date"]') ||
+            first.querySelector('[data-field="departure_date"]');
+          if (firstField) firstField.value = startDateIn.value;
+        } else if (e.target === endDateIn) {
+          var last = rows[rows.length - 1];
+          var lastField = last.querySelector('[data-field="departure_date"]') ||
+            last.querySelector('[data-field="arrival_date"]');
+          if (lastField) lastField.value = endDateIn.value;
+        }
+      }
+      if (startDateIn) startDateIn.addEventListener('change', onEditTripBoundsField);
+      if (endDateIn) endDateIn.addEventListener('change', onEditTripBoundsField);
 
       if (window.i18n && typeof window.i18n.applyToPage === 'function') {
         window.i18n.applyToPage(modal);

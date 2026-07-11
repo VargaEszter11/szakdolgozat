@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('settingsForm');
     var themeSelect = document.getElementById('themeSelect');
     var languageSelect = document.getElementById('languageSelect');
-    var savedTheme = localStorage.getItem('theme') || 'light';
+    var savedTheme = localStorage.getItem('theme') || 'dark';
     var savedLanguage = localStorage.getItem('language') || 'en';
 
     themeSelect.value = savedTheme;

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlencode
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from database import models
+
+# Skyscanner links embed the date as a /YYMMDD/ path segment.
+_SKYSCANNER_DATE_RE = re.compile(r"(/[a-z]{3}/[a-z]{3}/)(\d{6})(/)")
 
 
 def seasonality_status(is_seasonal: Optional[bool]) -> str:
@@ -18,11 +22,9 @@ def seasonality_status(is_seasonal: Optional[bool]) -> str:
 
 
 def _people_count(people: Optional[int] = 1) -> int:
-    try:
-        count = int(people)
-    except (TypeError, ValueError):
-        count = 1
-    return max(1, count)
+    if people is None:
+        return 1
+    return max(1, people)
 
 
 def _skyscanner_date(departure_date: str) -> Optional[str]:
@@ -63,6 +65,37 @@ def booking_url(
         "https://www.skyscanner.net/transport/flights/"
         f"{origin.lower()}/{destination.lower()}/{skyscanner_date}/?{params}"
     )
+
+
+def update_booking_url_date(url: Optional[str], new_departure_date: str) -> Optional[str]:
+    """Patch just the date segment of an existing booking_url in place.
+
+    Used when a stop's arrival date is edited after the trip was generated:
+    the origin/destination/people/airline parts stay whatever was already
+    resolved, only the embedded departure date needs to move. Handles both
+    URL shapes seen in stored data: a "dateOut" query param (airline direct
+    booking links, e.g. Ryanair) and Skyscanner's /YYMMDD/ path segment.
+    """
+    if not url:
+        return url
+    try:
+        new_date = date.fromisoformat(str(new_departure_date))
+    except (TypeError, ValueError):
+        return url
+
+    parts = urlsplit(url)
+    query_pairs = parse_qsl(parts.query, keep_blank_values=True)
+    if any(key == "dateOut" for key, _ in query_pairs):
+        new_query = urlencode(
+            [(k, new_date.isoformat() if k == "dateOut" else v) for k, v in query_pairs]
+        )
+        return urlunsplit((parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
+
+    skyscanner_date = new_date.strftime("%y%m%d")
+    patched, count = _SKYSCANNER_DATE_RE.subn(
+        lambda m: m.group(1) + skyscanner_date + m.group(3), url, count=1
+    )
+    return patched if count else url
 
 
 def direct_route_for_leg(db, origin: str, destination: str, airline_iata: Optional[str] = None):
@@ -110,7 +143,7 @@ def available_flight_candidates(
             direct_route_for_leg(
                 db,
                 origin,
-                candidate.get("iata"),
+                candidate.get("iata") or "",
                 candidate.get("airline_iata"),
             ),
             departure_date,

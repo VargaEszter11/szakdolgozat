@@ -5,7 +5,7 @@
     function getEffectiveThemePreference() {
         var select = typeof document !== 'undefined' ? document.getElementById('themeSelect') : null;
         if (select && select.value) return select.value;
-        return localStorage.getItem('theme') || 'light';
+        return localStorage.getItem('theme') || 'dark';
     }
 
     function resolveTheme(theme) {
@@ -41,7 +41,7 @@
         }
     }
 
-    var initial = localStorage.getItem('theme') || 'light';
+    var initial = localStorage.getItem('theme') || 'dark';
     applyAppTheme(initial);
     if (initial === 'auto') {
         bindThemeAutoListener();

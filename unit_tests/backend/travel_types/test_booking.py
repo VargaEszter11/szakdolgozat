@@ -11,6 +11,7 @@ from backend.travel_types.booking import (
     flight_booking_details,
     route_operates_on_date,
     seasonality_status,
+    update_booking_url_date,
 )
 
 
@@ -172,3 +173,81 @@ def test_flight_booking_details_returns_empty_dict_when_route_not_available(monk
     )
 
     assert result == {}
+
+
+# ============= update_booking_url_date =============
+
+RYANAIR_URL = (
+    "https://www.ryanair.com/gb/en/trip/flights/select?adults=3&teens=0&children=0"
+    "&infants=0&dateOut=2026-06-21&originIata=DUB&destinationIata=CWL"
+    "&isConnectedFlight=false&discount=0&promoCode="
+)
+
+SKYSCANNER_URL = (
+    "https://www.skyscanner.net/transport/flights/tll/arn/260529/"
+    "?adultsv2=1&adults=1&cabinclass=economy&childrenv2=&children=0"
+    "&inboundaltsenabled=false&outboundaltsenabled=false&preferdirects=false"
+    "&ref=home&rtn=0"
+)
+
+
+def test_update_booking_url_date_skyscanner_updates_path_segment():
+    updated = update_booking_url_date(SKYSCANNER_URL, "2026-07-15")
+    assert updated is not None
+
+    assert "/tll/arn/260715/" in updated
+    assert "/tll/arn/260529/" not in updated
+
+
+def test_update_booking_url_date_skyscanner_preserves_other_params():
+    updated = update_booking_url_date(SKYSCANNER_URL, "2026-07-15")
+    assert updated is not None
+
+    assert "adultsv2=1" in updated
+    assert "cabinclass=economy" in updated
+    assert "rtn=0" in updated
+
+
+def test_update_booking_url_date_ryanair_updates_query_param():
+    updated = update_booking_url_date(RYANAIR_URL, "2026-07-15")
+    assert updated is not None
+
+    assert "dateOut=2026-07-15" in updated
+    assert "dateOut=2026-06-21" not in updated
+
+
+def test_update_booking_url_date_ryanair_preserves_other_params_including_blank():
+    updated = update_booking_url_date(RYANAIR_URL, "2026-07-15")
+    assert updated is not None
+
+    assert "originIata=DUB" in updated
+    assert "destinationIata=CWL" in updated
+    assert "adults=3" in updated
+    # promoCode= was blank in the original and must stay blank, not disappear.
+    assert "promoCode=" in updated
+
+
+def test_update_booking_url_date_returns_none_for_none_url():
+    assert update_booking_url_date(None, "2026-07-15") is None
+
+
+def test_update_booking_url_date_returns_empty_string_unchanged():
+    assert update_booking_url_date("", "2026-07-15") == ""
+
+
+def test_update_booking_url_date_returns_url_unchanged_for_invalid_date():
+    assert update_booking_url_date(SKYSCANNER_URL, "not-a-date") == SKYSCANNER_URL
+    assert update_booking_url_date(RYANAIR_URL, "not-a-date") == RYANAIR_URL
+
+
+def test_update_booking_url_date_returns_url_unchanged_for_unrecognized_format():
+    unknown_url = "https://example.com/flights?foo=bar"
+
+    assert update_booking_url_date(unknown_url, "2026-07-15") == unknown_url
+
+
+def test_update_booking_url_date_is_idempotent():
+    once = update_booking_url_date(RYANAIR_URL, "2026-07-15")
+    twice = update_booking_url_date(once, "2026-07-15")
+
+    assert once == twice

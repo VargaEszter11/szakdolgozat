@@ -276,7 +276,15 @@ def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpd
     update_data = stop_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_stop, key, value)
-    
+
+    if "arrival_date" in update_data:
+        stop_row = cast(Any, db_stop)
+        new_arrival = update_data["arrival_date"]
+        if stop_row.booking_url and new_arrival:
+            from travel_types.booking import update_booking_url_date
+
+            stop_row.booking_url = update_booking_url_date(stop_row.booking_url, str(new_arrival))
+
     db.commit()
     db.refresh(db_stop)
     return db_stop

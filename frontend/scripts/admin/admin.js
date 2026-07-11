@@ -2,6 +2,10 @@
     const SESSION_KEY = 'admin_secret';
     const CONFIRM_PHRASE = 'DELETE EVERYTHING';
 
+    function adminT(key, fallback) {
+        return window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t(key) : fallback;
+    }
+
     const loginCard = document.getElementById('adminLoginCard');
     const panel = document.getElementById('adminPanel');
     const loginForm = document.getElementById('adminLoginForm');
@@ -10,12 +14,29 @@
 
     const exportBtn = document.getElementById('adminExportBtn');
     const importFile = document.getElementById('adminImportFile');
+    const importFileText = document.getElementById('adminImportFileText');
     const importConfirm = document.getElementById('adminImportConfirm');
     const importBtn = document.getElementById('adminImportBtn');
     const statusEl = document.getElementById('adminStatus');
 
-    function setStatus(text) {
-        statusEl.textContent = text || '';
+    function updateImportFileText() {
+        const file = importFile.files && importFile.files[0];
+        importFileText.textContent = file
+            ? file.name
+            : adminT('admin.importFilePrompt', 'Click to choose a file');
+    }
+
+    function setStatus(text, type) {
+        if (!text) {
+            statusEl.hidden = true;
+            statusEl.textContent = '';
+            statusEl.classList.remove('admin-message--success', 'admin-message--error');
+            return;
+        }
+        statusEl.hidden = false;
+        statusEl.textContent = text;
+        statusEl.classList.remove('admin-message--success', 'admin-message--error');
+        statusEl.classList.add(type === 'error' ? 'admin-message--error' : 'admin-message--success');
     }
 
     function showPanel() {
@@ -57,7 +78,6 @@
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginSubmit.disabled = true;
-        loginSubmit.textContent = 'Checking...';
 
         try {
             const secret = secretInput.value.trim();
@@ -67,20 +87,18 @@
                 secretInput.value = '';
                 showPanel();
             } else {
-                showError('Invalid admin secret.');
+                showError(adminT('admin.invalidSecret', 'Invalid admin secret.'));
             }
         } catch {
-            showError('Server error. Please try again later.');
+            showError(adminT('admin.serverError', 'Server error. Please try again later.'));
         } finally {
             loginSubmit.disabled = false;
-            loginSubmit.textContent = 'Unlock';
         }
     });
 
     exportBtn.addEventListener('click', async () => {
         exportBtn.disabled = true;
-        exportBtn.textContent = 'Exporting...';
-        setStatus('');
+        setStatus(null);
 
         try {
             const response = await fetch('/api/admin/export', {
@@ -100,13 +118,12 @@
             a.click();
             a.remove();
             URL.revokeObjectURL(url);
-            setStatus('Export downloaded.');
+            setStatus(adminT('admin.exportComplete', 'Export downloaded.'), 'success');
         } catch (err) {
             console.error(err);
-            showError('Could not export data. ' + (err.message || ''));
+            showError(adminT('admin.exportFailed', 'Could not export data.') + ' ' + (err.message || ''));
         } finally {
             exportBtn.disabled = false;
-            exportBtn.textContent = 'Export data (.json)';
         }
     });
 
@@ -117,18 +134,23 @@
     }
 
     importConfirm.addEventListener('input', updateImportButtonState);
-    importFile.addEventListener('change', updateImportButtonState);
+    importFile.addEventListener('change', () => {
+        updateImportFileText();
+        updateImportButtonState();
+    });
 
     importBtn.addEventListener('click', () => {
         const file = importFile.files && importFile.files[0];
         if (!file) return;
 
         showConfirm(
-            'This will permanently delete ALL current data in this environment and replace it with the selected file. Continue?',
+            adminT(
+                'admin.importConfirmPrompt',
+                'This will permanently delete ALL current data in this environment and replace it with the selected file. Continue?'
+            ),
             async () => {
                 importBtn.disabled = true;
-                importBtn.textContent = 'Importing...';
-                setStatus('');
+                setStatus(null);
 
                 try {
                     const text = await file.text();
@@ -136,7 +158,7 @@
                     try {
                         payload = JSON.parse(text);
                     } catch {
-                        throw new Error('Selected file is not valid JSON.');
+                        throw new Error(adminT('admin.invalidFile', 'Selected file is not valid JSON.'));
                     }
 
                     const response = await fetch('/api/admin/import', {
@@ -153,16 +175,19 @@
                         throw new Error(data.detail || ('Import failed (' + response.status + ')'));
                     }
 
-                    setStatus('Import complete:\n' + JSON.stringify(data.counts, null, 2));
+                    setStatus(
+                        adminT('admin.importComplete', 'Import complete:') + '\n' + JSON.stringify(data.counts, null, 2),
+                        'success'
+                    );
                     importConfirm.value = '';
                     importFile.value = '';
+                    updateImportFileText();
                     updateImportButtonState();
                 } catch (err) {
                     console.error(err);
-                    showError(err.message || 'Import failed.');
+                    setStatus(err.message || adminT('admin.importFailed', 'Import failed.'), 'error');
                 } finally {
                     importBtn.disabled = false;
-                    importBtn.textContent = 'Import (overwrite all data)';
                 }
             }
         );
