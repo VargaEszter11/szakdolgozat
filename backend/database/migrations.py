@@ -38,6 +38,14 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE users
+                    ADD COLUMN IF NOT EXISTS home_city TEXT NULL
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     ALTER TABLE direct_routes
                     ADD COLUMN IF NOT EXISTS is_seasonal BOOLEAN NULL,
                     ADD COLUMN IF NOT EXISTS effective_from DATE NULL,

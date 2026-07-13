@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('editProfileForm');
     var usernameInput = document.getElementById('profileUsername');
     var emailInput = document.getElementById('profileEmail');
+    var homeCityInput = document.getElementById('profileHomeCity');
     var newPasswordInput = document.getElementById('profileNewPassword');
     var confirmPasswordInput = document.getElementById('profileConfirmPassword');
     var errorEl = document.getElementById('editProfileError');
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (data) {
             if (usernameInput) usernameInput.value = data.username || '';
             if (emailInput) emailInput.value = data.email || '';
+            if (homeCityInput) homeCityInput.value = data.home_city || '';
         })
         .catch(function () {
             showError(t('editProfile.errorLoad', 'Could not load your profile.'));
@@ -85,7 +87,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        var payload = { username: username, email: email };
+        var homeCity = (homeCityInput && homeCityInput.value) ? homeCityInput.value.trim() : '';
+
+        var payload = { username: username, email: email, home_city: homeCity };
         if (newPw) {
             payload.password = newPw;
         }

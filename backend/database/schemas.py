@@ -20,12 +20,14 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(None, min_length=6)
     preferred_llm_provider: Optional[Literal["deepseek", "ollama"]] = None
+    home_city: Optional[str] = Field(None, max_length=255)
 
 
 class UserResponse(UserBase):
     id: int
     created_at: dt.datetime
     preferred_llm_provider: str = "deepseek"
+    home_city: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

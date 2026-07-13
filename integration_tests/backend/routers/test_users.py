@@ -51,6 +51,12 @@ class TestGetUser:
 
         assert response.status_code == 404
 
+    def test_get_user_home_city_defaults_to_none(self, client, test_user):
+        response = client.get(f"/api/users/{test_user['id']}")
+
+        assert response.status_code == 200
+        assert response.json()["home_city"] is None
+
 
 class TestListUsers:
     """Integration tests for GET /api/users."""
@@ -108,6 +114,29 @@ class TestUpdateUser:
         )
 
         assert response.status_code == 404
+
+    def test_update_user_sets_home_city(self, client, test_user):
+        response = client.put(
+            f"/api/users/{test_user['id']}",
+            json={"home_city": "Budapest"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["home_city"] == "Budapest"
+
+        refetched = client.get(f"/api/users/{test_user['id']}")
+        assert refetched.json()["home_city"] == "Budapest"
+
+    def test_update_user_can_clear_home_city(self, client, test_user):
+        client.put(f"/api/users/{test_user['id']}", json={"home_city": "Vienna"})
+
+        response = client.put(
+            f"/api/users/{test_user['id']}",
+            json={"home_city": ""},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["home_city"] == ""
 
 
 class TestDeleteUser:

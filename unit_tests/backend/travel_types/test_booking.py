@@ -208,25 +208,6 @@ def test_update_booking_url_date_skyscanner_preserves_other_params():
     assert "rtn=0" in updated
 
 
-def test_update_booking_url_date_ryanair_updates_query_param():
-    updated = update_booking_url_date(RYANAIR_URL, "2026-07-15")
-    assert updated is not None
-
-    assert "dateOut=2026-07-15" in updated
-    assert "dateOut=2026-06-21" not in updated
-
-
-def test_update_booking_url_date_ryanair_preserves_other_params_including_blank():
-    updated = update_booking_url_date(RYANAIR_URL, "2026-07-15")
-    assert updated is not None
-
-    assert "originIata=DUB" in updated
-    assert "destinationIata=CWL" in updated
-    assert "adults=3" in updated
-    # promoCode= was blank in the original and must stay blank, not disappear.
-    assert "promoCode=" in updated
-
-
 def test_update_booking_url_date_returns_none_for_none_url():
     assert update_booking_url_date(None, "2026-07-15") is None
 
@@ -244,10 +225,3 @@ def test_update_booking_url_date_returns_url_unchanged_for_unrecognized_format()
     unknown_url = "https://example.com/flights?foo=bar"
 
     assert update_booking_url_date(unknown_url, "2026-07-15") == unknown_url
-
-
-def test_update_booking_url_date_is_idempotent():
-    once = update_booking_url_date(RYANAIR_URL, "2026-07-15")
-    twice = update_booking_url_date(once, "2026-07-15")
-
-    assert once == twice

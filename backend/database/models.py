@@ -36,6 +36,7 @@ class User(Base):
         nullable=False,
         server_default=text("'deepseek'"),
     )
+    home_city = Column(Text, nullable=True)
 
     # Relationships
     planned_trips = relationship("PlannedTrip", back_populates="user", cascade="all, delete-orphan")

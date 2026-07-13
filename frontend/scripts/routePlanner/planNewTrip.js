@@ -8,7 +8,7 @@ const ENDPOINTS = {
     random: '/generate_travel_plans/random'
 };
 
-let selectedPlan = 'visited';
+let selectedPlan = 'random';
 let savedVisitedPlaces = [];
 
 function useTravelLogFromDb() {
@@ -28,6 +28,97 @@ function refreshPlannerDbHints() {
     } else {
         hint.textContent = '';
     }
+}
+
+let homeCity = '';
+
+function homeCityButtonLabel() {
+    const t = window.i18n ? window.i18n.t.bind(window.i18n) : (k, f) => f;
+    const key = homeCity ? 'planNewTrip.useHomeCity' : 'planNewTrip.setHomeCity';
+    const fallback = homeCity ? 'Use my home city' : 'Set as my home city';
+    return { key, text: t(key, fallback) };
+}
+
+function refreshHomeCityButton() {
+    const btn = document.getElementById('useHomeCityBtn');
+    if (!btn) return;
+    const label = btn.querySelector('span');
+    if (!label) return;
+    const { key, text } = homeCityButtonLabel();
+    label.setAttribute('data-i18n', key);
+    label.textContent = text;
+}
+
+async function saveHomeCity(userId, city) {
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ home_city: city })
+    });
+    if (!res.ok) throw new Error('save home city ' + res.status);
+    return res.json();
+}
+
+async function loadHomeCity() {
+    const userId = localStorage.getItem('user_id');
+    const btn = document.getElementById('useHomeCityBtn');
+    if (!userId || !btn) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/users/${userId}`);
+        if (res.ok) {
+            const user = await res.json();
+            homeCity = (user.home_city || '').trim();
+        }
+    } catch (err) {
+        console.warn('Could not load home city:', err);
+    }
+
+    btn.hidden = false;
+    refreshHomeCityButton();
+
+    btn.addEventListener('click', async () => {
+        const input = document.getElementById('startingCity');
+        if (!input) return;
+
+        // Already have a home city saved: one click fills the field.
+        if (homeCity) {
+            input.value = homeCity;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            return;
+        }
+
+        // No home city yet: save whatever is currently typed as Starting
+        // City, then immediately use it — same click both sets and uses it.
+        const cityToSave = input.value.trim();
+        if (!cityToSave) {
+            input.focus();
+            const tripResults = document.getElementById('tripResults');
+            const resultsContainer = document.getElementById('resultsContainer');
+            if (tripResults && resultsContainer) {
+                const t = window.i18n ? window.i18n.t.bind(window.i18n) : (k, f) => f;
+                showError(
+                    t('planNewTrip.homeCityRequired', 'Type a starting city first, then click again to save it as your home city.'),
+                    '',
+                    tripResults,
+                    resultsContainer
+                );
+            }
+            return;
+        }
+
+        btn.disabled = true;
+        try {
+            const updated = await saveHomeCity(userId, cityToSave);
+            homeCity = (updated.home_city || '').trim();
+            refreshHomeCityButton();
+        } catch (err) {
+            console.warn('Could not save home city:', err);
+        } finally {
+            btn.disabled = false;
+        }
+    });
 }
 
 async function loadSavedPlaces() {
@@ -131,6 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updatePlacesField();
     loadSavedPlaces();
+    loadHomeCity();
     const dbToggle = document.getElementById('useTravelLogInPlanner');
     if (dbToggle) {
         dbToggle.addEventListener('change', () => refreshPlannerDbHints());
