@@ -425,7 +425,128 @@ button.btn-cancel:hover {
     margin-left: 0;
 }
 
+/* ── Main page dashboard ── */
+.main-page-home .main-page-panel {
+    background: var(--color-surface);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--color-surface-border);
+}
+
+.main-page-home .main-page-panel-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-surface-border-strong);
+    padding-bottom: 0.5rem;
+}
+
+.main-page-home .main-page-panel-title--chart {
+    margin-top: 1.5rem;
+}
+
+.main-page-home .main-page-panel .travel-logs-list {
+    gap: 1rem;
+}
+
+.main-page-home .main-europe-chart-summary {
+    margin: -0.35rem 0 0.85rem 0;
+    font-size: 0.875rem;
+}
+
+.main-page-home .main-europe-chart {
+    min-height: 0;
+}
+
+.main-page-home .main-europe-chart-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.25rem 0;
+}
+
+.main-page-home .main-europe-chart-pie-outer {
+    position: relative;
+    width: min(200px, 42vw);
+    aspect-ratio: 1;
+    flex-shrink: 0;
+}
+
+.main-page-home .main-europe-chart-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.main-page-home .main-europe-chart-slice--visited {
+    fill: var(--color-accent);
+    stroke: none;
+}
+
+.main-page-home .main-europe-chart-slice--unvisited {
+    fill: var(--color-surface-border-medium);
+    stroke: none;
+}
+
+.main-page-home .main-europe-chart-outline {
+    fill: none;
+    stroke: var(--color-surface-border);
+    stroke-width: 2;
+}
+
+.main-page-home .main-europe-chart-center-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-text);
+    pointer-events: none;
+}
+
+.main-page-home .main-europe-chart-legend-key {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--color-text);
+}
+
+.main-page-home .main-europe-chart-legend-key span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.main-page-home .main-europe-chart-swatch {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.main-page-home .main-europe-chart-swatch--visited {
+    background: var(--color-accent);
+}
+
+.main-page-home .main-europe-chart-swatch--unvisited {
+    background: var(--color-surface-border-medium);
+}
+
 /* ── Travel log cards ── */
+.main-page-home .main-page-panel .travel-log-card {
+    background: var(--color-input-bg);
+    border-color: var(--color-surface-border);
+}
+
 .main-page-home .travel-logs-list {
     display: flex;
     flex-direction: column;

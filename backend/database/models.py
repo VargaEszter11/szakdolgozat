@@ -151,6 +151,7 @@ class VisitedPlace(Base):
     place_name = Column(Text, nullable=False)
     country = Column(Text, nullable=True)
     date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
     rating = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)
     photo_path = Column(Text, nullable=True)

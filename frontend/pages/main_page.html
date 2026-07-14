@@ -41,14 +41,27 @@
                         </a>
                     </div>
 
-                    <div id="mainTravelLogs" class="travel-logs-list" aria-live="polite">
-                        <p class="travel-logs-loading muted" data-i18n="mainPage.loading">Loading…</p>
-                    </div>
+                    <section class="main-page-panel" aria-labelledby="mainRecentHeading">
+                        <h2 id="mainRecentHeading" class="main-page-panel-title" data-i18n="mainPage.recentVisits">
+                            Most recent visits
+                        </h2>
+                        <div id="mainTravelLogs" class="travel-logs-list" aria-live="polite">
+                            <p class="travel-logs-loading muted" data-i18n="mainPage.loading">Loading…</p>
+                        </div>
+
+                        <h2 id="mainEuropeChartHeading" class="main-page-panel-title main-page-panel-title--chart"
+                            data-i18n="mainPage.europeChartTitle">
+                            European countries visited
+                        </h2>
+                        <p id="mainEuropeChartSummary" class="main-europe-chart-summary muted" hidden></p>
+                        <div id="mainEuropeChart" class="main-europe-chart" role="img"
+                            aria-labelledby="mainEuropeChartHeading"></div>
+                    </section>
                 </div>
             </main>
         </div>
     </div>
-    <script src="../scripts/utils/mainPageTravelLog.js" defer></script>
+    <script src="../scripts/utils/mainPageTravelLog.js?v=8" defer></script>
 </body>
 
 </html>

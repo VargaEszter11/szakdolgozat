@@ -56,20 +56,28 @@ document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('addPlaceForm');
   const cancelBtn = document.getElementById('cancelBtn');
   const visitedDateInput = document.getElementById('visitedDate');
+  const visitedEndDateInput = document.getElementById('visitedEndDate');
   const ratingInput = document.getElementById('rating');
   const starBtns = document.querySelectorAll('.star-btn');
 
-  if (visitedDateInput && typeof flatpickr === 'function') {
+  if (typeof flatpickr === 'function') {
     var LOCALE_MAP = { hu: 'hu', de: 'de' };
     var lang = localStorage.getItem('language') || 'en';
     var fpLocale = LOCALE_MAP[lang] || 'default';
 
-    flatpickr(visitedDateInput, {
+    var fpOpts = {
       dateFormat: 'Y-m-d',
       maxDate: 'today',
       locale: fpLocale,
       disableMobile: true
-    });
+    };
+
+    if (visitedDateInput) {
+      flatpickr(visitedDateInput, fpOpts);
+    }
+    if (visitedEndDateInput) {
+      flatpickr(visitedEndDateInput, fpOpts);
+    }
   }
 
   if (starBtns.length && ratingInput) {
@@ -276,12 +284,18 @@ document.addEventListener('DOMContentLoaded', function () {
     var placeName = document.getElementById('placeName').value.trim();
     var country = document.getElementById('country').value.trim();
     var visitedDate = document.getElementById('visitedDate').value;
+    var visitedEndDate = document.getElementById('visitedEndDate').value;
     var description = document.getElementById('description').value.trim();
     var notes = document.getElementById('notes').value.trim();
     var rating = parseInt(document.getElementById('rating').value, 10) || 5;
 
     if (!placeName || !country || !visitedDate) {
-      showErrorMsg('Please fill in Place Name, Country and Date Visited.');
+      showErrorMsg('Please fill in Place Name, Country and Start Date.');
+      return;
+    }
+
+    if (visitedEndDate && visitedEndDate < visitedDate) {
+      showErrorMsg('End date must be on or after the start date.');
       return;
     }
 
@@ -295,6 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
       place_name: placeName,
       country: country,
       date: visitedDate,
+      end_date: visitedEndDate || null,
       rating: rating,
       description: fullDescription || null
     };

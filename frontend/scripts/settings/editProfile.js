@@ -7,16 +7,32 @@ document.addEventListener('DOMContentLoaded', function () {
     var newPasswordInput = document.getElementById('profileNewPassword');
     var confirmPasswordInput = document.getElementById('profileConfirmPassword');
     var errorEl = document.getElementById('editProfileError');
+    var successEl = document.getElementById('editProfileSuccess');
     var saveBtn = document.getElementById('saveProfileBtn');
+    var successTimer = null;
 
     function hideMessages() {
-        errorEl.hidden = true;
+        if (errorEl) errorEl.hidden = true;
+        if (successEl) successEl.hidden = true;
+        clearTimeout(successTimer);
     }
 
     function showError(text) {
         hideMessages();
-        errorEl.textContent = text;
-        errorEl.hidden = false;
+        if (errorEl) {
+            errorEl.textContent = text;
+            errorEl.hidden = false;
+        }
+    }
+
+    function showSuccess() {
+        hideMessages();
+        if (!successEl) return;
+        successEl.textContent = t('editProfile.savedMessage', 'Profile updated successfully.');
+        successEl.hidden = false;
+        successTimer = setTimeout(function () {
+            if (successEl) successEl.hidden = true;
+        }, 4000);
     }
 
     function formatApiDetail(detail) {
@@ -119,6 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (window.i18n && typeof window.i18n.applyToPage === 'function') {
                         window.i18n.applyToPage();
                     }
+                    showSuccess();
                     return;
                 }
                 var msg = formatApiDetail(result.body && result.body.detail);

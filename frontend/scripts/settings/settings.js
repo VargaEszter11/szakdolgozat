@@ -47,17 +47,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function t(key) {
+        return window.i18n && window.i18n.t ? window.i18n.t(key) : key;
+    }
+
+    var savedMessageEl = document.getElementById('settingsSavedMessage');
+    var savedMessageTimer = null;
+
+    function showSavedMessage() {
+        if (!savedMessageEl) return;
+        savedMessageEl.textContent = t('settings.savedMessage');
+        savedMessageEl.hidden = false;
+        clearTimeout(savedMessageTimer);
+        savedMessageTimer = setTimeout(function () {
+            savedMessageEl.hidden = true;
+        }, 4000);
+    }
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         persistSettings();
+        showSavedMessage();
     });
 
     function apiBase() {
         return typeof window.API_BASE_URL === 'string' ? window.API_BASE_URL : '';
-    }
-
-    function t(key) {
-        return window.i18n && window.i18n.t ? window.i18n.t(key) : key;
     }
 
     function initLlmProviderPicker() {
@@ -87,10 +101,12 @@ document.addEventListener('DOMContentLoaded', function () {
             statusEl.hidden = false;
             statusEl.textContent = t(key);
             statusEl.classList.toggle('settings-llm-status--error', !!isError);
+            statusEl.classList.toggle('settings-llm-status--success', !isError);
             clearTimeout(showLlmStatus._t);
             showLlmStatus._t = setTimeout(function () {
                 statusEl.hidden = true;
-            }, 3200);
+                statusEl.classList.remove('settings-llm-status--error', 'settings-llm-status--success');
+            }, 4000);
         }
 
         fetch(apiBase() + '/api/users/' + encodeURIComponent(uid))

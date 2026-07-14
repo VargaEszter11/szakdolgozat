@@ -134,6 +134,14 @@ body.page-settings .settings-llm-status--error {
     color: #f87171;
 }
 
+body.page-settings .settings-llm-status--success {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: var(--color-settings-success-bg);
+    color: var(--color-settings-success-text);
+    border: 1px solid var(--color-settings-success-border);
+}
+
 html[data-theme="light"] body.page-settings .settings-llm-status--error {
     color: #b91c1c;
 }

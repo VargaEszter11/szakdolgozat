@@ -10,7 +10,17 @@
     var d = new Date(value);
     if (isNaN(d.getTime())) return value;
     var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
-    return d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function formatVisitDates(startValue, endValue) {
+    if (!startValue && !endValue) return '—';
+    var startIso = String(startValue || '').trim().slice(0, 10);
+    var endIso = String(endValue || '').trim().slice(0, 10);
+    if (startIso && endIso && startIso !== endIso) {
+      return formatDate(startIso) + ' – ' + formatDate(endIso);
+    }
+    return formatDate(startIso || endIso);
   }
 
   function escapeHtml(str) {
@@ -30,6 +40,7 @@
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
     var dateValue = item.date || item.visitedDate || item.dateVisited;
+    var endDateValue = item.end_date || item.endDate || item.visitedEndDate;
 
     // Build coordinates object from latitude/longitude fields
     var coordinates = null;
@@ -44,7 +55,7 @@
       name: placeName.trim() || 'Unknown',
       country: country || '',
       displayName: name,
-      dateVisited: formatDate(dateValue),
+      dateVisited: formatVisitDates(dateValue, endDateValue),
       description: item.description || item.notes || '',
       coordinates: coordinates
     };

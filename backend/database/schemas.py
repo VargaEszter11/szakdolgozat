@@ -85,6 +85,7 @@ class VisitedPlaceBase(BaseModel):
     place_name: str
     country: Optional[str] = None
     date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
@@ -100,6 +101,7 @@ class VisitedPlaceUpdate(BaseModel):
     place_name: Optional[str] = None
     country: Optional[str] = None
     date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     photo_path: Optional[str] = None
@@ -113,6 +115,7 @@ class VisitedPlaceResponse(BaseModel):
     place_name: str
     country: Optional[str] = None
     date: Optional[dt.date] = None
+    end_date: Optional[dt.date] = None
     rating: Optional[int] = None
     description: Optional[str] = None
     photo_path: Optional[str] = None

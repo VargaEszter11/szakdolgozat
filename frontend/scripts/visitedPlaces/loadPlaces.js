@@ -22,7 +22,17 @@
     var d = new Date(value);
     if (isNaN(d.getTime())) return value;
     var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
-    return d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function formatVisitDates(startValue, endValue) {
+    var startIso = toIsoDateInput(startValue);
+    var endIso = toIsoDateInput(endValue);
+    if (!startIso && !endIso) return '—';
+    if (startIso && endIso && startIso !== endIso) {
+      return formatDate(startIso) + ' – ' + formatDate(endIso);
+    }
+    return formatDate(startIso || endIso);
   }
 
   function toIsoDateInput(value) {
@@ -115,8 +125,13 @@
     var name = placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
     var dateValue = item.date || item.visitedDate || item.dateVisited;
+    var endDateValue = item.end_date || item.endDate || item.visitedEndDate;
     var d = dateValue ? new Date(dateValue) : null;
+    var endD = endDateValue ? new Date(endDateValue) : null;
     var dateSortKey = d && !isNaN(d.getTime()) ? d.getTime() : 0;
+    if (endD && !isNaN(endD.getTime()) && endD.getTime() > dateSortKey) {
+      dateSortKey = endD.getTime();
+    }
     var rawDescription = item.description || item.notes || '';
     var rawPhotoPath = item.photo_path != null && item.photo_path !== '' ? String(item.photo_path) : null;
     return {
@@ -124,8 +139,9 @@
       name: name,
       place_name: placeName,
       country: country,
-      date: formatDate(dateValue),
+      date: formatVisitDates(dateValue, endDateValue),
       dateIso: toIsoDateInput(dateValue),
+      endDateIso: toIsoDateInput(endDateValue),
       dateSortKey: dateSortKey,
       rating: item.rating != null ? item.rating : 5,
       description: rawDescription,
@@ -348,6 +364,16 @@
     syncHasValue(dateInput);
     dateInput.addEventListener('change', function () { syncHasValue(dateInput); });
 
+    var endDateId = uid + '-end-date';
+    var endDateInput = document.createElement('input');
+    endDateInput.type = 'date';
+    endDateInput.className = 'form-input';
+    endDateInput.id = endDateId;
+    endDateInput.name = 'end_date';
+    endDateInput.value = place.endDateIso || '';
+    syncHasValue(endDateInput);
+    endDateInput.addEventListener('change', function () { syncHasValue(endDateInput); });
+
     var descId = uid + '-desc';
     var descInput = document.createElement('textarea');
     descInput.className = 'form-input form-textarea';
@@ -360,7 +386,13 @@
 
     bodyWrap.appendChild(formGroup(nameId, t('addNewPlace.placeName', 'Place name'), nameInput));
     bodyWrap.appendChild(formGroup(countryId, t('addNewPlace.country', 'Country'), countryInput));
-    bodyWrap.appendChild(formGroup(dateId, t('addNewPlace.visitedDate', 'Date visited'), dateInput));
+
+    var dateRow = document.createElement('div');
+    dateRow.className = 'form-row-2';
+    dateRow.appendChild(formGroup(dateId, t('addNewPlace.visitedDate', 'Start date'), dateInput));
+    dateRow.appendChild(formGroup(endDateId, t('addNewPlace.visitedEndDate', 'End date'), endDateInput));
+    bodyWrap.appendChild(dateRow);
+
     bodyWrap.appendChild(formGroup(descId, t('addNewPlace.description', 'Description'), descInput));
 
     var photoGroup = document.createElement('div');
@@ -678,10 +710,17 @@
         showError(t('visitedPlaces.placeNameRequired', 'Please enter a place name.'));
         return;
       }
+      var startDate = (dateInput.value || '').trim();
+      var endDate = (endDateInput.value || '').trim();
+      if (startDate && endDate && endDate < startDate) {
+        showError(t('visitedPlaces.endDateBeforeStart', 'End date must be on or after the start date.'));
+        return;
+      }
       var body = {
         place_name: pn,
         country: (countryInput.value || '').trim() || null,
-        date: (dateInput.value || '').trim() || null,
+        date: startDate || null,
+        end_date: endDate || null,
         description: (descInput.value || '').trim() || null
       };
       if (clearLegacyPhoto) {
@@ -799,7 +838,8 @@
         if (countryRow) countryRow.style.display = country ? '' : 'none';
 
         var dateVal = place.date || place.visitedDate;
-        if (dateEl) dateEl.textContent = formatDate(dateVal);
+        var endDateVal = place.end_date || place.endDate;
+        if (dateEl) dateEl.textContent = formatVisitDates(dateVal, endDateVal);
 
         if (ratingRow) ratingRow.style.display = place.rating != null ? '' : 'none';
         if (ratingEl) ratingEl.textContent = formatRatingDisplay(place.rating);
