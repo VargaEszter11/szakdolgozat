@@ -128,6 +128,18 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
     return db_user
 
 
+def update_user_password(db: Session, user_id: int, new_password: str) -> Optional[models.User]:
+    """Update only a user's password."""
+    db_user = get_user(db, user_id)
+    if not db_user:
+        return None
+
+    cast(Any, db_user).password = hash_password(new_password)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
 def delete_user(db: Session, user_id: int) -> bool:
     """Delete a user"""
     db_user = get_user(db, user_id)

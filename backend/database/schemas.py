@@ -16,11 +16,11 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    username: Optional[str] = Field(default=None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
-    password: Optional[str] = Field(None, min_length=6)
+    password: Optional[str] = Field(default=None, min_length=6)
     preferred_llm_provider: Optional[Literal["deepseek", "ollama"]] = None
-    home_city: Optional[str] = Field(None, max_length=255)
+    home_city: Optional[str] = Field(default=None, max_length=255)
 
 
 class UserResponse(UserBase):

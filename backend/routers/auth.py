@@ -179,8 +179,9 @@ def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Sessi
         )
 
     token_row_data = cast(Any, token_row)
-    user_update = schemas.UserUpdate(password=request.new_password)
-    updated_user = crud.update_user(db, user_id=token_row_data.user_id, user_update=user_update)
+    updated_user = crud.update_user_password(
+        db, user_id=token_row_data.user_id, new_password=request.new_password
+    )
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

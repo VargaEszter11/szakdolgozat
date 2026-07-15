@@ -229,7 +229,7 @@ def test_forgot_password_request_unknown_email_still_returns_generic_success(
 
 
 @patch("routers.auth.crud.consume_password_reset_token")
-@patch("routers.auth.crud.update_user")
+@patch("routers.auth.crud.update_user_password")
 @patch("routers.auth.crud.get_valid_password_reset_token")
 def test_forgot_password_reset_success(mock_get_token, mock_update, mock_consume):
     mock_get_token.return_value = MagicMock(user_id=1)
