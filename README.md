@@ -2,38 +2,55 @@
 
 BSc in Computer Science Engineering
 
-## What it is for
+## What it is
 
-The application is for people who travel often and want to keep **visited places** and **planned trips** in one place: browse past trips on a map or in a list, add new places, plan future routes, and use optional AI-assisted planning.
+A web app for frequent travellers to keep **visited places** and **planned trips** in one place: log past trips (list + map), plan future routes (optionally with an LLM), and share itineraries.
 
-## Main features
+## Features
 
-- **Visited places**: Table and map views; add locations with details.
-- **Plan new trip**: Build a route from visited places, new destinations, or random suggestions; planning can use an LLM (see configuration below).
-- **Planned trips**: List of saved plans; open a trip for details, or **edit** it in a modal (title, start city, trip dates, and per-stop fields). When you change dates on the **first** or **last** stop, the trip-level start and end dates update to stay consistent (first stop drives the trip start, last stop drives the trip end). Removing a stop re-chains following stops’ dates where applicable.
-- **Authentication**: Login and registration (including Google OAuth when configured).
-- **Profile**: Edit profile, session check, travel statistics.
-- **Settings**: Theme and language.
+- **Visited places** — list and map views; add places with details and optional photos
+- **Plan new trip** — routes from visited places, unvisited destinations, or random suggestions; LLM via DeepSeek or local Ollama
+- **Planned trips** — saved plans with detail/edit modals, booking status, stop management, and date consistency when editing first/last stops
+- **Trip sharing** — public read-only link (`/share`) and in-app invitations to other users
+- **Auth** — register/login, Google OAuth (optional), password reset by email
+- **Profile & settings** — profile editing, travel stats, theme (light/dark/auto), language (EN / HU / DE)
+- **Admin** — protected data export/import between environments (optional `ADMIN_SECRET`)
 
-## Technologies
+## Stack
 
-| Layer    | Stack                          |
-|----------|--------------------------------|
-| Frontend | HTML, CSS, JavaScript          |
-| Backend  | Python, FastAPI                |
-| Database | PostgreSQL (via SQLAlchemy)    |
+| Layer    | Stack |
+|----------|--------|
+| Frontend | HTML, CSS, JavaScript (static; nginx in Docker) |
+| Backend  | Python 3.12, FastAPI, SQLAlchemy |
+| Database | PostgreSQL |
+| Deploy   | Docker Compose (`db` + `backend` + `frontend`) |
 
-External integrations (optional, via environment variables) include geocoding (Nominatim), LLM providers (e.g. DeepSeek or local Ollama), and Google sign-in. See `.env.example` for variable names and short comments.
+Optional integrations (see `.env.example`): Nominatim geocoding, DeepSeek / Ollama, Google OAuth, AirLabs, SMTP.
 
-## Prerequisites
+## Quick start (Docker)
 
-- Python 3.10+ (recommended)
-- PostgreSQL with a database created for the app (default name in `.env.example`: `szakdolgozat`)
-- A copy of `.env` in the project root (copy from `.env.example` and fill in values you need)
+**Prerequisites:** Docker Desktop (or Docker Engine + Compose), and a `.env` file in the project root.
 
-## Installation
+```bat
+copy .env.example .env
+docker compose up --build -d
+```
 
-From the project root:
+Open **http://localhost** (frontend on port 80; API proxied to the backend).
+
+Local Compose overrides (`docker-compose.override.yaml`) also publish Postgres on host port **5433**.
+
+Stop:
+
+```bat
+docker compose down
+```
+
+Set `PUBLIC_BASE_URL` in `.env` when the app is behind a reverse proxy so email links (password reset) use your public domain.
+
+## Local development (without Docker frontend)
+
+**Prerequisites:** Python 3.10+, a running PostgreSQL database, `.env` configured (`DB_*`, etc.).
 
 ```bat
 python -m venv .venv
@@ -41,22 +58,48 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Create the database and user if needed, then set `DB_*` (and any other keys) in `.env`.
-
-## Running the application
-
-**Manual start** (from the `backend` folder, with dependencies installed and `PYTHONPATH`/working directory set so `main:app` resolves):
+Start the API (serves/uploads; for full UI prefer Docker frontend, or open static files carefully with API base URL set):
 
 ```bat
 cd backend
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Then open `http://localhost:8000` in a browser.
+## Configuration
 
-## Project layout (short)
+Copy `.env.example` → `.env` and fill what you need. Important groups:
 
-- `backend/` — FastAPI app (`main.py`), database models, trip planning logic
-- `frontend/` — static pages, scripts, and styles served by the backend
-- `requirements.txt` — Python dependencies
-- `start.bat` — local launch helper for Windows
+| Area | Variables |
+|------|-----------|
+| Database | `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` |
+| Google login | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| Trip LLM | `DEEPSEEK_*` and/or `OLLAMA_*` |
+| Geocoding | `NOMINATIM_USER_AGENT` (required by OSM policy) |
+| Password reset email | `SMTP_*`, optionally `PUBLIC_BASE_URL` |
+| Admin tools | `ADMIN_SECRET` |
+
+## Tests
+
+```bat
+python -m pytest unit_tests --cov=backend --cov-report=term-missing
+```
+
+CI runs the same suite on push/PR via `.github/workflows/tests.yml`.
+
+## Project layout
+
+```
+backend/           FastAPI app (routers, models, planners, scrapers)
+frontend/          Static pages, scripts, styles
+docker/            nginx config for the frontend container
+unit_tests/        Backend unit tests
+integration_tests/ Backend workflow tests
+uploads/           User uploads (place images; volume in Docker)
+docker-compose.yaml
+.env.example
+requirements.txt
+```
+
+## API overview
+
+Routers are mounted under `/api` (auth, users, places, trips, stops, sharing, admin). Trip generation also uses `/generate_travel_plans/…`. Interactive docs when the backend is up: `/docs`.
