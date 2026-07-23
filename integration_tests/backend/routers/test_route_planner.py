@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 class TestGeocode:
     """Integration tests for POST /api/geocode."""
 
-    @patch("travel_types.plan_generation.geocode_place", new_callable=AsyncMock)
+    @patch("travel_types.plan_requests.geocode_place", new_callable=AsyncMock)
     def test_geocode_places(self, mock_geocode, client):
         mock_geocode.return_value = (47.5, 19.0)
 

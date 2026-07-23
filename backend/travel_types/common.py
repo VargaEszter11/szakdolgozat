@@ -38,7 +38,7 @@ GENERAL_OUTPUT_RULES = (
 ACTIVITY_SUGGESTION_RULE = "- For each destination, suggest 1-2 realistic activities/programs."
 
 
-def language_name(language_code: str) -> str:
+def language_name(language_code: str | None) -> str:
     return LANG_NAMES.get((language_code or "en").lower(), "English")
 
 
@@ -53,7 +53,7 @@ def _list_line(values: list | None) -> str:
     return ", ".join(cleaned) if cleaned else "none"
 
 
-def _block(*lines: str) -> str:
+def _block(*lines: str | None) -> str:
     return "\n".join(line for line in lines if line is not None) + "\n"
 
 
@@ -292,7 +292,7 @@ async def run_db_planner(
     extra_places: List[str] | None = None,
     preferred_transport: str = "allModes",
 ) -> str:
-    from .planner import build_plan
+    from .plan_builder import build_plan
 
     data = await build_plan(
         strategy=strategy,

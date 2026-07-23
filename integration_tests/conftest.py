@@ -34,6 +34,18 @@ Base.metadata.create_all(bind=engine)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+@pytest.fixture
+def patch_plan_builder_db(monkeypatch, db):
+    """Bind plan_builder.SessionLocal to the same SQLite engine as the test ``db``."""
+
+    def _patch(plan_builder_module):
+        factory = sessionmaker(autocommit=False, autoflush=False, bind=db.get_bind())
+        monkeypatch.setattr(plan_builder_module, "SessionLocal", factory)
+        return factory
+
+    return _patch
+
+
 def override_get_db():
     """Override the database dependency with test database."""
     db = None
