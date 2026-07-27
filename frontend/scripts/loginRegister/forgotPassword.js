@@ -37,23 +37,24 @@ function showRequestStep() {
     );
 
     const form = document.createElement('form');
-    form.style.display = 'flex';
-    form.style.flexDirection = 'column';
-    form.style.gap = '12px';
-    form.style.marginTop = '8px';
+    form.className = 'login-form';
 
-    const emailInput = createInput('email', forgotPasswordT('forgotPassword.emailPlaceholder', 'Your registered email'), true);
+    const { group: emailGroup, input: emailInput } = createFormGroup({
+        type: 'email',
+        id: 'forgotPasswordEmail',
+        label: forgotPasswordT('forgotPassword.email', 'Email *'),
+        placeholder: forgotPasswordT('forgotPassword.emailPlaceholder', 'Your registered email'),
+        required: true,
+        autocomplete: 'email',
+    });
 
     const actions = document.createElement('div');
     actions.className = 'custom-modal-actions';
-    actions.style.marginTop = '4px';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
-    cancelBtn.className = 'custom-modal-btn';
+    cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
     cancelBtn.textContent = forgotPasswordT('forgotPassword.cancel', 'Cancel');
-    cancelBtn.style.background = 'var(--muted)';
-    cancelBtn.style.color = 'var(--surface)';
 
     const sendBtn = document.createElement('button');
     sendBtn.type = 'submit';
@@ -63,7 +64,7 @@ function showRequestStep() {
     actions.appendChild(cancelBtn);
     actions.appendChild(sendBtn);
 
-    form.appendChild(emailInput);
+    form.appendChild(emailGroup);
     form.appendChild(actions);
 
     modal.appendChild(header);
@@ -122,11 +123,27 @@ function showRequestStep() {
     emailInput.focus();
 }
 
-function createInput(type, placeholder, required) {
+function createFormGroup({ type, id, label, placeholder, required, autocomplete }) {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+
+    const labelEl = document.createElement('label');
+    labelEl.className = 'form-label';
+    labelEl.htmlFor = id;
+    labelEl.textContent = label;
+
     const input = document.createElement('input');
     input.type = type;
+    input.id = id;
+    input.name = id;
     input.placeholder = placeholder;
-    input.required = required;
+    input.required = Boolean(required);
     input.className = 'form-input';
-    return input;
+    if (autocomplete) {
+        input.autocomplete = autocomplete;
+    }
+
+    group.appendChild(labelEl);
+    group.appendChild(input);
+    return { group, input };
 }

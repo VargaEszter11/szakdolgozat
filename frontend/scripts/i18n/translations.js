@@ -301,6 +301,7 @@ window.I18N_TRANSLATIONS = {
       login: 'Log in',
       cancel: 'Cancel',
       googleOrContinue: 'or continue with',
+      googleContinue: 'Continue with Google',
       googleUnavailable: 'Google sign-in is currently unavailable.',
       googleNotConfigured: 'Google sign-in is not configured on the server.',
       googleLoadFailed: 'Google sign-in failed to load. Please try refreshing.',
@@ -324,6 +325,7 @@ window.I18N_TRANSLATIONS = {
     forgotPassword: {
       title: 'Reset Password',
       description: "Enter your account's email and we'll send you a link to reset your password.",
+      email: 'Email *',
       emailPlaceholder: 'Your registered email',
       send: 'Send reset link',
       sending: 'Sending...',
@@ -681,6 +683,7 @@ window.I18N_TRANSLATIONS = {
       login: 'Bejelentkezés',
       cancel: 'Mégse',
       googleOrContinue: 'vagy folytasd ezzel',
+      googleContinue: 'Folytatás Google-fiókkal',
       googleUnavailable: 'A Google bejelentkezés jelenleg nem érhető el.',
       googleNotConfigured: 'A Google bejelentkezés nincs beállítva a szerveren.',
       googleLoadFailed: 'A Google bejelentkezés nem töltődött be. Próbáld újratölteni az oldalt.',
@@ -704,6 +707,7 @@ window.I18N_TRANSLATIONS = {
     forgotPassword: {
       title: 'Jelszó visszaállítása',
       description: 'Add meg a fiókodhoz tartozó e-mail címet, és küldünk egy linket a jelszavad visszaállításához.',
+      email: 'E-mail *',
       emailPlaceholder: 'Regisztrált e-mail címed',
       send: 'Link küldése',
       sending: 'Küldés...',
@@ -1061,6 +1065,7 @@ window.I18N_TRANSLATIONS = {
       login: 'Anmelden',
       cancel: 'Abbrechen',
       googleOrContinue: 'oder weiter mit',
+      googleContinue: 'Weiter mit Google',
       googleUnavailable: 'Google-Anmeldung ist derzeit nicht verfügbar.',
       googleNotConfigured: 'Google-Anmeldung ist auf dem Server nicht konfiguriert.',
       googleLoadFailed: 'Google-Anmeldung konnte nicht geladen werden. Bitte die Seite neu laden.',
@@ -1084,6 +1089,7 @@ window.I18N_TRANSLATIONS = {
     forgotPassword: {
       title: 'Passwort zurücksetzen',
       description: 'Gib die E-Mail-Adresse deines Kontos ein, wir senden dir einen Link zum Zurücksetzen des Passworts.',
+      email: 'E-Mail *',
       emailPlaceholder: 'Deine registrierte E-Mail',
       send: 'Link senden',
       sending: 'Wird gesendet...',

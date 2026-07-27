@@ -51,10 +51,6 @@ function getAppLanguageCode() {
     return "en";
 }
 
-function getGoogleSignInLocale() {
-    return getAppLanguageCode();
-}
-
 function showGoogleUnavailable(reason) {
     var key = "login.googleUnavailable";
     if (reason === "not_configured") key = "login.googleNotConfigured";
@@ -92,7 +88,7 @@ function loadGoogleIdentityScript() {
         var existing = document.getElementById("google-identity-script");
         if (existing) {
             if (scriptHasHl(existing)) {
-                if (window.google && window.google.accounts && window.google.accounts.id) {
+                if (window.google && window.google.accounts && window.google.accounts.oauth2) {
                     resolve();
                     return;
                 }
@@ -122,34 +118,13 @@ function loadGoogleIdentityScript() {
     });
 }
 
-function parseGoogleCredentialPayload(credential) {
-    try {
-        var parts = String(credential).split(".");
-        if (parts.length < 2) return {};
-        var base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-        var pad = base64.length % 4;
-        if (pad) base64 += new Array(5 - pad).join("=");
-        var json = decodeURIComponent(
-            atob(base64)
-                .split("")
-                .map(function (c) {
-                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-                })
-                .join("")
-        );
-        return JSON.parse(json);
-    } catch (e) {
-        return {};
-    }
-}
-
-async function handleGoogleCredential(credential) {
+async function handleGoogleAuthCode(code) {
     const response = await fetch("/api/google-login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ credential: credential })
+        body: JSON.stringify({ code: code })
     });
 
     const data = await response.json();
@@ -157,9 +132,8 @@ async function handleGoogleCredential(credential) {
         throw new Error(data.detail || "Google login failed");
     }
 
-    var payload = parseGoogleCredentialPayload(credential);
-    if (payload.picture && typeof payload.picture === "string") {
-        localStorage.setItem("google_avatar_url", payload.picture);
+    if (data.avatar_url && typeof data.avatar_url === "string") {
+        localStorage.setItem("google_avatar_url", data.avatar_url);
     } else {
         localStorage.removeItem("google_avatar_url");
     }
@@ -182,17 +156,26 @@ async function initGoogleLogin() {
         }
 
         await loadGoogleIdentityScript();
-        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
             throw new Error("Google Identity Services failed to initialize");
         }
 
-        var host = document.getElementById("googleSignInButton");
-        window.google.accounts.id.initialize({
+        var btn = document.getElementById("googleSignInBtn");
+
+        var codeClient = window.google.accounts.oauth2.initCodeClient({
             client_id: config.client_id,
-            locale: getGoogleSignInLocale(),
+            scope: "openid email profile",
+            ux_mode: "popup",
             callback: async function (response) {
+                if (!response || !response.code) {
+                    if (response && response.error && response.error !== "popup_closed") {
+                        console.error(response.error);
+                        showError("Google login failed");
+                    }
+                    return;
+                }
                 try {
-                    const data = await handleGoogleCredential(response.credential);
+                    const data = await handleGoogleAuthCode(response.code);
                     saveSessionAndRedirect(data);
                 } catch (error) {
                     console.error(error);
@@ -201,14 +184,12 @@ async function initGoogleLogin() {
             }
         });
 
-        window.google.accounts.id.renderButton(host, {
-            theme: "outline",
-            size: "large",
-            text: "continue_with",
-            shape: "pill",
-            width: "280",
-            locale: getGoogleSignInLocale()
-        });
+        if (btn) {
+            btn.disabled = false;
+            btn.addEventListener("click", function () {
+                codeClient.requestCode();
+            });
+        }
     } catch (error) {
         console.error(error);
         showGoogleUnavailable("load_failed");

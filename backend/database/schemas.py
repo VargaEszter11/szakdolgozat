@@ -40,13 +40,14 @@ class LoginRequest(BaseModel):
 
 
 class GoogleLoginRequest(BaseModel):
-    credential: str
+    code: str
 
 
 class LoginResponse(BaseModel):
     success: bool
     user_id: int
     username: str
+    avatar_url: Optional[str] = None
 
 
 class RegisterRequest(BaseModel):

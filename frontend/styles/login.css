@@ -11,6 +11,10 @@ body.page-login .login-form .form-group {
     margin-bottom: 1rem;
 }
 
+body.page-login .custom-modal .login-form .form-group:last-of-type {
+    margin-bottom: 0.75rem;
+}
+
 body.page-login .login-form .form-label {
     font-weight: 600;
     margin-bottom: 0.25rem;
@@ -142,6 +146,39 @@ body.page-login .google-signin-host {
     display: flex;
     justify-content: center;
     min-height: 44px;
+}
+
+body.page-login .google-signin-btn {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--color-btn-cancel-border);
+    background: none;
+    color: var(--color-text);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+body.page-login .google-signin-btn:hover {
+    background: var(--color-btn-cancel-hover);
+}
+
+body.page-login .google-signin-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+body.page-login .google-signin-icon {
+    flex-shrink: 0;
 }
 
 body.page-login .google-login-hint {

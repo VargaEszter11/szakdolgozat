@@ -61,21 +61,29 @@ class TestGoogleAuth:
         assert response.status_code == 200
         assert response.json()["client_id"] == "test-client-id"
 
+    @patch("routers.auth.get_google_client_secret")
     @patch("routers.auth.get_google_client_id")
-    def test_google_login_not_configured(self, mock_client_id, client):
+    def test_google_login_not_configured(self, mock_client_id, mock_client_secret, client):
         mock_client_id.return_value = ""
+        mock_client_secret.return_value = ""
 
         response = client.post(
             "/api/google-login",
-            json={"credential": "some-token"},
+            json={"code": "some-code"},
         )
 
         assert response.status_code == 500
 
+    @patch("routers.auth.get_google_client_secret")
     @patch("routers.auth.get_google_client_id")
+    @patch("routers.auth._exchange_google_code")
     @patch("routers.auth.id_token.verify_oauth2_token")
-    def test_google_login_existing_user(self, mock_verify, mock_client_id, client, test_user):
+    def test_google_login_existing_user(
+        self, mock_verify, mock_exchange, mock_client_id, mock_client_secret, client, test_user
+    ):
         mock_client_id.return_value = "test-client-id"
+        mock_client_secret.return_value = "test-client-secret"
+        mock_exchange.return_value = {"id_token": "some-token"}
         mock_verify.return_value = {
             "email_verified": True,
             "email": test_user["email"],
@@ -84,7 +92,7 @@ class TestGoogleAuth:
 
         response = client.post(
             "/api/google-login",
-            json={"credential": "valid-token"},
+            json={"code": "valid-code"},
         )
 
         assert response.status_code == 200
@@ -92,10 +100,16 @@ class TestGoogleAuth:
         assert data["success"] is True
         assert data["user_id"] == test_user["id"]
 
+    @patch("routers.auth.get_google_client_secret")
     @patch("routers.auth.get_google_client_id")
+    @patch("routers.auth._exchange_google_code")
     @patch("routers.auth.id_token.verify_oauth2_token")
-    def test_google_login_creates_new_user(self, mock_verify, mock_client_id, client):
+    def test_google_login_creates_new_user(
+        self, mock_verify, mock_exchange, mock_client_id, mock_client_secret, client
+    ):
         mock_client_id.return_value = "test-client-id"
+        mock_client_secret.return_value = "test-client-secret"
+        mock_exchange.return_value = {"id_token": "some-token"}
         mock_verify.return_value = {
             "email_verified": True,
             "email": "googleuser@example.com",
@@ -104,7 +118,7 @@ class TestGoogleAuth:
 
         response = client.post(
             "/api/google-login",
-            json={"credential": "valid-token"},
+            json={"code": "valid-code"},
         )
 
         assert response.status_code == 200
@@ -112,15 +126,38 @@ class TestGoogleAuth:
         assert data["success"] is True
         assert data["user_id"] > 0
 
+    @patch("routers.auth.get_google_client_secret")
     @patch("routers.auth.get_google_client_id")
-    @patch("routers.auth.id_token.verify_oauth2_token")
-    def test_google_login_invalid_token(self, mock_verify, mock_client_id, client):
+    @patch("routers.auth._exchange_google_code")
+    def test_google_login_invalid_code(
+        self, mock_exchange, mock_client_id, mock_client_secret, client
+    ):
         mock_client_id.return_value = "test-client-id"
+        mock_client_secret.return_value = "test-client-secret"
+        mock_exchange.side_effect = ValueError("invalid code")
+
+        response = client.post(
+            "/api/google-login",
+            json={"code": "bad-code"},
+        )
+
+        assert response.status_code == 401
+
+    @patch("routers.auth.get_google_client_secret")
+    @patch("routers.auth.get_google_client_id")
+    @patch("routers.auth._exchange_google_code")
+    @patch("routers.auth.id_token.verify_oauth2_token")
+    def test_google_login_invalid_token(
+        self, mock_verify, mock_exchange, mock_client_id, mock_client_secret, client
+    ):
+        mock_client_id.return_value = "test-client-id"
+        mock_client_secret.return_value = "test-client-secret"
+        mock_exchange.return_value = {"id_token": "bad-token"}
         mock_verify.side_effect = ValueError("invalid token")
 
         response = client.post(
             "/api/google-login",
-            json={"credential": "bad-token"},
+            json={"code": "some-code"},
         )
 
         assert response.status_code == 401

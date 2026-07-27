@@ -111,36 +111,66 @@ def test_login_wrong_password(mock_verify, mock_get_user):
 
     assert response.status_code == 401
 
+@patch("routers.auth.get_google_client_secret")
 @patch("routers.auth.get_google_client_id")
-def test_google_login_not_configured(mock_client_id):
+def test_google_login_not_configured(mock_client_id, mock_client_secret):
     mock_client_id.return_value = ""
+    mock_client_secret.return_value = ""
 
     response = client.post(
         "/api/google-login",
-        json={"credential": "fake-token"}
+        json={"code": "fake-code"}
     )
 
     assert response.status_code == 500
 
 
+@patch("routers.auth.get_google_client_secret")
 @patch("routers.auth.get_google_client_id")
-@patch("routers.auth.id_token.verify_oauth2_token")
-def test_google_login_invalid_token(mock_verify_token, mock_client_id):
+@patch("routers.auth._exchange_google_code")
+def test_google_login_invalid_code(mock_exchange, mock_client_id, mock_client_secret):
     mock_client_id.return_value = "client-id"
-    mock_verify_token.side_effect = Exception("invalid")
+    mock_client_secret.return_value = "client-secret"
+    mock_exchange.side_effect = Exception("exchange failed")
 
     response = client.post(
         "/api/google-login",
-        json={"credential": "bad-token"}
+        json={"code": "bad-code"}
     )
 
     assert response.status_code == 401
 
 
+@patch("routers.auth.get_google_client_secret")
 @patch("routers.auth.get_google_client_id")
+@patch("routers.auth._exchange_google_code")
 @patch("routers.auth.id_token.verify_oauth2_token")
-def test_google_login_unverified_email(mock_verify_token, mock_client_id):
+def test_google_login_invalid_token(
+    mock_verify_token, mock_exchange, mock_client_id, mock_client_secret
+):
     mock_client_id.return_value = "client-id"
+    mock_client_secret.return_value = "client-secret"
+    mock_exchange.return_value = {"id_token": "bad-token"}
+    mock_verify_token.side_effect = Exception("invalid")
+
+    response = client.post(
+        "/api/google-login",
+        json={"code": "some-code"}
+    )
+
+    assert response.status_code == 401
+
+
+@patch("routers.auth.get_google_client_secret")
+@patch("routers.auth.get_google_client_id")
+@patch("routers.auth._exchange_google_code")
+@patch("routers.auth.id_token.verify_oauth2_token")
+def test_google_login_unverified_email(
+    mock_verify_token, mock_exchange, mock_client_id, mock_client_secret
+):
+    mock_client_id.return_value = "client-id"
+    mock_client_secret.return_value = "client-secret"
+    mock_exchange.return_value = {"id_token": "some-token"}
     mock_verify_token.return_value = {
         "email_verified": False,
         "email": "test@example.com"
@@ -148,13 +178,15 @@ def test_google_login_unverified_email(mock_verify_token, mock_client_id):
 
     response = client.post(
         "/api/google-login",
-        json={"credential": "token"}
+        json={"code": "some-code"}
     )
 
     assert response.status_code == 401
 
 
+@patch("routers.auth.get_google_client_secret")
 @patch("routers.auth.get_google_client_id")
+@patch("routers.auth._exchange_google_code")
 @patch("routers.auth.id_token.verify_oauth2_token")
 @patch("routers.auth.crud.get_user_by_email")
 @patch("routers.auth.crud.create_google_user")
@@ -162,13 +194,18 @@ def test_google_login_create_user(
     mock_create,
     mock_get_email,
     mock_verify_token,
-    mock_client_id
+    mock_exchange,
+    mock_client_id,
+    mock_client_secret,
 ):
     mock_client_id.return_value = "client-id"
+    mock_client_secret.return_value = "client-secret"
+    mock_exchange.return_value = {"id_token": "some-token"}
     mock_verify_token.return_value = {
         "email_verified": True,
         "email": "test@example.com",
-        "name": "Test User"
+        "name": "Test User",
+        "picture": "https://example.com/avatar.png"
     }
 
     mock_get_email.return_value = None
@@ -176,11 +213,12 @@ def test_google_login_create_user(
 
     response = client.post(
         "/api/google-login",
-        json={"credential": "valid-token"}
+        json={"code": "valid-code"}
     )
 
     assert response.status_code == 200
     assert response.json()["success"] is True
+    assert response.json()["avatar_url"] == "https://example.com/avatar.png"
 
 @patch("routers.auth.get_google_client_id")
 def test_google_config(mock_client_id):
