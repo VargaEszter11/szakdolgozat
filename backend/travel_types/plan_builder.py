@@ -21,6 +21,12 @@ from .place_matching import (
     split_place_label,
 )
 from .common import language_name, next_stop_prompt, preferences_line
+from .place_access import (
+    candidates_for_unmatched_places,
+    remaining_unmatched_places,
+    resolve_home_hub_transfer,
+    resolve_place_access,
+)
 from .route_candidates import (
     annotate_distances,
     build_candidates,
@@ -37,7 +43,8 @@ def _finalize_segment_days_and_dates(
     if len(plan) < 2:
         return
 
-    stops = plan[:-1]
+    has_return = bool(plan[-1].get("is_return_home")) or int(plan[-1].get("days") or 0) == 0
+    stops = plan[:-1] if has_return else plan
     if not stops:
         return
 
@@ -54,9 +61,10 @@ def _finalize_segment_days_and_dates(
         walker = walker + timedelta(days=days)
         stop["departureDate"] = walker.strftime("%Y-%m-%d")
 
-    plan[-1]["arrivalDate"] = end_date
-    plan[-1]["departureDate"] = end_date
-    plan[-1]["days"] = 0
+    if has_return:
+        plan[-1]["arrivalDate"] = end_date
+        plan[-1]["departureDate"] = end_date
+        plan[-1]["days"] = 0
 
 
 def _minimum_stop_days(remaining_days: int) -> int:
@@ -242,13 +250,14 @@ async def _ask_ai_to_pick_candidate(
         return None
 
     chosen_iata = (choice.get("iata") or "").strip().upper()
+    matching = [
+        item
+        for item in candidates
+        if (item.get("iata") or "").strip().upper() == chosen_iata
+    ]
     candidate = next(
-        (
-            item
-            for item in candidates
-            if (item.get("iata") or "").strip().upper() == chosen_iata
-        ),
-        None,
+        (item for item in matching if item.get("ground_transfer") or item.get("off_airport")),
+        matching[0] if matching else None,
     )
     if not candidate:
         return None
@@ -267,6 +276,10 @@ async def _ask_ai_to_pick_candidate(
         "seasonality_status": seasonality_status(candidate.get("is_seasonal")),
         "effective_from": candidate.get("effective_from"),
         "effective_to": candidate.get("effective_to"),
+        "requested_place": candidate.get("requested_place"),
+        "off_airport": candidate.get("off_airport"),
+        "ground_transfer": candidate.get("ground_transfer"),
+        "via_place_access": candidate.get("via_place_access"),
     }
 
 
@@ -274,7 +287,7 @@ def _used_iatas(plan: List[Dict[str, Any]]) -> set[str]:
     return {
         (stop.get("iata") or "").strip().upper()
         for stop in plan
-        if stop.get("iata")
+        if stop.get("iata") and not stop.get("off_airport") and not stop.get("is_ground_transfer")
     }
 
 
@@ -288,6 +301,8 @@ async def _ranked_step_candidates(
     requested_places: List[str],
     forbidden_places: List[str],
     preferred_transport: str = "allModes",
+    language: str = "en",
+    place_access_cache: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[dict], List[dict]]:
     candidates = await build_candidates(
         db,
@@ -304,6 +319,63 @@ async def _ranked_step_candidates(
     requested_matches = []
     if strategy == "visited":
         requested_matches = _requested_candidate_matches(candidates, requested_places, plan)
+        unmatched = remaining_unmatched_places(requested_places, plan, candidates)
+        resolutions = []
+        for place in unmatched:
+            resolution = await resolve_place_access(
+                db,
+                place,
+                current_airport=current_airport,
+                preferred_transport=preferred_transport,
+                language=language,
+                cache=place_access_cache,
+            )
+            if resolution:
+                resolutions.append(resolution)
+
+        reachable = {
+            (item.get("iata") or "").strip().upper()
+            for item in candidates
+            if item.get("iata")
+        }
+        access_candidates = candidates_for_unmatched_places(
+            resolutions,
+            reachable_iatas=reachable,
+            current_airport=current_airport,
+        )
+        if access_candidates:
+            # Prefer existing route metadata (airline etc.) when injecting via-airport hubs.
+            enriched = []
+            for access in access_candidates:
+                if access.get("off_airport"):
+                    enriched.append(access)
+                    continue
+                access_iata = (access.get("iata") or "").strip().upper()
+                base = next(
+                    (
+                        item
+                        for item in candidates
+                        if (item.get("iata") or "").strip().upper() == access_iata
+                    ),
+                    None,
+                )
+                if base:
+                    merged = dict(base)
+                    merged.update(
+                        {
+                            "requested_place": access.get("requested_place"),
+                            "via_place_access": True,
+                            "ground_transfer": access.get("ground_transfer"),
+                        }
+                    )
+                    if (merged.get("transport") or "flight") == "flight" or not merged.get("transport"):
+                        merged["transport"] = base.get("transport") or "flight"
+                    enriched.append(merged)
+                else:
+                    enriched.append(access)
+            requested_matches = _merge_requested_with_ranked(requested_matches, enriched)
+            candidates = _merge_requested_with_ranked(enriched, candidates)
+
         if not requested_matches:
             return [], []
 
@@ -379,6 +451,10 @@ def _fallback_choice(
         "seasonality_status": seasonality_status(candidate.get("is_seasonal")),
         "effective_from": candidate.get("effective_from"),
         "effective_to": candidate.get("effective_to"),
+        "requested_place": candidate.get("requested_place"),
+        "off_airport": candidate.get("off_airport"),
+        "ground_transfer": candidate.get("ground_transfer"),
+        "via_place_access": candidate.get("via_place_access"),
     }
 
 
@@ -393,7 +469,8 @@ def _stop_from_choice(
     days = _clamp_days(choice.get("days"), remaining_days)
     departure_date = cursor.strftime("%Y-%m-%d")
     booking_details = {}
-    if (choice.get("transportFromPreviousCity") or "flight") == "flight":
+    transport = choice.get("transportFromPreviousCity") or "flight"
+    if transport == "flight":
         booking_details = flight_booking_details(
             db,
             current_airport,
@@ -404,14 +481,14 @@ def _stop_from_choice(
         if not booking_details:
             return None
 
-    return {
+    stop = {
         "city": choice["city"],
         "country": choice.get("country") or "",
         "iata": choice["iata"],
         "days": days,
         "arrivalDate": cursor.strftime("%Y-%m-%d"),
         "departureDate": (cursor + timedelta(days=days)).strftime("%Y-%m-%d"),
-        "transportFromPreviousCity": choice.get("transportFromPreviousCity") or "flight",
+        "transportFromPreviousCity": transport,
         "activities": choice.get("activities") or [],
         "is_seasonal_route": choice.get("is_seasonal_route"),
         "seasonality_status": choice.get("seasonality_status"),
@@ -420,6 +497,33 @@ def _stop_from_choice(
         "direct_flights_queried_from": current_airport,
         **booking_details,
     }
+    if choice.get("requested_place") and (
+        choice.get("off_airport") or choice.get("is_ground_transfer")
+    ):
+        stop["requested_place"] = choice["requested_place"]
+    if choice.get("off_airport"):
+        stop["off_airport"] = True
+    if choice.get("access_city"):
+        stop["access_city"] = choice["access_city"]
+    if choice.get("local_transport"):
+        stop["local_transport"] = choice["local_transport"]
+    return stop
+
+
+def _annotate_departure_home_transfer(
+    plan: List[Dict[str, Any]],
+    *,
+    home_city: str,
+    home_transfer: Optional[Dict[str, Any]],
+) -> None:
+    if not plan or not home_transfer:
+        return
+    first = plan[0]
+    if first.get("is_return_home"):
+        return
+    first["departure_from_city"] = (home_city or "").strip().title() or home_city
+    first["departure_access_city"] = home_transfer.get("access_city")
+    first["departure_local_transport"] = home_transfer.get("local_transport") or "bus"
 
 
 def _append_return_home(
@@ -431,6 +535,7 @@ def _append_return_home(
     home_country: str,
     end_date: str,
     preferred_transport: str = "allModes",
+    home_transfer: Optional[Dict[str, Any]] = None,
 ) -> None:
     if not plan:
         return
@@ -466,20 +571,46 @@ def _append_return_home(
     if return_transport is None:
         return
 
-    plan.append(
-        {
-            "city": home_city,
-            "country": home_country,
-            "iata": starting_airport_iata,
-            "days": 0,
-            "arrivalDate": end_date,
-            "departureDate": end_date,
-            "transportFromPreviousCity": return_transport,
-            "activities": [],
-            "direct_flights_queried_from": plan[-1].get("iata"),
-            **return_flight_details,
-        }
-    )
+    last_city = (plan[-1].get("city") or "").strip().lower()
+    home_label = (home_city or "").strip()
+    if last_city and home_label and last_city == home_label.lower():
+        # Already at the starting place (e.g. last stop is home).
+        return
+
+    return_stop: Dict[str, Any] = {
+        "city": home_label.title() if home_label else home_city,
+        "country": home_country or "",
+        "iata": starting_airport_iata,
+        "days": 0,
+        "arrivalDate": end_date,
+        "departureDate": end_date,
+        "transportFromPreviousCity": return_transport,
+        "activities": [],
+        "is_return_home": True,
+        "direct_flights_queried_from": plan[-1].get("iata"),
+        **return_flight_details,
+    }
+    last_stop = plan[-1]
+    # Mirror destination access: get from last place to its hub before the main return leg.
+    if return_transport in {"flight", "ferry"}:
+        last_access = (last_stop.get("access_city") or "").strip()
+        last_local = (last_stop.get("local_transport") or "").strip()
+        if last_access and last_local:
+            return_stop["departure_access_city"] = last_access
+            return_stop["departure_local_transport"] = last_local
+            return_stop["departure_from_city"] = (last_stop.get("city") or "").strip()
+    if home_transfer:
+        access_city = (home_transfer.get("access_city") or "").strip()
+        local = home_transfer.get("local_transport") or "bus"
+        if access_city:
+            if return_transport == "flight" or return_transport == "ferry":
+                # Same pattern as destination access: fly to hub, then ground home.
+                return_stop["access_city"] = access_city
+                return_stop["local_transport"] = local
+            else:
+                # Already arriving by ground at/near the hub — show hub origin.
+                return_stop["access_city"] = access_city
+    plan.append(return_stop)
 
 
 def _missing_requested_places(
@@ -524,9 +655,17 @@ async def build_plan(
     cursor = datetime.strptime(start_date, "%Y-%m-%d")
     remaining_days = int(travel_length)
     max_legs = min(24, max(1, remaining_days) + 8)
+    place_access_cache: Dict[str, Any] = {}
 
     db = SessionLocal()
     try:
+        home_transfer = await resolve_home_hub_transfer(
+            db,
+            starting_point,
+            starting_airport_iata=starting_airport_iata,
+            preferred_transport=preferred_transport,
+            language=language,
+        )
         for _ in range(max_legs):
             if remaining_days <= 0:
                 break
@@ -540,6 +679,8 @@ async def build_plan(
                 requested_places=requested_places,
                 forbidden_places=forbidden_places,
                 preferred_transport=preferred_transport,
+                language=language,
+                place_access_cache=place_access_cache,
             )
             if not candidates:
                 break
@@ -590,23 +731,64 @@ async def build_plan(
                     has_requested_places=bool(requested_matches),
                 )
 
-            stop = _stop_from_choice(
-                db,
-                choice=choice,
-                current_airport=current_airport,
-                cursor=cursor,
-                remaining_days=remaining_days,
-            )
+            stop = None
+            if choice.get("ground_transfer"):
+                transfer = dict(choice["ground_transfer"])
+                place_choice = {
+                    "city": transfer.get("city") or choice.get("city"),
+                    "country": transfer.get("country") or choice.get("country") or "",
+                    "iata": transfer.get("iata") or choice.get("iata"),
+                    "days": choice.get("days"),
+                    "transportFromPreviousCity": choice.get("transportFromPreviousCity")
+                    or "flight",
+                    "activities": choice.get("activities") or ["City walk", "Local sights"],
+                    "airline_iata": choice.get("airline_iata"),
+                    "airline_name": choice.get("airline_name"),
+                    "is_seasonal_route": choice.get("is_seasonal_route"),
+                    "seasonality_status": choice.get("seasonality_status"),
+                    "effective_from": choice.get("effective_from"),
+                    "effective_to": choice.get("effective_to"),
+                    "requested_place": transfer.get("requested_place")
+                    or choice.get("requested_place"),
+                    "off_airport": True,
+                    "access_city": choice.get("city"),
+                    "local_transport": transfer.get("transport") or "bus",
+                }
+                stop = _stop_from_choice(
+                    db,
+                    choice=place_choice,
+                    current_airport=current_airport,
+                    cursor=cursor,
+                    remaining_days=remaining_days,
+                )
+            else:
+                stop = _stop_from_choice(
+                    db,
+                    choice=choice,
+                    current_airport=current_airport,
+                    cursor=cursor,
+                    remaining_days=remaining_days,
+                )
             if not stop:
                 break
 
             plan.append(stop)
             remaining_days -= int(stop["days"])
+            cursor = datetime.strptime(stop["departureDate"], "%Y-%m-%d")
             current_airport = str(stop["iata"])
 
         if remaining_days > 0 and plan:
-            plan[-1]["days"] = int(plan[-1].get("days") or 1) + remaining_days
+            for item in reversed(plan):
+                if int(item.get("days") or 0) <= 0:
+                    continue
+                item["days"] = int(item.get("days") or 1) + remaining_days
+                break
 
+        _annotate_departure_home_transfer(
+            plan,
+            home_city=home_city,
+            home_transfer=home_transfer,
+        )
         _append_return_home(
             db,
             plan=plan,
@@ -615,6 +797,7 @@ async def build_plan(
             home_country=home_country,
             end_date=end_date,
             preferred_transport=preferred_transport,
+            home_transfer=home_transfer,
         )
     finally:
         db.close()

@@ -26,6 +26,52 @@ function transportLabel(transport) {
     return label && !label.startsWith('plannedTrips.') ? label : transport;
 }
 
+function formatStopTransport(destination) {
+    const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
+    function tpl(key, fallback) {
+        if (!t) return fallback;
+        const value = t('plannedTrips.' + key);
+        return value && !String(value).startsWith('plannedTrips.') ? value : fallback;
+    }
+    const thenJoin = tpl('transportThenJoin', ', then ');
+
+    const parts = [];
+    const depLocal = destination.departure_local_transport || destination.departureLocalTransport;
+    const depAccess = destination.departure_access_city || destination.departureAccessCity;
+    if (depLocal && depAccess) {
+        parts.push(
+            tpl('transportHubDeparture', '{local} to {access}')
+                .replace('{local}', transportLabel(depLocal))
+                .replace('{access}', depAccess)
+        );
+    }
+
+    const mainRaw = destination.transportFromPreviousCity || destination.transport_from_last;
+    const main = transportLabel(mainRaw);
+    const local = destination.local_transport || destination.localTransport;
+    const access = destination.access_city || destination.accessCity;
+    const isReturn = !!(destination.is_return_home || destination.isReturnHome);
+
+    if (local && access) {
+        parts.push(
+            tpl('transportWithLocalTransfer', '{main}, then {local} from {access}')
+                .replace('{main}', main)
+                .replace('{local}', transportLabel(local))
+                .replace('{access}', access)
+        );
+    } else if (access && isReturn) {
+        parts.push(
+            tpl('transportGroundFromHub', '{main} from {access}')
+                .replace('{main}', main)
+                .replace('{access}', access)
+        );
+    } else {
+        parts.push(main);
+    }
+
+    return parts.filter(Boolean).join(thenJoin);
+}
+
 function accommodationBookingUrl(city, country, checkin, checkout, people) {
     if (!city || !checkin || !checkout || checkin === checkout) return null;
     const params = new URLSearchParams({
@@ -84,7 +130,11 @@ export function renderTripDetails(trip, people = 1) {
     if (trip.plan && Array.isArray(trip.plan)) {
         html += '<div class="trip-destinations">';
         trip.plan.forEach((destination, idx) => {
-            const cityLine = escapeHtml(destination.city || '') + ', ' + escapeHtml(destination.country || '');
+            const cityLine = [destination.city, destination.country]
+                .map((part) => (part == null ? '' : String(part).trim()))
+                .filter(Boolean)
+                .map(escapeHtml)
+                .join(', ');
             const accommodationUrl = accommodationBookingUrl(
                 destination.city,
                 destination.country,
@@ -101,7 +151,7 @@ export function renderTripDetails(trip, people = 1) {
                             ${destination.arrivalDate && destination.departureDate
                     ? `<strong>${window.i18n.t('plannedTrips.dates')}:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)}`
                     : `<strong>${window.i18n.t('plannedTrips.days')}:</strong> ${destination.days}`}
-                             | <strong>${window.i18n.t('plannedTrips.transport')}:</strong> ${escapeHtml(transportLabel(destination.transportFromPreviousCity))}
+                             | <strong>${window.i18n.t('plannedTrips.transport')}:</strong> ${escapeHtml(formatStopTransport(destination))}
                         </p>
                         ${destination.booking_url || accommodationUrl ? `
                             <div class="trip-stop-actions">
@@ -213,7 +263,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
                     stop_order: i + 1,
                     arrival_date: arrivalStr,
                     departure_date: departureStr,
-                    transport_from_last: destination.transportFromPreviousCity || null,
+                    transport_from_last: formatStopTransport(destination),
                     activities: destination.activities ? destination.activities.join(', ') : null,
                     booking_url: destination.booking_url || null,
                     flight_availability_verified: destination.flight_availability_verified ?? null

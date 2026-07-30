@@ -108,6 +108,20 @@ def place_matches_candidate(place: str, candidate: dict) -> bool:
     place_city = extract_city(place)
     if not place_city:
         return False
+    requested = (candidate.get("requested_place") or "").strip()
+    if requested and (
+        candidate.get("off_airport")
+        or candidate.get("is_ground_transfer")
+        or candidate.get("via_place_access")
+        or candidate.get("ground_transfer")
+    ):
+        requested_city = extract_city(requested)
+        if requested_city and (
+            place_city in requested_city
+            or requested_city in place_city
+            or place_city == requested_city
+        ):
+            return True
     city = (candidate.get("city") or "").strip().lower()
     country = (candidate.get("country") or "").strip().lower()
     full = f"{city}, {country}" if country else city

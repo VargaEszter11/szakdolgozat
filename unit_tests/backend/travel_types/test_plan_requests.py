@@ -87,6 +87,41 @@ def test_clean_plan_city_names():
     assert plan["plan"][1]["city"] == "NoIata"
 
 
+def test_clean_plan_city_names_keeps_off_airport_place():
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(city="Split")
+    plan = {
+        "plan": [
+            {
+                "iata": "SPU",
+                "city": "Trogir",
+                "off_airport": True,
+                "requested_place": "trogir",
+            }
+        ]
+    }
+    pg.clean_plan_city_names(plan, db)
+    assert plan["plan"][0]["city"] == "Trogir"
+    db.query.assert_not_called()
+
+
+def test_clean_plan_city_names_keeps_return_home_place():
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(city="Kosice")
+    plan = {
+        "plan": [
+            {
+                "iata": "KSC",
+                "city": "Miskolc",
+                "is_return_home": True,
+            }
+        ]
+    }
+    pg.clean_plan_city_names(plan, db)
+    assert plan["plan"][0]["city"] == "Miskolc"
+    db.query.assert_not_called()
+
+
 @pytest.mark.asyncio
 async def test_get_coordinates_success_and_404(monkeypatch):
     async def ok(place):

@@ -157,6 +157,7 @@ def test_append_return_home_and_missing_places(monkeypatch):
     )
     assert plan[-1]["city"] == "Budapest"
     assert plan[-1]["transportFromPreviousCity"] == "flight"
+    assert plan[-1]["is_return_home"] is True
 
     monkeypatch.setattr(plan_builder, "flight_booking_details", lambda *a, **k: {})
     monkeypatch.setattr(plan_builder, "ground_transport_between_airports", lambda *a, **k: None)
@@ -171,6 +172,66 @@ def test_append_return_home_and_missing_places(monkeypatch):
         end_date="2026-07-10",
     )
     assert len(short) == 1
+
+    monkeypatch.setattr(plan_builder, "flight_booking_details", lambda *a, **k: {})
+    monkeypatch.setattr(plan_builder, "ground_transport_between_airports", lambda *a, **k: "bus")
+    same_hub = [{"city": "Kosice", "iata": "KSC"}]
+    plan_builder._append_return_home(
+        MagicMock(),
+        plan=same_hub,
+        starting_airport_iata="KSC",
+        home_city="miskolc",
+        home_country="",
+        end_date="2026-08-19",
+        home_transfer={"access_city": "Kosice", "local_transport": "bus"},
+    )
+    assert same_hub[-1]["city"] == "Miskolc"
+    assert same_hub[-1]["is_return_home"] is True
+    assert same_hub[-1]["transportFromPreviousCity"] == "bus"
+    assert same_hub[-1]["access_city"] == "Kosice"
+
+    flight_home = [{
+        "city": "Rathvilly",
+        "iata": "DUB",
+        "access_city": "Dublin",
+        "local_transport": "bus",
+        "off_airport": True,
+    }]
+    monkeypatch.setattr(
+        plan_builder,
+        "flight_booking_details",
+        lambda *a, **k: {
+            "booking_url": "https://book",
+            "airline_iata": "FR",
+            "origin_airport_iata": "DUB",
+            "destination_airport_iata": "KSC",
+        },
+    )
+    plan_builder._append_return_home(
+        MagicMock(),
+        plan=flight_home,
+        starting_airport_iata="KSC",
+        home_city="Miskolc",
+        home_country="",
+        end_date="2026-08-19",
+        home_transfer={"access_city": "Kosice", "local_transport": "bus"},
+    )
+    assert flight_home[-1]["transportFromPreviousCity"] == "flight"
+    assert flight_home[-1]["local_transport"] == "bus"
+    assert flight_home[-1]["access_city"] == "Kosice"
+    assert flight_home[-1]["departure_access_city"] == "Dublin"
+    assert flight_home[-1]["departure_local_transport"] == "bus"
+    assert flight_home[-1]["departure_from_city"] == "Rathvilly"
+
+    first = [{"city": "Rathvilly", "iata": "DUB", "transportFromPreviousCity": "flight"}]
+    plan_builder._annotate_departure_home_transfer(
+        first,
+        home_city="miskolc",
+        home_transfer={"access_city": "Kosice", "local_transport": "bus"},
+    )
+    assert first[0]["departure_access_city"] == "Kosice"
+    assert first[0]["departure_local_transport"] == "bus"
+    assert first[0]["departure_from_city"] == "Miskolc"
 
     monkeypatch.setattr(plan_builder, "place_used_in_plan", lambda place, plan: False)
     assert plan_builder._missing_requested_places(strategy="random", requested_places=["Paris"], plan=[]) == []
@@ -293,6 +354,7 @@ async def test_build_plan_happy_path(monkeypatch):
         },
     )
     monkeypatch.setattr(plan_builder, "_append_return_home", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "resolve_home_hub_transfer", AsyncMock(return_value=None))
     monkeypatch.setattr(plan_builder, "refresh_booking_details", lambda *a, **k: None)
 
     result = await plan_builder.build_plan(

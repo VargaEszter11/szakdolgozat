@@ -240,6 +240,16 @@ def clean_plan_city_names(plan: dict, db: Session) -> None:
         for stop in trip.get("plan", []):
             if not isinstance(stop, dict):
                 continue
+            # Keep typed / home place names; IATA is only the routing hub.
+            if (
+                stop.get("off_airport")
+                or stop.get("is_ground_transfer")
+                or stop.get("is_return_home")
+            ):
+                requested = (stop.get("requested_place") or "").strip()
+                if requested:
+                    stop["city"] = requested.split(",")[0].strip().title()
+                continue
             iata = (stop.get("iata") or "").strip().upper()
             if not iata:
                 continue

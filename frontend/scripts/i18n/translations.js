@@ -234,6 +234,10 @@ window.I18N_TRANSLATIONS = {
         bus: 'Bus',
         ferry: 'Ferry'
       },
+      transportWithLocalTransfer: '{main}, then {local} from {access}',
+      transportHubDeparture: '{local} to {access}',
+      transportGroundFromHub: '{main} from {access}',
+      transportThenJoin: ', then ',
       checkFlightAvailability: 'Check flight availability',
       bookThisFlight: 'Book this flight',
       days: 'Days',
@@ -616,6 +620,10 @@ window.I18N_TRANSLATIONS = {
         bus: 'Busz',
         ferry: 'Komp'
       },
+      transportWithLocalTransfer: '{main}, majd {local} innen: {access}',
+      transportHubDeparture: '{local} ide: {access}',
+      transportGroundFromHub: '{main} innen: {access}',
+      transportThenJoin: ', majd ',
       checkFlightAvailability: 'Repülőjegy elérhetőségének ellenőrzése',
       bookThisFlight: 'Repülőjegy foglalása',
       days: 'Napok',
@@ -998,6 +1006,10 @@ window.I18N_TRANSLATIONS = {
         bus: 'Bus',
         ferry: 'Fähre'
       },
+      transportWithLocalTransfer: '{main}, dann {local} ab {access}',
+      transportHubDeparture: '{local} nach {access}',
+      transportGroundFromHub: '{main} ab {access}',
+      transportThenJoin: ', dann ',
       checkFlightAvailability: 'Flugverfügbarkeit prüfen',
       bookThisFlight: 'Flug buchen',
       days: 'Tage',
