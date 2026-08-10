@@ -78,6 +78,8 @@ def test_login_success(mock_verify, mock_get_user):
     assert response.status_code == 200
     assert response.json()["success"] is True
     assert response.json()["username"] == "testuser"
+    assert response.json().get("access_token")
+    assert response.json().get("token_type") == "bearer"
 
 
 @patch("routers.auth.crud.get_user_by_username")
@@ -219,6 +221,9 @@ def test_google_login_create_user(
     assert response.status_code == 200
     assert response.json()["success"] is True
     assert response.json()["avatar_url"] == "https://example.com/avatar.png"
+    assert response.json().get("access_token")
+    assert response.json().get("token_type") == "bearer"
+    assert response.json().get("access_token")
 
 @patch("routers.auth.get_google_client_id")
 def test_google_config(mock_client_id):

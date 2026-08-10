@@ -6,8 +6,10 @@ from fastapi.testclient import TestClient
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from database import schemas
 from routers import trip_sharing
+from utils.auth_deps import get_current_user
+
+from .auth_test_utils import fake_user, override_current_user
 
 app = FastAPI()
 app.include_router(trip_sharing.router, prefix="/api")
@@ -15,7 +17,8 @@ app.include_router(trip_sharing.router, prefix="/api")
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    yield TestClient(app)
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
@@ -92,6 +95,7 @@ def sample_invitation(**overrides):
 
 
 def test_create_share_link_not_owner(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(99))
     monkeypatch.setattr(
         trip_sharing.crud,
         "create_or_get_trip_share_link",
@@ -99,12 +103,13 @@ def test_create_share_link_not_owner(monkeypatch, client, db_mock):
     )
     app.dependency_overrides[trip_sharing.get_db] = override_get_db(db_mock)
 
-    res = client.post("/api/planned-trips/1/share-link", json={"user_id": 99})
+    res = client.post("/api/planned-trips/1/share-link", json={})
 
     assert res.status_code == 403
 
 
 def test_create_share_link_success(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(10))
     monkeypatch.setattr(
         trip_sharing.crud,
         "create_or_get_trip_share_link",
@@ -112,7 +117,7 @@ def test_create_share_link_success(monkeypatch, client, db_mock):
     )
     app.dependency_overrides[trip_sharing.get_db] = override_get_db(db_mock)
 
-    res = client.post("/api/planned-trips/1/share-link", json={"user_id": 10})
+    res = client.post("/api/planned-trips/1/share-link", json={})
 
     assert res.status_code == 200
     body = res.json()
@@ -154,6 +159,7 @@ def test_get_shared_trip_invalid_token(monkeypatch, client, db_mock):
 
 
 def test_share_with_user_success(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(10))
     inv = sample_invitation()
     monkeypatch.setattr(
         trip_sharing.crud,
@@ -174,7 +180,7 @@ def test_share_with_user_success(monkeypatch, client, db_mock):
 
     res = client.post(
         "/api/planned-trips/1/share",
-        json={"from_user_id": 10, "to_user_id": 20},
+        json={"to_user_id": 20},
     )
 
     assert res.status_code == 201
@@ -182,6 +188,7 @@ def test_share_with_user_success(monkeypatch, client, db_mock):
 
 
 def test_share_with_self_rejected(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(10))
     monkeypatch.setattr(
         trip_sharing.crud,
         "create_trip_share_invitation",
@@ -191,15 +198,15 @@ def test_share_with_self_rejected(monkeypatch, client, db_mock):
 
     res = client.post(
         "/api/planned-trips/1/share",
-        json={"from_user_id": 10, "to_user_id": 10},
+        json={"to_user_id": 10},
     )
 
     assert res.status_code == 400
 
 
 def test_list_invitations(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(20))
     inv = sample_invitation()
-    monkeypatch.setattr(trip_sharing.crud, "get_user", lambda db, user_id: SimpleNamespace(id=user_id))
     monkeypatch.setattr(
         trip_sharing.crud,
         "list_trip_share_invitations_for_user",
@@ -226,6 +233,7 @@ def test_list_invitations(monkeypatch, client, db_mock):
 
 
 def test_accept_invitation(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(20))
     inv = sample_invitation(status="accepted", result_trip_id=99)
     monkeypatch.setattr(
         trip_sharing.crud,
@@ -244,7 +252,7 @@ def test_accept_invitation(monkeypatch, client, db_mock):
     )
     app.dependency_overrides[trip_sharing.get_db] = override_get_db(db_mock)
 
-    res = client.post("/api/trip-share-invitations/5/accept", json={"user_id": 20})
+    res = client.post("/api/trip-share-invitations/5/accept", json={})
 
     assert res.status_code == 200
     assert res.json()["status"] == "accepted"
@@ -252,6 +260,7 @@ def test_accept_invitation(monkeypatch, client, db_mock):
 
 
 def test_decline_invitation(monkeypatch, client, db_mock):
+    override_current_user(app, fake_user(20))
     inv = sample_invitation(status="declined")
     monkeypatch.setattr(
         trip_sharing.crud,
@@ -270,7 +279,7 @@ def test_decline_invitation(monkeypatch, client, db_mock):
     )
     app.dependency_overrides[trip_sharing.get_db] = override_get_db(db_mock)
 
-    res = client.post("/api/trip-share-invitations/5/decline", json={"user_id": 20})
+    res = client.post("/api/trip-share-invitations/5/decline", json={})
 
     assert res.status_code == 200
     assert res.json()["status"] == "declined"

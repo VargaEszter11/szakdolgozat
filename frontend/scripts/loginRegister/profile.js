@@ -164,6 +164,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             localStorage.removeItem('user_id');
             localStorage.removeItem('username');
             localStorage.removeItem('google_avatar_url');
+            localStorage.removeItem('access_token');
             window.location.href = 'loginPage.html';
           });
         });

@@ -5,6 +5,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from typing import Any, cast
 from utils.email import send_password_reset_email
+from utils.auth_deps import create_access_token
 import os
 import requests
 
@@ -103,6 +104,10 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
         success=True,
         user_id=user_row.id,
         username=user_row.username,
+        access_token=create_access_token(
+            user_id=int(user_row.id),
+            username=str(user_row.username),
+        ),
     )
 
 
@@ -173,6 +178,10 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
         success=True,
         user_id=user_row.id,
         username=user_row.username,
+        access_token=create_access_token(
+            user_id=int(user_row.id),
+            username=str(user_row.username),
+        ),
         avatar_url=id_info.get("picture"),
     )
 

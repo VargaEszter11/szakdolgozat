@@ -67,6 +67,7 @@ class TestAdminExport:
         test_user,
         visited_place,
         planned_trip,
+        auth_headers,
         tmp_path,
         monkeypatch,
     ):
@@ -79,6 +80,7 @@ class TestAdminExport:
 
         image_response = client.post(
             f"/api/visited-places/{visited_place['id']}/images",
+            headers=auth_headers,
             json={"image_path": str(photo)},
         )
         assert image_response.status_code == 201
@@ -120,6 +122,7 @@ class TestAdminImport:
         test_user,
         visited_place,
         planned_trip,
+        auth_headers,
         tmp_path,
         monkeypatch,
         db,
@@ -133,6 +136,7 @@ class TestAdminImport:
 
         image_response = client.post(
             f"/api/visited-places/{visited_place['id']}/images",
+            headers=auth_headers,
             json={"image_path": str(photo)},
         )
         assert image_response.status_code == 201
@@ -144,9 +148,13 @@ class TestAdminImport:
         # Mutate live data so a successful import is observable.
         client.put(
             f"/api/visited-places/{visited_place['id']}",
+            headers=auth_headers,
             json={"place_name": "ChangedCity"},
         )
-        assert client.get(f"/api/visited-places/{visited_place['id']}").json()["place_name"] == "ChangedCity"
+        assert client.get(
+            f"/api/visited-places/{visited_place['id']}",
+            headers=auth_headers,
+        ).json()["place_name"] == "ChangedCity"
 
         imported = client.post("/api/admin/import", headers=ADMIN_HEADERS, json=payload)
 
@@ -157,7 +165,10 @@ class TestAdminImport:
         assert body["counts"]["visited_places"] >= 1
         assert body["counts"]["planned_trips"] >= 1
 
-        restored = client.get(f"/api/visited-places/{visited_place['id']}")
+        restored = client.get(
+            f"/api/visited-places/{visited_place['id']}",
+            headers=auth_headers,
+        )
         assert restored.status_code == 200
         assert restored.json()["place_name"] == visited_place["place_name"]
 
@@ -169,6 +180,7 @@ class TestAdminImport:
         admin_secret,
         sqlite_admin_sql,
         test_user,
+        auth_headers,
         monkeypatch,
     ):
         monkeypatch.setattr(admin, "ensure_place_images_dir", lambda: None)
@@ -207,6 +219,11 @@ class TestAdminImport:
         assert "Import failed" in response.json()["detail"]
 
         # Original user should still be queryable after rollback.
-        users = client.get("/api/users/")
+        users = client.get("/api/users/", headers=auth_headers)
         assert users.status_code == 200
-        assert any(u["id"] == test_user["id"] for u in users.json())
+        # Current user is excluded from search listing.
+        assert all(u["id"] != test_user["id"] for u in users.json())
+        # Confirm user still exists via self endpoint.
+        me = client.get(f"/api/users/{test_user['id']}", headers=auth_headers)
+        assert me.status_code == 200
+        assert me.json()["id"] == test_user["id"]

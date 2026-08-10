@@ -122,10 +122,29 @@ def test_user_2(db):
 
 
 @pytest.fixture(scope="function")
-def planned_trip(client, test_user):
+def auth_headers(test_user):
+    """Bearer token for the primary test user."""
+    from utils.auth_deps import create_access_token
+
+    token = create_access_token(user_id=int(test_user["id"]), username=test_user["username"])
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(scope="function")
+def auth_headers_2(test_user_2):
+    """Bearer token for the second test user."""
+    from utils.auth_deps import create_access_token
+
+    token = create_access_token(user_id=int(test_user_2["id"]), username=test_user_2["username"])
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(scope="function")
+def planned_trip(client, test_user, auth_headers):
     """Create a planned trip for the primary test user."""
     response = client.post(
         "/api/planned-trips",
+        headers=auth_headers,
         json={
             "user_id": test_user["id"],
             "title": "Europe Adventure",
@@ -141,10 +160,11 @@ def planned_trip(client, test_user):
 
 
 @pytest.fixture(scope="function")
-def visited_place(client, test_user):
+def visited_place(client, test_user, auth_headers):
     """Create a visited place for the primary test user."""
     response = client.post(
         "/api/visited-places",
+        headers=auth_headers,
         json={
             "user_id": test_user["id"],
             "place_name": "Prague",

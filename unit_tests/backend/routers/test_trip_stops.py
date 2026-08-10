@@ -1,17 +1,21 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from types import SimpleNamespace
 from unittest.mock import MagicMock, AsyncMock
 
 from routers import trip_stops
+from utils.auth_deps import get_current_user
 
 app = FastAPI()
 app.include_router(trip_stops.router)
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def client(auth_user):
+    app.dependency_overrides[get_current_user] = lambda: auth_user
+    yield TestClient(app)
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
@@ -23,6 +27,12 @@ def override_get_db(db_mock):
     def _override():
         yield db_mock
     return _override
+
+
+def mock_trip(**overrides):
+    data = {"id": 1, "user_id": 1}
+    data.update(overrides)
+    return SimpleNamespace(**data)
 
 
 def trip_stop_response(**overrides):
@@ -43,7 +53,7 @@ def trip_stop_response(**overrides):
         "flight_availability_verified": None,
     }
     data.update(overrides)
-    return data
+    return SimpleNamespace(**data)
 
 
 def test_create_trip_stop_trip_not_found(monkeypatch, client, db_mock):
@@ -61,7 +71,7 @@ def test_create_trip_stop_trip_not_found(monkeypatch, client, db_mock):
 
 
 def test_create_trip_stop_geocode_success(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: True)
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
     monkeypatch.setattr(trip_stops.crud, "create_trip_stop", lambda db, stop: trip_stop_response())
 
     async def fake_geocode(place):
@@ -81,7 +91,7 @@ def test_create_trip_stop_geocode_success(monkeypatch, client, db_mock):
 
 
 def test_create_trip_stop_geocode_fail(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: True)
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
     monkeypatch.setattr(trip_stops.crud, "create_trip_stop", lambda db, stop: trip_stop_response())
 
     async def fail_geocode(place):
@@ -99,6 +109,7 @@ def test_create_trip_stop_geocode_fail(monkeypatch, client, db_mock):
 
     assert res.status_code in (200, 201)
 
+
 def test_get_trip_stop_not_found(monkeypatch, client, db_mock):
     monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: None)
 
@@ -111,12 +122,14 @@ def test_get_trip_stop_not_found(monkeypatch, client, db_mock):
 
 def test_get_trip_stop_success(monkeypatch, client, db_mock):
     monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: trip_stop_response())
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
 
     res = client.get("/trip-stops/1")
 
     assert res.status_code == 200
+
 
 def test_get_trip_stops_trip_not_found(monkeypatch, client, db_mock):
     monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: None)
@@ -129,7 +142,7 @@ def test_get_trip_stops_trip_not_found(monkeypatch, client, db_mock):
 
 
 def test_get_trip_stops_success(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: True)
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
     monkeypatch.setattr(trip_stops.crud, "get_trip_stops", lambda db, trip_id: [])
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
@@ -138,8 +151,9 @@ def test_get_trip_stops_success(monkeypatch, client, db_mock):
 
     assert res.status_code == 200
 
+
 def test_update_trip_stop_not_found(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "update_trip_stop", lambda db, stop_id, stop_update: None)
+    monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: None)
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
 
@@ -151,7 +165,13 @@ def test_update_trip_stop_not_found(monkeypatch, client, db_mock):
 
 
 def test_update_trip_stop_success(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "update_trip_stop", lambda db, stop_id, stop_update: trip_stop_response(place_name="Updated"))
+    monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: trip_stop_response())
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
+    monkeypatch.setattr(
+        trip_stops.crud,
+        "update_trip_stop",
+        lambda db, stop_id, stop_update: trip_stop_response(place_name="Updated"),
+    )
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
 
@@ -161,7 +181,10 @@ def test_update_trip_stop_success(monkeypatch, client, db_mock):
 
     assert res.status_code == 200
 
+
 def test_delete_trip_stop_success(monkeypatch, client, db_mock):
+    monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: trip_stop_response())
+    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
     monkeypatch.setattr(trip_stops.crud, "delete_trip_stop", lambda db, stop_id: True)
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
@@ -172,7 +195,7 @@ def test_delete_trip_stop_success(monkeypatch, client, db_mock):
 
 
 def test_delete_trip_stop_not_found(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "delete_trip_stop", lambda db, stop_id: False)
+    monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: None)
 
     app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
 

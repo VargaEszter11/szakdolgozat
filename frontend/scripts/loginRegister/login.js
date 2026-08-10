@@ -1,6 +1,9 @@
 function saveSessionAndRedirect(data) {
     localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("username", data.username);
+    if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token);
+    }
     window.location.href = "../main_page.html";
 }
 

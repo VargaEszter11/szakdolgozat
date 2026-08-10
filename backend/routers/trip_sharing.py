@@ -1,9 +1,10 @@
-from typing import Any, List, cast
+from typing import Any, List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from database import crud, get_db, models, schemas
+from utils.auth_deps import current_user_id, get_current_user, require_self
 
 router = APIRouter()
 
@@ -57,11 +58,13 @@ def _trip_public_response(trip: models.PlannedTrip, db: Session) -> schemas.Shar
 )
 def create_trip_share_link(
     trip_id: int,
-    body: schemas.TripShareLinkRequest,
+    body: Optional[schemas.TripShareLinkRequest] = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
+    del body  # user identity comes from the access token
     try:
-        link = crud.create_or_get_trip_share_link(db, trip_id, body.user_id)
+        link = crud.create_or_get_trip_share_link(db, trip_id, current_user_id(current_user))
     except ValueError as exc:
         code = str(exc)
         if code == "trip_not_found":
@@ -80,11 +83,13 @@ def create_trip_share_link(
 @router.delete("/planned-trips/{trip_id}/share-link", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_trip_share_link(
     trip_id: int,
-    body: schemas.TripShareLinkRequest,
+    body: Optional[schemas.TripShareLinkRequest] = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
+    del body
     try:
-        crud.revoke_trip_share_link(db, trip_id, body.user_id)
+        crud.revoke_trip_share_link(db, trip_id, current_user_id(current_user))
     except ValueError as exc:
         code = str(exc)
         if code == "trip_not_found":
@@ -116,10 +121,11 @@ def share_trip_with_user(
     trip_id: int,
     body: schemas.TripShareInvitationCreate,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
     try:
         invitation = crud.create_trip_share_invitation(
-            db, trip_id, body.from_user_id, body.to_user_id
+            db, trip_id, current_user_id(current_user), body.to_user_id
         )
     except ValueError as exc:
         code = str(exc)
@@ -151,7 +157,9 @@ def list_trip_share_invitations(
     user_id: int,
     status_filter: str = Query("pending", alias="status"),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
+    require_self(user_id, current_user)
     user = crud.get_user(db, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -165,11 +173,15 @@ def list_trip_share_invitations(
 )
 def accept_trip_share_invitation(
     invitation_id: int,
-    body: schemas.TripShareInvitationAction,
+    body: Optional[schemas.TripShareInvitationAction] = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
+    del body
     try:
-        invitation = crud.accept_trip_share_invitation(db, invitation_id, body.user_id)
+        invitation = crud.accept_trip_share_invitation(
+            db, invitation_id, current_user_id(current_user)
+        )
     except ValueError as exc:
         code = str(exc)
         if code == "invitation_not_found":
@@ -193,11 +205,15 @@ def accept_trip_share_invitation(
 )
 def decline_trip_share_invitation(
     invitation_id: int,
-    body: schemas.TripShareInvitationAction,
+    body: Optional[schemas.TripShareInvitationAction] = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
+    del body
     try:
-        invitation = crud.decline_trip_share_invitation(db, invitation_id, body.user_id)
+        invitation = crud.decline_trip_share_invitation(
+            db, invitation_id, current_user_id(current_user)
+        )
     except ValueError as exc:
         code = str(exc)
         if code == "invitation_not_found":

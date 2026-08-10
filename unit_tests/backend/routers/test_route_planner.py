@@ -1,17 +1,20 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, MagicMock
 
 from routers import route_planner
+from utils.auth_deps import get_current_user
 
 app = FastAPI()
 app.include_router(route_planner.router)
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def client(auth_user):
+    app.dependency_overrides[get_current_user] = lambda: auth_user
+    yield TestClient(app)
+    app.dependency_overrides.pop(get_current_user, None)
+
 
 def test_geocode_success(monkeypatch, client):
     async def fake_geocode(request):
@@ -25,6 +28,7 @@ def test_geocode_success(monkeypatch, client):
 
     assert res.status_code == 200
     assert "results" in res.json()
+
 
 def test_generate_visited_plan(monkeypatch, client):
     async def fake_plan(request, db):
@@ -43,6 +47,7 @@ def test_generate_visited_plan(monkeypatch, client):
     assert res.status_code == 200
     assert res.json()["type"] == "visited"
 
+
 def test_generate_unvisited_plan(monkeypatch, client):
     async def fake_plan(request, db):
         return {"type": "unvisited"}
@@ -58,6 +63,7 @@ def test_generate_unvisited_plan(monkeypatch, client):
 
     assert res.status_code == 200
     assert res.json()["type"] == "unvisited"
+
 
 def test_generate_random_plan(monkeypatch, client):
     async def fake_plan(request, db):

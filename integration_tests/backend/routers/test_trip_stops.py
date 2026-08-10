@@ -6,9 +6,10 @@ Integration tests for trip stop endpoints.
 class TestCreateTripStop:
     """Integration tests for POST /api/trip-stops."""
 
-    def test_create_trip_stop_success(self, client, planned_trip):
+    def test_create_trip_stop_success(self, client, planned_trip, auth_headers):
         response = client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Vienna",
@@ -24,9 +25,10 @@ class TestCreateTripStop:
         assert data["place_name"] == "Vienna"
         assert data["trip_id"] == planned_trip["id"]
 
-    def test_create_trip_stop_trip_not_found(self, client):
+    def test_create_trip_stop_trip_not_found(self, client, auth_headers):
         response = client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": 9999,
                 "place_name": "Nowhere",
@@ -39,9 +41,10 @@ class TestCreateTripStop:
 class TestGetTripStop:
     """Integration tests for GET /api/trip-stops/{stop_id}."""
 
-    def test_get_trip_stop_success(self, client, planned_trip):
+    def test_get_trip_stop_success(self, client, planned_trip, auth_headers):
         create_response = client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Bratislava",
@@ -51,13 +54,13 @@ class TestGetTripStop:
         )
         stop_id = create_response.json()["id"]
 
-        response = client.get(f"/api/trip-stops/{stop_id}")
+        response = client.get(f"/api/trip-stops/{stop_id}", headers=auth_headers)
 
         assert response.status_code == 200
         assert response.json()["place_name"] == "Bratislava"
 
-    def test_get_trip_stop_not_found(self, client):
-        response = client.get("/api/trip-stops/9999")
+    def test_get_trip_stop_not_found(self, client, auth_headers):
+        response = client.get("/api/trip-stops/9999", headers=auth_headers)
 
         assert response.status_code == 404
 
@@ -65,9 +68,10 @@ class TestGetTripStop:
 class TestListTripStops:
     """Integration tests for GET /api/trips/{trip_id}/stops."""
 
-    def test_get_trip_stops_success(self, client, planned_trip):
+    def test_get_trip_stops_success(self, client, planned_trip, auth_headers):
         client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Krakow",
@@ -77,6 +81,7 @@ class TestListTripStops:
         )
         client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Warsaw",
@@ -85,14 +90,17 @@ class TestListTripStops:
             },
         )
 
-        response = client.get(f"/api/trips/{planned_trip['id']}/stops")
+        response = client.get(
+            f"/api/trips/{planned_trip['id']}/stops",
+            headers=auth_headers,
+        )
 
         assert response.status_code == 200
         stops = response.json()
         assert len(stops) == 2
 
-    def test_get_trip_stops_trip_not_found(self, client):
-        response = client.get("/api/trips/9999/stops")
+    def test_get_trip_stops_trip_not_found(self, client, auth_headers):
+        response = client.get("/api/trips/9999/stops", headers=auth_headers)
 
         assert response.status_code == 404
 
@@ -100,9 +108,10 @@ class TestListTripStops:
 class TestUpdateTripStop:
     """Integration tests for PUT /api/trip-stops/{stop_id}."""
 
-    def test_update_trip_stop_success(self, client, planned_trip):
+    def test_update_trip_stop_success(self, client, planned_trip, auth_headers):
         create_response = client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Ljubljana",
@@ -114,6 +123,7 @@ class TestUpdateTripStop:
 
         response = client.put(
             f"/api/trip-stops/{stop_id}",
+            headers=auth_headers,
             json={"place_name": "Lake Bled", "activities": "Hiking"},
         )
 
@@ -122,9 +132,10 @@ class TestUpdateTripStop:
         assert data["place_name"] == "Lake Bled"
         assert data["activities"] == "Hiking"
 
-    def test_update_trip_stop_not_found(self, client):
+    def test_update_trip_stop_not_found(self, client, auth_headers):
         response = client.put(
             "/api/trip-stops/9999",
+            headers=auth_headers,
             json={"place_name": "Missing"},
         )
 
@@ -134,9 +145,10 @@ class TestUpdateTripStop:
 class TestDeleteTripStop:
     """Integration tests for DELETE /api/trip-stops/{stop_id}."""
 
-    def test_delete_trip_stop_success(self, client, planned_trip):
+    def test_delete_trip_stop_success(self, client, planned_trip, auth_headers):
         create_response = client.post(
             "/api/trip-stops",
+            headers=auth_headers,
             json={
                 "trip_id": planned_trip["id"],
                 "place_name": "Zagreb",
@@ -146,12 +158,12 @@ class TestDeleteTripStop:
         )
         stop_id = create_response.json()["id"]
 
-        response = client.delete(f"/api/trip-stops/{stop_id}")
+        response = client.delete(f"/api/trip-stops/{stop_id}", headers=auth_headers)
 
         assert response.status_code == 204
-        assert client.get(f"/api/trip-stops/{stop_id}").status_code == 404
+        assert client.get(f"/api/trip-stops/{stop_id}", headers=auth_headers).status_code == 404
 
-    def test_delete_trip_stop_not_found(self, client):
-        response = client.delete("/api/trip-stops/9999")
+    def test_delete_trip_stop_not_found(self, client, auth_headers):
+        response = client.delete("/api/trip-stops/9999", headers=auth_headers)
 
         assert response.status_code == 404

@@ -47,6 +47,8 @@ class LoginResponse(BaseModel):
     success: bool
     user_id: int
     username: str
+    access_token: str
+    token_type: str = "bearer"
     avatar_url: Optional[str] = None
 
 
@@ -205,7 +207,7 @@ class PlannedTripResponse(PlannedTripBase):
 # ============= Trip Sharing Schemas =============
 
 class TripShareLinkRequest(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
 
 
 class TripShareLinkResponse(BaseModel):
@@ -214,12 +216,12 @@ class TripShareLinkResponse(BaseModel):
 
 
 class TripShareInvitationCreate(BaseModel):
-    from_user_id: int
     to_user_id: int
+    from_user_id: Optional[int] = None
 
 
 class TripShareInvitationAction(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
 
 
 class TripShareSourceSummary(BaseModel):
