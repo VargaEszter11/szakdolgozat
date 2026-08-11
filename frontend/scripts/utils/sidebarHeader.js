@@ -242,6 +242,19 @@
         }
     }
 
+    function loadOnboardingTutorial() {
+        if (document.querySelector('script[data-onboarding-tutorial]')) return;
+        var s = document.createElement('script');
+        s.src = prefix + 'scripts/utils/onboardingTutorial.js';
+        s.setAttribute('data-onboarding-tutorial', '1');
+        s.onload = function () {
+            if (typeof window.startTravelTutorial === 'function') {
+                window.startTravelTutorial();
+            }
+        };
+        document.body.appendChild(s);
+    }
+
     window.appShell = {
         injectHeader: injectHeader,
         injectSidebar: injectSidebar,
@@ -251,6 +264,7 @@
             injectSidebar();
             initMobileDrawer();
             if (window.i18n) window.i18n.applyToPage();
+            loadOnboardingTutorial();
         }
     };
 

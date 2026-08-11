@@ -59,6 +59,48 @@ window.I18N_TRANSLATIONS = {
       planTrips: 'Plan Trips',
       stories: 'Share Stories'
     },
+    tutorial: {
+      skip: 'Skip tour',
+      next: 'Next',
+      finish: 'Get started',
+      hintClick: 'Click the highlighted control to continue.',
+      hintFallback: 'Use the button below to continue.',
+      hintNext: 'Press Next when you are ready.',
+      welcomeTitle: 'Welcome to TravelApp',
+      welcomeBody:
+        'This short tour shows how to log places, plan trips, and share itineraries. You can skip anytime.',
+      homeLogTitle: 'Your travel log',
+      homeLogBody:
+        'The home page shows your latest visits and how much of Europe you have explored so far.',
+      addPlaceTitle: 'Add a visited place',
+      addPlaceBody:
+        'Start by logging a city you already visited. That feeds your map, stats, and trip planner.',
+      addFormTitle: 'Fill in the place details',
+      addFormBody:
+        'Enter the place name, country, dates, optional photos and notes, then save. You can add more places anytime.',
+      visitedTitle: 'Browse visited places',
+      visitedBody:
+        'All saved places live here. Open any card to edit details, or use Map View to see them on a map.',
+      mapTitle: 'Map view',
+      mapBody:
+        'Map View plots your visits geographically — useful when deciding where to go next.',
+      planTitle: 'Plan a new trip',
+      planBody: 'Open the planner to generate an itinerary with transport and activities.',
+      modesTitle: 'Choose a planning mode',
+      modesBody:
+        'Visited: reuse places you know. Unvisited: explore new cities. Random: let the app surprise you.',
+      formTitle: 'Set trip details',
+      formBody:
+        'Pick start city, dates, travelers, transport preference and optional notes, then generate a plan.',
+      plannedTitle: 'Planned trips & sharing',
+      plannedBody:
+        'Saved itineraries appear under Planned Trips. Open one to edit stops, mark bookings, or share with a link or another user.',
+      profileTitle: 'Profile & settings',
+      profileBody:
+        'Your profile is in the top bar. Settings lets you change theme, language, and which AI plans your trips.',
+      doneTitle: 'You are ready',
+      doneBody: 'That is the core flow: log places → plan trips → save and share. Enjoy exploring!'
+    },
     visitedPlaces: {
       title: 'Visited Places',
       subtitle: 'Your travel memories and experiences',
@@ -445,6 +487,48 @@ window.I18N_TRANSLATIONS = {
       planTrips: 'Utazások tervezése',
       stories: 'Történetek megosztása'
     },
+    tutorial: {
+      skip: 'Kihagyás',
+      next: 'Tovább',
+      finish: 'Kezdjük',
+      hintClick: 'Kattints a kiemelt gombra a folytatáshoz.',
+      hintFallback: 'A folytatáshoz használd az alábbi gombot.',
+      hintNext: 'Ha kész vagy, nyomd meg a Tovább gombot.',
+      welcomeTitle: 'Üdvözöl a TravelApp',
+      welcomeBody:
+        'Ez a rövid túra bemutatja, hogyan naplózhatsz helyeket, tervezhetsz utakat és oszthatsz meg útiterveket. Bármikor kihagyhatod.',
+      homeLogTitle: 'Az utazási naplód',
+      homeLogBody:
+        'A főoldalon látod a legutóbbi látogatásaidat és azt, Európa mekkora részét fedezted már fel.',
+      addPlaceTitle: 'Adj hozzá meglátogatott helyet',
+      addPlaceBody:
+        'Kezdd egy már meglátogatott város rögzítésével. Ez táplálja a térképet, a statisztikákat és a tervezőt.',
+      addFormTitle: 'Töltsd ki a hely adatait',
+      addFormBody:
+        'Add meg a hely nevét, országot, dátumokat, opcionális fotókat és megjegyzéseket, majd mentsd. Később is adhatsz hozzá újabbakat.',
+      visitedTitle: 'Böngészd a meglátogatott helyeket',
+      visitedBody:
+        'Az összes mentett hely itt van. Nyiss meg egy kártyát a szerkesztéshez, vagy használd a Térkép nézetet.',
+      mapTitle: 'Térkép nézet',
+      mapBody:
+        'A Térkép nézet földrajzilag megjeleníti a látogatásaidat — hasznos a következő úticél kiválasztásához.',
+      planTitle: 'Tervezz új utat',
+      planBody: 'Nyisd meg a tervezőt, hogy útitervet generáljon közlekedéssel és programokkal.',
+      modesTitle: 'Válassz tervezési módot',
+      modesBody:
+        'Meglátogatott: ismert helyek újra. Meg nem látogatott: új városok. Véletlenszerű: az app meglepetést készít.',
+      formTitle: 'Állítsd be az út részleteit',
+      formBody:
+        'Válassz kiindulási várost, dátumokat, utasokat, közlekedési preferenciát és opcionális megjegyzéseket, majd generálj tervet.',
+      plannedTitle: 'Tervezett utak és megosztás',
+      plannedBody:
+        'A mentett útitervek a Tervezett utak alatt jelennek meg. Megnyithatod őket szerkesztésre, foglalás jelölésére, vagy megoszthatod linkkel / másik felhasználóval.',
+      profileTitle: 'Profil és beállítások',
+      profileBody:
+        'A profilod a felső sávban van. A Beállításokban témát, nyelvet és azt állíthatod, melyik MI tervezze az utakat.',
+      doneTitle: 'Kész vagy',
+      doneBody: 'Ez a lényeg: helyek naplózása → utak tervezése → mentés és megosztás. Jó felfedezést!'
+    },
     visitedPlaces: {
       title: 'Meglátogatott helyek',
       subtitle: 'Utazási emlékeid és élményeid',
@@ -830,6 +914,48 @@ window.I18N_TRANSLATIONS = {
       places: '200+ neue Orte',
       planTrips: 'Reisen planen',
       stories: 'Geschichten teilen'
+    },
+    tutorial: {
+      skip: 'Tour überspringen',
+      next: 'Weiter',
+      finish: 'Loslegen',
+      hintClick: 'Klicke auf das hervorgehobene Element, um fortzufahren.',
+      hintFallback: 'Nutze die Schaltfläche unten, um fortzufahren.',
+      hintNext: 'Drücke Weiter, wenn du bereit bist.',
+      welcomeTitle: 'Willkommen bei TravelApp',
+      welcomeBody:
+        'Diese kurze Tour zeigt, wie du Orte erfasst, Reisen planst und Routen teilst. Du kannst jederzeit überspringen.',
+      homeLogTitle: 'Dein Reisetagebuch',
+      homeLogBody:
+        'Die Startseite zeigt deine neuesten Besuche und, wie viel von Europa du schon erkundet hast.',
+      addPlaceTitle: 'Besuchten Ort hinzufügen',
+      addPlaceBody:
+        'Beginne mit einer Stadt, die du schon besucht hast. Das speist Karte, Statistik und den Planer.',
+      addFormTitle: 'Ortsdetails ausfüllen',
+      addFormBody:
+        'Gib Name, Land, Daten sowie optional Fotos und Notizen ein und speichere. Du kannst später weitere Orte ergänzen.',
+      visitedTitle: 'Besuchte Orte durchsuchen',
+      visitedBody:
+        'Alle gespeicherten Orte findest du hier. Öffne eine Karte zum Bearbeiten oder nutze die Kartenansicht.',
+      mapTitle: 'Kartenansicht',
+      mapBody:
+        'Die Kartenansicht zeigt deine Besuche geografisch — hilfreich für die nächste Destination.',
+      planTitle: 'Neue Reise planen',
+      planBody: 'Öffne den Planer, um eine Route mit Transport und Aktivitäten zu erzeugen.',
+      modesTitle: 'Planungsmodus wählen',
+      modesBody:
+        'Besucht: bekannte Orte. Unbesucht: neue Städte. Zufällig: lass dich überraschen.',
+      formTitle: 'Reisedetails festlegen',
+      formBody:
+        'Wähle Startstadt, Daten, Reisende, Transport und optionale Notizen, dann generiere den Plan.',
+      plannedTitle: 'Geplante Reisen & Teilen',
+      plannedBody:
+        'Gespeicherte Routen erscheinen unter Geplante Reisen. Öffne eine, um Stopps zu bearbeiten, Buchungen zu markieren oder per Link / Nutzer zu teilen.',
+      profileTitle: 'Profil & Einstellungen',
+      profileBody:
+        'Dein Profil ist in der oberen Leiste. In den Einstellungen änderst du Theme, Sprache und welche KI Reisen plant.',
+      doneTitle: 'Du bist startklar',
+      doneBody: 'Der Kernablauf: Orte erfassen → Reisen planen → speichern und teilen. Viel Spaß beim Entdecken!'
     },
     visitedPlaces: {
       title: 'Besuchte Orte',

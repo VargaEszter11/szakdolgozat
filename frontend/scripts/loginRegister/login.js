@@ -4,6 +4,10 @@ function saveSessionAndRedirect(data) {
     if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
     }
+    if (localStorage.getItem("tutorial_completed") !== "1") {
+        localStorage.setItem("pending_tutorial", "1");
+        localStorage.setItem("tutorial_step", "1");
+    }
     window.location.href = "../main_page.html";
 }
 

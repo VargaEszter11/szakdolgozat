@@ -979,6 +979,224 @@ body.page-profile .main-page-home-content-inner>section.card {
     background: var(--color-modal-secondary-hover);
 }
 
+.tutorial-modal {
+    max-width: 440px;
+}
+
+.tutorial-progress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.tutorial-progress-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--color-modal-secondary-border);
+    opacity: 0.7;
+}
+
+.tutorial-progress-dot.is-active {
+    background: var(--color-accent);
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.tutorial-modal-actions {
+    margin-top: 0.25rem;
+}
+
+.tutorial-go-link {
+    display: inline-block;
+    margin: -0.5rem 0 1.1rem 0;
+    color: var(--color-accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.tutorial-go-link:hover {
+    text-decoration: underline;
+}
+
+body.tutorial-tour-active {
+    overflow: hidden;
+}
+
+.tutorial-tour-root {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.22s ease;
+}
+
+.tutorial-tour-root.is-entering,
+.tutorial-tour-root.is-leaving {
+    opacity: 0;
+}
+
+.tutorial-tour-backdrop {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    pointer-events: auto;
+}
+
+.tutorial-tour-hole {
+    position: fixed;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px var(--color-modal-overlay);
+    outline: 2px solid var(--color-accent);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+    transition:
+        top 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease;
+}
+
+.tutorial-tour-hole.is-hidden {
+    opacity: 0;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.tutorial-tour-tip {
+    position: fixed;
+    z-index: 10070;
+    width: min(26rem, calc(100vw - 1.5rem));
+    background: var(--color-modal-surface);
+    border: 1px solid var(--color-modal-border);
+    border-radius: 14px;
+    box-shadow: var(--color-modal-shadow);
+    padding: 1rem 1.15rem 1.05rem;
+    pointer-events: auto;
+    color: var(--color-text);
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    transition:
+        opacity 0.22s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tutorial-tour-tip--dock {
+    left: 50%;
+    bottom: 1.25rem;
+    top: auto;
+}
+
+.tutorial-tour-tip.is-entering {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+}
+
+.tutorial-tour-tip.is-leaving {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+}
+
+.tutorial-tour-body {
+    min-height: 4.5rem;
+}
+
+.tutorial-tour-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.tutorial-tour-counter {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-modal-message);
+    letter-spacing: 0.02em;
+}
+
+.tutorial-tour-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.tutorial-tour-message {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--color-modal-message);
+}
+
+.tutorial-tour-hint {
+    margin: 0 0 0.85rem 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.tutorial-tour-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tutorial-progress-dot {
+    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+
+.tutorial-elevated {
+    z-index: 10060 !important;
+}
+
+.tutorial-elevated-relative {
+    position: relative !important;
+}
+
+.tutorial-target-active {
+    pointer-events: auto !important;
+    box-shadow: 0 0 0 3px rgba(222, 190, 86, 0.45);
+    border-radius: 8px;
+    transition: box-shadow 0.25s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tutorial-tour-root,
+    .tutorial-tour-tip,
+    .tutorial-tour-hole,
+    .tutorial-progress-dot,
+    .tutorial-target-active {
+        transition: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .tutorial-tour-tip--dock {
+        bottom: 0.75rem;
+        width: calc(100vw - 1rem);
+        border-radius: 12px;
+    }
+
+    .tutorial-tour-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .tutorial-tour-actions .custom-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 @media (max-width: 768px) {
     .custom-modal-btn {
         display: inline-flex;
