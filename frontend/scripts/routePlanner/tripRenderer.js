@@ -130,14 +130,18 @@ export function renderTripDetails(trip, people = 1) {
     if (trip.plan && Array.isArray(trip.plan)) {
         html += '<div class="trip-destinations">';
         trip.plan.forEach((destination, idx) => {
-            const cityLine = [destination.city, destination.country]
+            const countryLabel =
+                window.Countries && window.Countries.displayName
+                    ? window.Countries.displayName(destination.country)
+                    : destination.country;
+            const cityLine = [destination.city, countryLabel]
                 .map((part) => (part == null ? '' : String(part).trim()))
                 .filter(Boolean)
                 .map(escapeHtml)
                 .join(', ');
             const accommodationUrl = accommodationBookingUrl(
                 destination.city,
-                destination.country,
+                countryLabel,
                 destination.arrivalDate,
                 destination.departureDate,
                 people

@@ -53,9 +53,15 @@
       .catch(function () { return null; });
   }
 
+  function placeDisplay(placeName, country) {
+    return window.Countries && window.Countries.formatPlace
+      ? window.Countries.formatPlace(placeName, country)
+      : (placeName || '') + (country ? ', ' + country : '');
+  }
+
   function labelForStop(stop) {
     var ord = stop.stop_order != null ? String(stop.stop_order) : '?';
-    return ord + '. ' + (stop.place_name || '') + (stop.country ? ', ' + stop.country : '');
+    return ord + '. ' + placeDisplay(stop.place_name, stop.country);
   }
 
   function buildAllRoutePoints(trip, orderedStops) {
@@ -99,7 +105,7 @@
           }
           var q = (stop.place_name || '').trim();
           if (!q) return undefined;
-          if (stop.country) q += ', ' + String(stop.country).trim();
+          if (stop.country) q += ', ' + countryDisplay(stop.country);
           return beforeNetwork()
             .then(function () { return nominatimGeocode(q); })
             .then(function (hit) {
@@ -160,7 +166,7 @@
     var details = document.createElement('div');
     details.className = 'trip-stop-details';
     var h4 = document.createElement('h4');
-    h4.textContent = stop.place_name + (stop.country ? ', ' + stop.country : '');
+    h4.textContent = placeDisplay(stop.place_name, stop.country);
     var info = document.createElement('div');
     info.className = 'trip-stop-info';
     if (stop.arrival_date) {

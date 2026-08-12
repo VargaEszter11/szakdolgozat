@@ -39,12 +39,17 @@ async def create_visited_place(
     current_user: models.User = Depends(get_current_user),
 ):
     """Add a visited place"""
+    from utils.countries import geocode_country_label, normalize_country_code
+
     place_dict = place.model_dump()
     place_dict["user_id"] = current_user_id(current_user)
+    if place_dict.get("country"):
+        place_dict["country"] = normalize_country_code(place_dict["country"]) or place_dict["country"]
     place = schemas.VisitedPlaceCreate(**place_dict)
 
     try:
-        place_query = f"{place.place_name}, {place.country}" if place.country else place.place_name
+        country_label = geocode_country_label(place.country) if place.country else ""
+        place_query = f"{place.place_name}, {country_label}" if country_label else place.place_name
         lat, lon = await geocode_place(place_query)
         place_dict = place.model_dump()
         place_dict["latitude"] = lat

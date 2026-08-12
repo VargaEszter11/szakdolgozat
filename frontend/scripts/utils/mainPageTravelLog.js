@@ -1,35 +1,11 @@
 (function () {
   var MAX_RECENT = 3;
 
-  var EUROPE_ISO_LIST = [
-    'AL', 'AD', 'AT', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU',
-    'IS', 'IE', 'IT', 'XK', 'LV', 'LI', 'LT', 'LU', 'MT', 'MD', 'MC', 'ME', 'NL', 'MK', 'NO', 'PL',
-    'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB', 'TR', 'UA', 'BY', 'VA'
-  ];
+  var EUROPE_ISO_LIST =
+    (window.Countries && window.Countries.EUROPE_ISO_LIST) || [];
 
   var EUROPE = {};
   EUROPE_ISO_LIST.forEach(function (iso) { EUROPE[iso] = 1; });
-
-  var NAME_TO_ISO = {
-    albania: 'AL', andorra: 'AD', austria: 'AT', belgium: 'BE', bosnia: 'BA',
-    'bosnia and herzegovina': 'BA', bulgaria: 'BG', croatia: 'HR', cyprus: 'CY',
-    'czech republic': 'CZ', czechia: 'CZ', denmark: 'DK', estonia: 'EE',
-    finland: 'FI', france: 'FR', germany: 'DE', greece: 'GR', hungary: 'HU',
-    iceland: 'IS', ireland: 'IE', italy: 'IT', kosovo: 'XK', latvia: 'LV',
-    liechtenstein: 'LI', lithuania: 'LT', luxembourg: 'LU', malta: 'MT',
-    moldova: 'MD', monaco: 'MC', montenegro: 'ME', netherlands: 'NL',
-    'north macedonia': 'MK', macedonia: 'MK', norway: 'NO', poland: 'PL',
-    portugal: 'PT', romania: 'RO', russia: 'RU', 'san marino': 'SM', serbia: 'RS',
-    slovakia: 'SK', slovenia: 'SI', spain: 'ES', sweden: 'SE', switzerland: 'CH',
-    'united kingdom': 'GB', uk: 'GB', england: 'GB', scotland: 'GB', wales: 'GB',
-    turkey: 'TR', ukraine: 'UA', belarus: 'BY', vatican: 'VA',
-    magyarorszag: 'HU', deutschland: 'DE', osterreich: 'AT', schweiz: 'CH',
-    spanien: 'ES', italien: 'IT', frankreich: 'FR', polen: 'PL', ungarn: 'HU',
-    niederlande: 'NL', belgien: 'BE', schweden: 'SE', norwegen: 'NO',
-    finnland: 'FI', irland: 'IE', bulgarien: 'BG', serbien: 'RS', kroatien: 'HR',
-    slowakei: 'SK', slowenien: 'SI', tschechien: 'CZ', griechenland: 'GR',
-    grossbritannien: 'GB', turkei: 'TR', island: 'IS'
-  };
 
   var EUROPE_TOTAL = EUROPE_ISO_LIST.length;
 
@@ -76,43 +52,22 @@
     return formatDate(startIso || endIso);
   }
 
-  function normalizeCountryKey(value) {
-    return String(value || '')
-      .trim()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
   function resolveEuropeIso(country) {
-    var raw = String(country || '').trim();
-    if (!raw) return null;
-
-    var upper = raw.toUpperCase();
-    if (upper.length === 2 && EUROPE[upper]) {
-      return upper === 'UK' ? 'GB' : upper;
+    if (window.Countries && window.Countries.europeIso) {
+      return window.Countries.europeIso(country);
     }
-
-    var key = normalizeCountryKey(raw);
-    if (NAME_TO_ISO[key]) return NAME_TO_ISO[key];
-
-    var keys = Object.keys(NAME_TO_ISO);
-    for (var i = 0; i < keys.length; i++) {
-      if (key.indexOf(keys[i]) >= 0 || keys[i].indexOf(key) >= 0) {
-        return NAME_TO_ISO[keys[i]];
-      }
-    }
-
+    var raw = String(country || '').trim().toUpperCase();
+    if (raw.length === 2 && EUROPE[raw]) return raw === 'UK' ? 'GB' : raw;
     return null;
   }
 
   function normalizePlace(item) {
     var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
-    var name = placeName + (country ? ', ' + country : '');
+    var name =
+      window.Countries && window.Countries.formatPlace
+        ? window.Countries.formatPlace(placeName, country)
+        : placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
 
     var dateValue = item.date || item.visitedDate || item.dateVisited;

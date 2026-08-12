@@ -22,6 +22,12 @@
       document.documentElement.setAttribute('lang', fullLocale);
     }
 
+    try {
+      document.dispatchEvent(
+        new CustomEvent('app:languagechange', { detail: { language: locale } })
+      );
+    } catch (e) { /* ignore */ }
+
     return locale;
   }
 

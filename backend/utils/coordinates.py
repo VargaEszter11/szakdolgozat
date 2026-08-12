@@ -3,9 +3,16 @@ import httpx
 from fastapi import HTTPException
 from typing import Tuple
 
+from utils.countries import EUROPE_COUNTRY_CODES
+
 # Nominatim requires a descriptive User-Agent (no generic library defaults). See:
 # https://operations.osmfoundation.org/policies/nominatim/
 _DEFAULT_UA = "TravelApp/1.0 (university project; configure NOMINATIM_USER_AGENT in .env)"
+
+# Nominatim countrycodes uses lowercase ISO-2; skip XK (not in OSM countrycodes).
+_GEOCODE_COUNTRYCODES = ",".join(
+    sorted(code.lower() for code in EUROPE_COUNTRY_CODES if code != "XK")
+)
 
 
 async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, float]:
@@ -15,7 +22,7 @@ async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, f
         "format": "json",
         "limit": 1,
         "accept-language": language,
-        "countrycodes": "AT,BE,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IS,IE,IT,LV,LT,LU,MT,NL,NO,PL,PT,RO,SK,SI,ES,SE,CH,GB",
+        "countrycodes": _GEOCODE_COUNTRYCODES,
     }
     user_agent = (os.getenv("NOMINATIM_USER_AGENT") or "").strip() or _DEFAULT_UA
     headers = {

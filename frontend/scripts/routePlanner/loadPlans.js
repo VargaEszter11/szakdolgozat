@@ -106,9 +106,21 @@
       });
   }
 
+  function countryDisplay(value) {
+    return window.Countries && window.Countries.displayName
+      ? window.Countries.displayName(value)
+      : String(value || '').trim();
+  }
+
+  function placeDisplay(placeName, country) {
+    return window.Countries && window.Countries.formatPlace
+      ? window.Countries.formatPlace(placeName, country)
+      : (placeName || '') + (country ? ', ' + country : '');
+  }
+
   function labelForStop(stop) {
     var ord = stop.stop_order != null ? String(stop.stop_order) : '?';
-    return ord + '. ' + (stop.place_name || '') + (stop.country ? ', ' + stop.country : '');
+    return ord + '. ' + placeDisplay(stop.place_name, stop.country);
   }
 
   /**
@@ -165,7 +177,7 @@
           }
           var q = (stop.place_name || '').trim();
           if (!q) return undefined;
-          if (stop.country) q += ', ' + String(stop.country).trim();
+          if (stop.country) q += ', ' + countryDisplay(stop.country);
           return beforeNetwork()
             .then(function () {
               return nominatimGeocode(q);
@@ -765,7 +777,21 @@
     }
 
     grid.appendChild(mkField(false, 'editFieldPlace', 'editFieldPlace', 'place_name', 'text', stop.place_name, false));
-    grid.appendChild(mkField(false, 'editFieldCountry', 'editFieldCountry', 'country', 'text', stop.country, false));
+    var countryField = mkField(
+      false,
+      'editFieldCountry',
+      'editFieldCountry',
+      'country',
+      'text',
+      countryDisplay(stop.country) || stop.country,
+      false
+    );
+    grid.appendChild(countryField);
+    var countryInput = countryField.querySelector('[data-field="country"]');
+    if (countryInput && window.Countries && window.Countries.mountAutocomplete) {
+      if (stop.country) countryInput.dataset.countryCode = String(stop.country).trim().toUpperCase();
+      window.Countries.mountAutocomplete(countryInput);
+    }
     grid.appendChild(mkField(false, 'editFieldArrival', 'editFieldArrival', 'arrival_date', 'date', toDateInputValue(stop.arrival_date), false));
     grid.appendChild(mkField(false, 'editFieldDeparture', 'editFieldDeparture', 'departure_date', 'date', toDateInputValue(stop.departure_date), false));
     grid.appendChild(mkField(true, 'editFieldTransport', 'editFieldTransport', 'transport_from_last', 'text', stop.transport_from_last, false));
@@ -800,7 +826,10 @@
       id: sid ? parseInt(sid, 10) : null,
       stop_order: orderIndex,
       place_name: place,
-      country: trimOrNull(countryIn && countryIn.value),
+      country: trimOrNull(
+        (window.Countries && window.Countries.getCode(countryIn)) ||
+          (countryIn && countryIn.value)
+      ),
       arrival_date: fromDateInputVal(arrIn && arrIn.value),
       departure_date: fromDateInputVal(depIn && depIn.value),
       transport_from_last: trimOrNull(transportIn && transportIn.value),
@@ -1059,7 +1088,7 @@
     var details = document.createElement('div');
     details.className = 'trip-stop-details';
     var h4 = document.createElement('h4');
-    h4.textContent = stop.place_name + (stop.country ? ', ' + stop.country : '');
+    h4.textContent = placeDisplay(stop.place_name, stop.country);
     var info = document.createElement('div');
     info.className = 'trip-stop-info';
     if (stop.arrival_date) {
@@ -1091,7 +1120,7 @@
       }
       var accommodationUrl = accommodationBookingUrl(
         isLastStop ? null : stop.place_name,
-        stop.country,
+        countryDisplay(stop.country),
         stop.arrival_date,
         stop.departure_date,
         people

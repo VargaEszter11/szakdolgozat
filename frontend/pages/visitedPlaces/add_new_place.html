@@ -12,6 +12,7 @@
     <script src="../../scripts/utils/apiConfig.js"></script>
     <script src="../../scripts/utils/themeLoader.js"></script>
     <script src="../../scripts/utils/authGuard.js"></script>
+    <script src="../../scripts/utils/countries.js"></script>
     <script src="../../scripts/i18n/translations.js" defer></script>
     <script src="../../scripts/i18n/i18n.js" defer></script>
     <script src="../../scripts/utils/sidebarHeader.js" defer></script>
@@ -51,7 +52,7 @@
                                 </label>
                                 <input type="text" id="placeName" name="placeName" required
                                     data-i18n-placeholder="addNewPlace.placeNamePlaceholder"
-                                    placeholder="e.g. Paris, France" class="form-input">
+                                    placeholder="e.g. Budapest, Hungary" class="form-input">
                             </div>
 
                             <div class="form-group">
@@ -59,8 +60,9 @@
                                     Country *
                                 </label>
                                 <input type="text" id="country" name="country" required
-                                    data-i18n-placeholder="addNewPlace.countryPlaceholder" placeholder="e.g. France"
-                                    class="form-input">
+                                    data-i18n-placeholder="addNewPlace.countryPlaceholder"
+                                    placeholder="Start typing, e.g. Hungary"
+                                    class="form-input" autocomplete="off">
                             </div>
 
                             <div class="form-row-2">

@@ -119,10 +119,27 @@
     return html;
   }
 
+  function countryLabel(value) {
+    if (window.Countries && window.Countries.displayName) {
+      return window.Countries.displayName(value);
+    }
+    return String(value || '').trim();
+  }
+
+  function formatPlaceTitle(placeName, country) {
+    if (window.Countries && window.Countries.formatPlace) {
+      return window.Countries.formatPlace(placeName, country);
+    }
+    var city = String(placeName || '').trim();
+    var c = countryLabel(country);
+    if (!city) return c || 'Unnamed place';
+    return c ? city + ', ' + c : city;
+  }
+
   function normalizePlace(item, index) {
     var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
-    var name = placeName + (country ? ', ' + country : '');
+    var name = formatPlaceTitle(placeName, country);
     if (!name.trim()) name = 'Unnamed place';
     var dateValue = item.date || item.visitedDate || item.dateVisited;
     var endDateValue = item.end_date || item.endDate || item.visitedEndDate;
@@ -353,6 +370,11 @@
     countryInput.autocomplete = 'off';
     syncHasValue(countryInput);
     countryInput.addEventListener('input', function () { syncHasValue(countryInput); });
+    if (window.Countries && window.Countries.mountAutocomplete) {
+      window.Countries.mountAutocomplete(countryInput, {
+        onChange: function () { syncHasValue(countryInput); }
+      });
+    }
 
     var dateId = uid + '-date';
     var dateInput = document.createElement('input');
@@ -718,7 +740,8 @@
       }
       var body = {
         place_name: pn,
-        country: (countryInput.value || '').trim() || null,
+        country: (window.Countries && window.Countries.getCode(countryInput)) ||
+          (countryInput.value || '').trim() || null,
         date: startDate || null,
         end_date: endDate || null,
         description: (descInput.value || '').trim() || null
@@ -832,9 +855,9 @@
 
         var placeName = place.place_name || '';
         var country = place.country || '';
-        if (titleEl) titleEl.textContent = placeName + (country ? ', ' + country : '');
+        if (titleEl) titleEl.textContent = formatPlaceTitle(placeName, country);
 
-        if (countryEl) countryEl.textContent = country || '\u2014';
+        if (countryEl) countryEl.textContent = countryLabel(country) || '\u2014';
         if (countryRow) countryRow.style.display = country ? '' : 'none';
 
         var dateVal = place.date || place.visitedDate;

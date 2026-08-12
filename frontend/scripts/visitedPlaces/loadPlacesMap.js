@@ -37,7 +37,10 @@
     // API response uses: place_name, country, date, description, latitude, longitude
     var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
-    var name = placeName + (country ? ', ' + country : '');
+    var name =
+      window.Countries && window.Countries.formatPlace
+        ? window.Countries.formatPlace(placeName, country)
+        : placeName + (country ? ', ' + country : '');
     if (!name.trim()) name = 'Unnamed place';
     var dateValue = item.date || item.visitedDate || item.dateVisited;
     var endDateValue = item.end_date || item.endDate || item.visitedEndDate;

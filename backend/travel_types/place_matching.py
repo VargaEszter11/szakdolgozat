@@ -4,60 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-
-COUNTRY_NAME_TO_CODE = {
-    "albania": "AL",
-    "andorra": "AD",
-    "austria": "AT",
-    "belgium": "BE",
-    "bosnia and herzegovina": "BA",
-    "bosnia": "BA",
-    "bulgaria": "BG",
-    "croatia": "HR",
-    "cyprus": "CY",
-    "czech republic": "CZ",
-    "czechia": "CZ",
-    "denmark": "DK",
-    "estonia": "EE",
-    "finland": "FI",
-    "france": "FR",
-    "germany": "DE",
-    "greece": "GR",
-    "hungary": "HU",
-    "iceland": "IS",
-    "ireland": "IE",
-    "italy": "IT",
-    "kosovo": "XK",
-    "latvia": "LV",
-    "liechtenstein": "LI",
-    "lithuania": "LT",
-    "luxembourg": "LU",
-    "malta": "MT",
-    "moldova": "MD",
-    "monaco": "MC",
-    "montenegro": "ME",
-    "netherlands": "NL",
-    "north macedonia": "MK",
-    "norway": "NO",
-    "poland": "PL",
-    "portugal": "PT",
-    "romania": "RO",
-    "san marino": "SM",
-    "serbia": "RS",
-    "slovakia": "SK",
-    "slovenia": "SI",
-    "spain": "ES",
-    "sweden": "SE",
-    "switzerland": "CH",
-    "united kingdom": "GB",
-    "great britain": "GB",
-    "uk": "GB",
-    "england": "GB",
-    "vatican city": "VA",
-    "vatican": "VA",
-}
-
-COUNTRY_CODE_TO_NAME = {code: name for name, code in COUNTRY_NAME_TO_CODE.items()}
+from utils.countries import COUNTRY_CODE_TO_NAME, COUNTRY_NAME_TO_CODE, normalize_country_code
 
 
 def split_place_label(label: str):
@@ -72,12 +19,7 @@ def extract_city(place_str: str) -> str:
 
 
 def _country_code(value: str) -> str:
-    text = (value or "").strip().lower()
-    if not text:
-        return ""
-    if len(text) == 2:
-        return text.upper()
-    return COUNTRY_NAME_TO_CODE.get(text, "")
+    return normalize_country_code(value) or ""
 
 
 def _country_tokens(value: str) -> set[str]:
@@ -87,7 +29,11 @@ def _country_tokens(value: str) -> set[str]:
     if text:
         tokens.add(text)
     if code and COUNTRY_CODE_TO_NAME.get(code):
-        tokens.add(COUNTRY_CODE_TO_NAME[code])
+        tokens.add(COUNTRY_CODE_TO_NAME[code].lower())
+    # Keep alias tokens for matching legacy free-text visited places.
+    for name, mapped in COUNTRY_NAME_TO_CODE.items():
+        if mapped == code:
+            tokens.add(name)
     return tokens
 
 

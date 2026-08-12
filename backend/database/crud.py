@@ -260,7 +260,12 @@ def delete_planned_trip(db: Session, trip_id: int) -> bool:
 
 def create_trip_stop(db: Session, stop: schemas.TripStopCreate) -> models.PlannedTripStop:
     """Create a new trip stop"""
-    db_stop = models.PlannedTripStop(**stop.model_dump())
+    from utils.countries import normalize_country_code
+
+    data = stop.model_dump()
+    if data.get("country") is not None:
+        data["country"] = normalize_country_code(data["country"]) or data["country"]
+    db_stop = models.PlannedTripStop(**data)
     db.add(db_stop)
     db.commit()
     db.refresh(db_stop)
@@ -281,11 +286,15 @@ def get_trip_stops(db: Session, trip_id: int) -> List[models.PlannedTripStop]:
 
 def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpdate) -> Optional[models.PlannedTripStop]:
     """Update a trip stop"""
+    from utils.countries import normalize_country_code
+
     db_stop = get_trip_stop(db, stop_id)
     if not db_stop:
         return None
     
     update_data = stop_update.model_dump(exclude_unset=True)
+    if "country" in update_data and update_data["country"] is not None:
+        update_data["country"] = normalize_country_code(update_data["country"]) or update_data["country"]
     for key, value in update_data.items():
         setattr(db_stop, key, value)
 
@@ -317,7 +326,12 @@ def delete_trip_stop(db: Session, stop_id: int) -> bool:
 
 def create_visited_place(db: Session, place: schemas.VisitedPlaceCreate) -> models.VisitedPlace:
     """Create a new visited place"""
-    db_place = models.VisitedPlace(**place.model_dump())
+    from utils.countries import normalize_country_code
+
+    data = place.model_dump()
+    if data.get("country") is not None:
+        data["country"] = normalize_country_code(data["country"]) or data["country"]
+    db_place = models.VisitedPlace(**data)
     db.add(db_place)
     db.commit()
     db.refresh(db_place)
@@ -346,11 +360,15 @@ def get_visited_places(db: Session, skip: int = 0, limit: int = 100) -> List[mod
 
 def update_visited_place(db: Session, place_id: int, place_update: schemas.VisitedPlaceUpdate) -> Optional[models.VisitedPlace]:
     """Update a visited place"""
+    from utils.countries import normalize_country_code
+
     db_place = get_visited_place(db, place_id)
     if not db_place:
         return None
     
     update_data = place_update.model_dump(exclude_unset=True)
+    if "country" in update_data and update_data["country"] is not None:
+        update_data["country"] = normalize_country_code(update_data["country"]) or update_data["country"]
     for key, value in update_data.items():
         setattr(db_place, key, value)
     

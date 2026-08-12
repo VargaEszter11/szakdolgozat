@@ -123,6 +123,7 @@ def test_europe_country_codes_contains_known_european_countries():
     assert "GB" in EUROPE_COUNTRY_CODES
     assert "FR" in EUROPE_COUNTRY_CODES
     assert "DE" in EUROPE_COUNTRY_CODES
+    assert "AM" in EUROPE_COUNTRY_CODES
 
 
 def test_europe_country_codes_excludes_non_european_countries():

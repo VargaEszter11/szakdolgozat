@@ -59,6 +59,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const visitedEndDateInput = document.getElementById('visitedEndDate');
   const ratingInput = document.getElementById('rating');
   const starBtns = document.querySelectorAll('.star-btn');
+  const countryInputEl = document.getElementById('country');
+  if (countryInputEl && window.Countries) {
+    window.Countries.mountAutocomplete(countryInputEl);
+  }
 
   if (typeof flatpickr === 'function') {
     var LOCALE_MAP = { hu: 'hu', de: 'de' };
@@ -282,7 +286,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var placeName = document.getElementById('placeName').value.trim();
-    var country = document.getElementById('country').value.trim();
+    var countryInput = document.getElementById('country');
+    var country =
+      (window.Countries && window.Countries.getCode(countryInput)) ||
+      (countryInput && countryInput.value.trim()) ||
+      '';
     var visitedDate = document.getElementById('visitedDate').value;
     var visitedEndDate = document.getElementById('visitedEndDate').value;
     var description = document.getElementById('description').value.trim();
