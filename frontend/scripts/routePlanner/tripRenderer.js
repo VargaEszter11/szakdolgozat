@@ -313,9 +313,16 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
             options.onSaved();
         }
 
-        button.textContent = 'Saved ✓';
-        button.style.backgroundColor = 'var(--success, #22c55e)';
-        window.location.href = 'planned_trips.html';
+        if (typeof window.showModal === 'function') {
+            window.showModal({
+                title: (window.i18n && window.i18n.t('planNewTrip.saveTrip')) || 'Save Trip',
+                message: (window.i18n && window.i18n.t('planNewTrip.savedMessage')) || 'Trip saved successfully.',
+                type: 'success'
+            });
+        } else if (typeof window.showError === 'function') {
+            // fallback: avoid leaving user without feedback
+            console.info('Trip saved successfully.');
+        }
 
     } catch (error) {
         console.error('Error saving trip:', error);

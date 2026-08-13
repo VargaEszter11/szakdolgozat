@@ -5,11 +5,13 @@
   var PENDING_KEY = 'pending_tutorial';
   var DONE_KEY = 'tutorial_completed';
   var STEP_KEY = 'tutorial_step';
+  var LANG_READY_KEY = 'tutorial_language_ready';
   var PAD = 8;
   var FADE_MS = 220;
   var HOLE_MS = 320;
 
   var tour = null;
+  var languagePrompt = null;
 
   function t(key, fallback) {
     if (window.i18n && typeof window.i18n.t === 'function') {
@@ -25,7 +27,7 @@
         title: t('tutorial.welcomeTitle', 'Welcome to TravelApp'),
         body: t(
           'tutorial.welcomeBody',
-          'This short tour shows how to log places, plan trips, and share itineraries. You can skip anytime.'
+          'TravelApp is your personal travel diary and automatic trip planner for Europe. You log places you have already visited and set a few preferences — then the app plans the trip for you (it is not a collaborative planner you build stop by stop).\n\nThis tour walks through the main screens step by step. You can skip anytime if you prefer to explore on your own.'
         ),
         page: /main_page\.html/,
         goto: '/pages/main_page.html',
@@ -36,7 +38,7 @@
         title: t('tutorial.homeLogTitle', 'Your travel log'),
         body: t(
           'tutorial.homeLogBody',
-          'The home page shows your latest visits and how much of Europe you have explored so far.'
+          'Home is your dashboard. Recent visited places appear as cards so you can reopen notes and photos quickly.\n\nFurther down, the Europe chart shows which countries you have already visited. It updates automatically as you add more places, giving you a clear picture of your coverage.'
         ),
         page: /main_page\.html/,
         goto: '/pages/main_page.html',
@@ -47,7 +49,7 @@
         title: t('tutorial.addPlaceTitle', 'Add a visited place'),
         body: t(
           'tutorial.addPlaceBody',
-          'Start by logging a city you already visited. That feeds your map, stats, and trip planner.'
+          'Start by logging cities and towns you have already been to. Each saved place feeds your visited list, the Europe chart, the map, and the trip planner.\n\nClick the highlighted Add button to open the form and create your first entry.'
         ),
         page: /main_page\.html/,
         goto: '/pages/main_page.html',
@@ -63,7 +65,7 @@
         title: t('tutorial.addFormTitle', 'Fill in the place details'),
         body: t(
           'tutorial.addFormBody',
-          'Enter the place name, country, dates, optional photos and notes, then save. You can add more places anytime.'
+          'Enter the place name and choose the country from the suggestions so names stay consistent. Set a start date, and optionally an end date for multi-day stays.\n\nYou can rate the visit with stars, write a short description, and attach photos. After you save, the place shows up on Home, Visited Places, and the map.'
         ),
         page: /add_new_place\.html/,
         goto: '/pages/visitedPlaces/add_new_place.html',
@@ -74,7 +76,7 @@
         title: t('tutorial.visitedTitle', 'Browse visited places'),
         body: t(
           'tutorial.visitedBody',
-          'All saved places live here. Open any card to edit details, or use Map View to see them on a map.'
+          'Visited Places is the full list of everywhere you have logged, usually newest first.\n\nOpen a card to read details, notes, and photos. Use the pencil icon to edit name, country, dates, rating, description, or photos — or delete a place you no longer need.'
         ),
         page: /visited_places\.html/,
         goto: '/pages/visitedPlaces/visited_places.html',
@@ -85,7 +87,7 @@
         title: t('tutorial.mapTitle', 'Map view'),
         body: t(
           'tutorial.mapBody',
-          'Map View plots your visits geographically — useful when deciding where to go next.'
+          'Map View plots every logged stop on a geographic map so you can see clusters, routes, and gaps at a glance.\n\nUse it when deciding where to travel next, or to revisit a region you already know well.'
         ),
         page: /visited_places\.html|places_map_view\.html/,
         goto: '/pages/visitedPlaces/visited_places.html',
@@ -96,7 +98,7 @@
         title: t('tutorial.planTitle', 'Plan a new trip'),
         body: t(
           'tutorial.planBody',
-          'Open the planner to generate an itinerary with transport and activities.'
+          'When you want a new itinerary, open Plan New Trip from the sidebar (or an Add button that links to the planner).\n\nImportant: the app plans the trip for you. You choose the mode and constraints; it generates the full day-by-day route with transport and activities — you do not assemble the itinerary together with the app.'
         ),
         page: /^(?!.*plan_new_trip\.html).*$/,
         goto: null,
@@ -108,7 +110,7 @@
         title: t('tutorial.modesTitle', 'Choose a planning mode'),
         body: t(
           'tutorial.modesBody',
-          'Visited: reuse places you know. Unvisited: explore new cities. Random: let the app surprise you.'
+          'First choose how destinations should be selected:\n\n• Visited — build a trip around places you already logged.\n• Unvisited — discover new cities while avoiding ones you already visited.\n• Random — let the app invent a surprise itinerary.\n\nPick the mode that matches your goal, then continue with the form below.'
         ),
         page: /plan_new_trip\.html/,
         goto: '/pages/routePlanner/plan_new_trip.html',
@@ -119,7 +121,7 @@
         title: t('tutorial.formTitle', 'Set trip details'),
         body: t(
           'tutorial.formBody',
-          'Pick start city, dates, travelers, transport preference and optional notes, then generate a plan.'
+          'Set your starting city, trip dates, number of travelers, and preferred transport (for example train and bus, or options that include flights). Optional notes help tailor the result.\n\nThen generate the trip: the app creates the complete plan for you. Review what it produced, save it to Planned Trips, and edit later if needed.'
         ),
         page: /plan_new_trip\.html/,
         goto: '/pages/routePlanner/plan_new_trip.html',
@@ -130,7 +132,7 @@
         title: t('tutorial.plannedTitle', 'Planned trips & sharing'),
         body: t(
           'tutorial.plannedBody',
-          'Saved itineraries appear under Planned Trips. Open one to edit stops, mark bookings, or share with a link or another user.'
+          'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another TravelApp user. Incoming invitations appear in the share inbox on this page.'
         ),
         page: /planned_trips\.html/,
         goto: '/pages/routePlanner/planned_trips.html',
@@ -141,7 +143,7 @@
         title: t('tutorial.profileTitle', 'Profile & settings'),
         body: t(
           'tutorial.profileBody',
-          'Your profile is in the top bar. Settings lets you change theme, language, and which AI plans your trips.'
+          'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, change the interface language (English, Hungarian, or German), and choose which AI assistant should generate your trip plans.'
         ),
         page: /.*/,
         selectors: ['.main-header-profile', '[data-sidebar-id="settings"]'],
@@ -151,7 +153,7 @@
         title: t('tutorial.doneTitle', 'You are ready'),
         body: t(
           'tutorial.doneBody',
-          'That is the core flow: log places → plan trips → save and share. Enjoy exploring!'
+          'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the Europe chart become much more useful with your own history. Happy travels!'
         ),
         page: /.*/,
         selectors: [],
@@ -180,6 +182,159 @@
     localStorage.setItem(DONE_KEY, '1');
     localStorage.removeItem(PENDING_KEY);
     localStorage.removeItem(STEP_KEY);
+    localStorage.removeItem(LANG_READY_KEY);
+  }
+
+  function needsLanguagePrompt() {
+    if (localStorage.getItem(LANG_READY_KEY) === '1') return false;
+    return getStep() <= 1;
+  }
+
+  function currentLanguage() {
+    if (window.i18n && typeof window.i18n.getLanguage === 'function') {
+      return window.i18n.getLanguage();
+    }
+    return localStorage.getItem('language') || 'en';
+  }
+
+  function applyLanguage(locale) {
+    if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+      window.i18n.setLanguage(locale);
+      if (typeof window.i18n.applyToPage === 'function') {
+        window.i18n.applyToPage();
+      }
+      return;
+    }
+    localStorage.setItem('language', locale);
+  }
+
+  function destroyLanguagePrompt() {
+    if (!languagePrompt) return;
+    document.body.classList.remove('tutorial-tour-active');
+    if (languagePrompt.root && languagePrompt.root.parentNode) {
+      languagePrompt.root.parentNode.removeChild(languagePrompt.root);
+    }
+    languagePrompt = null;
+  }
+
+  function showLanguagePrompt() {
+    if (languagePrompt || tour) return;
+
+    var root = document.createElement('div');
+    root.className = 'tutorial-tour-root tutorial-lang-prompt-root';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-labelledby', 'tutorial-lang-title');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'tutorial-tour-backdrop';
+
+    var card = document.createElement('div');
+    card.className = 'tutorial-lang-prompt';
+
+    var title = document.createElement('h2');
+    title.id = 'tutorial-lang-title';
+    title.className = 'tutorial-lang-prompt-title';
+
+    var message = document.createElement('p');
+    message.className = 'tutorial-lang-prompt-message';
+
+    var choices = document.createElement('div');
+    choices.className = 'tutorial-lang-choices';
+    choices.setAttribute('role', 'radiogroup');
+    choices.setAttribute('aria-labelledby', 'tutorial-lang-title');
+
+    var langs = [
+      { code: 'en', label: 'English' },
+      { code: 'hu', label: 'Magyar' },
+      { code: 'de', label: 'Deutsch' }
+    ];
+    var selected = currentLanguage();
+    if (selected !== 'en' && selected !== 'hu' && selected !== 'de') selected = 'en';
+
+    function refreshCopy() {
+      title.textContent = t('tutorial.chooseLanguageTitle', 'Choose your language');
+      message.textContent = t(
+        'tutorial.chooseLanguageBody',
+        'Pick the language for the app and this tour. You can change it later in Settings.'
+      );
+      startBtn.textContent = t('tutorial.startTour', 'Start tour');
+      skipBtn.textContent = t('tutorial.skip', 'Skip tour');
+    }
+
+    langs.forEach(function (lang) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className =
+        'tutorial-lang-choice' + (lang.code === selected ? ' is-selected' : '');
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', lang.code === selected ? 'true' : 'false');
+      btn.setAttribute('data-lang', lang.code);
+      btn.textContent = lang.label;
+      btn.addEventListener('click', function () {
+        selected = lang.code;
+        applyLanguage(selected);
+        choices.querySelectorAll('.tutorial-lang-choice').forEach(function (el) {
+          var on = el.getAttribute('data-lang') === selected;
+          el.classList.toggle('is-selected', on);
+          el.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        refreshCopy();
+      });
+      choices.appendChild(btn);
+    });
+
+    var actions = document.createElement('div');
+    actions.className = 'tutorial-lang-prompt-actions';
+
+    var skipBtn = document.createElement('button');
+    skipBtn.type = 'button';
+    skipBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+
+    var startBtn = document.createElement('button');
+    startBtn.type = 'button';
+    startBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+
+    actions.appendChild(skipBtn);
+    actions.appendChild(startBtn);
+
+    card.appendChild(title);
+    card.appendChild(message);
+    card.appendChild(choices);
+    card.appendChild(actions);
+
+    root.appendChild(backdrop);
+    root.appendChild(card);
+    document.body.appendChild(root);
+    document.body.classList.add('tutorial-tour-active');
+
+    languagePrompt = { root: root };
+
+    refreshCopy();
+    applyLanguage(selected);
+
+    skipBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      applyLanguage(selected);
+      localStorage.setItem(LANG_READY_KEY, '1');
+      markDone();
+      destroyLanguagePrompt();
+    });
+
+    startBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      applyLanguage(selected);
+      localStorage.setItem(LANG_READY_KEY, '1');
+      setStep(1);
+      destroyLanguagePrompt();
+      showTour();
+    });
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        root.classList.add('is-visible');
+      });
+    });
   }
 
   function forceFromQuery() {
@@ -187,6 +342,7 @@
       var params = new URLSearchParams(location.search || '');
       if (params.get('tutorial') !== '1') return;
       localStorage.removeItem(DONE_KEY);
+      localStorage.removeItem(LANG_READY_KEY);
       localStorage.setItem(PENDING_KEY, '1');
       localStorage.setItem(STEP_KEY, '1');
       params.delete('tutorial');
@@ -642,6 +798,15 @@
       }, 50);
       return;
     }
+    beginTutorialFlow();
+  }
+
+  function beginTutorialFlow() {
+    if (!isActive()) return;
+    if (needsLanguagePrompt()) {
+      showLanguagePrompt();
+      return;
+    }
     showTour();
   }
 
@@ -655,9 +820,11 @@
 
   window.resetTravelTutorial = function () {
     localStorage.removeItem(DONE_KEY);
+    localStorage.removeItem(LANG_READY_KEY);
     localStorage.setItem(PENDING_KEY, '1');
     localStorage.setItem(STEP_KEY, '1');
     if (tour) destroyTour(tour);
+    destroyLanguagePrompt();
     var orphanRoot = document.querySelector('.tutorial-tour-root');
     if (orphanRoot) orphanRoot.remove();
     var orphanTip = document.querySelector('.tutorial-tour-tip');
@@ -668,10 +835,10 @@
       window.location.href = '/pages/main_page.html?tutorial=1';
       return;
     }
-    showTour();
+    beginTutorialFlow();
   };
 
-  window.startTravelTutorial = showTour;
+  window.startTravelTutorial = beginTutorialFlow;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);

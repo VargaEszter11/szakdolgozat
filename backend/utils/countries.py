@@ -35,6 +35,7 @@ _COUNTRY_ROWS: List[Tuple[str, str, Tuple[str, ...]]] = [
     ("IS", "Iceland", ("island", "izland", "ízland")),
     ("IE", "Ireland", ("irland", "irorszag", "írország",)),
     ("IT", "Italy", ("italien", "italia", "olaszorszag", "olaszország",)),
+    ("KA", "Kazakhstan", ("kazahsztan", "kazahstan", "kazahsztán",)),
     ("XK", "Kosovo", ("koszovo", "koszovó", )),
     ("LV", "Latvia", ("lettland", "lettorszag", "lettország",)),
     ("LI", "Liechtenstein", ()),

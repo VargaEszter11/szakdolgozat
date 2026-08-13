@@ -1021,6 +1021,86 @@ body.page-profile .main-page-home-content-inner>section.card {
     text-decoration: underline;
 }
 
+.tutorial-lang-prompt-root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
+
+.tutorial-lang-prompt-root.is-visible {
+    opacity: 1;
+}
+
+.tutorial-lang-prompt {
+    position: relative;
+    z-index: 10070;
+    width: min(26rem, calc(100vw - 2rem));
+    background: var(--color-modal-surface);
+    border: 1px solid var(--color-modal-border);
+    border-radius: 14px;
+    box-shadow: var(--color-modal-shadow);
+    padding: 1.25rem 1.25rem 1.15rem;
+    color: var(--color-text);
+    pointer-events: auto;
+}
+
+.tutorial-lang-prompt-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.tutorial-lang-prompt-message {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--color-modal-message);
+}
+
+.tutorial-lang-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.15rem;
+}
+
+.tutorial-lang-choice {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-input-border, var(--color-modal-border));
+    background: var(--color-input-bg, transparent);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tutorial-lang-choice:hover,
+.tutorial-lang-choice:focus-visible {
+    border-color: var(--color-accent);
+    outline: none;
+}
+
+.tutorial-lang-choice.is-selected {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring, rgba(0, 0, 0, 0.08));
+    background: var(--color-input-bg-focus, var(--color-input-bg, transparent));
+}
+
+.tutorial-lang-prompt-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
 body.tutorial-tour-active {
     overflow: hidden;
 }
@@ -1071,7 +1151,10 @@ body.tutorial-tour-active {
 .tutorial-tour-tip {
     position: fixed;
     z-index: 10070;
-    width: min(26rem, calc(100vw - 1.5rem));
+    width: min(30rem, calc(100vw - 1.5rem));
+    max-height: min(70vh, 32rem);
+    display: flex;
+    flex-direction: column;
     background: var(--color-modal-surface);
     border: 1px solid var(--color-modal-border);
     border-radius: 14px;
@@ -1104,6 +1187,9 @@ body.tutorial-tour-active {
 
 .tutorial-tour-body {
     min-height: 4.5rem;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 0.15rem;
 }
 
 .tutorial-tour-meta {
@@ -1112,6 +1198,7 @@ body.tutorial-tour-active {
     justify-content: space-between;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
+    flex-shrink: 0;
 }
 
 .tutorial-tour-counter {
@@ -1132,8 +1219,9 @@ body.tutorial-tour-active {
 .tutorial-tour-message {
     margin: 0 0 0.5rem 0;
     font-size: 0.9rem;
-    line-height: 1.45;
+    line-height: 1.5;
     color: var(--color-modal-message);
+    white-space: pre-line;
 }
 
 .tutorial-tour-hint {
@@ -1148,6 +1236,8 @@ body.tutorial-tour-active {
     justify-content: flex-end;
     gap: 0.5rem;
     flex-wrap: wrap;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
 }
 
 .tutorial-progress-dot {

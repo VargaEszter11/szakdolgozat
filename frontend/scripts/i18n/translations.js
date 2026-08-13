@@ -66,40 +66,46 @@ window.I18N_TRANSLATIONS = {
       hintClick: 'Click the highlighted control to continue.',
       hintFallback: 'Use the button below to continue.',
       hintNext: 'Press Next when you are ready.',
+      chooseLanguageTitle: 'Choose your language',
+      chooseLanguageBody:
+        'Pick the language for the app and this tour. You can change it later in Settings.',
+      startTour: 'Start tutorial',
       welcomeTitle: 'Welcome to TravelApp',
       welcomeBody:
-        'This short tour shows how to log places, plan trips, and share itineraries. You can skip anytime.',
+        'TravelApp is your personal travel diary and trip planner for Europe. Add the places you\'ve visited, pick a few preferences, and the app puts together a trip for you — no manual stop-by-stop planning needed.\n\nHere\'s a quick tour of the main screens. Feel free to skip if you\'d rather dive in yourself.',
       homeLogTitle: 'Your travel log',
       homeLogBody:
-        'The home page shows your latest visits and how much of Europe you have explored so far.',
+        'Home is your dashboard. Recent visited places appear as cards so you can reopen notes and photos quickly.\n\nFurther down, the chart shows how many european countries you have already visited. It updates automatically as you add more places, giving you a clear picture of your coverage.',
       addPlaceTitle: 'Add a visited place',
       addPlaceBody:
-        'Start by logging a city you already visited. That feeds your map, stats, and trip planner.',
+        'Start by logging places you have already been to. Each saved place feeds your visited list, the chart, the map, and the trip planner.\n\nClick the highlighted Add button to open the form and create your first entry.',
       addFormTitle: 'Fill in the place details',
       addFormBody:
-        'Enter the place name, country, dates, optional photos and notes, then save. You can add more places anytime.',
+        'Enter the place name and choose the country from the suggestions so names stay consistent. Set a start date, and optionally an end date for multi-day stays.\n\nYou can rate the visit with stars, write a short description, and attach photos. After you save, the place shows up on Home, Visited Places, and the map.',
       visitedTitle: 'Browse visited places',
       visitedBody:
-        'All saved places live here. Open any card to edit details, or use Map View to see them on a map.',
+        'Visited Places is the full list of everywhere you have logged, starts with the most recent.\n\nOpen a card to read details, notes, and photos. Use the pencil icon to edit name, country, dates, rating, description, or photos — or delete a place you no longer need.',
       mapTitle: 'Map view',
       mapBody:
-        'Map View plots your visits geographically — useful when deciding where to go next.',
+        'Map View plots every logged stop on a geographic map so you can see clusters, routes, and gaps at a glance.\n\nUse it when deciding where to travel next, or to revisit a region you already know well.',
       planTitle: 'Plan a new trip',
-      planBody: 'Open the planner to generate an itinerary with transport and activities.',
+      planBody:
+        'When you want a new itinerary, open Plan New Trip from the sidebar (or an Add button that links to the planner).\n\nImportant: the app plans the trip for you. You choose the mode and constraints; it generates the full day-by-day route with transport and activities — you do not assemble the itinerary together with the app.',
       modesTitle: 'Choose a planning mode',
       modesBody:
-        'Visited: reuse places you know. Unvisited: explore new cities. Random: let the app surprise you.',
+        'First choose how destinations should be selected:\n\n• Visited — build a trip around places you already logged.\n• Unvisited — discover new cities while avoiding ones you already visited.\n• Random — let the app surprise you.\n\nPick the mode that matches your goal, then continue with the form below.',
       formTitle: 'Set trip details',
       formBody:
-        'Pick start city, dates, travelers, transport preference and optional notes, then generate a plan.',
+        'Set your starting city, trip dates, number of travelers, and preferred transport (for example land transport, or options that include flights). Optional notes help tailor the result.\n\nThen generate the trip: the app creates the complete plan for you. Review what it produced, generate a new plan if needed, save it to Planned Trips, and edit later if needed.',
       plannedTitle: 'Planned trips & sharing',
       plannedBody:
-        'Saved itineraries appear under Planned Trips. Open one to edit stops, mark bookings, or share with a link or another user.',
+        'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another TravelApp user. Incoming invitations appear in the share inbox on this page.',
       profileTitle: 'Profile & settings',
       profileBody:
-        'Your profile is in the top bar. Settings lets you change theme, language, and which AI plans your trips.',
+        'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, change the interface language (English, Hungarian, or German), and choose which AI assistant should generate your trip plans.',
       doneTitle: 'You are ready',
-      doneBody: 'That is the core flow: log places → plan trips → save and share. Enjoy exploring!'
+      doneBody:
+        'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the chart become much more useful with your own history. Happy travels!'
     },
     visitedPlaces: {
       title: 'Visited Places',
@@ -191,6 +197,7 @@ window.I18N_TRANSLATIONS = {
       generating: 'Generating...',
       retryPlan: 'Retry',
       saveTrip: 'Save Trip',
+      savedMessage: 'Trip saved successfully. You can find it under Planned Trips.',
       yourTrip: 'Your Trip',
       readyNotification: 'Your trip plan is ready',
       readyNotificationHint: 'Open Plan New Trip to review and save it.',
@@ -212,8 +219,8 @@ window.I18N_TRANSLATIONS = {
         'Add at least one place in the field above, or turn on using your travel log from the database.',
       preferredTransport: 'Preferred transport mode',
       flight: 'Flight',
-      trainBus: 'Train/Bus',
-      trainBusFerry: 'Train/Bus/Ferry',
+      trainBus: 'Land transport',
+      trainBusFerry: 'Land transport + ferry',
       allModes: 'All modes'
     },
     plannedTrips: {
@@ -500,40 +507,46 @@ window.I18N_TRANSLATIONS = {
       hintClick: 'Kattints a kiemelt gombra a folytatáshoz.',
       hintFallback: 'A folytatáshoz használd az alábbi gombot.',
       hintNext: 'Ha kész vagy, nyomd meg a Tovább gombot.',
+      chooseLanguageTitle: 'Válaszd ki a nyelvet',
+      chooseLanguageBody:
+        'Válaszd ki az alkalmazás és a bemutató nyelvét. Később a Beállításokban bármikor módosíthatod.',
+      startTour: 'Bemutató indítása',
       welcomeTitle: 'Üdvözöl a TravelApp',
       welcomeBody:
-        'Ez a rövid túra bemutatja, hogyan naplózhatsz helyeket, tervezhetsz utakat és oszthatsz meg útiterveket. Bármikor kihagyhatod.',
+        'A TravelApp a személyes utazási naplód és automatikus európai utazás terveződ. Rögzítsd a már meglátogatott helyeidet, adj meg néhány preferenciát és hagyd, hogy az alkalmazás megtervezze neked a következő utazásodat, nem neked kell manuálisan megállóról megállóra összerakni.\n\nEz a bemutató lépésről lépésre végigvezet a fő képernyőkön. Bármikor kihagyhatod, ha inkább egyedül szeretnél felfedezni.',
       homeLogTitle: 'Az utazási naplód',
       homeLogBody:
-        'A főoldalon látod a legutóbbi látogatásaidat és azt, Európa mekkora részét fedezted már fel.',
+        'A főoldal a vezérlőpultod. A legutóbbi meglátogatott helyek kártyákként jelennek meg, így gyorsan visszanézheted a jegyzeteidet és fotóidat.\n\nAlább a diagram mutatja, hány európai országot látogattál már meg. Ahogy új helyeket adsz hozzá, automatikusan frissül, és átlátható képet ad a lefedettségedről.',
       addPlaceTitle: 'Adj hozzá meglátogatott helyet',
       addPlaceBody:
-        'Kezdd egy már meglátogatott város rögzítésével. Ez táplálja a térképet, a statisztikákat és a tervezőt.',
+        'Kezdd azokkal a városokkal és településekkel, ahol már jártál. Minden mentett hely táplálja a listádat, a diagramot, a térképet és az útitervezőt.\n\nKattints a kiemelt Hozzáadás gombra, hogy megnyíljon az űrlap, és rögzítsd az első bejegyzést.',
       addFormTitle: 'Töltsd ki a hely adatait',
       addFormBody:
-        'Add meg a hely nevét, országot, dátumokat, opcionális fotókat és megjegyzéseket, majd mentsd. Később is adhatsz hozzá újabbakat.',
+        'Add meg a hely nevét, és válaszd ki az országot a javaslatok közül, hogy az elnevezések egységesek maradjanak. Állíts be kezdő dátumot, és opcionálisan befejező dátumot többnapos tartózkodáshoz.\n\nCsillagokkal értékelheted a látogatást, írhatsz rövid leírást, és feltölthetsz fotókat. Mentés után a hely megjelenik a főoldalon, a Meglátogatott helyek listán és a térképen.',
       visitedTitle: 'Böngészd a meglátogatott helyeket',
       visitedBody:
-        'Az összes mentett hely itt van. Nyiss meg egy kártyát a szerkesztéshez, vagy használd a Térkép nézetet.',
+        'A Meglátogatott helyek az összes rögzített helyed teljes listája, a legújabbal kezdve.\n\nNyiss meg egy kártyát a részletekhez, jegyzetekhez és fotókhoz. A ceruza ikonnal szerkesztheted a nevet, országot, dátumokat, értékelést, leírást vagy fotókat — vagy törölhetsz egy már nem kellő helyet.',
       mapTitle: 'Térkép nézet',
       mapBody:
-        'A Térkép nézet földrajzilag megjeleníti a látogatásaidat — hasznos a következő úticél kiválasztásához.',
+        'A Térkép nézet minden rögzített megállót földrajzilag megjelenít, így egy pillantással látod, hogy mely környékeket fedezted már fel jobban és melyeket kevésbé.\n\nHasznos, ha a következő úticélod szeretnéd kiválasztani, vagy egy már ismert régiót szeretnél újra felfedezni.',
       planTitle: 'Tervezz új utat',
-      planBody: 'Nyisd meg a tervezőt, hogy útitervet generáljon közlekedéssel és programokkal.',
+      planBody:
+        'Ha új útitervet szeretnél, nyisd meg az Új utazás tervezése menüpontot az oldalsávból (vagy egy olyan Hozzáadás gombot, ami a tervezőhöz vezet).\n\nFontos: az alkalmazás helyetted tervezi meg az utat. Te választod a módot és a preferenciákat; ő generálja a teljes, napokra bontott útvonalat közlekedéssel és programokkal — nem együtt szerkesztitek az útitervet.',
       modesTitle: 'Válassz tervezési módot',
       modesBody:
-        'Meglátogatott: ismert helyek újra. Meg nem látogatott: új városok. Véletlenszerű: az app meglepetést készít.',
+        'Először válaszd ki, hogyan kerüljenek be a célpontok:\n\n• Meglátogatott — olyan helyek köré épít utat, amelyeket már rögzítettél.\n• Meg nem látogatott — új városokat fedez fel, elkerülve a már meglátogatottakat.\n• Véletlenszerű — az app meglep egy útitervvel.\n\nVálaszd a célodnak megfelelő módot, majd folytasd az űrlappal.',
       formTitle: 'Állítsd be az út részleteit',
       formBody:
-        'Válassz kiindulási várost, dátumokat, utasokat, közlekedési preferenciát és opcionális megjegyzéseket, majd generálj tervet.',
+        'Add meg a kiindulási várost, az út dátumait, az utasok számát és a preferált közlekedést (például szárazföldi közlekedés, vagy repülővel bővített opciók). Az opcionális megjegyzések segítenek finomhangolni az eredményt.\n\nEzután generáld az utat: az alkalmazás elkészíti a teljes tervet helyetted. Nézd át, mentsd a Tervezett utak közé, és később szükség szerint módosítsd.',
       plannedTitle: 'Tervezett utak és megosztás',
       plannedBody:
-        'A mentett útitervek a Tervezett utak alatt jelennek meg. Megnyithatod őket szerkesztésre, foglalás jelölésére, vagy megoszthatod linkkel / másik felhasználóval.',
+        'A mentett útitervek a Tervezett utak alatt találhatók. Nyiss meg egy utat a megállók áttekintéséhez, részletek módosításához, foglalási linkek követéséhez, és ahhoz, hogy nyomon kövesd, hogy állsz a szervezéssel.\n\nMegoszthatsz egy utat nyilvános linkkel, vagy meghívhatsz egy másik TravelApp-felhasználót. A bejövő meghívók ezen az oldalon, a megosztási értesítéseknél jelennek meg.',
       profileTitle: 'Profil és beállítások',
       profileBody:
-        'A profilod a felső sávban van. A Beállításokban témát, nyelvet és azt állíthatod, melyik MI tervezze az utakat.',
+        'A profilmenüd a felső sávban van a fiókkal kapcsolatos műveletekhez.\n\nA Beállításokban válthatsz világos, sötét vagy automatikus témát, módosíthatod a felület nyelvét (angol, magyar vagy német), és kiválaszthatod, melyik MI asszisztens generálja az útiterveidet.',
       doneTitle: 'Kész vagy',
-      doneBody: 'Ez a lényeg: helyek naplózása → utak tervezése → mentés és megosztás. Jó felfedezést!'
+      doneBody:
+        'Ez a lényeg: naplózd a meglátogatott helyeket → böngészd őket listán és térképen → hagyd, hogy az app megtervezze az utat helyetted → mentsd és oszd meg az eredményt.\n\nAmikor tudsz, adj hozzá néhány valódi helyet — az automatikus tervezés és az Európa-diagram sokkal hasznosabb a saját történeteddel. Jó felfedezést!'
     },
     visitedPlaces: {
       title: 'Meglátogatott helyek',
@@ -625,6 +638,7 @@ window.I18N_TRANSLATIONS = {
       generating: 'Generálás...',
       retryPlan: 'Újrapróbálás',
       saveTrip: 'Utazás mentése',
+      savedMessage: 'Az utazás sikeresen mentve. A Tervezett utak között találod.',
       yourTrip: 'Az utazásod',
       readyNotification: 'Az útiterved elkészült',
       readyNotificationHint: 'Nyisd meg az Új utazás tervezése oldalt a megtekintéshez és mentéshez.',
@@ -646,8 +660,8 @@ window.I18N_TRANSLATIONS = {
         'Adj meg legalább egy helyet a mezőben, vagy kapcsold be az adatbázisból származó utazási napló használatát.',
       preferredTransport: 'Preferált közlekedési mód',
       flight: 'Repülő',
-      trainBus: 'Vonat/Busz',
-      trainBusFerry: 'Vonat/Busz/Komp',
+      trainBus: 'Szárazföldi közlekedés',
+      trainBusFerry: 'Szárazföldi közlekedés + komp',
       allModes: 'Minden mód'
     },
     plannedTrips: {
@@ -934,40 +948,46 @@ window.I18N_TRANSLATIONS = {
       hintClick: 'Klicke auf das hervorgehobene Element, um fortzufahren.',
       hintFallback: 'Nutze die Schaltfläche unten, um fortzufahren.',
       hintNext: 'Drücke Weiter, wenn du bereit bist.',
+      chooseLanguageTitle: 'Sprache wählen',
+      chooseLanguageBody:
+        'Wähle die Sprache für die App und diese Tour. Später kannst du sie in den Einstellungen ändern.',
+      startTour: 'Tutorial starten',
       welcomeTitle: 'Willkommen bei TravelApp',
       welcomeBody:
-        'Diese kurze Tour zeigt, wie du Orte erfasst, Reisen planst und Routen teilst. Du kannst jederzeit überspringen.',
+        'TravelApp ist dein persönliches Reisetagebuch und automatischer Reiseplaner für Europa. Du trägst Orte ein, die du bereits besucht hast, legst ein paar Vorlieben fest — und die App plant die Reise für dich (du planst hier nicht selbst Station für Station).\n\nDiese kurze Tour zeigt dir die wichtigsten Bildschirme. Du kannst jederzeit überspringen, wenn du lieber selbst erkunden möchtest.',
       homeLogTitle: 'Dein Reisetagebuch',
       homeLogBody:
-        'Die Startseite zeigt deine neuesten Besuche und, wie viel von Europa du schon erkundet hast.',
+        'Die Startseite ist dein Dashboard. Kürzlich besuchte Orte erscheinen als Karten, damit du Notizen und Fotos schnell wieder öffnen kannst.\n\nDarunter zeigt das Europa-Diagramm, in welchen Ländern du schon warst. Es aktualisiert sich automatisch, wenn du weitere Orte hinzufügst, und gibt dir einen klaren Überblick über deine Abdeckung.',
       addPlaceTitle: 'Besuchten Ort hinzufügen',
       addPlaceBody:
-        'Beginne mit einer Stadt, die du schon besucht hast. Das speist Karte, Statistik und den Planer.',
+        'Beginne mit Städten und Orten, an denen du schon warst. Jeder gespeicherte Ort speist deine Liste, das Europa-Diagramm, die Karte und den Reiseplaner.\n\nKlicke auf den hervorgehobenen Hinzufügen-Button, um das Formular zu öffnen und deinen ersten Eintrag anzulegen.',
       addFormTitle: 'Ortsdetails ausfüllen',
       addFormBody:
-        'Gib Name, Land, Daten sowie optional Fotos und Notizen ein und speichere. Du kannst später weitere Orte ergänzen.',
+        'Gib den Ortsnamen ein und wähle das Land aus den Vorschlägen, damit die Bezeichnungen einheitlich bleiben. Setze ein Startdatum und optional ein Enddatum für mehrtägige Aufenthalte.\n\nDu kannst den Besuch mit Sternen bewerten, eine kurze Beschreibung schreiben und Fotos anhängen. Nach dem Speichern erscheint der Ort auf der Startseite, unter Besuchte Orte und auf der Karte.',
       visitedTitle: 'Besuchte Orte durchsuchen',
       visitedBody:
-        'Alle gespeicherten Orte findest du hier. Öffne eine Karte zum Bearbeiten oder nutze die Kartenansicht.',
+        'Unter Besuchte Orte findest du die komplette Liste aller geloggten Ziele, meist neueste zuerst.\n\nÖffne eine Karte für Details, Notizen und Fotos. Mit dem Stift-Symbol bearbeitest du Name, Land, Daten, Bewertung, Beschreibung oder Fotos — oder löschst einen Ort, den du nicht mehr brauchst.',
       mapTitle: 'Kartenansicht',
       mapBody:
-        'Die Kartenansicht zeigt deine Besuche geografisch — hilfreich für die nächste Destination.',
+        'Die Kartenansicht trägt jeden geloggten Stopp auf eine geografische Karte, damit du Cluster, Routen und Lücken auf einen Blick siehst.\n\nNutze sie, wenn du das nächste Reiseziel wählst oder eine Region wiederentdecken willst, die du schon kennst.',
       planTitle: 'Neue Reise planen',
-      planBody: 'Öffne den Planer, um eine Route mit Transport und Aktivitäten zu erzeugen.',
+      planBody:
+        'Wenn du eine neue Route möchtest, öffne Neue Reise planen in der Seitenleiste (oder einen Hinzufügen-Button, der zum Planer führt).\n\nWichtig: Die App plant die Reise für dich. Du wählst Modus und Rahmenbedingungen; sie erzeugt die komplette tagesweise Route mit Transport und Aktivitäten — ihr plant die Route nicht gemeinsam zusammen.',
       modesTitle: 'Planungsmodus wählen',
       modesBody:
-        'Besucht: bekannte Orte. Unbesucht: neue Städte. Zufällig: lass dich überraschen.',
+        'Wähle zuerst, wie Ziele ausgewählt werden sollen:\n\n• Besucht — baue eine Reise um Orte, die du schon geloggt hast.\n• Unbesucht — entdecke neue Städte und vermeide bereits besuchte.\n• Zufällig — lass die App eine Überraschungsroute erfinden.\n\nWähle den Modus, der zu deinem Ziel passt, und fahre dann mit dem Formular fort.',
       formTitle: 'Reisedetails festlegen',
       formBody:
-        'Wähle Startstadt, Daten, Reisende, Transport und optionale Notizen, dann generiere den Plan.',
+        'Lege Startstadt, Reisedaten, Anzahl der Reisenden und bevorzugten Transport fest (zum Beispiel Zug/Bus oder Optionen mit Flügen). Optionale Notizen helfen, das Ergebnis anzupassen.\n\nDanach generierst du die Reise: Die App erstellt den kompletten Plan für dich. Prüfe das Ergebnis, speichere es unter Geplante Reisen und bearbeite es später bei Bedarf.',
       plannedTitle: 'Geplante Reisen & Teilen',
       plannedBody:
-        'Gespeicherte Routen erscheinen unter Geplante Reisen. Öffne eine, um Stopps zu bearbeiten, Buchungen zu markieren oder per Link / Nutzer zu teilen.',
+        'Gespeicherte Routen findest du unter Geplante Reisen. Öffne eine Reise, um Stopps zu prüfen, Details anzupassen, Buchungslinks zu folgen und im Blick zu behalten, was du schon organisiert hast.\n\nDu kannst eine Reise per öffentlichem Link teilen oder einen anderen TravelApp-Nutzer einladen. Eingehende Einladungen erscheinen im Teilen-Posteingang auf dieser Seite.',
       profileTitle: 'Profil & Einstellungen',
       profileBody:
-        'Dein Profil ist in der oberen Leiste. In den Einstellungen änderst du Theme, Sprache und welche KI Reisen plant.',
+        'Dein Profilmenü liegt in der oberen Leiste für kontobezogene Aktionen.\n\nIn den Einstellungen wechselst du Hell-, Dunkel- oder Auto-Theme, änderst die Sprache der Oberfläche (Englisch, Ungarisch oder Deutsch) und wählst, welcher KI-Assistent deine Reisepläne erzeugen soll.',
       doneTitle: 'Du bist startklar',
-      doneBody: 'Der Kernablauf: Orte erfassen → Reisen planen → speichern und teilen. Viel Spaß beim Entdecken!'
+      doneBody:
+        'Das ist der Kernablauf: Orte erfassen → auf Liste und Karte durchstöbern → die App die Reise für dich planen lassen → Ergebnis speichern und teilen.\n\nFüge nach Möglichkeit ein paar echte Orte hinzu — automatische Planung und Europa-Diagramm werden mit deiner eigenen Geschichte deutlich nützlicher. Viel Spaß beim Entdecken!'
     },
     visitedPlaces: {
       title: 'Besuchte Orte',
@@ -1059,6 +1079,7 @@ window.I18N_TRANSLATIONS = {
       generating: 'Wird generiert...',
       retryPlan: 'Erneut versuchen',
       saveTrip: 'Reise speichern',
+      savedMessage: 'Reise erfolgreich gespeichert. Du findest sie unter Geplante Reisen.',
       yourTrip: 'Deine Reise',
       readyNotification: 'Dein Reiseplan ist fertig',
       readyNotificationHint: 'Öffne „Neue Reise planen“, um ihn anzusehen und zu speichern.',
@@ -1080,8 +1101,8 @@ window.I18N_TRANSLATIONS = {
         'Gib mindestens einen Ort oben ein oder aktiviere die Nutzung deines Reisetagebuchs aus der Datenbank.',
       preferredTransport: 'Bevorzugter Transport',
       flight: 'Flug',
-      trainBus: 'Zug/Bus',
-      trainBusFerry: 'Zug/Bus/Fähre',
+      trainBus: 'Land transport',
+      trainBusFerry: 'Land transport + komp',
       allModes: 'Alle Möglichkeiten'
     },
     plannedTrips: {

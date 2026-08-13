@@ -42,6 +42,67 @@ function clearPlannerSession() {
     } catch (err) { /* ignore */ }
 }
 
+function clearPlannerResults() {
+    const loadingState = document.getElementById('loadingState');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const tripResults = document.getElementById('tripResults');
+    if (loadingState) loadingState.style.display = 'none';
+    if (resultsContainer) resultsContainer.style.display = 'none';
+    if (tripResults) tripResults.innerHTML = '';
+}
+
+function resetPlannerFormFields() {
+    const setEmpty = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = '';
+        el.classList.remove('has-value');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    setEmpty('startingCity');
+    setEmpty('preferences');
+    setEmpty('placesList');
+
+    const people = document.getElementById('people');
+    if (people) {
+        people.value = '1';
+        people.classList.add('has-value');
+        people.dispatchEvent(new Event('input', { bubbles: true }));
+        people.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    const transport = document.getElementById('preferredTransport');
+    if (transport) {
+        transport.value = 'allModes';
+        transport.classList.add('has-value');
+        transport.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    if (startDatePicker) startDatePicker.clear();
+    else setEmpty('startDate');
+    if (endDatePicker) {
+        endDatePicker.set('minDate', null);
+        endDatePicker.clear();
+    } else {
+        setEmpty('endDate');
+    }
+
+    document.querySelectorAll('.add-place-form .form-input').forEach((input) => {
+        input.classList.toggle('has-value', !!String(input.value || '').trim());
+    });
+}
+
+function resetPlannerUi() {
+    generationInFlight = false;
+    clearPlannerSession();
+    resetPlannerFormFields();
+    clearPlannerResults();
+    const generateBtn = document.getElementById('generateBtn');
+    if (generateBtn) generateBtn.disabled = false;
+}
+
 const ENDPOINTS = {
     visited: '/generate_travel_plans/visited',
     unvisited: '/generate_travel_plans/unvisited',
@@ -358,7 +419,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const resultOptions = () => ({
         onRetry: retryGeneration,
-        onSaved: clearPlannerSession
+        onSaved: () => {
+            resetPlannerUi();
+        },
+        onCancel: () => {
+            resetPlannerUi();
+        }
     });
 
     async function runGeneration(planType, body, meta) {
@@ -461,6 +527,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     form.addEventListener('change', persistFormOnly);
     form.addEventListener('input', persistFormOnly);
+
+    const cancelBtn = form.querySelector('.btn-cancel');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetPlannerUi();
+        });
+    }
 
     const dbToggle = document.getElementById('useTravelLogInPlanner');
     if (dbToggle) {
