@@ -220,6 +220,9 @@ function trackFilledInputs() {
     });
 }
 
+let startDatePicker = null;
+let endDatePicker = null;
+
 function initDatePickers() {
     if (typeof flatpickr === 'undefined') return;
 
@@ -230,11 +233,58 @@ function initDatePickers() {
     const opts = {
         dateFormat: 'Y-m-d',
         locale: fpLocale,
-        disableMobile: true
+        disableMobile: true,
+        onOpen: function (selectedDates, dateStr, instance) {
+            const jumpTo = dateStr || (instance.input && instance.input.value) || '';
+            if (jumpTo) instance.jumpToDate(jumpTo, false);
+        }
     };
 
-    flatpickr('#startDate', opts);
-    flatpickr('#endDate', opts);
+    endDatePicker = flatpickr('#endDate', opts);
+    startDatePicker = flatpickr('#startDate', {
+        ...opts,
+        onChange: function (selectedDates, dateStr) {
+            if (!dateStr || !endDatePicker) return;
+            endDatePicker.set('minDate', dateStr);
+            const endVal = endDatePicker.input.value || '';
+            if (!endVal || endVal < dateStr) {
+                endDatePicker.setDate(dateStr, true);
+            }
+            endDatePicker.jumpToDate(dateStr, true);
+        }
+    });
+
+    syncLinkedDatePickers(
+        startDatePicker && startDatePicker.input ? startDatePicker.input.value : '',
+        endDatePicker && endDatePicker.input ? endDatePicker.input.value : ''
+    );
+}
+
+function syncLinkedDatePickers(startValue, endValue) {
+    const start = (startValue || '').trim();
+    const end = (endValue || '').trim();
+
+    if (startDatePicker) {
+        if (start) {
+            startDatePicker.setDate(start, false);
+            startDatePicker.jumpToDate(start, true);
+        } else {
+            startDatePicker.clear();
+        }
+    }
+
+    if (endDatePicker) {
+        if (start) endDatePicker.set('minDate', start);
+        else endDatePicker.set('minDate', null);
+
+        const resolvedEnd = end && (!start || end >= start) ? end : (start || '');
+        if (resolvedEnd) {
+            endDatePicker.setDate(resolvedEnd, false);
+            endDatePicker.jumpToDate(resolvedEnd, true);
+        } else {
+            endDatePicker.clear();
+        }
+    }
 }
 
 function readFormSnapshot() {
@@ -260,12 +310,11 @@ function applyFormSnapshot(form) {
         el.dispatchEvent(new Event('change', { bubbles: true }));
     };
     setVal('startingCity', form.startingCity);
-    setVal('startDate', form.startDate);
-    setVal('endDate', form.endDate);
     setVal('people', form.people);
     setVal('preferredTransport', form.preferredTransport);
     setVal('preferences', form.preferences);
     setVal('placesList', form.placesList);
+    syncLinkedDatePickers(form.startDate, form.endDate);
     const dbToggle = document.getElementById('useTravelLogInPlanner');
     if (dbToggle && typeof form.useTravelLog === 'boolean') {
         dbToggle.checked = form.useTravelLog;
@@ -471,8 +520,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             showError('Please select both start and end dates.', '', tripResults, resultsContainer);
             return;
         }
-        if (endDate <= startDate) {
-            showError('End date must be after start date.', '', tripResults, resultsContainer);
+        if (endDate < startDate) {
+            showError('End date must be on or after start date.', '', tripResults, resultsContainer);
             return;
         }
 

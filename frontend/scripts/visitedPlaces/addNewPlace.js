@@ -76,28 +76,86 @@ document.addEventListener('DOMContentLoaded', function () {
       disableMobile: true
     };
 
+    var endPicker = visitedEndDateInput ? flatpickr(visitedEndDateInput, Object.assign({}, fpOpts, {
+      onOpen: function (selectedDates, dateStr, instance) {
+        var jumpTo = dateStr || (instance.input && instance.input.value) || '';
+        if (jumpTo) instance.jumpToDate(jumpTo, false);
+      }
+    })) : null;
     if (visitedDateInput) {
-      flatpickr(visitedDateInput, fpOpts);
-    }
-    if (visitedEndDateInput) {
-      flatpickr(visitedEndDateInput, fpOpts);
+      flatpickr(visitedDateInput, Object.assign({}, fpOpts, {
+        onOpen: function (selectedDates, dateStr, instance) {
+          var jumpTo = dateStr || (instance.input && instance.input.value) || '';
+          if (jumpTo) instance.jumpToDate(jumpTo, false);
+        },
+        onChange: function (selectedDates, dateStr) {
+          if (!dateStr || !endPicker) return;
+          endPicker.set('minDate', dateStr);
+          var endVal = endPicker.input.value || '';
+          if (!endVal || endVal < dateStr) {
+            endPicker.setDate(dateStr, true);
+          }
+          endPicker.jumpToDate(dateStr, true);
+        }
+      }));
+      var initialStart = visitedDateInput.value || '';
+      if (initialStart && endPicker) {
+        endPicker.set('minDate', initialStart);
+        var endVal = endPicker.input.value || '';
+        if (!endVal || endVal < initialStart) {
+          endPicker.setDate(initialStart, true);
+        }
+        endPicker.jumpToDate(initialStart, true);
+      }
+      if (initialStart && visitedDateInput._flatpickr) {
+        visitedDateInput._flatpickr.jumpToDate(initialStart, true);
+      }
     }
   }
 
   if (starBtns.length && ratingInput) {
-    function setRating(value) {
-      ratingInput.value = value;
+    function paintStars(value) {
+      var n = parseInt(value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 0;
+      if (n > 5) n = 5;
       starBtns.forEach(function (btn) {
         var r = parseInt(btn.getAttribute('data-rating'), 10);
-        btn.classList.toggle('selected', r <= value);
+        btn.classList.toggle('selected', n > 0 && r <= n);
+        btn.classList.toggle('preview', n > 0 && r <= n);
       });
     }
+
+    function currentRating() {
+      var n = parseInt(ratingInput.value, 10);
+      return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 0;
+    }
+
+    function setRating(value) {
+      var n = parseInt(value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 0;
+      if (n > 5) n = 5;
+      ratingInput.value = n > 0 ? String(n) : '';
+      paintStars(n);
+    }
+
+    var starRating = document.querySelector('.star-rating');
     starBtns.forEach(function (btn) {
+      btn.addEventListener('mouseenter', function () {
+        paintStars(parseInt(btn.getAttribute('data-rating'), 10));
+      });
+      btn.addEventListener('focus', function () {
+        paintStars(parseInt(btn.getAttribute('data-rating'), 10));
+      });
       btn.addEventListener('click', function () {
         setRating(parseInt(btn.getAttribute('data-rating'), 10));
       });
     });
-    setRating(5);
+    if (starRating) {
+      starRating.addEventListener('mouseleave', function () {
+        paintStars(currentRating());
+      });
+    }
+    setRating(0);
   }
 
   if (cancelBtn) {
@@ -295,7 +353,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var visitedEndDate = document.getElementById('visitedEndDate').value;
     var description = document.getElementById('description').value.trim();
     var notes = document.getElementById('notes').value.trim();
-    var rating = parseInt(document.getElementById('rating').value, 10) || 5;
+    var ratingRaw = parseInt(document.getElementById('rating').value, 10);
+    var rating = Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
 
     if (!placeName || !country || !visitedDate) {
       showErrorMsg('Please fill in Place Name, Country and Start Date.');

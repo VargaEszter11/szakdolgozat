@@ -106,15 +106,14 @@
       });
   }
 
-  function starsHtml(placeId, rating) {
+  function starsHtml(rating) {
     rating = Math.min(5, Math.max(0, parseInt(rating, 10) || 0));
     var html = '';
     for (var i = 1; i <= 5; i++) {
       var filled = i <= rating ? ' place-star-filled' : '';
-      html += '<button type="button" class="place-star-btn' + filled + '" data-place-id="' +
-        escapeHtml(placeId) + '" data-value="' + i + '" aria-label="Rate ' + i + ' out of 5 stars">' +
+      html += '<span class="place-star' + filled + '" aria-hidden="true">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
-        '</button>';
+        '</span>';
     }
     return html;
   }
@@ -160,7 +159,7 @@
       dateIso: toIsoDateInput(dateValue),
       endDateIso: toIsoDateInput(endDateValue),
       dateSortKey: dateSortKey,
-      rating: item.rating != null ? item.rating : 5,
+      rating: item.rating != null ? item.rating : 0,
       description: rawDescription,
       photo_path: rawPhotoPath,
       image: item.image || item.photo_path || DEFAULT_IMAGE,
@@ -194,7 +193,9 @@
       '</div>' +
 
       '<div class="visited-places-card-actions">' +
-      '<div class="place-stars" role="group" aria-label="Rating">' + starsHtml(place.id, place.rating) + '</div>' +
+      '<div class="place-stars" role="img" aria-label="' +
+      escapeHtml(String(place.rating || 0) + ' / 5') +
+      '">' + starsHtml(place.rating) + '</div>' +
       '<button type="button" class="place-edit-btn" data-id="' + escapeHtml(place.id) + '" title="' + escapeHtml(t('visitedPlaces.editPlace', 'Edit place')) + '" aria-label="' + escapeHtml(t('visitedPlaces.editPlace', 'Edit place')) + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
       '<path d="M12 20h9"/>' +
@@ -237,25 +238,6 @@
       });
   }
 
-  function updateRating(placeId, rating) {
-    fetch('/api/visited-places/' + placeId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rating: rating })
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error('Failed to update rating: ' + res.status);
-        return res.json();
-      })
-      .then(function () {
-        loadPlaces();
-      })
-      .catch(function (err) {
-        console.error('Error updating rating:', err);
-        showError('Failed to update rating. Please try again.');
-      });
-  }
-
   function closeEditModal(overlay) {
     if (overlay && overlay.parentNode) {
       overlay.parentNode.removeChild(overlay);
@@ -293,7 +275,7 @@
     var removedImageIds = {};
     var clearLegacyPhoto = false;
 
-    document.querySelectorAll('.visited-place-details-overlay').forEach(function (el) {
+    document.querySelectorAll('.visited-place-details-overlay, .edit-place-modal-overlay').forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
 
@@ -370,11 +352,6 @@
     countryInput.autocomplete = 'off';
     syncHasValue(countryInput);
     countryInput.addEventListener('input', function () { syncHasValue(countryInput); });
-    if (window.Countries && window.Countries.mountAutocomplete) {
-      window.Countries.mountAutocomplete(countryInput, {
-        onChange: function () { syncHasValue(countryInput); }
-      });
-    }
 
     var dateId = uid + '-date';
     var dateInput = document.createElement('input');
@@ -408,12 +385,93 @@
 
     bodyWrap.appendChild(formGroup(nameId, t('addNewPlace.placeName', 'Place name'), nameInput));
     bodyWrap.appendChild(formGroup(countryId, t('addNewPlace.country', 'Country'), countryInput));
+    // Autocomplete wraps the input via parentNode — must run after the input is in the DOM.
+    if (window.Countries && window.Countries.mountAutocomplete) {
+      window.Countries.mountAutocomplete(countryInput, {
+        onChange: function () { syncHasValue(countryInput); }
+      });
+    }
 
     var dateRow = document.createElement('div');
     dateRow.className = 'form-row-2';
     dateRow.appendChild(formGroup(dateId, t('addNewPlace.visitedDate', 'Start date'), dateInput));
     dateRow.appendChild(formGroup(endDateId, t('addNewPlace.visitedEndDate', 'End date'), endDateInput));
     bodyWrap.appendChild(dateRow);
+
+    var ratingGroup = document.createElement('div');
+    ratingGroup.className = 'form-group';
+    var ratingLabel = document.createElement('span');
+    ratingLabel.className = 'form-label';
+    ratingLabel.textContent = t('addNewPlace.rating', 'Rating');
+    ratingGroup.appendChild(ratingLabel);
+
+    var ratingHidden = document.createElement('input');
+    ratingHidden.type = 'hidden';
+    ratingHidden.id = uid + '-rating';
+    ratingHidden.name = 'rating';
+    var initialRating = parseInt(place.rating, 10);
+    if (!Number.isFinite(initialRating) || initialRating < 1) initialRating = 0;
+    if (initialRating > 5) initialRating = 5;
+    ratingHidden.value = initialRating > 0 ? String(initialRating) : '';
+
+    var starRating = document.createElement('div');
+    starRating.className = 'star-rating';
+    starRating.setAttribute('role', 'group');
+    starRating.setAttribute('aria-label', t('addNewPlace.rating', 'Rating'));
+    var starPoly =
+      '12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2';
+    for (var si = 1; si <= 5; si++) {
+      var starBtn = document.createElement('button');
+      starBtn.type = 'button';
+      starBtn.className = 'star-btn';
+      starBtn.setAttribute('data-rating', String(si));
+      starBtn.setAttribute('aria-label', si + (si === 1 ? ' star' : ' stars'));
+      starBtn.innerHTML =
+        '<svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<polygon points="' + starPoly + '" /></svg>';
+      starRating.appendChild(starBtn);
+    }
+    ratingGroup.appendChild(starRating);
+    ratingGroup.appendChild(ratingHidden);
+    bodyWrap.appendChild(ratingGroup);
+
+    var editStarBtns = starRating.querySelectorAll('.star-btn');
+    function paintEditStars(value) {
+      var n = parseInt(value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 0;
+      if (n > 5) n = 5;
+      editStarBtns.forEach(function (btn) {
+        var r = parseInt(btn.getAttribute('data-rating'), 10);
+        btn.classList.toggle('selected', n > 0 && r <= n);
+        btn.classList.toggle('preview', n > 0 && r <= n);
+      });
+    }
+    function currentEditRating() {
+      var n = parseInt(ratingHidden.value, 10);
+      return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 0;
+    }
+    function setEditRating(value) {
+      var n = parseInt(value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 0;
+      if (n > 5) n = 5;
+      ratingHidden.value = n > 0 ? String(n) : '';
+      paintEditStars(n);
+    }
+    editStarBtns.forEach(function (btn) {
+      btn.addEventListener('mouseenter', function () {
+        paintEditStars(parseInt(btn.getAttribute('data-rating'), 10));
+      });
+      btn.addEventListener('focus', function () {
+        paintEditStars(parseInt(btn.getAttribute('data-rating'), 10));
+      });
+      btn.addEventListener('click', function () {
+        setEditRating(parseInt(btn.getAttribute('data-rating'), 10));
+      });
+    });
+    starRating.addEventListener('mouseleave', function () {
+      paintEditStars(currentEditRating());
+    });
+    setEditRating(initialRating);
 
     bodyWrap.appendChild(formGroup(descId, t('addNewPlace.description', 'Description'), descInput));
 
@@ -738,12 +796,16 @@
         showError(t('visitedPlaces.endDateBeforeStart', 'End date must be on or after the start date.'));
         return;
       }
+      var ratingRaw = parseInt(ratingHidden.value, 10);
+      var rating =
+        Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
       var body = {
         place_name: pn,
         country: (window.Countries && window.Countries.getCode(countryInput)) ||
           (countryInput.value || '').trim() || null,
         date: startDate || null,
         end_date: endDate || null,
+        rating: rating,
         description: (descInput.value || '').trim() || null
       };
       if (clearLegacyPhoto) {
@@ -814,7 +876,7 @@
     var rawId = parseInt(placeId, 10);
     if (Number.isNaN(rawId)) return;
 
-    document.querySelectorAll('.visited-place-details-overlay').forEach(function (el) {
+    document.querySelectorAll('.visited-place-details-overlay, .edit-place-modal-overlay').forEach(function (el) {
       if (el.parentNode) el.parentNode.removeChild(el);
     });
 
@@ -974,15 +1036,6 @@
         showConfirm('Are you sure you want to delete this place?', function () {
           deletePlace(delId);
         });
-        return;
-      }
-      var starBtn = e.target.closest('.place-star-btn');
-      if (starBtn) {
-        e.preventDefault();
-        var pid = parseInt(starBtn.getAttribute('data-place-id'), 10);
-        var val = parseInt(starBtn.getAttribute('data-value'), 10);
-        if (isNaN(pid) || isNaN(val)) return;
-        updateRating(pid, val);
         return;
       }
       var card = e.target.closest('.visited-place-card');

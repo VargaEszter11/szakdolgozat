@@ -244,6 +244,7 @@
   function mountAutocomplete(input, options) {
     options = options || {};
     if (!input || input.dataset.countryAutocomplete === '1') return input;
+    if (!input.parentNode) return input;
 
     var wrap = document.createElement('div');
     wrap.className = 'country-autocomplete';
