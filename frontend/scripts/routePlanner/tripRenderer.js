@@ -85,10 +85,11 @@ function accommodationBookingUrl(city, country, checkin, checkout, people) {
     return `https://www.booking.com/searchresults.html?${params.toString()}`;
 }
 
-export function displayResults(data, tripResults, resultsContainer) {
+export function displayResults(data, tripResults, resultsContainer, options = {}) {
     if (!data.draft_plan) {
         tripResults.innerHTML = '<p class="error-message">No trip plan was generated. Please try again.</p>';
         resultsContainer.style.display = 'block';
+        bindRetryButton(tripResults, options.onRetry);
         return;
     }
 
@@ -100,9 +101,17 @@ export function displayResults(data, tripResults, resultsContainer) {
     const saveTripBtn = tripResults.querySelector('#saveTripBtn');
     if (saveTripBtn) {
         saveTripBtn.addEventListener('click', async () => {
-            await saveTripToDatabase(data.draft_plan, saveTripBtn, data.userStartDate, data.userEndDate, data.userPeople);
+            await saveTripToDatabase(
+                data.draft_plan,
+                saveTripBtn,
+                data.userStartDate,
+                data.userEndDate,
+                data.userPeople,
+                { onSaved: options.onSaved }
+            );
         });
     }
+    bindRetryButton(tripResults, options.onRetry);
 }
 
 export function renderTripDetails(trip, people = 1) {
@@ -186,16 +195,27 @@ export function renderTripDetails(trip, people = 1) {
         html += '</div>';
     }
 
-    // Save trip button
+    // Save / retry actions
+    const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
+    const saveLabel = t ? t('planNewTrip.saveTrip') : 'Save Trip';
+    const retryLabel = t ? t('planNewTrip.retryPlan') : 'Retry';
     html += `
         <div class="trip-actions">
-            <button id="saveTripBtn" class="btn-add">
+            <button type="button" id="retryTripBtn" class="btn-add btn-add-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <polyline points="1 20 1 14 7 14"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                ${escapeHtml(retryLabel && !String(retryLabel).startsWith('planNewTrip.') ? retryLabel : 'Retry')}
+            </button>
+            <button type="button" id="saveTripBtn" class="btn-add">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                Save Trip
+                ${escapeHtml(saveLabel && !String(saveLabel).startsWith('planNewTrip.') ? saveLabel : 'Save Trip')}
             </button>
         </div>
     `;
@@ -203,7 +223,15 @@ export function renderTripDetails(trip, people = 1) {
     return html;
 }
 
-async function saveTripToDatabase(trip, button, userStartDate, userEndDate, userPeople) {
+function bindRetryButton(root, onRetry) {
+    const retryBtn = root && root.querySelector('#retryTripBtn');
+    if (!retryBtn || typeof onRetry !== 'function') return;
+    retryBtn.addEventListener('click', () => {
+        onRetry();
+    });
+}
+
+async function saveTripToDatabase(trip, button, userStartDate, userEndDate, userPeople, options = {}) {
     const userId = localStorage.getItem('user_id');
     if (!userId) {
         window.showError('Please log in to save trips.', function () {
@@ -281,6 +309,10 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
             }
         }
 
+        if (typeof options.onSaved === 'function') {
+            options.onSaved();
+        }
+
         button.textContent = 'Saved ✓';
         button.style.backgroundColor = 'var(--success, #22c55e)';
         window.location.href = 'planned_trips.html';
@@ -293,12 +325,24 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
     }
 }
 
-export function showError(message, details, tripResults, resultsContainer) {
+export function showError(message, details, tripResults, resultsContainer, options = {}) {
+    const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
+    const retryLabel = t ? t('planNewTrip.retryPlan') : 'Retry';
+    const retryText = retryLabel && !String(retryLabel).startsWith('planNewTrip.') ? retryLabel : 'Retry';
+    const showRetry = typeof options.onRetry === 'function';
     tripResults.innerHTML = `
         <div class="error-message">
-            <p><strong>Error:</strong> ${message}</p>
-            ${details ? `<p class="error-details">${details}</p>` : ''}
+            <p><strong>Error:</strong> ${escapeHtml(message)}</p>
+            ${details ? `<p class="error-details">${escapeHtml(details)}</p>` : ''}
+            ${showRetry ? `
+                <div class="trip-actions trip-actions--error">
+                    <button type="button" id="retryTripBtn" class="btn-add btn-add-outline">
+                        ${escapeHtml(retryText)}
+                    </button>
+                </div>
+            ` : ''}
         </div>
     `;
     resultsContainer.style.display = 'block';
+    bindRetryButton(tripResults, options.onRetry);
 }

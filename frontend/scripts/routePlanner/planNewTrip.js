@@ -2,6 +2,46 @@ import { displayResults, showError } from './tripRenderer.js';
 
 const API_BASE_URL = window.API_BASE_URL || '';
 
+function plannerSessionApi() {
+    return window.PlannerSession || null;
+}
+
+function loadPlannerSession() {
+    const api = plannerSessionApi();
+    if (api) return api.load();
+    try {
+        const raw = sessionStorage.getItem('planner_generation_session_v1');
+        return raw ? JSON.parse(raw) : null;
+    } catch (err) {
+        return null;
+    }
+}
+
+function savePlannerSession(patch) {
+    const api = plannerSessionApi();
+    if (api) return api.save(patch);
+    try {
+        const current = loadPlannerSession() || {};
+        sessionStorage.setItem(
+            'planner_generation_session_v1',
+            JSON.stringify({ ...current, ...patch, updatedAt: Date.now() })
+        );
+    } catch (err) {
+        console.warn('Could not persist planner session:', err);
+    }
+}
+
+function clearPlannerSession() {
+    const api = plannerSessionApi();
+    if (api) {
+        api.clear();
+        return;
+    }
+    try {
+        sessionStorage.removeItem('planner_generation_session_v1');
+    } catch (err) { /* ignore */ }
+}
+
 const ENDPOINTS = {
     visited: '/generate_travel_plans/visited',
     unvisited: '/generate_travel_plans/unvisited',
@@ -10,6 +50,7 @@ const ENDPOINTS = {
 
 let selectedPlan = 'random';
 let savedVisitedPlaces = [];
+let generationInFlight = false;
 
 function useTravelLogFromDb() {
     const el = document.getElementById('useTravelLogInPlanner');
@@ -196,6 +237,56 @@ function initDatePickers() {
     flatpickr('#endDate', opts);
 }
 
+function readFormSnapshot() {
+    return {
+        startingCity: document.getElementById('startingCity')?.value || '',
+        startDate: document.getElementById('startDate')?.value || '',
+        endDate: document.getElementById('endDate')?.value || '',
+        people: document.getElementById('people')?.value || '1',
+        preferredTransport: document.getElementById('preferredTransport')?.value || 'allModes',
+        preferences: document.getElementById('preferences')?.value || '',
+        placesList: document.getElementById('placesList')?.value || '',
+        useTravelLog: useTravelLogFromDb()
+    };
+}
+
+function applyFormSnapshot(form) {
+    if (!form) return;
+    const setVal = (id, value) => {
+        const el = document.getElementById(id);
+        if (!el || value == null) return;
+        el.value = value;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    setVal('startingCity', form.startingCity);
+    setVal('startDate', form.startDate);
+    setVal('endDate', form.endDate);
+    setVal('people', form.people);
+    setVal('preferredTransport', form.preferredTransport);
+    setVal('preferences', form.preferences);
+    setVal('placesList', form.placesList);
+    const dbToggle = document.getElementById('useTravelLogInPlanner');
+    if (dbToggle && typeof form.useTravelLog === 'boolean') {
+        dbToggle.checked = form.useTravelLog;
+    }
+}
+
+function selectPlanType(plan) {
+    selectedPlan = plan || 'random';
+    document.querySelectorAll('.route-option-card').forEach((card) => {
+        card.classList.toggle('selected', card.dataset.plan === selectedPlan);
+    });
+    updatePlacesField();
+}
+
+function persistFormOnly() {
+    savePlannerSession({
+        selectedPlan,
+        form: readFormSnapshot()
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('tripPlanForm');
     trackFilledInputs();
@@ -208,24 +299,160 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!form || !generateBtn) return;
 
-    window.onTravelLogPlannerPrefChanged = () => refreshPlannerDbHints();
+    const retryGeneration = () => {
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+    };
+
+    const resultOptions = () => ({
+        onRetry: retryGeneration,
+        onSaved: clearPlannerSession
+    });
+
+    async function runGeneration(planType, body, meta) {
+        if (generationInFlight) return;
+        generationInFlight = true;
+
+        savePlannerSession({
+            status: 'generating',
+            selectedPlan: planType,
+            form: readFormSnapshot(),
+            requestBody: body,
+            resultData: null,
+            errorMessage: null,
+            errorDetails: null,
+            notifyPending: false
+        });
+
+        loadingState.style.display = 'block';
+        resultsContainer.style.display = 'none';
+        generateBtn.disabled = true;
+        const originalBtnContent = generateBtn.innerHTML;
+        generateBtn.textContent = window.i18n ? window.i18n.t('planNewTrip.generating') : 'Generating...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}${ENDPOINTS[planType]}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                let detail = `HTTP ${response.status}`;
+                try {
+                    const errBody = await response.json();
+                    if (errBody.detail) {
+                        detail = typeof errBody.detail === 'string'
+                            ? errBody.detail
+                            : JSON.stringify(errBody.detail);
+                    }
+                } catch (_) { /* keep detail */ }
+                throw new Error(detail);
+            }
+
+            const data = await response.json();
+            data.userStartDate = meta.startDate;
+            data.userEndDate = meta.endDate;
+            data.userPeople = meta.people;
+
+            savePlannerSession({
+                status: 'ready',
+                selectedPlan: planType,
+                form: readFormSnapshot(),
+                requestBody: body,
+                resultData: data,
+                errorMessage: null,
+                errorDetails: null,
+                notifyPending: false
+            });
+
+            displayResults(data, tripResults, resultsContainer, resultOptions());
+        } catch (error) {
+            console.error('Error generating trip:', error);
+            savePlannerSession({
+                status: 'error',
+                selectedPlan: planType,
+                form: readFormSnapshot(),
+                requestBody: body,
+                resultData: null,
+                errorMessage: 'Failed to generate trip. Please try again.',
+                errorDetails: error.message,
+                notifyPending: false
+            });
+            showError(
+                'Failed to generate trip. Please try again.',
+                error.message,
+                tripResults,
+                resultsContainer,
+                resultOptions()
+            );
+        } finally {
+            generationInFlight = false;
+            loadingState.style.display = 'none';
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalBtnContent;
+        }
+    }
+
+    window.onTravelLogPlannerPrefChanged = () => {
+        refreshPlannerDbHints();
+        persistFormOnly();
+    };
     window.onTravelLogPlannerPrefLoaded = () => refreshPlannerDbHints();
 
     planCards.forEach(card => {
         card.addEventListener('click', () => {
-            planCards.forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedPlan = card.dataset.plan;
-            updatePlacesField();
+            selectPlanType(card.dataset.plan);
+            persistFormOnly();
         });
     });
 
-    updatePlacesField();
-    loadSavedPlaces();
-    loadHomeCity();
+    form.addEventListener('change', persistFormOnly);
+    form.addEventListener('input', persistFormOnly);
+
     const dbToggle = document.getElementById('useTravelLogInPlanner');
     if (dbToggle) {
-        dbToggle.addEventListener('change', () => refreshPlannerDbHints());
+        dbToggle.addEventListener('change', () => {
+            refreshPlannerDbHints();
+            persistFormOnly();
+        });
+    }
+
+    updatePlacesField();
+    await Promise.all([loadSavedPlaces(), loadHomeCity()]);
+
+    const session = loadPlannerSession();
+    if (session) {
+        if (session.selectedPlan) selectPlanType(session.selectedPlan);
+        if (session.form) applyFormSnapshot(session.form);
+        refreshPlannerDbHints();
+
+        if (session.status === 'ready' && session.resultData && session.resultData.draft_plan) {
+            if (plannerSessionApi() && typeof plannerSessionApi().clearReadyAttention === 'function') {
+                plannerSessionApi().clearReadyAttention();
+            } else {
+                savePlannerSession({ notifyPending: false });
+            }
+            displayResults(session.resultData, tripResults, resultsContainer, resultOptions());
+        } else if (session.status === 'error') {
+            showError(
+                session.errorMessage || 'Failed to generate trip. Please try again.',
+                session.errorDetails || '',
+                tripResults,
+                resultsContainer,
+                resultOptions()
+            );
+        } else if (session.status === 'generating' && session.requestBody) {
+            // Page was left mid-request; resume with the same payload.
+            await runGeneration(session.selectedPlan || selectedPlan, session.requestBody, {
+                startDate: session.requestBody.startDate || session.form?.startDate,
+                endDate: session.requestBody.endDate || session.form?.endDate,
+                people: session.requestBody.people || Number(session.form?.people) || 1
+            });
+        }
     }
 
     form.addEventListener('submit', async (e) => {
@@ -312,45 +539,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        loadingState.style.display = 'block';
-        resultsContainer.style.display = 'none';
-        generateBtn.disabled = true;
-        const originalBtnContent = generateBtn.innerHTML;
-        generateBtn.textContent = window.i18n ? window.i18n.t('planNewTrip.generating') : 'Generating...';
-
-        try {
-            const response = await fetch(`${API_BASE_URL}${ENDPOINTS[selectedPlan]}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (!response.ok) {
-                let detail = `HTTP ${response.status}`;
-                try {
-                    const errBody = await response.json();
-                    if (errBody.detail) {
-                        detail = typeof errBody.detail === 'string'
-                            ? errBody.detail
-                            : JSON.stringify(errBody.detail);
-                    }
-                } catch (_) { /* keep detail */ }
-                throw new Error(detail);
-            }
-
-            const data = await response.json();
-            data.userStartDate = startDate;
-            data.userEndDate = endDate;
-            data.userPeople = people;
-            displayResults(data, tripResults, resultsContainer);
-
-        } catch (error) {
-            console.error('Error generating trip:', error);
-            showError('Failed to generate trip. Please try again.', error.message, tripResults, resultsContainer);
-        } finally {
-            loadingState.style.display = 'none';
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = originalBtnContent;
-        }
+        await runGeneration(selectedPlan, body, { startDate, endDate, people });
     });
 });

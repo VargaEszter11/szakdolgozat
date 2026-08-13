@@ -256,6 +256,8 @@
     }
 
     window.appShell = {
+        pagePrefix: pagePrefix,
+        assetPrefix: prefix,
         injectHeader: injectHeader,
         injectSidebar: injectSidebar,
         refreshHeaderProfileAvatar: refreshHeaderProfileAvatar,
@@ -265,8 +267,17 @@
             initMobileDrawer();
             if (window.i18n) window.i18n.applyToPage();
             loadOnboardingTutorial();
+            loadPlannerSessionWatch();
         }
     };
+
+    function loadPlannerSessionWatch() {
+        if (document.querySelector('script[data-planner-session]')) return;
+        var s = document.createElement('script');
+        s.src = prefix + 'scripts/routePlanner/plannerSession.js';
+        s.setAttribute('data-planner-session', '1');
+        document.body.appendChild(s);
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', window.appShell.init);

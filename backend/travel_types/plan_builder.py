@@ -11,6 +11,7 @@ from .booking import (
     available_flight_candidates,
     flight_booking_details,
     refresh_booking_details,
+    return_flight_booking_details,
     seasonality_status,
 )
 from .llm_client import call_llm_api
@@ -541,32 +542,65 @@ def _append_return_home(
         return
 
     return_origin = str(plan[-1].get("iata") or "").strip().upper()
+    home_hub = str(starting_airport_iata or "").strip().upper()
     allowed_modes = _allowed_transport_modes(preferred_transport)
     return_transport = None
-    return_flight_details = {}
+    return_flight_details: Dict[str, Any] = {}
+    same_hub = bool(return_origin and home_hub and return_origin == home_hub)
+    # Off-airport homes (e.g. Miskolc ↔ Kosice): prefer keeping the return as a
+    # flight into the hub even when the reverse DirectRoute is missing/out of season.
+    prefer_soft_flight = bool(home_transfer) and not same_hub
 
     if allowed_modes is None or "flight" in allowed_modes:
         return_flight_details = (
-            flight_booking_details(db, return_origin, starting_airport_iata, end_date)
-            if return_origin
+            return_flight_booking_details(
+                db,
+                return_origin,
+                home_hub,
+                end_date,
+                allow_unverified=prefer_soft_flight,
+            )
+            if return_origin and home_hub
             else {}
         )
         if return_flight_details:
             return_transport = "flight"
 
-    if return_transport is None and (allowed_modes is None or {"train", "bus"} & allowed_modes):
+    if (
+        return_transport is None
+        and (allowed_modes is None or {"train", "bus"} & allowed_modes)
+    ):
         ground_transport = ground_transport_between_airports(
-            db, return_origin, starting_airport_iata
+            db, return_origin, home_hub
         )
         if ground_transport and (allowed_modes is None or ground_transport in allowed_modes):
             return_transport = ground_transport
 
     if return_transport is None and (allowed_modes is None or "ferry" in allowed_modes):
         ferry_transport = ferry_transport_between_airports(
-            db, return_origin, starting_airport_iata
+            db, return_origin, home_hub
         )
         if ferry_transport:
             return_transport = ferry_transport
+
+    # Last resort for off-airport homes: still show a flight+transfer home instead of
+    # dropping the return leg when no dated reverse route and no ground option exist.
+    if (
+        return_transport is None
+        and prefer_soft_flight
+        and (allowed_modes is None or "flight" in allowed_modes)
+        and return_origin
+        and home_hub
+    ):
+        return_flight_details = return_flight_booking_details(
+            db,
+            return_origin,
+            home_hub,
+            end_date,
+            allow_unverified=True,
+        )
+        if return_flight_details:
+            return_transport = "flight"
 
     if return_transport is None:
         return
@@ -580,7 +614,7 @@ def _append_return_home(
     return_stop: Dict[str, Any] = {
         "city": home_label.title() if home_label else home_city,
         "country": home_country or "",
-        "iata": starting_airport_iata,
+        "iata": home_hub,
         "days": 0,
         "arrivalDate": end_date,
         "departureDate": end_date,
@@ -603,13 +637,17 @@ def _append_return_home(
         access_city = (home_transfer.get("access_city") or "").strip()
         local = home_transfer.get("local_transport") or "bus"
         if access_city:
-            if return_transport == "flight" or return_transport == "ferry":
-                # Same pattern as destination access: fly to hub, then ground home.
+            if return_transport in {"flight", "ferry"}:
+                # Same pattern as destination access: fly/ferry to hub, then ground home.
                 return_stop["access_city"] = access_city
                 return_stop["local_transport"] = local
-            else:
-                # Already arriving by ground at/near the hub — show hub origin.
+            elif same_hub:
+                # Already at the hub — main leg is the local transfer home.
                 return_stop["access_city"] = access_city
+            else:
+                # Ground between different hubs, then local transfer home.
+                return_stop["access_city"] = access_city
+                return_stop["local_transport"] = local
     plan.append(return_stop)
 
 

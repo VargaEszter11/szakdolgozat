@@ -175,6 +175,35 @@ def test_flight_booking_details_returns_empty_dict_when_route_not_available(monk
     assert result == {}
 
 
+def test_return_flight_booking_details_soft_fallback_without_route(monkeypatch):
+    monkeypatch.setattr(
+        "backend.travel_types.booking.direct_route_for_leg",
+        lambda *args, **kwargs: None,
+    )
+    from backend.travel_types.booking import return_flight_booking_details
+
+    empty = return_flight_booking_details(
+        db=None,
+        origin="FCO",
+        destination="KSC",
+        departure_date="2026-08-15",
+        allow_unverified=False,
+    )
+    assert empty == {}
+
+    soft = return_flight_booking_details(
+        db=None,
+        origin="FCO",
+        destination="KSC",
+        departure_date="2026-08-15",
+        allow_unverified=True,
+    )
+    assert soft["origin_airport_iata"] == "FCO"
+    assert soft["destination_airport_iata"] == "KSC"
+    assert soft["flight_availability_verified"] is False
+    assert "skyscanner.net/transport/flights/fco/ksc/" in soft["booking_url"]
+
+
 # ============= update_booking_url_date =============
 
 RYANAIR_URL = (

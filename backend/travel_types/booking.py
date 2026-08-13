@@ -183,6 +183,69 @@ def flight_booking_details(
     }
 
 
+def _soft_flight_booking_details(
+    db,
+    origin: str,
+    destination: str,
+    departure_date: str,
+    people: int = 1,
+) -> dict:
+    origin_code = (origin or "").strip().upper()
+    destination_code = (destination or "").strip().upper()
+    if not origin_code or not destination_code or origin_code == destination_code:
+        return {}
+
+    route = direct_route_for_leg(db, origin_code, destination_code)
+    if route:
+        return {
+            "origin_airport_iata": route.origin_iata,
+            "destination_airport_iata": route.destination_iata,
+            "airline_iata": route.airline_iata,
+            "airline_name": route.airline_name,
+            "is_seasonal_route": route.is_seasonal,
+            "seasonality_status": seasonality_status(route.is_seasonal),
+            "effective_from": route.effective_from.isoformat() if route.effective_from else None,
+            "effective_to": route.effective_to.isoformat() if route.effective_to else None,
+            "booking_url": booking_url(
+                route.airline_iata,
+                route.origin_iata,
+                route.destination_iata,
+                departure_date,
+                people,
+            ),
+            "flight_availability_verified": False,
+        }
+
+    url = booking_url(None, origin_code, destination_code, departure_date, people)
+    if not url:
+        return {}
+    return {
+        "origin_airport_iata": origin_code,
+        "destination_airport_iata": destination_code,
+        "booking_url": url,
+        "flight_availability_verified": False,
+    }
+
+
+def return_flight_booking_details(
+    db,
+    origin: str,
+    destination: str,
+    departure_date: str,
+    airline_iata: Optional[str] = None,
+    people: int = 1,
+    *,
+    allow_unverified: bool = False,
+) -> dict:
+    """Resolve return-home flight details, optionally allowing soft/unverified links."""
+    details = flight_booking_details(
+        db, origin, destination, departure_date, airline_iata, people
+    )
+    if details or not allow_unverified:
+        return details
+    return _soft_flight_booking_details(db, origin, destination, departure_date, people)
+
+
 def refresh_booking_details(
     db,
     plan: List[Dict[str, Any]],
@@ -196,16 +259,18 @@ def refresh_booking_details(
         transport = (stop.get("transportFromPreviousCity") or "").strip().lower()
         destination_iata = (stop.get("iata") or "").strip().upper()
         travel_date = stop.get("arrivalDate")
+        is_return_home = bool(stop.get("is_return_home"))
 
         if transport == "flight" and previous_iata and destination_iata and travel_date:
             stop.update(
-                flight_booking_details(
+                return_flight_booking_details(
                     db,
                     previous_iata,
                     destination_iata,
                     travel_date,
                     selected_airline_iata,
                     people,
+                    allow_unverified=is_return_home,
                 )
             )
 
