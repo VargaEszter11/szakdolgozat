@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="icon" href="../../pictures/marker.png">
@@ -63,16 +64,23 @@
                                 <div id="llmProviderChoices" class="settings-llm-choices" role="group"
                                     aria-label="AI provider">
                                     <button type="button" class="settings-llm-btn" data-llm="deepseek">
-                                        <span class="settings-llm-btn-title" data-i18n="settings.llmDeepseekTitle">DeepSeek (cloud)</span>
-                                        <span class="settings-llm-btn-desc muted" data-i18n="settings.llmDeepseekDesc">Recommended. Requires DEEPSEEK_API_KEY on the server.</span>
+                                        <span class="settings-llm-btn-title"
+                                            data-i18n="settings.llmDeepseekTitle">DeepSeek (cloud)</span>
+                                        <span class="settings-llm-btn-desc muted"
+                                            data-i18n="settings.llmDeepseekDesc">Recommended. Requires DEEPSEEK_API_KEY
+                                            on the server.</span>
                                     </button>
                                     <button type="button" class="settings-llm-btn" data-llm="ollama">
-                                        <span class="settings-llm-btn-title" data-i18n="settings.llmOllamaTitle">Local Ollama</span>
-                                        <span class="settings-llm-btn-desc muted" data-i18n="settings.llmOllamaDesc">Uses your machine at OLLAMA_API_URL (default localhost).</span>
+                                        <span class="settings-llm-btn-title" data-i18n="settings.llmOllamaTitle">Local
+                                            Ollama</span>
+                                        <span class="settings-llm-btn-desc muted"
+                                            data-i18n="settings.llmOllamaDesc">Uses your machine at OLLAMA_API_URL
+                                            (default localhost).</span>
                                     </button>
                                 </div>
                                 <p id="llmProviderStatus" class="settings-llm-status muted" hidden role="status"></p>
-                                <p class="settings-llm-note muted" data-i18n="settings.aiNote">Your choice is saved to your account and applies with one click.</p>
+                                <p class="settings-llm-note muted" data-i18n="settings.aiNote">Your choice is saved to
+                                    your account and applies with one click.</p>
                             </div>
 
                             <p id="settingsSavedMessage" class="settings-saved-message" role="status" hidden

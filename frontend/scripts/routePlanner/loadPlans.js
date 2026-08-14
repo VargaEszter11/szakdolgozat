@@ -541,7 +541,10 @@
   async function render() {
     var container = document.getElementById('tripCards');
     var emptyState = document.getElementById('emptyState');
-    if (!container || !emptyState) return;
+    if (!container || !emptyState) {
+      if (window.markAppReady) window.markAppReady();
+      return;
+    }
 
     var trips = await getTrips();
     var sortedTrips = sortTripsByStartDate(trips);
@@ -549,12 +552,14 @@
     if (sortedTrips.length === 0) {
       container.classList.add('hidden');
       emptyState.classList.remove('hidden');
+      if (window.markAppReady) window.markAppReady();
       return;
     }
 
     emptyState.classList.add('hidden');
     container.classList.remove('hidden');
     container.innerHTML = sortedTrips.map(renderCard).join('');
+    if (window.markAppReady) window.markAppReady();
   }
 
   function bindTripListActions() {

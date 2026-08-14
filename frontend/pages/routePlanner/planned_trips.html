@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-defer-app-ready>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/visited-places.css">
     <link rel="stylesheet" href="../../styles/planned-trips.css">
@@ -94,10 +95,14 @@
 
                 <div class="trip-details-content">
                     <div class="trip-details-info">
-                        <p><strong data-i18n="plannedTrips.editFieldStartDate">Start date</strong>: <span id="tripDetailsStartDate"></span></p>
-                        <p><strong data-i18n="plannedTrips.editFieldEndDate">End date</strong>: <span id="tripDetailsEndDate"></span></p>
-                        <p><strong data-i18n="plannedTrips.people">People</strong>: <span id="tripDetailsPeople">1</span></p>
-                        <p><strong data-i18n="plannedTrips.bookingStatus">Booking status</strong>: <span id="tripDetailsBookedStatus"></span></p>
+                        <p><strong data-i18n="plannedTrips.editFieldStartDate">Start date</strong>: <span
+                                id="tripDetailsStartDate"></span></p>
+                        <p><strong data-i18n="plannedTrips.editFieldEndDate">End date</strong>: <span
+                                id="tripDetailsEndDate"></span></p>
+                        <p><strong data-i18n="plannedTrips.people">People</strong>: <span
+                                id="tripDetailsPeople">1</span></p>
+                        <p><strong data-i18n="plannedTrips.bookingStatus">Booking status</strong>: <span
+                                id="tripDetailsBookedStatus"></span></p>
                         <p id="tripDetailsStartCityWrap" class="hidden">
                             <strong data-i18n="plannedTrips.editFieldStartCity">Starting city</strong>:
                             <span id="tripDetailsStartCity"></span>
@@ -105,13 +110,16 @@
                     </div>
 
                     <div id="tripDetailsMapSection" class="trip-details-map-section hidden">
-                        <h3 id="tripDetailsMapHeading" class="trip-details-map-heading" data-i18n="plannedTrips.mapRouteHeading">Route map</h3>
-                        <div id="tripDetailsMap" class="trip-details-map" role="img" aria-labelledby="tripDetailsMapHeading"></div>
+                        <h3 id="tripDetailsMapHeading" class="trip-details-map-heading"
+                            data-i18n="plannedTrips.mapRouteHeading">Route map</h3>
+                        <div id="tripDetailsMap" class="trip-details-map" role="img"
+                            aria-labelledby="tripDetailsMapHeading"></div>
                         <p id="tripDetailsMapNote" class="trip-details-map-note muted hidden"></p>
                     </div>
 
                     <h3 id="tripDetailsStopsHeading">
-                        <span data-i18n="plannedTrips.tripStops">Trip stops</span> (<span id="tripDetailsStopsCount">0</span>)
+                        <span data-i18n="plannedTrips.tripStops">Trip stops</span> (<span
+                            id="tripDetailsStopsCount">0</span>)
                     </h3>
 
                     <div class="trip-stops-list" id="tripDetailsStopsList"></div>
@@ -125,7 +133,8 @@
             aria-modal="true" aria-labelledby="tripEditHeading">
             <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripEditModalBox">
                 <div class="trip-details-header planned-trips-trip-popup__header">
-                    <h2 id="tripEditHeading" class="trip-details-title" data-i18n="plannedTrips.editModalTitle">Edit trip</h2>
+                    <h2 id="tripEditHeading" class="trip-details-title" data-i18n="plannedTrips.editModalTitle">Edit
+                        trip</h2>
                     <button type="button" class="trip-details-close" aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
@@ -138,15 +147,19 @@
                     <div class="trip-details-info trip-details-info--form">
                         <div class="trip-details-form-field">
                             <label for="editTripTitle" data-i18n="plannedTrips.editFieldTitle">Title</label>
-                            <input type="text" id="editTripTitle" class="trip-details-text-input" required maxlength="200" autocomplete="off" />
+                            <input type="text" id="editTripTitle" class="trip-details-text-input" required
+                                maxlength="200" autocomplete="off" />
                         </div>
                         <div class="trip-details-form-field">
-                            <label for="editTripStartCity" data-i18n="plannedTrips.editFieldStartCity">Starting city</label>
-                            <input type="text" id="editTripStartCity" class="trip-details-text-input" maxlength="200" autocomplete="off" />
+                            <label for="editTripStartCity" data-i18n="plannedTrips.editFieldStartCity">Starting
+                                city</label>
+                            <input type="text" id="editTripStartCity" class="trip-details-text-input" maxlength="200"
+                                autocomplete="off" />
                         </div>
                         <div class="trip-details-form-row-2">
                             <div class="trip-details-form-field">
-                                <label for="editTripStartDate" data-i18n="plannedTrips.editFieldStartDate">Start date</label>
+                                <label for="editTripStartDate" data-i18n="plannedTrips.editFieldStartDate">Start
+                                    date</label>
                                 <input type="date" id="editTripStartDate" class="trip-details-text-input" />
                             </div>
                             <div class="trip-details-form-field">
@@ -158,8 +171,8 @@
                     <h3 data-i18n="plannedTrips.editStopsHeading">Stops</h3>
                     <div id="editStopsList" class="trip-stops-list"></div>
                     <button type="button" id="editAddStopBtn" class="btn-add">
-                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 8v8" />
                             <path d="M8 12h8" />
@@ -167,8 +180,10 @@
                         <span data-i18n="plannedTrips.editAddStop">Add stop</span>
                     </button>
                     <div class="trip-details-form-actions">
-                        <button type="button" id="tripEditSaveBtn" class="btn-add" data-i18n="plannedTrips.editSave">Save</button>
-                        <button type="button" id="tripEditCancelBtn" class="btn-cancel" data-i18n="plannedTrips.editCancel">Cancel</button>
+                        <button type="button" id="tripEditSaveBtn" class="btn-add"
+                            data-i18n="plannedTrips.editSave">Save</button>
+                        <button type="button" id="tripEditCancelBtn" class="btn-cancel"
+                            data-i18n="plannedTrips.editCancel">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -180,7 +195,8 @@
             aria-modal="true" aria-labelledby="tripShareTitle">
             <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripShareModalBox">
                 <div class="trip-details-header planned-trips-trip-popup__header">
-                    <h2 id="tripShareTitle" class="trip-details-title" data-i18n="plannedTrips.shareTrip">Share trip</h2>
+                    <h2 id="tripShareTitle" class="trip-details-title" data-i18n="plannedTrips.shareTrip">Share trip
+                    </h2>
                     <button type="button" class="trip-details-close" aria-label="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
@@ -192,18 +208,22 @@
                 <div class="trip-details-content">
                     <div class="trip-share-section">
                         <h3 data-i18n="plannedTrips.copyLink">Copy link</h3>
-                        <p class="muted" data-i18n="plannedTrips.copyLinkHint">Anyone with this link can view the itinerary (no login required).</p>
+                        <p class="muted" data-i18n="plannedTrips.copyLinkHint">Anyone with this link can view the
+                            itinerary (no login required).</p>
                         <div class="trip-share-link-row">
                             <input type="text" id="tripShareLinkInput" class="trip-details-text-input" readonly />
-                            <button type="button" id="tripShareCopyBtn" class="btn-add" data-i18n="plannedTrips.copyLink">Copy link</button>
+                            <button type="button" id="tripShareCopyBtn" class="btn-add"
+                                data-i18n="plannedTrips.copyLink">Copy link</button>
                         </div>
                     </div>
                     <div class="trip-share-section">
                         <h3 data-i18n="plannedTrips.sendToUser">Send to user</h3>
                         <label for="tripShareUserSearch" data-i18n="plannedTrips.searchUser">Search by username</label>
-                        <input type="text" id="tripShareUserSearch" class="trip-details-text-input" autocomplete="off" />
+                        <input type="text" id="tripShareUserSearch" class="trip-details-text-input"
+                            autocomplete="off" />
                         <div id="tripShareUserResults" class="trip-share-user-results"></div>
-                        <button type="button" id="tripShareSendBtn" class="btn-add" disabled data-i18n="plannedTrips.sendToUser">Send to user</button>
+                        <button type="button" id="tripShareSendBtn" class="btn-add" disabled
+                            data-i18n="plannedTrips.sendToUser">Send to user</button>
                     </div>
                 </div>
             </div>

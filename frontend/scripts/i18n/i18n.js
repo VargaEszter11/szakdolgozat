@@ -31,7 +31,7 @@
     return locale;
   }
 
-  // ✅ Nested key + fallback support
+  // Nested key + fallback support
   function resolveKey(obj, key) {
     var parts = key.split('.');
     var result = obj;
@@ -89,7 +89,7 @@
     });
   }
 
-  // ✅ expose globally so other scripts can re-run it
+  // expose globally so other scripts can re-run it
   window.i18n = {
     getLanguage: getLanguage,
     setLanguage: setLanguage,
@@ -99,12 +99,16 @@
 
   function initI18n() {
     setLanguage(getLanguage());
-
-    // First pass immediately
     applyToPage();
 
-    // Run again after a short delay to catch any late-added DOM
-    setTimeout(() => applyToPage(), 50); // 50ms gives time for other scripts
+    // Pages without sidebarHeader never call appShell.init()
+    if (!window.appShell) {
+      document.documentElement.classList.add('app-ready');
+    }
+
+    setTimeout(function () {
+      applyToPage();
+    }, 50);
   }
 
   // DOM ready

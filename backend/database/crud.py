@@ -390,6 +390,7 @@ def delete_visited_place(db: Session, place_id: int) -> bool:
 
     for img in db_place.images:
         delete_file_for_public_path(img.image_path)
+    delete_file_for_public_path(getattr(db_place, "photo_path", None))
 
     db.delete(db_place)
     db.commit()

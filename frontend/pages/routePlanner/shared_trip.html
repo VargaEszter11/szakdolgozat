@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
+    <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/visited-places.css">
     <link rel="stylesheet" href="../../styles/planned-trips.css">
@@ -27,7 +28,8 @@
                     <h1 class="main-page-home-title" id="sharedTripTitle" data-i18n="plannedTrips.sharedTripTitle">
                         Shared itinerary
                     </h1>
-                    <p class="main-page-home-subtitle muted" id="sharedTripSubtitle" data-i18n="plannedTrips.sharedTripReadOnly">
+                    <p class="main-page-home-subtitle muted" id="sharedTripSubtitle"
+                        data-i18n="plannedTrips.sharedTripReadOnly">
                         Read-only shared trip
                     </p>
                 </div>
@@ -41,9 +43,12 @@
                 <div class="shared-trip-view-panel">
                     <div class="trip-details-content">
                         <div class="trip-details-info">
-                            <p><strong data-i18n="plannedTrips.editFieldStartDate">Start date</strong>: <span id="sharedStartDate"></span></p>
-                            <p><strong data-i18n="plannedTrips.editFieldEndDate">End date</strong>: <span id="sharedEndDate"></span></p>
-                            <p><strong data-i18n="plannedTrips.people">People</strong>: <span id="sharedPeople">1</span></p>
+                            <p><strong data-i18n="plannedTrips.editFieldStartDate">Start date</strong>: <span
+                                    id="sharedStartDate"></span></p>
+                            <p><strong data-i18n="plannedTrips.editFieldEndDate">End date</strong>: <span
+                                    id="sharedEndDate"></span></p>
+                            <p><strong data-i18n="plannedTrips.people">People</strong>: <span id="sharedPeople">1</span>
+                            </p>
                             <p id="sharedStartCityWrap" class="hidden">
                                 <strong data-i18n="plannedTrips.editFieldStartCity">Starting city</strong>:
                                 <span id="sharedStartCity"></span>

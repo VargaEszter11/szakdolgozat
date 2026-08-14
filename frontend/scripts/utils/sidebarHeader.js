@@ -266,6 +266,9 @@
             injectSidebar();
             initMobileDrawer();
             if (window.i18n) window.i18n.applyToPage();
+            if (!document.documentElement.hasAttribute('data-defer-app-ready')) {
+                document.documentElement.classList.add('app-ready');
+            }
             loadOnboardingTutorial();
             loadPlannerSessionWatch();
         }

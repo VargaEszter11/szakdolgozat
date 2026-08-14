@@ -110,6 +110,7 @@
     var userId = localStorage.getItem('user_id');
     if (!userId) {
       console.warn('No user_id found. User not logged in.');
+      if (window.markAppReady) window.markAppReady();
       return;
     }
 
@@ -138,6 +139,7 @@
 
     console.log('Loading cities on map. Total places:', places.length);
     loadCities(places);
+    if (window.markAppReady) window.markAppReady();
   }
 
   window.addEventListener('DOMContentLoaded', initMap);

@@ -2,7 +2,7 @@ import { formatVisitDates } from './helpers.js';
 import { resolveEuropeIso } from './europe.js';
 
 export var DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
+  '/pictures/placeholder.png';
 
 export function placeImageUrl(place) {
   if (place.image) return place.image;

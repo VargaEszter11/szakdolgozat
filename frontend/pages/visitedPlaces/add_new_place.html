@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="icon" href="../../pictures/marker.png">
@@ -61,8 +62,7 @@
                                 </label>
                                 <input type="text" id="country" name="country" required
                                     data-i18n-placeholder="addNewPlace.countryPlaceholder"
-                                    placeholder="Start typing, e.g. Hungary"
-                                    class="form-input" autocomplete="off">
+                                    placeholder="Start typing, e.g. Hungary" class="form-input" autocomplete="off">
                             </div>
 
                             <div class="form-row-2">
@@ -74,7 +74,8 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="visitedEndDate" class="form-label" data-i18n="addNewPlace.visitedEndDate">
+                                    <label for="visitedEndDate" class="form-label"
+                                        data-i18n="addNewPlace.visitedEndDate">
                                         End Date
                                     </label>
                                     <input type="text" id="visitedEndDate" name="visitedEndDate" class="form-input">
@@ -146,25 +147,27 @@
                                 <label for="photos" class="form-label" data-i18n="addNewPlace.photos">Photos</label>
                                 <div class="photo-upload-shell">
                                     <label class="upload-zone" for="photos">
-                                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48"
+                                            height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="17 8 12 3 7 8" />
                                             <line x1="12" x2="12" y1="3" y2="15" />
                                         </svg>
                                         <p class="upload-text" data-i18n="addNewPlace.photosPlaceholder">Click to upload
                                             photos</p>
-                                        <p class="upload-hint" data-i18n="addNewPlace.photosHint">PNG, JPG up to 10MB</p>
-                                        <input type="file" id="photos" name="photos" accept="image/png,image/jpeg,image/jpg"
-                                            class="upload-input" multiple>
+                                        <p class="upload-hint" data-i18n="addNewPlace.photosHint">PNG, JPG up to 10MB
+                                        </p>
+                                        <input type="file" id="photos" name="photos"
+                                            accept="image/png,image/jpeg,image/jpg" class="upload-input" multiple>
                                     </label>
                                     <div id="photoPreviewGrid" class="photo-preview-grid" hidden></div>
                                     <p id="photoFormatErrors" class="photo-upload-errors" hidden role="alert"></p>
                                 </div>
                             </div>
 
-                            <div id="submitProgress" class="submit-progress" hidden role="status"
-                                aria-live="polite"></div>
+                            <div id="submitProgress" class="submit-progress" hidden role="status" aria-live="polite">
+                            </div>
 
                             <div class="form-actions">
                                 <button type="submit" class="btn-add">

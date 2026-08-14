@@ -1,8 +1,6 @@
-//next: reduce redundant API calls
-
 (function () {
   var STORAGE_KEY = 'visitedPlaces';
-  var DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80';
+  var DEFAULT_IMAGE = '/pictures/placeholder.png';
   var lastPlaces = [];
 
   function escapeHtml(str) {
@@ -840,7 +838,7 @@
           console.error('Error updating place:', err);
           showError(
             (err && err.message) ||
-              t('visitedPlaces.editFailed', 'Could not save changes. Please try again.')
+            t('visitedPlaces.editFailed', 'Could not save changes. Please try again.')
           );
           saveBtn.disabled = false;
           cancelBtn.disabled = false;
@@ -1058,7 +1056,10 @@
   function render(places) {
     var container = document.getElementById('placeCards');
     var countEl = document.getElementById('placeCount');
-    if (!container) return;
+    if (!container) {
+      if (window.markAppReady) window.markAppReady();
+      return;
+    }
 
     var sorted = sortByVisitDate(places);
     lastPlaces = sorted;
@@ -1069,6 +1070,7 @@
     container.innerHTML = sorted.length
       ? sorted.map(renderCard).join('')
       : '<p class="place-cards-empty">' + emptyHtml + '</p>';
+    if (window.markAppReady) window.markAppReady();
   }
 
   function loadPlaces() {
@@ -1079,6 +1081,7 @@
       if (container) {
         container.innerHTML = '<p class="place-cards-empty">Please log in to view your places. <a href="../loginRegister/loginPage.html">Log in here</a>.</p>';
       }
+      if (window.markAppReady) window.markAppReady();
       return;
     }
 
@@ -1108,6 +1111,7 @@
         if (container) {
           container.innerHTML = '<p class="place-cards-empty">Failed to load places. Please try again later.</p>';
         }
+        if (window.markAppReady) window.markAppReady();
       });
   }
 

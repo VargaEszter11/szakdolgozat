@@ -4,11 +4,16 @@ import { renderRecentPlaces } from './recentVisits.js';
 import { renderStats } from './stats.js';
 import { destroyEuropeMap, renderEuropeCoverage } from './europeMap.js';
 
+function reveal() {
+  if (window.markAppReady) window.markAppReady();
+}
+
 function render(places, tripCount) {
   renderStats(places, tripCount);
   renderRecentPlaces(places);
   renderEuropeCoverage(places);
   if (window.i18n && window.i18n.applyToPage) window.i18n.applyToPage();
+  reveal();
 }
 
 function showMessageInBoth(msgHtml) {
@@ -27,6 +32,7 @@ function showMessageInBoth(msgHtml) {
   if (mapEl) mapEl.innerHTML = '';
   if (summaryEl) summaryEl.hidden = true;
   if (window.i18n && window.i18n.applyToPage) window.i18n.applyToPage();
+  reveal();
 }
 
 function loadTravelLog() {

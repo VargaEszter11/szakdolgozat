@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.i18n.applyToPage(accountSection);
       }
     }
+    if (window.markAppReady) window.markAppReady();
     return;
   }
 
@@ -152,11 +153,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
       }
     }
-
   } catch (error) {
     console.error('Error loading profile data:', error);
     if (profileEmail) {
       profileEmail.textContent = 'Error loading profile';
     }
   }
+  if (window.markAppReady) window.markAppReady();
 });
