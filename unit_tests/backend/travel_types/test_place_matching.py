@@ -41,26 +41,26 @@ def test_place_matches_candidate_exact_match():
     )
 
 
-def test_place_matches_candidate_country_name_against_code():
+def test_place_matches_candidate_country_code():
     candidate = {
         "city": "Rome",
         "country": "IT",
     }
 
     assert place_matches_candidate(
-        "Italy",
+        "IT",
         candidate,
     )
 
 
-def test_place_matches_candidate_country_code_against_name():
+def test_place_matches_candidate_country_code_case_insensitive():
     candidate = {
         "city": "Rome",
-        "country": "Italy",
+        "country": "IT",
     }
 
     assert place_matches_candidate(
-        "IT",
+        "it",
         candidate,
     )
 
@@ -100,7 +100,7 @@ def test_place_used_in_plan_returns_true_for_country():
     ]
 
     assert place_used_in_plan(
-        "Italy",
+        "IT",
         plan,
     )
 
@@ -158,7 +158,7 @@ def test_filter_visited_returns_places_matching_requested_country():
 
     result = filter_visited(
         destinations,
-        ["Italy"],
+        ["IT"],
     )
 
     assert [item["iata"] for item in result] == ["FCO", "MXP"]
@@ -203,7 +203,7 @@ def test_filter_unvisited_removes_forbidden_country():
 
     result = filter_unvisited(
         destinations,
-        ["Italy"],
+        ["IT"],
     )
 
     assert len(result) == 1

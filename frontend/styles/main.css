@@ -1,5 +1,4 @@
-/* Shell + shared components — colors from themes.css (html[data-theme]) */
-
+/* Shell + shared components*/
 @import url("themes.css");
 @import url("settings.css");
 
@@ -10,7 +9,6 @@
 }
 
 body {
-    margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -23,7 +21,6 @@ body {
     overflow: hidden;
 }
 
-/* ── Header: flush full-width bar ── */
 .main-page-home .main-header.main-page-home-header {
     background: var(--color-surface);
     padding: 10px 20px;
@@ -127,7 +124,6 @@ body {
     min-width: 0;
 }
 
-/* ── Body: sidebar + content, flush ── */
 .main-page-home-body {
     flex: 1;
     display: flex;
@@ -225,7 +221,6 @@ body {
     background: var(--color-page-bg);
 }
 
-/* Scrollbars: follow theme (avoid default bright / white bars in dark mode) */
 .main-page-home-sidebar,
 .main-page-home-content,
 .edit-place-modal-body,
@@ -307,9 +302,6 @@ body {
     line-height: 1.45;
 }
 
-/* ============================================================
-   App buttons — primary (accent). Use .btn-add or .btn-submit.
-   ============================================================ */
 .btn-add,
 a.btn-add,
 button.btn-add,
@@ -331,7 +323,6 @@ button.btn-submit {
     cursor: pointer;
     font-family: inherit;
     line-height: 1.25;
-    box-sizing: border-box;
 }
 
 .btn-add:hover,
@@ -379,9 +370,6 @@ button.btn-add.btn-add-danger:hover {
     color: #ffffff;
 }
 
-/* ============================================================
-   App buttons — cancel (secondary outline). Own section.
-   ============================================================ */
 .btn-cancel,
 a.btn-cancel,
 button.btn-cancel {
@@ -400,7 +388,6 @@ button.btn-cancel {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
 }
 
 .btn-cancel:hover,
@@ -433,6 +420,39 @@ button.btn-cancel:hover {
     border: 1px solid var(--color-surface-border);
 }
 
+.main-page-home .main-page-panel-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 1rem 0;
+    border-bottom: 1px solid var(--color-surface-border-strong);
+    padding-bottom: 0.5rem;
+}
+
+.main-page-home .main-page-panel-heading .main-page-panel-title {
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.main-page-home .main-page-panel-more {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.main-page-home .main-page-panel-more:hover {
+    color: var(--color-accent-hover, var(--color-accent));
+    text-decoration: underline;
+}
+
+/* Shared "section heading" style */
 .main-page-home .main-page-panel-title {
     font-size: 1.05rem;
     font-weight: 600;
@@ -446,8 +466,87 @@ button.btn-cancel:hover {
     margin-top: 1.5rem;
 }
 
+.main-page-home .main-stats-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0 0 1.35rem 0;
+}
+
+.main-page-home .main-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-surface-border);
+}
+
+.main-page-home .main-stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    color: var(--color-accent);
+    background: var(--color-accent-subtle);
+    flex-shrink: 0;
+}
+
+.main-page-home .main-stat-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--color-accent);
+    letter-spacing: -0.02em;
+}
+
+.main-page-home .main-stat-label {
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-muted, var(--color-modal-message));
+    opacity: 0.9;
+}
+
 .main-page-home .main-page-panel .travel-logs-list {
     gap: 1rem;
+}
+
+.main-page-home .main-recent-card {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 0;
+}
+
+.main-page-home .main-recent-card .log-image-wrapper {
+    width: 112px;
+    min-height: 112px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 16px 0 0 16px;
+    background: var(--color-surface-border);
+}
+
+.main-page-home .main-recent-card .log-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.main-page-home .main-recent-card .log-content {
+    flex: 1;
+    min-width: 0;
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
 }
 
 .main-page-home .main-europe-chart-summary {
@@ -457,6 +556,45 @@ button.btn-cancel:hover {
 
 .main-page-home .main-europe-chart {
     min-height: 0;
+}
+
+.main-page-home .main-europe-coverage {
+    display: flex;
+    align-items: stretch;
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.main-page-home .main-europe-map {
+    flex: 1 1 auto;
+    min-height: 300px;
+    height: 360px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--color-surface-border);
+    background: var(--color-page-bg);
+}
+
+.main-page-home .main-europe-map .leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: var(--color-page-bg);
+}
+
+.main-page-home .main-europe-map-fallback {
+    margin: 0;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.main-page-home .main-europe-diagram {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    min-width: 9.5rem;
 }
 
 .main-page-home .main-europe-chart-wrap {
@@ -471,7 +609,7 @@ button.btn-cancel:hover {
 
 .main-page-home .main-europe-chart-pie-outer {
     position: relative;
-    width: min(200px, 42vw);
+    width: min(160px, 38vw);
     aspect-ratio: 1;
     flex-shrink: 0;
 }
@@ -504,7 +642,7 @@ button.btn-cancel:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
     color: var(--color-text);
@@ -513,9 +651,10 @@ button.btn-cancel:hover {
 
 .main-page-home .main-europe-chart-legend-key {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1.25rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 0.45rem;
     font-size: 0.8125rem;
     color: var(--color-text);
 }
@@ -541,6 +680,43 @@ button.btn-cancel:hover {
     background: var(--color-surface-border-medium);
 }
 
+@media (max-width: 900px) {
+    .main-page-home .main-stats-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .main-page-home .main-europe-coverage {
+        flex-direction: column;
+    }
+
+    .main-page-home .main-europe-diagram {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem 1.5rem;
+    }
+
+    .main-page-home .main-europe-chart-legend-key {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 520px) {
+    .main-page-home .main-stats-strip {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .main-page-home .main-recent-card .log-image-wrapper {
+        width: 88px;
+        min-height: 96px;
+    }
+
+    .main-page-home .main-stat-value {
+        font-size: 1.25rem;
+    }
+}
+
 /* ── Travel log cards ── */
 .main-page-home .main-page-panel .travel-log-card {
     background: var(--color-input-bg);
@@ -559,6 +735,10 @@ button.btn-cancel:hover {
     border-radius: 16px;
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--color-surface-border);
+}
+
+.main-page-home .travel-log-card.main-recent-card {
+    padding: 0;
 }
 
 .main-page-home .travel-log-card .log-header {
@@ -609,15 +789,6 @@ body.page-profile .main-page-home-content-inner>section.card {
     border-radius: 16px;
     border: 1px solid var(--color-surface-border);
     padding: 1.5rem 1.75rem;
-}
-
-.main-page-home .section-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-surface-border-strong);
-    padding-bottom: 0.5rem;
 }
 
 .main-page-home .profile-actions-row {
@@ -676,7 +847,6 @@ body.page-profile .main-page-home-content-inner>section.card {
         border-radius: 10px;
         background: transparent;
         cursor: pointer;
-        color: var(--color-text);
         flex-shrink: 0;
     }
 
@@ -698,7 +868,6 @@ body.page-profile .main-page-home-content-inner>section.card {
         min-height: 44px;
         padding: 8px;
         border-radius: 10px;
-        box-sizing: border-box;
         text-decoration: none;
     }
 
@@ -771,7 +940,6 @@ body.page-profile .main-page-home-content-inner>section.card {
         min-height: 44px;
         padding-top: 0.65rem;
         padding-bottom: 0.65rem;
-        box-sizing: border-box;
     }
 
     .main-page-home .sidebar-link-single {
@@ -837,8 +1005,7 @@ body.page-profile .main-page-home-content-inner>section.card {
     .form-actions .btn-submit,
     .form-actions a.btn-submit,
     .form-actions button.btn-submit,
-    .main-page-home .btn-trip,
-    .main-page-home .btn-trip-secondary,
+    .main-page-home .btn-add.btn-add-outline,
     .main-page-home .profile-actions-row .btn-add,
     .main-page-home .add-place-form .btn-add,
     .main-page-home .add-place-form .btn-cancel,
@@ -861,6 +1028,41 @@ body.page-profile .main-page-home-content-inner>section.card {
     .edit-place-modal-footer .form-actions {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    /* Tutorial tour tweaks (mobile) */
+    .tutorial-tour-tip--dock {
+        bottom: 0.75rem;
+        width: calc(100vw - 1rem);
+        border-radius: 12px;
+    }
+
+    .tutorial-tour-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .tutorial-tour-actions .custom-modal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Custom modal buttons (mobile) */
+    .custom-modal-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .custom-modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+    }
+
+    .custom-modal-actions .custom-modal-btn {
+        width: 100%;
     }
 }
 
@@ -916,13 +1118,13 @@ body.page-profile .main-page-home-content-inner>section.card {
 }
 
 .custom-modal-icon.success {
-    background: rgba(34, 197, 94, 0.2);
-    color: #86efac;
+    background: var(--color-settings-success-bg);
+    color: var(--color-settings-success-text);
 }
 
 .custom-modal-icon.error {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
 }
 
 .custom-modal-icon.warning {
@@ -988,6 +1190,7 @@ body.page-profile .main-page-home-content-inner>section.card {
     flex-wrap: wrap;
     gap: 0.35rem;
     margin: 0;
+    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
 .tutorial-progress-dot {
@@ -996,6 +1199,7 @@ body.page-profile .main-page-home-content-inner>section.card {
     border-radius: 50%;
     background: var(--color-modal-secondary-border);
     opacity: 0.7;
+    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
 .tutorial-progress-dot.is-active {
@@ -1240,10 +1444,6 @@ body.tutorial-tour-active {
     margin-top: 0.25rem;
 }
 
-.tutorial-progress-dot {
-    transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
-}
-
 .tutorial-elevated {
     z-index: 10060 !important;
 }
@@ -1260,49 +1460,13 @@ body.tutorial-tour-active {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .tutorial-tour-root,
     .tutorial-tour-tip,
     .tutorial-tour-hole,
     .tutorial-progress-dot,
     .tutorial-target-active {
         transition: none !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .tutorial-tour-tip--dock {
-        bottom: 0.75rem;
-        width: calc(100vw - 1rem);
-        border-radius: 12px;
-    }
-
-    .tutorial-tour-actions {
-        flex-direction: column-reverse;
-        align-items: stretch;
-    }
-
-    .tutorial-tour-actions .custom-modal-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .custom-modal-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .custom-modal-actions {
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: center;
-    }
-
-    .custom-modal-actions .custom-modal-btn {
-        width: 100%;
     }
 }
 
@@ -1315,7 +1479,6 @@ body.tutorial-tour-active {
 .country-autocomplete .form-input,
 .country-autocomplete .trip-details-text-input {
     width: 100%;
-    box-sizing: border-box;
 }
 
 .country-autocomplete-list {
@@ -1358,7 +1521,7 @@ body.tutorial-tour-active {
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: var(--color-modal-message, var(--color-muted, #888));
+    color: var(--color-modal-message, var(--color-text-muted, #888));
 }
 
 /* Planner ready notification — non-blocking corner toast */
@@ -1402,6 +1565,7 @@ body.tutorial-tour-active {
         opacity: 0;
         transform: translateY(0.5rem);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

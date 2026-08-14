@@ -101,7 +101,7 @@ class TestPlaceMatchingWithDatabase:
     def test_place_matches_candidate_with_country_codes_from_db(self, european_airports):
         candidate = {"city": "Budapest", "country": "HU", "iata": "BUD"}
 
-        assert place_matches_candidate("Hungary", candidate) is True
+        assert place_matches_candidate("HU", candidate) is True
         assert place_matches_candidate("Budapest", candidate) is True
         assert place_matches_candidate("Vienna", candidate) is False
 

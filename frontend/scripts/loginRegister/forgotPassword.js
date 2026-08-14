@@ -20,7 +20,7 @@ function showRequestStep() {
     const icon = document.createElement('div');
     icon.className = 'custom-modal-icon';
     icon.innerHTML = '🔑';
-    icon.style.background = 'var(--accent-light, #e8f0fe)';
+    icon.style.background = 'var(--color-accent-subtle, #e8f0fe)';
 
     const title = document.createElement('h3');
     title.className = 'custom-modal-title';

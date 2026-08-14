@@ -75,8 +75,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   const profileName = document.querySelector('.profile-name');
   const profileEmail = document.querySelector('.profile-email');
-  const placesVisitedEl = document.querySelector('.profile-stat-value');
-  const tripsPlannedEl = document.querySelectorAll('.profile-stat-value')[1];
   const accountSection = document.querySelector('.profile-actions');
 
   if (!userId || !username) {
@@ -86,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (accountSection) {
       accountSection.innerHTML = `
-        <h2 class="section-title" data-i18n="profile.account">Account</h2>
+        <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
         <p class="muted" data-i18n="profile.notLoggedIn">You are not logged in.</p>
         <div class="profile-actions-row">
           <a href="loginPage.html" class="btn-add" data-i18n="profile.login">Login</a>
@@ -114,25 +112,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     }
 
-    const placesResponse = await fetch(`/api/users/${userId}/visited-places`);
-    if (placesResponse.ok) {
-      const places = await placesResponse.json();
-      if (placesVisitedEl) {
-        placesVisitedEl.textContent = Array.isArray(places) ? places.length : 0;
-      }
-    }
-
-    const tripsResponse = await fetch(`/api/users/${userId}/planned-trips`);
-    if (tripsResponse.ok) {
-      const trips = await tripsResponse.json();
-      if (tripsPlannedEl) {
-        tripsPlannedEl.textContent = Array.isArray(trips) ? trips.length : 0;
-      }
-    }
-
     if (accountSection) {
       accountSection.innerHTML = `
-        <h2 class="section-title" data-i18n="profile.account">Account</h2>
+        <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
         <p class="muted" data-i18n="profile.manageYourAccountAndPreferences">Manage your account and preferences.</p>
         <div class="profile-account-buttons">
           <a href="../settings/editProfile.html" class="btn-add btn-add-outline profile-btn-edit">

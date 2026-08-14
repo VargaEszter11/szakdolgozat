@@ -23,7 +23,7 @@
     ['IS', 'Iceland', ['island', 'izland', 'ízland']],
     ['IE', 'Ireland', ['irland', 'irorszag', 'írország']],
     ['IT', 'Italy', ['italien', 'italia', 'olaszorszag', 'olaszország']],
-    ['KA', 'Kazakhstan', ['kazahsztan', 'kazahstan', 'kazahsztán']],
+    ['KZ', 'Kazakhstan', ['kazahsztan', 'kazahstan', 'kazahsztán']],
     ['XK', 'Kosovo', ['koszovo', 'koszovó']],
     ['LV', 'Latvia', ['lettland', 'lettorszag', 'lettország']],
     ['LI', 'Liechtenstein'],
@@ -132,8 +132,8 @@
     var name = row[1];
     var aliases = row[2] || [];
     CODE_TO_NAME[code] = name;
-    NAME_TO_CODE[fold(name)] = code;
     var terms = [fold(name), fold(code)].concat(aliases.map(fold));
+    NAME_TO_CODE[fold(name)] = code;
     aliases.forEach(function (alias) {
       NAME_TO_CODE[fold(alias)] = code;
     });
@@ -159,18 +159,14 @@
     if (upper.length === 2 && /^[A-Z]{2}$/.test(upper)) {
       return CODE_TO_NAME[upper] ? upper : '';
     }
-    var key = fold(raw);
-    if (NAME_TO_CODE[key]) return NAME_TO_CODE[key];
-    for (var i = 0; i < SEARCH_INDEX.length; i++) {
-      var entry = SEARCH_INDEX[i];
-      for (var j = 0; j < entry.terms.length; j++) {
-        var term = entry.terms[j];
-        if (term.length >= 4 && (key.indexOf(term) >= 0 || term.indexOf(key) >= 0)) {
-          return entry.code;
-        }
-      }
-    }
     return '';
+  }
+
+  /** Autocomplete only: map a typed country name/alias to ISO-2. Not used when reading stored places. */
+  function codeFromTypedName(value) {
+    var code = normalizeCode(value);
+    if (code) return code;
+    return NAME_TO_CODE[fold(value)] || '';
   }
 
   function displayName(value) {
@@ -276,14 +272,17 @@
     }
 
     function syncLanguage() {
-      var code = normalizeCode(input.dataset.countryCode) || normalizeCode(input.value);
+      var code = normalizeCode(input.dataset.countryCode) || codeFromTypedName(input.value);
       if (code) setValueFromCode(code);
       if (!list.hidden) refresh();
     }
 
     input._countrySyncLanguage = syncLanguage;
 
-    var initial = normalizeCode(input.value) || normalizeCode(input.dataset.countryCode || '');
+    var initial =
+      normalizeCode(input.dataset.countryCode || '') ||
+      normalizeCode(input.value) ||
+      codeFromTypedName(input.value);
     if (initial) setValueFromCode(initial);
 
     function renderSuggestions(items) {
@@ -322,7 +321,7 @@
     }
 
     function commitTyped() {
-      var code = normalizeCode(input.value);
+      var code = codeFromTypedName(input.value);
       if (code) setValueFromCode(code);
       else input.dataset.countryCode = '';
       closeList(wrap);
@@ -330,7 +329,7 @@
     }
 
     input.addEventListener('input', function () {
-      input.dataset.countryCode = normalizeCode(input.value) || '';
+      input.dataset.countryCode = codeFromTypedName(input.value) || '';
       refresh();
     });
     input.addEventListener('focus', function () {
@@ -384,7 +383,7 @@
     if (!input) return '';
     return (
       normalizeCode(input.dataset.countryCode) ||
-      normalizeCode(input.value) ||
+      codeFromTypedName(input.value) ||
       ''
     );
   }

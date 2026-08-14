@@ -2,15 +2,9 @@
 
 from __future__ import annotations
 
-import unicodedata
 from typing import Dict, List, Optional, Tuple
 
-
-def _fold(value: str) -> str:
-    text = unicodedata.normalize("NFD", (value or "").strip().lower())
-    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
-    return " ".join(text.replace("-", " ").replace("_", " ").split())
-
+# Aliases kept for parity with the frontend autocomplete search index.
 _COUNTRY_ROWS: List[Tuple[str, str, Tuple[str, ...]]] = [
     ("AL", "Albania", ("albania", "albánia", "albanien",)),
     ("AD", "Andorra", ()),
@@ -35,7 +29,7 @@ _COUNTRY_ROWS: List[Tuple[str, str, Tuple[str, ...]]] = [
     ("IS", "Iceland", ("island", "izland", "ízland")),
     ("IE", "Ireland", ("irland", "irorszag", "írország",)),
     ("IT", "Italy", ("italien", "italia", "olaszorszag", "olaszország",)),
-    ("KA", "Kazakhstan", ("kazahsztan", "kazahstan", "kazahsztán",)),
+    ("KZ", "Kazakhstan", ("kazahsztan", "kazahstan", "kazahsztán",)),
     ("XK", "Kosovo", ("koszovo", "koszovó", )),
     ("LV", "Latvia", ("lettland", "lettorszag", "lettország",)),
     ("LI", "Liechtenstein", ()),
@@ -65,21 +59,16 @@ _COUNTRY_ROWS: List[Tuple[str, str, Tuple[str, ...]]] = [
     ("VA", "Vatican City", ("vatican", "holy see", "vatikan", "vatikanvaros", "vatikánváros",)),
 ]
 
-COUNTRY_CODE_TO_NAME: Dict[str, str] = {}
-COUNTRY_NAME_TO_CODE: Dict[str, str] = {}
-
-for _code, _name, _aliases in _COUNTRY_ROWS:
-    COUNTRY_CODE_TO_NAME[_code] = _name
-    COUNTRY_NAME_TO_CODE[_fold(_name)] = _code
-    for _alias in _aliases:
-        COUNTRY_NAME_TO_CODE[_fold(_alias)] = _code
+COUNTRY_CODE_TO_NAME: Dict[str, str] = {
+    code: name for code, name, _aliases in _COUNTRY_ROWS
+}
 
 # Derived from ROWS — same set used by airport region filters and Europe chart.
 EUROPE_COUNTRY_CODES = set(COUNTRY_CODE_TO_NAME.keys())
 
 
 def normalize_country_code(value: Optional[str]) -> Optional[str]:
-    """Return ISO-2 code from the country list, or None."""
+    """Return ISO-2 code if value is already a known code; no name matching."""
     if value is None:
         return None
     raw = str(value).strip()
@@ -90,17 +79,11 @@ def normalize_country_code(value: Optional[str]) -> Optional[str]:
         upper = "GB"
     if len(upper) == 2 and upper.isalpha():
         return upper if upper in COUNTRY_CODE_TO_NAME else None
-    folded = _fold(raw)
-    if folded in COUNTRY_NAME_TO_CODE:
-        return COUNTRY_NAME_TO_CODE[folded]
-    for name, code in COUNTRY_NAME_TO_CODE.items():
-        if len(name) >= 4 and (name in folded or folded in name):
-            return code
     return None
 
 
 def country_display_name(value: Optional[str]) -> str:
-    """Human-readable English name for a code or legacy free-text value."""
+    """Human-readable English name for an ISO-2 country code."""
     if value is None:
         return ""
     raw = str(value).strip()

@@ -19,7 +19,7 @@
 </head>
 
 <body>
-    <div class="main-page-home">
+    <div class="main-page main-page-home">
 
         <header id="app-header" class="main-header main-page-home-header"></header>
 
@@ -31,11 +31,11 @@
                 <div class="main-page-home-content-inner">
 
                     <div class="main-page-home-content-header">
-                        <div>
+                        <div class="main-page-home-intro">
                             <h1 class="main-page-home-title" data-i18n="visitedPlaces.title">
                                 Visited Places
                             </h1>
-                            <p class="muted" data-i18n="visitedPlaces.subtitle">
+                            <p class="main-page-home-subtitle muted" data-i18n="visitedPlaces.subtitle">
                                 Your travel memories and experiences
                             </p>
                         </div>
@@ -50,9 +50,14 @@
                                 </svg>
                                 <span data-i18n="nav.addNewPlace">Add Place</span>
                             </a>
-                            <a href="places_map_view.html" class="btn-trip btn-trip-secondary"
-                                data-i18n="visitedPlaces.mapView">
-                                Map View
+                            <a href="places_map_view.html" class="btn-add btn-add-outline">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                                    <line x1="9" y1="3" x2="9" y2="18" />
+                                    <line x1="15" y1="6" x2="15" y2="21" />
+                                </svg>
+                                <span data-i18n="visitedPlaces.mapView">Map View</span>
                             </a>
                         </div>
                     </div>

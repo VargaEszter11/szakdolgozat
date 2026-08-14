@@ -21,7 +21,7 @@
 </head>
 
 <body>
-  <div class="main-page-home">
+  <div class="main-page main-page-home">
 
     <header id="app-header" class="main-header main-page-home-header"></header>
 
@@ -33,18 +33,27 @@
         <div class="main-page-home-content-inner">
 
           <div class="main-page-home-content-header">
-            <div>
+            <div class="main-page-home-intro">
               <h1 class="main-page-home-title" data-i18n="visitedPlaces.mapViewTitle">
                 Map View
               </h1>
-              <p class="muted" data-i18n="visitedPlaces.mapViewSubtitle">
+              <p class="main-page-home-subtitle muted" data-i18n="visitedPlaces.mapViewSubtitle">
                 See all your visited places on the map
               </p>
             </div>
 
             <div class="visited-places-header-actions">
-              <a href="visited_places.html" class="btn-trip btn-trip-secondary" data-i18n="map.listView">
-                List View
+              <a href="visited_places.html" class="btn-add btn-add-outline">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                <span data-i18n="map.listView">List View</span>
               </a>
             </div>
           </div>
@@ -52,7 +61,7 @@
           <div class="map-view-wrap">
             <div id="map"></div>
             <div class="map-controls">
-              <a href="visited_places.html" class="btn-map" data-i18n="map.listView">List View</a>
+              <a href="visited_places.html" class="btn-add btn-add-outline" data-i18n="map.listView">List View</a>
             </div>
           </div>
 

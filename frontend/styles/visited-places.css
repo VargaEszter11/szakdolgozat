@@ -8,15 +8,6 @@
     margin-bottom: 0;
 }
 
-.visited-places-page .muted {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-}
-
-.visited-places-page .main-page-home-content-header .muted {
-    margin: 0.5rem 0 0;
-}
-
 .visited-places-page .travel-logs-list {
     display: flex;
     flex-direction: column;
@@ -59,26 +50,8 @@
     gap: 0.75rem;
 }
 
-.btn-trip {
-    padding: 0.5rem 1.2rem;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s ease;
-}
-
-.btn-trip-secondary {
-    background: transparent;
-    color: var(--color-accent);
-    border: 1px solid var(--color-accent);
-}
-
-.btn-trip-secondary:hover {
-    background: var(--color-outline-accent-bg);
+.visited-places-header-actions .btn-add {
+    flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

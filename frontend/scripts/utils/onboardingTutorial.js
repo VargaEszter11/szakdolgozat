@@ -38,11 +38,11 @@
         title: t('tutorial.homeLogTitle', 'Your travel log'),
         body: t(
           'tutorial.homeLogBody',
-          'Home is your dashboard. Recent visited places appear as cards so you can reopen notes and photos quickly.\n\nFurther down, the Europe chart shows which countries you have already visited. It updates automatically as you add more places, giving you a clear picture of your coverage.'
+          'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as photo cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in gold (with a small diagram summary beside it). It updates as you add more places.'
         ),
         page: /main_page\.html/,
         goto: '/pages/main_page.html',
-        selectors: ['#mainTravelLogs', '.main-page-panel', '.main-page-home-content-inner'],
+        selectors: ['#mainStatsStrip', '#mainTravelLogs', '#mainEuropeMap', '.main-page-panel'],
         mode: 'next',
       },
       {
@@ -91,7 +91,7 @@
         ),
         page: /visited_places\.html|places_map_view\.html/,
         goto: '/pages/visitedPlaces/visited_places.html',
-        selectors: ['a.btn-trip[href*="places_map_view"]', 'a[href*="places_map_view"]'],
+        selectors: ['a.btn-add[href*="places_map_view"]', 'a[href*="places_map_view"]'],
         mode: 'next',
       },
       {

@@ -346,9 +346,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var placeName = document.getElementById('placeName').value.trim();
     var countryInput = document.getElementById('country');
     var country =
-      (window.Countries && window.Countries.getCode(countryInput)) ||
-      (countryInput && countryInput.value.trim()) ||
-      '';
+      (window.Countries && window.Countries.getCode(countryInput)) || '';
     var visitedDate = document.getElementById('visitedDate').value;
     var visitedEndDate = document.getElementById('visitedEndDate').value;
     var description = document.getElementById('description').value.trim();
@@ -357,7 +355,11 @@ document.addEventListener('DOMContentLoaded', function () {
     var rating = Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
 
     if (!placeName || !country || !visitedDate) {
-      showErrorMsg('Please fill in Place Name, Country and Start Date.');
+      showErrorMsg(
+        !country && (countryInput && countryInput.value.trim())
+          ? 'Please select a country from the suggestions list.'
+          : 'Please fill in Place Name, Country and Start Date.'
+      );
       return;
     }
 

@@ -41,15 +41,6 @@
     color: var(--color-log-date-soft);
 }
 
-.planned-trips-page .muted {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-}
-
-.planned-trips-page .main-page-home-content-header .muted {
-    margin: 0.5rem 0 0;
-}
-
 @media (max-width: 768px) {
     .planned-trips-page .main-page-home-content-header {
         flex-direction: column;

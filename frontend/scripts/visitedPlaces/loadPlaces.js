@@ -801,13 +801,16 @@
         Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
       var body = {
         place_name: pn,
-        country: (window.Countries && window.Countries.getCode(countryInput)) ||
-          (countryInput.value || '').trim() || null,
+        country: (window.Countries && window.Countries.getCode(countryInput)) || null,
         date: startDate || null,
         end_date: endDate || null,
         rating: rating,
         description: (descInput.value || '').trim() || null
       };
+      if (!body.country) {
+        showError(t('addNewPlace.countryRequired', 'Please select a country from the list.'));
+        return;
+      }
       if (clearLegacyPhoto) {
         body.photo_path = null;
       }

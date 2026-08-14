@@ -1,13 +1,4 @@
-body.page-settings #settingsForm .section-title {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 0 0 1rem 0;
-    color: var(--color-text);
-    border-bottom: 1px solid var(--color-surface-border-strong);
-    padding-bottom: 0.5rem;
-}
-
-body.page-settings #settingsForm .section-title:not(:first-of-type) {
+body.page-settings #settingsForm .main-page-panel-title:not(:first-of-type) {
     margin-top: 1.5rem;
 }
 
@@ -131,7 +122,7 @@ body.page-settings .settings-llm-status {
 }
 
 body.page-settings .settings-llm-status--error {
-    color: #f87171;
+    color: var(--color-danger-text);
 }
 
 body.page-settings .settings-llm-status--success {
@@ -140,8 +131,4 @@ body.page-settings .settings-llm-status--success {
     background: var(--color-settings-success-bg);
     color: var(--color-settings-success-text);
     border: 1px solid var(--color-settings-success-border);
-}
-
-html[data-theme="light"] body.page-settings .settings-llm-status--error {
-    color: #b91c1c;
 }

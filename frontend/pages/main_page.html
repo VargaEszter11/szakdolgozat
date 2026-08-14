@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" href="../pictures/marker.png">
     <title>TravelApp – Main page</title>
     <script src="../scripts/utils/apiConfig.js"></script>
@@ -14,6 +15,7 @@
     <script src="../scripts/i18n/translations.js" defer></script>
     <script src="../scripts/i18n/i18n.js" defer></script>
     <script src="../scripts/utils/sidebarHeader.js" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 </head>
 
 <body>
@@ -28,8 +30,6 @@
                     <div class="main-page-home-content-header">
                         <div class="main-page-home-intro">
                             <h1 class="main-page-home-title" data-i18n="mainPage.title">Welcome to TravelApp!</h1>
-                            <p class="main-page-home-subtitle muted" data-i18n="mainPage.subtitle">Your freshest travel
-                                memories</p>
                         </div>
                         <a href="visitedPlaces/add_new_place.html" class="btn-add">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -43,9 +43,15 @@
                     </div>
 
                     <section class="main-page-panel" aria-labelledby="mainRecentHeading">
-                        <h2 id="mainRecentHeading" class="main-page-panel-title" data-i18n="mainPage.recentVisits">
-                            Most recent visits
-                        </h2>
+                        <div id="mainStatsStrip" class="main-stats-strip" aria-label="Travel stats" hidden></div>
+
+                        <div class="main-page-panel-heading">
+                            <h2 id="mainRecentHeading" class="main-page-panel-title" data-i18n="mainPage.recentVisits">
+                                Most recent visits
+                            </h2>
+                            <a href="visitedPlaces/visited_places.html" class="main-page-panel-more"
+                                data-i18n="mainPage.moreVisits">More</a>
+                        </div>
                         <div id="mainTravelLogs" class="travel-logs-list" aria-live="polite">
                             <p class="travel-logs-loading muted" data-i18n="mainPage.loading">Loading…</p>
                         </div>
@@ -55,14 +61,19 @@
                             European countries visited
                         </h2>
                         <p id="mainEuropeChartSummary" class="main-europe-chart-summary muted" hidden></p>
-                        <div id="mainEuropeChart" class="main-europe-chart" role="img"
-                            aria-labelledby="mainEuropeChartHeading"></div>
+                        <div id="mainEuropeChart" class="main-europe-chart" aria-labelledby="mainEuropeChartHeading">
+                            <div class="main-europe-coverage">
+                                <div id="mainEuropeMap" class="main-europe-map" role="img"
+                                    aria-label="Europe map of visited countries"></div>
+                                <div id="mainEuropeDiagram" class="main-europe-diagram"></div>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </main>
         </div>
     </div>
-    <script src="../scripts/utils/mainPageTravelLog.js?v=8" defer></script>
+    <script type="module" src="../scripts/mainPage/index.js"></script>
 </body>
 
 </html>

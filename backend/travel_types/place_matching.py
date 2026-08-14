@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from utils.countries import COUNTRY_CODE_TO_NAME, COUNTRY_NAME_TO_CODE, normalize_country_code
+from utils.countries import COUNTRY_CODE_TO_NAME, normalize_country_code
 
 
 def split_place_label(label: str):
@@ -30,10 +30,6 @@ def _country_tokens(value: str) -> set[str]:
         tokens.add(text)
     if code and COUNTRY_CODE_TO_NAME.get(code):
         tokens.add(COUNTRY_CODE_TO_NAME[code].lower())
-    # Keep alias tokens for matching legacy free-text visited places.
-    for name, mapped in COUNTRY_NAME_TO_CODE.items():
-        if mapped == code:
-            tokens.add(name)
     return tokens
 
 
