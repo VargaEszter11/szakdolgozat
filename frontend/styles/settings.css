@@ -1,7 +1,3 @@
-body.page-settings #settingsForm .main-page-panel-title:not(:first-of-type) {
-    margin-top: 1.5rem;
-}
-
 body.page-settings #settingsForm select.form-input {
     cursor: pointer;
     color-scheme: var(--color-scheme-ui);
@@ -38,13 +34,6 @@ body.page-settings #settingsForm select.form-input:active {
 
 html[data-theme="light"] body.page-settings #settingsForm select.form-input {
     color-scheme: light;
-}
-
-body.page-settings #settingsForm .form-hint {
-    font-size: 0.8125rem;
-    color: var(--color-text-subtle);
-    line-height: 1.4;
-    margin: 0;
 }
 
 body.page-settings .settings-saved-message {
