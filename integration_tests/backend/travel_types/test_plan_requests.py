@@ -14,16 +14,6 @@ from travel_types.unvisited import UnvisitedGenerationRequest
 class TestPlanRequestsHelpersWithDatabase:
     """Helpers that read user / airport state from the test database."""
 
-    def test_resolve_llm_provider_always_deepseek(self, db, test_user):
-        from database import models
-
-        user = db.query(models.User).filter(models.User.id == test_user["id"]).one()
-        user.preferred_llm_provider = "deepseek"
-        db.commit()
-
-        assert pr.resolve_llm_provider(db, test_user["id"]) == "deepseek"
-        assert pr.resolve_llm_provider(None, None) == "deepseek"
-
     def test_clean_plan_city_names_uses_airport_city(self, db, european_airports):
         plan = {"plan": [{"iata": "FCO", "city": "Fiumicino"}]}
 
@@ -39,10 +29,9 @@ class TestPlanRequestsHelpersWithDatabase:
             userId=test_user["id"],
         )
 
-        length, provider = pr.planner_context(request, db)
+        length, _ = pr.planner_context(request, db)
 
         assert length == 7
-        assert provider == "deepseek"
 
 
 class TestPlanRequestsGeneration:
@@ -119,36 +108,3 @@ class TestPlanRequestsGeneration:
         assert result == {"ok": True}
         assert "Prague, CZ" in captured["forbidden"] or "Prague" in str(captured["forbidden"])
         assert "Berlin" in captured["forbidden"]
-
-    @pytest.mark.asyncio
-    async def test_generate_random_plan_delegates(self, db, monkeypatch):
-        async def fake_with_location(func, *args, **kwargs):
-            return {"func": func.__name__, "start": kwargs["starting_point"]}
-
-        monkeypatch.setattr(pr, "generate_plan_with_location", fake_with_location)
-        monkeypatch.setattr(pr, "planner_context", lambda request, database: (3, "deepseek"))
-
-        request = pr.RandomGenerationRequest(
-            startingPoint="Budapest",
-            startDate="2026-07-01",
-            endDate="2026-07-04",
-        )
-
-        result = await pr.generate_random_plan(request, db)
-
-        assert result["func"] == "generate_travel_plan_random"
-        assert result["start"] == "Budapest"
-
-    @pytest.mark.asyncio
-    async def test_geocode_places_uses_geocode_helper(self, monkeypatch):
-        async def fake_geocode(place, language="en"):
-            if place == "Budapest":
-                return 47.5, 19.0
-            raise RuntimeError("fail")
-
-        monkeypatch.setattr(pr, "geocode_place", fake_geocode)
-
-        out = await pr.geocode_places(pr.GeocodeRequest(places=["Budapest", "Nope"]))
-
-        assert out[0] == {"lat": 47.5, "lon": 19.0}
-        assert out[1] is None

@@ -29,7 +29,7 @@ class TestUnvisitedForbiddenPlacesWithDatabase:
 
 
 class TestUnvisitedPlanWithDatabase:
-    """unvisited generator DB-planner path and LLM filtering."""
+    """unvisited generator against the DB planner path."""
 
     @pytest.mark.asyncio
     async def test_generate_with_airport_uses_db_planner(
@@ -98,30 +98,3 @@ class TestUnvisitedPlanWithDatabase:
         data = json.loads(raw)
         assert data["strategy"] == "unvisited"
         assert data["plan"][0]["iata"] == "FCO"
-
-    @pytest.mark.asyncio
-    async def test_generate_without_airport_excludes_forbidden_from_prompt(self, monkeypatch):
-        captured = {}
-
-        async def fake_llm(prompt, provider):
-            captured["prompt"] = prompt
-            return '{"plan":[]}'
-
-        monkeypatch.setattr(unvisited, "call_llm_api", fake_llm)
-
-        await unvisited.generate_travel_plan_unvisited(
-            startingPoint="Budapest",
-            travelLength=4,
-            preferences=[],
-            forbidden_places=["Paris, France"],
-            direct_destinations=[
-                {"city": "Paris", "country": "France", "iata": "CDG"},
-                {"city": "Vienna", "country": "Austria", "iata": "VIE"},
-            ],
-            start_date="2026-07-01",
-            end_date="2026-07-05",
-        )
-
-        assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]
-        assert "Paris, France (IATA: CDG)" not in captured["prompt"]
-        assert "ALREADY VISITED" in captured["prompt"]

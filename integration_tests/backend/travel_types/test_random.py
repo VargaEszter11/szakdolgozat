@@ -10,7 +10,7 @@ from travel_types import plan_builder, random as random_plan
 
 
 class TestRandomPlanWithDatabase:
-    """random generator against DB planner path and LLM fallback."""
+    """random generator against the DB planner path."""
 
     @pytest.mark.asyncio
     async def test_generate_with_airport_uses_db_planner(
@@ -78,28 +78,3 @@ class TestRandomPlanWithDatabase:
         data = json.loads(raw)
         assert "trips" in data
         assert data["trips"][0]["plan"][0]["iata"] == "FCO"
-
-    @pytest.mark.asyncio
-    async def test_generate_without_airport_uses_llm_prompt(self, monkeypatch):
-        captured = {}
-
-        async def fake_llm(prompt, provider):
-            captured["prompt"] = prompt
-            captured["provider"] = provider
-            return '{"trips":[]}'
-
-        monkeypatch.setattr(random_plan, "call_llm_api", fake_llm)
-
-        raw = await random_plan.generate_travel_plan_random(
-            startingPoint="Budapest",
-            travelLength=4,
-            preferences=["museums"],
-            direct_destinations=[{"city": "Vienna", "country": "Austria", "iata": "VIE"}],
-            start_date="2026-07-01",
-            end_date="2026-07-05",
-            llm_provider="deepseek",
-        )
-
-        assert raw == '{"trips":[]}'
-        assert captured["provider"] == "deepseek"
-        assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]

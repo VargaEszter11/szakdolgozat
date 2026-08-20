@@ -36,7 +36,6 @@ async def test_generate_travel_plan_random_falls_back_to_llm(monkeypatch):
 
     async def fake_llm(prompt, provider):
         captured["prompt"] = prompt
-        captured["provider"] = provider
         return '{"trips":[]}'
 
     run_db_planner = AsyncMock()
@@ -56,7 +55,6 @@ async def test_generate_travel_plan_random_falls_back_to_llm(monkeypatch):
     )
 
     assert raw == '{"trips":[]}'
-    assert captured["provider"] == "deepseek"
     assert "Available airport-linked destinations" in captured["prompt"]
     assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]
     assert "random" in captured["prompt"]

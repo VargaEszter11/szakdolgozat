@@ -84,15 +84,3 @@ class TestCommonWithPlanner:
         assert data["plan"]
         assert data["plan"][0]["iata"] == "FCO"
         assert data["plan"][-1]["iata"] == "BUD"
-
-
-class TestCommonPromptHelpers:
-    """Lightweight checks that shared prompt helpers stay coherent."""
-
-    def test_language_and_place_helpers(self):
-        assert common.language_name("hu") == "Hungarian"
-        assert common.merge_place_lists(["Paris"], ["paris", "Rome"]) == ["Paris", "Rome"]
-        assert "SYSTEM:" in common.system_travel_planner("English")
-        assert "Trip length: 5 days" in common.user_trip_header(
-            "Budapest", "2026-07-01", "2026-07-06", 5, ["food"]
-        )

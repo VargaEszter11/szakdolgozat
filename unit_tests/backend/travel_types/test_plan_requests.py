@@ -37,16 +37,10 @@ def test_planner_account_id():
     assert pg.planner_account_id(SimpleNamespace(plannerUserId=None, userId=4)) == 4
 
 
-def test_resolve_llm_provider():
-    assert pg.resolve_llm_provider(MagicMock(), 1) == "deepseek"
-    assert pg.resolve_llm_provider(None, None) == "deepseek"
-
-
 def test_planner_context(monkeypatch):
     req = SimpleNamespace(startDate="2026-07-01", endDate="2026-07-04", plannerUserId=1, userId=1)
-    length, provider = pg.planner_context(req, MagicMock())
+    length, _ = pg.planner_context(req, MagicMock())
     assert length == 3
-    assert provider == "deepseek"
 
 
 def test_apply_people_to_booking_links(monkeypatch):

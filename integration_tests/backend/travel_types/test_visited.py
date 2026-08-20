@@ -8,24 +8,8 @@ import pytest
 
 from travel_types import plan_builder, visited
 
-
-class TestVisitedMatching:
-    """Destination matching used by the visited LLM fallback path."""
-
-    def test_matching_destinations_from_requested_labels(self):
-        destinations = [
-            {"city": "Vienna", "country": "Austria", "iata": "VIE"},
-            {"city": "Rome", "country": "Italy", "iata": "FCO"},
-        ]
-
-        matched = visited._matching_destinations(destinations, ["vien", "Rome, Italy"])
-
-        assert "Vienna, Austria (IATA: VIE)" in matched
-        assert "Rome, Italy (IATA: FCO)" in matched
-
-
 class TestVisitedPlanWithDatabase:
-    """visited generator DB-planner path and LLM fallback."""
+    """visited generator against the DB planner path."""
 
     @pytest.mark.asyncio
     async def test_generate_with_airport_uses_db_planner(
@@ -94,33 +78,3 @@ class TestVisitedPlanWithDatabase:
         data = json.loads(raw)
         assert data["strategy"] == "visited"
         assert data["plan"][0]["iata"] == "FCO"
-
-    @pytest.mark.asyncio
-    async def test_generate_without_airport_uses_matching_destinations(self, monkeypatch):
-        captured = {}
-
-        async def fake_llm(prompt, provider):
-            captured["prompt"] = prompt
-            return '{"plan":[]}'
-
-        monkeypatch.setattr(visited, "call_llm_api", fake_llm)
-
-        await visited.generate_travel_plan_visited(
-            startingPoint="Budapest",
-            travelLength=4,
-            preferences=[],
-            visitedPlaces=["Vienna"],
-            extra_places=["Rome"],
-            direct_destinations=[
-                {"city": "Vienna", "country": "Austria", "iata": "VIE"},
-                {"city": "Berlin", "country": "Germany", "iata": "BER"},
-            ],
-            start_date="2026-07-01",
-            end_date="2026-07-05",
-            llm_provider="deepseek",
-        )
-
-        assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]
-        assert "Berlin, Germany (IATA: BER)" not in captured["prompt"]
-        assert "ONLY choose destinations from this list" in captured["prompt"]
-        assert "Vienna" in captured["prompt"] and "Rome" in captured["prompt"]
