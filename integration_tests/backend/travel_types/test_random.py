@@ -97,9 +97,9 @@ class TestRandomPlanWithDatabase:
             direct_destinations=[{"city": "Vienna", "country": "Austria", "iata": "VIE"}],
             start_date="2026-07-01",
             end_date="2026-07-05",
-            llm_provider="ollama",
+            llm_provider="deepseek",
         )
 
         assert raw == '{"trips":[]}'
-        assert captured["provider"] == "ollama"
+        assert captured["provider"] == "deepseek"
         assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]

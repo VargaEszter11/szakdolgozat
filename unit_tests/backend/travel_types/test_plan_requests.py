@@ -37,22 +37,16 @@ def test_planner_account_id():
     assert pg.planner_account_id(SimpleNamespace(plannerUserId=None, userId=4)) == 4
 
 
-def test_resolve_llm_provider(monkeypatch):
-    monkeypatch.setattr(pg.crud, "get_user", lambda db, user_id: SimpleNamespace(preferred_llm_provider="ollama"))
-    assert pg.resolve_llm_provider(MagicMock(), 1) == "ollama"
-
-    monkeypatch.setattr(pg.crud, "get_user", lambda db, user_id: None)
-    monkeypatch.setenv("DEFAULT_LLM_PROVIDER", "deepseek")
+def test_resolve_llm_provider():
     assert pg.resolve_llm_provider(MagicMock(), 1) == "deepseek"
     assert pg.resolve_llm_provider(None, None) == "deepseek"
 
 
 def test_planner_context(monkeypatch):
-    monkeypatch.setattr(pg, "resolve_llm_provider", lambda db, user_id: "ollama")
     req = SimpleNamespace(startDate="2026-07-01", endDate="2026-07-04", plannerUserId=1, userId=1)
     length, provider = pg.planner_context(req, MagicMock())
     assert length == 3
-    assert provider == "ollama"
+    assert provider == "deepseek"
 
 
 def test_apply_people_to_booking_links(monkeypatch):

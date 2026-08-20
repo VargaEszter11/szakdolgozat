@@ -28,16 +28,7 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Settings saved successfully!',
       langOptionEn: 'English',
       langOptionHu: 'Magyar (Hungarian)',
-      langOptionDe: 'Deutsch (German)',
-      aiAssistant: 'AI for trip planning',
-      llmDeepseekTitle: 'DeepSeek (cloud)',
-      llmDeepseekDesc: 'Uses the DeepSeek API. The server must have DEEPSEEK_API_KEY set.',
-      llmOllamaTitle: 'Local Ollama',
-      llmOllamaDesc: 'Runs on your computer (default: http://localhost:11434).',
-      aiNote: 'Tap an option to save it to your account immediately.',
-      aiSaved: 'AI choice saved.',
-      aiSaveFailed: 'Could not save AI choice. Try again.',
-      aiLoginRequired: 'Log in to choose which AI plans your trips.'
+      langOptionDe: 'Deutsch (German)'
     },
     mainPage: {
       title: 'Welcome to TravelApp!',
@@ -474,16 +465,7 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Beállítások sikeresen mentve!',
       langOptionEn: 'Angol',
       langOptionHu: 'Magyar',
-      langOptionDe: 'Német',
-      aiAssistant: 'MI az utazástervezéshez',
-      llmDeepseekTitle: 'DeepSeek (felhő)',
-      llmDeepseekDesc: 'DeepSeek API. A szerveren be kell állítani a DEEPSEEK_API_KEY-t.',
-      llmOllamaTitle: 'Helyi Ollama',
-      llmOllamaDesc: 'A gépeden fut (alapértelmezés: http://localhost:11434).',
-      aiNote: 'Koppints egy lehetőségre — azonnal elmentjük a fiókodhoz.',
-      aiSaved: 'MI választás mentve.',
-      aiSaveFailed: 'Az MI választás mentése sikertelen. Próbáld újra.',
-      aiLoginRequired: 'Jelentkezz be, hogy kiválaszthasd, melyik MI tervezze az utaidat.'
+      langOptionDe: 'Német'
     },
     mainPage: {
       title: 'Üdvözlünk a TravelAppben!',
@@ -920,16 +902,7 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Einstellungen erfolgreich gespeichert!',
       langOptionEn: 'Englisch',
       langOptionHu: 'Ungarisch',
-      langOptionDe: 'Deutsch',
-      aiAssistant: 'KI für die Reiseplanung',
-      llmDeepseekTitle: 'DeepSeek (Cloud)',
-      llmDeepseekDesc: 'Nutzt die DeepSeek-API. Auf dem Server muss DEEPSEEK_API_KEY gesetzt sein.',
-      llmOllamaTitle: 'Lokales Ollama',
-      llmOllamaDesc: 'Läuft auf deinem Rechner (Standard: http://localhost:11434).',
-      aiNote: 'Tippe auf eine Option — sie wird sofort in deinem Konto gespeichert.',
-      aiSaved: 'KI-Auswahl gespeichert.',
-      aiSaveFailed: 'KI-Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.',
-      aiLoginRequired: 'Melde dich an, um die KI für Reisepläne zu wählen.'
+      langOptionDe: 'Deutsch'
     },
     mainPage: {
       title: 'Willkommen bei TravelApp!',

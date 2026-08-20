@@ -19,7 +19,7 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
     password: Optional[str] = Field(default=None, min_length=6)
-    preferred_llm_provider: Optional[Literal["deepseek", "ollama"]] = None
+    preferred_llm_provider: Optional[Literal["deepseek"]] = None
     home_city: Optional[str] = Field(default=None, max_length=255)
 
 

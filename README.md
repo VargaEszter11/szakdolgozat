@@ -9,7 +9,7 @@ A web app for frequent travellers to keep **visited places** and **planned trips
 ## Features
 
 - **Visited places** — list and map views; add places with details and optional photos
-- **Plan new trip** — routes from visited places, unvisited destinations, or random suggestions; LLM via DeepSeek or local Ollama
+- **Plan new trip** — routes from visited places, unvisited destinations, or random suggestions; LLM via DeepSeek
 - **Planned trips** — saved plans with detail/edit modals, booking status, stop management, and date consistency when editing first/last stops
 - **Trip sharing** — public read-only link (`/share`) and in-app invitations to other users
 - **Auth** — register/login, Google OAuth (optional), password reset by email
@@ -25,7 +25,7 @@ A web app for frequent travellers to keep **visited places** and **planned trips
 | Database | PostgreSQL |
 | Deploy   | Docker Compose (`db` + `backend` + `frontend`) |
 
-Optional integrations (see `.env.example`): Nominatim geocoding, DeepSeek / Ollama, Google OAuth, AirLabs, SMTP.
+Optional integrations (see `.env.example`): Nominatim geocoding, DeepSeek, Google OAuth, AirLabs, SMTP.
 
 ## Quick start (Docker)
 
@@ -73,7 +73,7 @@ Copy `.env.example` → `.env` and fill what you need. Important groups:
 |------|-----------|
 | Database | `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` |
 | Google login | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
-| Trip LLM | `DEEPSEEK_*` and/or `OLLAMA_*` |
+| Trip LLM | `DEEPSEEK_API_KEY`, optional `DEEPSEEK_API_BASE`, `DEEPSEEK_MODEL` |
 | Geocoding | `NOMINATIM_USER_AGENT` (required by OSM policy) |
 | Password reset email | `SMTP_*`, optionally `PUBLIC_BASE_URL` |
 | Admin tools | `ADMIN_SECRET` |

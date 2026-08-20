@@ -14,14 +14,15 @@ from travel_types.unvisited import UnvisitedGenerationRequest
 class TestPlanRequestsHelpersWithDatabase:
     """Helpers that read user / airport state from the test database."""
 
-    def test_resolve_llm_provider_from_user(self, db, test_user):
+    def test_resolve_llm_provider_always_deepseek(self, db, test_user):
         from database import models
 
         user = db.query(models.User).filter(models.User.id == test_user["id"]).one()
-        user.preferred_llm_provider = "ollama"
+        user.preferred_llm_provider = "deepseek"
         db.commit()
 
-        assert pr.resolve_llm_provider(db, test_user["id"]) == "ollama"
+        assert pr.resolve_llm_provider(db, test_user["id"]) == "deepseek"
+        assert pr.resolve_llm_provider(None, None) == "deepseek"
 
     def test_clean_plan_city_names_uses_airport_city(self, db, european_airports):
         plan = {"plan": [{"iata": "FCO", "city": "Fiumicino"}]}
@@ -41,7 +42,7 @@ class TestPlanRequestsHelpersWithDatabase:
         length, provider = pr.planner_context(request, db)
 
         assert length == 7
-        assert provider in {"deepseek", "ollama"}
+        assert provider == "deepseek"
 
 
 class TestPlanRequestsGeneration:

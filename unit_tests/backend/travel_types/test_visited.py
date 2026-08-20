@@ -74,12 +74,12 @@ async def test_generate_travel_plan_visited_falls_back_to_llm(monkeypatch):
         start_date="2026-07-01",
         end_date="2026-07-05",
         language="en",
-        llm_provider="ollama",
+        llm_provider="deepseek",
         starting_airport_iata=None,
     )
 
     assert raw == '{"plan":[]}'
-    assert captured["provider"] == "ollama"
+    assert captured["provider"] == "deepseek"
     assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]
     assert "Berlin, Germany (IATA: BER)" not in captured["prompt"]
     assert "ONLY choose destinations from this list" in captured["prompt"]

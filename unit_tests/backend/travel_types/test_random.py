@@ -51,12 +51,12 @@ async def test_generate_travel_plan_random_falls_back_to_llm(monkeypatch):
         start_date="2026-07-01",
         end_date="2026-07-05",
         language="en",
-        llm_provider="ollama",
+        llm_provider="deepseek",
         starting_airport_iata=None,
     )
 
     assert raw == '{"trips":[]}'
-    assert captured["provider"] == "ollama"
+    assert captured["provider"] == "deepseek"
     assert "Available airport-linked destinations" in captured["prompt"]
     assert "Vienna, Austria (IATA: VIE)" in captured["prompt"]
     assert "random" in captured["prompt"]

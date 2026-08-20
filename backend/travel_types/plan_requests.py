@@ -1,5 +1,4 @@
 import json
-import os
 from datetime import datetime
 from typing import Any, List, Optional, cast
 
@@ -134,15 +133,10 @@ async def generate_random_plan(request: RandomGenerationRequest, db: Session) ->
 
 
 def resolve_llm_provider(db: Optional[Session], user_id: Optional[int]) -> str:
+    """Always DeepSeek (Coolify / production). DB column is kept but ignored."""
     from travel_types.llm_client import normalize_llm_provider
 
-    if db is not None and user_id is not None:
-        user = crud.get_user(db, user_id)
-        if user is not None:
-            raw = getattr(user, "preferred_llm_provider", None)
-            if raw:
-                return normalize_llm_provider(str(raw))
-    return normalize_llm_provider(os.getenv("DEFAULT_LLM_PROVIDER"))
+    return normalize_llm_provider()
 
 
 def planner_account_id(request) -> Optional[int]:
