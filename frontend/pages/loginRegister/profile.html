@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="stylesheet" href="../../styles/profile.css">
     <link rel="icon" href="../../pictures/marker.png">
     <title>Profile – TravelApp</title>
@@ -13,6 +14,7 @@
     <script src="../../scripts/utils/apiConfig.js"></script>
     <script src="../../scripts/utils/themeLoader.js"></script>
     <script src="../../scripts/utils/authGuard.js"></script>
+    <script src="../../scripts/utils/imageUpload.js"></script>
 
     <script src="../../scripts/i18n/translations.js" defer></script>
     <script src="../../scripts/i18n/i18n.js" defer></script>
@@ -55,6 +57,52 @@
                     <section class="profile-actions card">
                         <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
                         <p class="muted">Loading...</p>
+                    </section>
+
+                    <section id="profileFeedbackSection" class="profile-feedback card" hidden>
+                        <h2 class="main-page-panel-title" data-i18n="profile.feedbackTitle">Feedback</h2>
+                        <p class="muted" data-i18n="profile.feedbackHint">
+                            Tell us what you like or what we should improve.
+                        </p>
+                        <form id="feedbackForm" class="add-place-form">
+                            <div class="form-group">
+                                <label for="feedbackMessage" class="form-label"
+                                    data-i18n="profile.feedbackLabel">Message</label>
+                                <textarea id="feedbackMessage" name="message" class="form-textarea" rows="4"
+                                    maxlength="2000"
+                                    data-i18n-placeholder="profile.feedbackPlaceholder"
+                                    placeholder="Your feedback…"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="feedbackImage" class="form-label"
+                                    data-i18n="profile.feedbackImageLabel">Image (optional)</label>
+                                <div class="photo-upload-shell">
+                                    <label class="upload-zone" for="feedbackImage">
+                                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" width="48"
+                                            height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" x2="12" y1="3" y2="15" />
+                                        </svg>
+                                        <p class="upload-text" data-i18n="profile.feedbackImagePlaceholder">Click to
+                                            upload a photo</p>
+                                        <p class="upload-hint" data-i18n="profile.feedbackImageHint">PNG, JPG up to 10MB
+                                        </p>
+                                        <input type="file" id="feedbackImage" name="image"
+                                            accept="image/png,image/jpeg,image/jpg" class="upload-input">
+                                    </label>
+                                    <div id="feedbackImagePreview" class="photo-preview-grid" hidden></div>
+                                    <p id="feedbackImageErrors" class="photo-upload-errors" hidden role="alert"></p>
+                                </div>
+                            </div>
+                            <p id="feedbackStatus" class="profile-feedback-status" role="status" hidden></p>
+                            <div class="form-actions">
+                                <button type="submit" id="feedbackSubmit" class="btn-add">
+                                    <span data-i18n="profile.feedbackSend">Send feedback</span>
+                                </button>
+                            </div>
+                        </form>
                     </section>
 
                 </div>

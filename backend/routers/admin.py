@@ -7,13 +7,13 @@ import os
 import secrets
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
-from database import models, get_db
+from database import models, schemas, get_db, crud
 from utils.place_image_upload import PLACE_IMAGES_DIR, ensure_place_images_dir
 
 router = APIRouter()
@@ -31,6 +31,7 @@ _EXPORT_MODELS = [
     ("images", models.Image),
     ("trip_share_links", models.TripShareLink),
     ("trip_share_invitations", models.TripShareInvitation),
+    ("feedbacks", models.Feedback),
 ]
 
 # Tables with a plain integer "id" primary key whose sequence needs resetting
@@ -157,3 +158,38 @@ def admin_import(
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Import failed: {exc}") from exc
+
+@router.get("/admin/feedback", response_model=list[schemas.FeedbackResponse])
+def admin_list_feedback(
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin),
+):
+    rows = crud.list_feedbacks(db)
+    out: list[schemas.FeedbackResponse] = []
+    for raw_row in rows:
+        row = cast(Any, raw_row)
+        user = cast(Any, crud.get_user(db, int(row.user_id)))
+        out.append(
+            schemas.FeedbackResponse(
+                id=int(row.id),
+                user_id=int(row.user_id),
+                username=str(user.username) if user else f"user#{row.user_id}",
+                email=str(user.email) if user and user.email else None,
+                message=str(row.message),
+                image_path=row.image_path,
+                created_at=row.created_at,
+            )
+        )
+    return out
+
+
+@router.delete("/admin/feedback/{feedback_id}")
+def admin_delete_feedback(
+    feedback_id: int,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin),
+):
+    ok = crud.delete_feedback(db, feedback_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Feedback not found.")
+    return {"success": True}

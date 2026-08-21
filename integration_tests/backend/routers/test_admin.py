@@ -85,6 +85,14 @@ class TestAdminExport:
         )
         assert image_response.status_code == 201
 
+        feedback = client.post(
+            "/api/feedback",
+            headers=auth_headers,
+            data={"message": "Export me"},
+        )
+        assert feedback.status_code == 201
+        feedback_id = feedback.json()["id"]
+
         response = client.get("/api/admin/export", headers=ADMIN_HEADERS)
 
         assert response.status_code == 200
@@ -93,6 +101,7 @@ class TestAdminExport:
         assert any(u["id"] == test_user["id"] for u in data["users"])
         assert any(p["id"] == visited_place["id"] for p in data["visited_places"])
         assert any(t["id"] == planned_trip["id"] for t in data["planned_trips"])
+        assert any(f["id"] == feedback_id for f in data["feedbacks"])
         assert data["image_files"]["seed.png"] == base64.b64encode(b"seed-bytes").decode("ascii")
 
     def test_export_requires_admin(self, client, monkeypatch):
@@ -164,6 +173,7 @@ class TestAdminImport:
         assert body["counts"]["users"] >= 1
         assert body["counts"]["visited_places"] >= 1
         assert body["counts"]["planned_trips"] >= 1
+        assert "feedbacks" in body["counts"]
 
         restored = client.get(
             f"/api/visited-places/{visited_place['id']}",
@@ -212,6 +222,7 @@ class TestAdminImport:
                 "images": [],
                 "trip_share_links": [],
                 "trip_share_invitations": [],
+                "feedbacks": [],
             },
         )
 

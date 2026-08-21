@@ -169,146 +169,30 @@ document.addEventListener('DOMContentLoaded', function () {
   var photosInput = document.getElementById('photos');
   var photoPreviewGrid = document.getElementById('photoPreviewGrid');
   var photoFormatErrors = document.getElementById('photoFormatErrors');
-  var selectedPhotoFiles = [];
-  var previewObjectUrls = [];
-  var MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-
-  function allowedImageMime(type) {
-    var x = (type || '').toLowerCase().split(';')[0].trim();
-    return x === 'image/jpeg' || x === 'image/jpg' || x === 'image/png';
-  }
-
-  function allowedImageExtension(name) {
-    var ext = (name || '').split('.').pop().toLowerCase();
-    return ext === 'jpg' || ext === 'jpeg' || ext === 'png';
-  }
-
-  function isAllowedImage(file) {
-    if (allowedImageMime(file.type)) return true;
-    if (!file.type && allowedImageExtension(file.name)) return true;
-    return false;
-  }
-
-  function fileKey(f) {
-    return (f.name || '') + '|' + String(f.size) + '|' + String(f.lastModified);
-  }
-
-  function syncSelectedFilesToInput() {
-    if (!photosInput) return;
-    var dt = new DataTransfer();
-    selectedPhotoFiles.forEach(function (f) {
-      dt.items.add(f);
-    });
-    photosInput.files = dt.files;
-  }
-
-  function revokePreviewUrls() {
-    previewObjectUrls.forEach(function (u) {
-      try {
-        URL.revokeObjectURL(u);
-      } catch (err) {
-        /* ignore */
-      }
-    });
-    previewObjectUrls = [];
-  }
-
-  function renderPhotoPreviews() {
-    if (!photoPreviewGrid) return;
-    revokePreviewUrls();
-    photoPreviewGrid.innerHTML = '';
-    if (selectedPhotoFiles.length === 0) {
-      photoPreviewGrid.hidden = true;
-      return;
-    }
-    photoPreviewGrid.hidden = false;
-    selectedPhotoFiles.forEach(function (file) {
-      var url = URL.createObjectURL(file);
-      previewObjectUrls.push(url);
-
-      var item = document.createElement('div');
-      item.className = 'photo-preview-item';
-
-      var img = document.createElement('img');
-      img.src = url;
-      img.alt = file.name || '';
-
-      var rm = document.createElement('button');
-      rm.type = 'button';
-      rm.className = 'photo-preview-remove';
-      rm.setAttribute('aria-label', 'Remove photo');
-      rm.appendChild(document.createTextNode('×'));
-
-      rm.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var idx = selectedPhotoFiles.indexOf(file);
-        if (idx >= 0) selectedPhotoFiles.splice(idx, 1);
-        syncSelectedFilesToInput();
-        renderPhotoPreviews();
-      });
-
-      item.appendChild(img);
-      item.appendChild(rm);
-      photoPreviewGrid.appendChild(item);
-    });
-  }
-
-  function showPhotoFormatErrors(batchErrors) {
-    if (!photoFormatErrors) return;
-    if (!batchErrors || !batchErrors.length) {
-      photoFormatErrors.hidden = true;
-      photoFormatErrors.textContent = '';
-      return;
-    }
-    photoFormatErrors.hidden = false;
-    var lines = batchErrors.map(function (err) {
-      var name = err.file.name || 'file';
-      var msg;
-      if (err.reason === 'size') {
-        msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
-        if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-          msg = 'File too large (max 10 MB): ' + name;
+  var photoPicker = null;
+  if (!window.ImageUpload) {
+    console.error('ImageUpload helper failed to load');
+  } else if (photosInput) {
+    photoPicker = window.ImageUpload.createPicker({
+      input: photosInput,
+      previewGrid: photoPreviewGrid,
+      errorsEl: photoFormatErrors,
+      formatError: function (err) {
+        var name = (err.file && err.file.name) || 'file';
+        var msg;
+        if (err.reason === 'size') {
+          msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
+          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+            msg = 'File too large (max 10 MB): ' + name;
+          }
+        } else {
+          msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
+          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+            msg = 'Only PNG or JPEG files are allowed: ' + name;
+          }
         }
-      } else {
-        msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
-        if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-          msg = 'Only PNG or JPEG files are allowed: ' + name;
-        }
+        return msg;
       }
-      return msg;
-    });
-    photoFormatErrors.textContent = lines.join('\n');
-  }
-
-  if (photosInput) {
-    photosInput.addEventListener('change', function () {
-      var picked = Array.from(photosInput.files || []);
-      photosInput.value = '';
-      var batchErrors = [];
-      var prevKeys = {};
-      selectedPhotoFiles.forEach(function (f) {
-        prevKeys[fileKey(f)] = true;
-      });
-      if (picked.length === 0) {
-        syncSelectedFilesToInput();
-        renderPhotoPreviews();
-        showPhotoFormatErrors([]);
-        return;
-      }
-      picked.forEach(function (file) {
-        if (!isAllowedImage(file)) {
-          batchErrors.push({ file: file, reason: 'format' });
-        } else if (file.size > MAX_PHOTO_BYTES) {
-          batchErrors.push({ file: file, reason: 'size' });
-        } else if (!prevKeys[fileKey(file)]) {
-          prevKeys[fileKey(file)] = true;
-          selectedPhotoFiles.push(file);
-        }
-      });
-      syncSelectedFilesToInput();
-      renderPhotoPreviews();
-      showPhotoFormatErrors(batchErrors);
     });
   }
 
@@ -383,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
       description: fullDescription || null
     };
 
-    var filesToUpload = selectedPhotoFiles.slice();
+    var filesToUpload = photoPicker ? photoPicker.getFiles() : [];
     var fileCount = filesToUpload.length;
 
     hideProgress();

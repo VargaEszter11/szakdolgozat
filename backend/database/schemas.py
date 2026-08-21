@@ -405,4 +405,19 @@ class DirectRouteResponse(DirectRouteBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+# ============= Feedback Schemas =============
 
+class FeedbackCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+
+
+class FeedbackResponse(BaseModel):
+    id: int
+    user_id: int
+    username: str
+    email: Optional[str] = None
+    message: str
+    image_path: Optional[str] = None
+    created_at: dt.datetime
+
+    model_config = ConfigDict(from_attributes=True)

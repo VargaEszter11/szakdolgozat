@@ -42,3 +42,91 @@ body.page-admin #adminPanel hr {
     border-top: 1px solid var(--color-surface-border-strong);
     margin: 1.5rem 0;
 }
+
+body.page-admin .admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1.25rem 0;
+}
+
+body.page-admin .admin-nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-surface-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.page-admin .admin-nav-link:hover {
+    border-color: var(--color-accent-muted);
+}
+
+body.page-admin .admin-nav-link.is-active {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
+}
+
+body.page-admin .admin-feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+body.page-admin .admin-feedback-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-surface-border);
+    border-radius: 10px;
+    background: var(--color-input-bg);
+}
+
+body.page-admin .admin-feedback-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    align-items: baseline;
+    font-size: 0.875rem;
+}
+
+body.page-admin .admin-feedback-date {
+    margin-left: auto;
+}
+
+body.page-admin .admin-feedback-message {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+body.page-admin .admin-feedback-image-link {
+    display: block;
+    align-self: flex-start;
+    max-width: min(100%, 320px);
+}
+
+body.page-admin .admin-feedback-image {
+    display: block;
+    width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: var(--color-surface);
+}
+
+body.page-admin .admin-feedback-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+body.page-admin .admin-feedback-delete {
+    min-height: 2.25rem;
+}

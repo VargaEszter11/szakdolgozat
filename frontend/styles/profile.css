@@ -123,3 +123,35 @@ body.page-profile .profile-actions .btn-add.btn-add-danger {
         grid-template-columns: 1fr;
     }
 }
+
+body.page-profile .profile-feedback {
+    margin-top: 1rem;
+}
+
+body.page-profile .profile-feedback .muted {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+}
+
+body.page-profile .profile-feedback-status {
+    margin: 0 0 0.75rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+body.page-profile .profile-feedback-status[hidden] {
+    display: none !important;
+}
+
+body.page-profile .profile-feedback-status--success {
+    background: var(--color-settings-success-bg);
+    color: var(--color-settings-success-text);
+    border: 1px solid var(--color-settings-success-border);
+}
+
+body.page-profile .profile-feedback-status--error {
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border: 1px solid var(--color-danger-border);
+}

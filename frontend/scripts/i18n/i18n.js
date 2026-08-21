@@ -102,7 +102,10 @@
     applyToPage();
 
     // Pages without sidebarHeader never call appShell.init()
-    if (!window.appShell) {
+    if (
+      !window.appShell &&
+      !document.documentElement.hasAttribute('data-defer-app-ready')
+    ) {
       document.documentElement.classList.add('app-ready');
     }
 

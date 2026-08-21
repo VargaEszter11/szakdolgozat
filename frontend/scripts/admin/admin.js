@@ -49,6 +49,10 @@
         loginCard.classList.remove('hidden');
     }
 
+    function revealPage() {
+        if (window.markAppReady) window.markAppReady();
+    }
+
     async function verifySecret(secret) {
         const response = await fetch('/api/admin/ping', {
             headers: { 'X-Admin-Secret': secret }
@@ -61,20 +65,23 @@
     }
 
     async function init() {
-        const stored = getStoredSecret();
-        if (!stored) {
-            showLogin();
-            return;
-        }
-        const ok = await verifySecret(stored);
-        if (ok) {
-            showPanel();
-        } else {
-            sessionStorage.removeItem(SESSION_KEY);
-            showLogin();
+        try {
+            const stored = getStoredSecret();
+            if (!stored) {
+                showLogin();
+                return;
+            }
+            const ok = await verifySecret(stored);
+            if (ok) {
+                showPanel();
+            } else {
+                sessionStorage.removeItem(SESSION_KEY);
+                showLogin();
+            }
+        } finally {
+            revealPage();
         }
     }
-
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginSubmit.disabled = true;

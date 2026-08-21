@@ -82,6 +82,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (profileName) profileName.textContent = 'Guest';
     if (profileEmail) profileEmail.textContent = 'Please log in to view your profile';
 
+    var feedbackSectionGuest = document.getElementById('profileFeedbackSection');
+    if (feedbackSectionGuest) feedbackSectionGuest.hidden = true;
+
     if (accountSection) {
       accountSection.innerHTML = `
         <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
@@ -152,6 +155,96 @@ document.addEventListener('DOMContentLoaded', async function () {
           });
         });
       }
+    }
+
+    var feedbackSection = document.getElementById('profileFeedbackSection');
+    var feedbackForm = document.getElementById('feedbackForm');
+    var feedbackMessage = document.getElementById('feedbackMessage');
+    var feedbackImage = document.getElementById('feedbackImage');
+    var feedbackImagePreview = document.getElementById('feedbackImagePreview');
+    var feedbackImageErrors = document.getElementById('feedbackImageErrors');
+    var feedbackStatus = document.getElementById('feedbackStatus');
+    var feedbackSubmit = document.getElementById('feedbackSubmit');
+
+    if (feedbackSection) {
+      feedbackSection.hidden = false;
+      if (window.i18n && typeof window.i18n.applyToPage === 'function') {
+        window.i18n.applyToPage(feedbackSection);
+      }
+    }
+
+    function setFeedbackStatus(text, isError) {
+      if (!feedbackStatus) return;
+      if (!text) {
+        feedbackStatus.hidden = true;
+        feedbackStatus.textContent = '';
+        feedbackStatus.classList.remove('profile-feedback-status--error', 'profile-feedback-status--success');
+        return;
+      }
+      feedbackStatus.hidden = false;
+      feedbackStatus.textContent = text;
+      feedbackStatus.classList.remove('profile-feedback-status--error', 'profile-feedback-status--success');
+      feedbackStatus.classList.add(isError ? 'profile-feedback-status--error' : 'profile-feedback-status--success');
+    }
+
+    function tProfile(key, fallback) {
+      return window.i18n && window.i18n.t ? window.i18n.t(key) : fallback;
+    }
+
+    var feedbackImagePicker = window.ImageUpload && feedbackImage
+      ? window.ImageUpload.createPicker({
+          input: feedbackImage,
+          previewGrid: feedbackImagePreview,
+          errorsEl: feedbackImageErrors,
+          maxFiles: 1,
+          formatError: function (err) {
+            if (err.reason === 'size') {
+              return tProfile('profile.feedbackImageTooLarge', 'Image is too large (max 10MB).');
+            }
+            return tProfile('profile.feedbackImageInvalidType', 'Only PNG or JPEG files are allowed.');
+          }
+        })
+      : null;
+
+    if (feedbackForm && feedbackMessage) {
+      feedbackForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var msg = (feedbackMessage.value || '').trim();
+        if (!msg) {
+          setFeedbackStatus(tProfile('profile.feedbackEmpty', 'Please enter a message.'), true);
+          return;
+        }
+        if (feedbackSubmit) feedbackSubmit.disabled = true;
+        setFeedbackStatus(null);
+        try {
+          var formData = new FormData();
+          formData.append('message', msg);
+          var files = feedbackImagePicker ? feedbackImagePicker.getFiles() : [];
+          if (files[0]) {
+            formData.append('image', files[0]);
+          }
+          var res = await fetch('/api/feedback', {
+            method: 'POST',
+            body: formData
+          });
+          if (!res.ok) {
+            var errBody = await res.json().catch(function () { return {}; });
+            var detail = errBody.detail;
+            if (Array.isArray(detail)) {
+              detail = detail.map(function (d) { return d.msg || JSON.stringify(d); }).join(' ');
+            }
+            throw new Error(detail || ('HTTP ' + res.status));
+          }
+          feedbackMessage.value = '';
+          if (feedbackImagePicker) feedbackImagePicker.clear();
+          setFeedbackStatus(tProfile('profile.feedbackSent', 'Thanks! Your feedback was sent.'), false);
+        } catch (err) {
+          console.error(err);
+          setFeedbackStatus(tProfile('profile.feedbackFailed', 'Could not send feedback. Please try again.'), true);
+        } finally {
+          if (feedbackSubmit) feedbackSubmit.disabled = false;
+        }
+      });
     }
   } catch (error) {
     console.error('Error loading profile data:', error);

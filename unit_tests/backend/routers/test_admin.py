@@ -128,6 +128,7 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
         "images": [{"id": 9, "image_path": "uploads/place_images/photo.jpg"}],
         "trip_share_links": [],
         "trip_share_invitations": [],
+        "feedbacks": [{"id": 3, "user_id": 1, "message": "hello"}],
     }
 
     def query_side_effect(model):
@@ -144,7 +145,10 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
     body = res.json()
     assert body["version"] == 1
     assert body["users"] == [{"id": 1}]
+    assert body["feedbacks"] == [{"id": 3, "user_id": 1, "message": "hello"}]
     assert body["image_files"]["photo.jpg"] == base64.b64encode(b"img-bytes").decode("ascii")
+    assert "feedbacks" in {name for name, _ in admin._EXPORT_MODELS}
+    assert "feedbacks" in admin._SEQUENCE_TABLES
 
 
 def test_admin_import_invalid_payload_list_rejected_by_schema(monkeypatch, client, db_mock):

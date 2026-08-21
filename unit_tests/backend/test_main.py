@@ -16,12 +16,16 @@ def test_routers_are_attached():
 
 def test_expected_route_groups_exist():
     route_strings = [str(route) for route in main.app.routes]
+    openapi_paths = main.app.openapi()["paths"]
 
     assert any("auth" in r for r in route_strings)
     assert any("users" in r for r in route_strings)
     assert any("planned_trips" in r for r in route_strings)
     assert any("stops" in r or "trip_stops" in r for r in route_strings)
     assert any("places" in r or "visited" in r for r in route_strings)
+    assert "/api/feedback" in openapi_paths
+    assert "/api/admin/feedback" in openapi_paths
+    assert "/api/admin/feedback/{feedback_id}" in openapi_paths
 
 def test_request_logging_middleware_is_registered():
     middleware_classes = [m.cls for m in main.app.user_middleware]

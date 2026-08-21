@@ -53,7 +53,7 @@
         return _fetch.call(this, url, opts).then(function (res) {
             if (res.status === 401 && isApiUrl(url)) {
                 var path = location.pathname || '';
-                var isPublicPage = /(loginPage|registerPage|shared_trip|forgotPassword|resetPassword|admin)\.html/.test(path);
+                var isPublicPage = /(loginPage|registerPage|shared_trip|forgotPassword|resetPassword|admin(_feedback)?)\.html/.test(path);
                 if (!isPublicPage && localStorage.getItem('access_token')) {
                     clearSession();
                     var depth = (path.match(/\//g) || []).length;

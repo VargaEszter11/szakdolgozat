@@ -60,8 +60,6 @@
     });
   }
 
-  var MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-
   function responseDetail(res) {
     return res.json().catch(function () { return null; }).then(function (j) {
       if (!j) return 'HTTP ' + res.status;
@@ -76,22 +74,6 @@
       if (d != null && typeof d === 'object') return JSON.stringify(d);
       return res.statusText || ('HTTP ' + res.status);
     });
-  }
-
-  function allowedImageMime(type) {
-    var x = (type || '').toLowerCase().split(';')[0].trim();
-    return x === 'image/jpeg' || x === 'image/jpg' || x === 'image/png';
-  }
-
-  function allowedImageExtension(name) {
-    var ext = (name || '').split('.').pop().toLowerCase();
-    return ext === 'jpg' || ext === 'jpeg' || ext === 'png';
-  }
-
-  function isAllowedImage(file) {
-    if (allowedImageMime(file.type)) return true;
-    if (!file.type && allowedImageExtension(file.name)) return true;
-    return false;
   }
 
   function fetchPlaceImages(placeId) {
@@ -268,8 +250,6 @@
 
   function mountEditPlaceModal(place, rawId, existingImages) {
     var uid = 'ep-' + rawId + '-' + String(Date.now()).slice(-6);
-    var selectedNewFiles = [];
-    var previewObjectUrls = [];
     var removedImageIds = {};
     var clearLegacyPhoto = false;
 
@@ -597,107 +577,30 @@
     photoGroup.appendChild(photoShell);
     bodyWrap.appendChild(photoGroup);
 
-    function revokePreviewUrls() {
-      previewObjectUrls.forEach(function (u) {
-        try {
-          URL.revokeObjectURL(u);
-        } catch (err) {
-          /* ignore */
-        }
-      });
-      previewObjectUrls = [];
-    }
-
-    function showPhotoErrors(lines) {
-      if (!lines || !lines.length) {
-        photoErrors.hidden = true;
-        photoErrors.textContent = '';
-        return;
-      }
-      photoErrors.hidden = false;
-      photoErrors.textContent = lines.join('\n');
-    }
-
-    function fileKey(f) {
-      return (f.name || '') + '|' + String(f.size) + '|' + String(f.lastModified);
-    }
-
-    function renderNewFilePreview() {
-      revokePreviewUrls();
-      newPreviewGrid.innerHTML = '';
-      if (!selectedNewFiles.length) {
-        newPreviewGrid.hidden = true;
-        return;
-      }
-      newPreviewGrid.hidden = false;
-      selectedNewFiles.forEach(function (file) {
-        var url = URL.createObjectURL(file);
-        previewObjectUrls.push(url);
-        var item = document.createElement('div');
-        item.className = 'photo-preview-item';
-        var img = document.createElement('img');
-        img.src = url;
-        img.alt = file.name || '';
-        var rm = document.createElement('button');
-        rm.type = 'button';
-        rm.className = 'photo-preview-remove';
-        rm.setAttribute('aria-label', t('visitedPlaces.clearNewPhoto', 'Remove new photo'));
-        rm.appendChild(document.createTextNode('×'));
-        rm.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var ix = selectedNewFiles.indexOf(file);
-          if (ix >= 0) selectedNewFiles.splice(ix, 1);
-          photosInput.value = '';
-          renderNewFilePreview();
-          showPhotoErrors([]);
-        });
-        item.appendChild(img);
-        item.appendChild(rm);
-        newPreviewGrid.appendChild(item);
-      });
-    }
-
-    photosInput.addEventListener('change', function () {
-      var picked = Array.from(photosInput.files || []);
-      photosInput.value = '';
-      var batchErrors = [];
-      var prevKeys = {};
-      selectedNewFiles.forEach(function (f) {
-        prevKeys[fileKey(f)] = true;
-      });
-      picked.forEach(function (file) {
-        if (!isAllowedImage(file)) {
-          batchErrors.push({ file: file, reason: 'format' });
-          return;
-        }
-        if (file.size > MAX_PHOTO_BYTES) {
-          batchErrors.push({ file: file, reason: 'size' });
-          return;
-        }
-        if (prevKeys[fileKey(file)]) return;
-        prevKeys[fileKey(file)] = true;
-        selectedNewFiles.push(file);
-      });
-      var errLines = batchErrors.map(function (err) {
-        var name = err.file.name || 'file';
-        var msg;
-        if (err.reason === 'size') {
-          msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
-          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-            msg = 'File too large (max 10 MB): ' + name;
+    var newPhotoPicker = window.ImageUpload
+      ? window.ImageUpload.createPicker({
+          input: photosInput,
+          previewGrid: newPreviewGrid,
+          errorsEl: photoErrors,
+          removeAriaLabel: t('visitedPlaces.clearNewPhoto', 'Remove new photo'),
+          formatError: function (err) {
+            var name = (err.file && err.file.name) || 'file';
+            var msg;
+            if (err.reason === 'size') {
+              msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
+              if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+                msg = 'File too large (max 10 MB): ' + name;
+              }
+            } else {
+              msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
+              if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+                msg = 'Only PNG or JPEG files are allowed: ' + name;
+              }
+            }
+            return msg;
           }
-        } else {
-          msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
-          if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-            msg = 'Only PNG or JPEG files are allowed: ' + name;
-          }
-        }
-        return msg;
-      });
-      showPhotoErrors(errLines);
-      renderNewFilePreview();
-    });
+        })
+      : null;
 
     var footer = document.createElement('div');
     footer.className = 'edit-place-modal-footer';
@@ -762,7 +665,7 @@
           });
         });
       });
-      selectedNewFiles.forEach(function (file) {
+      (newPhotoPicker ? newPhotoPicker.getFiles() : []).forEach(function (file) {
         chain = chain.then(function () {
           var fd = new FormData();
           fd.append('file', file);

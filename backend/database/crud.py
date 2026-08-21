@@ -974,3 +974,42 @@ def decline_trip_share_invitation(
     db.commit()
     db.refresh(invitation)
     return invitation
+
+def create_feedback(
+    db: Session, user_id: int, message: str, image_path: Optional[str] = None
+) -> models.Feedback:
+    row = models.Feedback(
+        user_id=user_id,
+        message=message.strip(),
+        image_path=image_path,
+    )
+    db.add(row)
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def list_feedbacks(db: Session, skip: int = 0, limit: int = 200) -> List[models.Feedback]:
+    return (
+        db.query(models.Feedback)
+        .order_by(models.Feedback.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_feedback(db: Session, feedback_id: int) -> Optional[models.Feedback]:
+    return db.query(models.Feedback).filter(models.Feedback.id == feedback_id).first()
+
+
+def delete_feedback(db: Session, feedback_id: int) -> bool:
+    from utils.feedback_image_upload import delete_feedback_image
+
+    row = get_feedback(db, feedback_id)
+    if row is None:
+        return False
+    delete_feedback_image(getattr(row, "image_path", None))
+    db.delete(row)
+    db.commit()
+    return True

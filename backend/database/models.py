@@ -41,6 +41,7 @@ class User(Base):
     # Relationships
     planned_trips = relationship("PlannedTrip", back_populates="user", cascade="all, delete-orphan")
     visited_places = relationship("VisitedPlace", back_populates="user", cascade="all, delete-orphan")
+    feedbacks = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
 
 
 class PasswordResetToken(Base):
@@ -283,3 +284,17 @@ class DirectRoute(Base):
     airline = relationship("Airline", back_populates="routes")
     origin = relationship("Airport", foreign_keys=[origin_iata], back_populates="outgoing_routes")
     destination = relationship("Airport", foreign_keys=[destination_iata], back_populates="incoming_routes")
+
+
+class Feedback(Base):
+    """User-submitted feedback visible on the admin page."""
+    __tablename__ = "feedbacks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    message = Column(Text, nullable=False)
+    image_path = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User", back_populates="feedbacks")
+
