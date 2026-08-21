@@ -1,12 +1,11 @@
-function initialsFromDisplayName(name) {
-  if (!name || !String(name).trim()) return '?';
-  var s = String(name).trim();
-  var parts = s.split(/[\s._-]+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+function tProfile(key, fallback) {
+  return window.i18n && window.i18n.t ? window.i18n.t(key) : fallback;
+}
+
+function notifyHeaderAvatar() {
+  if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
+    window.appShell.refreshHeaderProfileAvatar();
   }
-  if (s.length >= 2) return s.slice(0, 2).toUpperCase();
-  return s.charAt(0).toUpperCase();
 }
 
 function applyStoredGoogleAvatar() {
@@ -21,31 +20,23 @@ function applyStoredGoogleAvatar() {
     wrap.classList.remove('profile-avatar--photo');
     img.removeAttribute('src');
     img.alt = '';
-    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
-      window.appShell.refreshHeaderProfileAvatar();
-    }
+    notifyHeaderAvatar();
     return;
   }
 
   img.onerror = function () {
     wrap.classList.remove('profile-avatar--photo');
     img.removeAttribute('src');
-    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
-      window.appShell.refreshHeaderProfileAvatar();
-    }
+    notifyHeaderAvatar();
   };
   img.onload = function () {
     wrap.classList.add('profile-avatar--photo');
-    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
-      window.appShell.refreshHeaderProfileAvatar();
-    }
+    notifyHeaderAvatar();
   };
 
   if (img.getAttribute('src') === url && img.complete && img.naturalHeight > 0) {
     wrap.classList.add('profile-avatar--photo');
-    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
-      window.appShell.refreshHeaderProfileAvatar();
-    }
+    notifyHeaderAvatar();
     return;
   }
 
@@ -53,9 +44,7 @@ function applyStoredGoogleAvatar() {
   img.src = url;
   if (img.complete && img.naturalHeight > 0) {
     wrap.classList.add('profile-avatar--photo');
-    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
-      window.appShell.refreshHeaderProfileAvatar();
-    }
+    notifyHeaderAvatar();
   }
 }
 
@@ -63,8 +52,14 @@ function setProfileAvatar(name) {
   var wrap = document.getElementById('profileAvatar');
   if (!wrap) return;
   var span = wrap.querySelector('.profile-avatar-initials');
-  if (span) span.textContent = initialsFromDisplayName(name);
-  var label = name && String(name).trim() ? 'Avatar for ' + String(name).trim() : 'Avatar';
+  if (span) {
+    span.textContent = typeof window.displayNameInitials === 'function'
+      ? window.displayNameInitials(name)
+      : '?';
+  }
+  var label = name && String(name).trim()
+    ? tProfile('profile.avatarLabel', 'Avatar for {{name}}').replace('{{name}}', String(name).trim())
+    : tProfile('profile.avatarLabelEmpty', 'Avatar');
   wrap.setAttribute('aria-label', label);
   applyStoredGoogleAvatar();
 }
@@ -78,42 +73,34 @@ document.addEventListener('DOMContentLoaded', async function () {
   const accountSection = document.querySelector('.profile-actions');
 
   if (!userId || !username) {
-    setProfileAvatar('');
-    if (profileName) profileName.textContent = 'Guest';
-    if (profileEmail) profileEmail.textContent = 'Please log in to view your profile';
-
-    var feedbackSectionGuest = document.getElementById('profileFeedbackSection');
-    if (feedbackSectionGuest) feedbackSectionGuest.hidden = true;
-
-    if (accountSection) {
-      accountSection.innerHTML = `
-        <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
-        <p class="muted" data-i18n="profile.notLoggedIn">You are not logged in.</p>
-        <div class="profile-actions-row">
-          <a href="loginPage.html" class="btn-add" data-i18n="profile.login">Login</a>
-          <a href="registerPage.html" class="btn-add btn-add-outline" data-i18n="profile.register">Register</a>
-        </div>
-      `;
-      if (window.i18n && typeof window.i18n.applyToPage === 'function') {
-        window.i18n.applyToPage(accountSection);
-      }
-    }
     if (window.markAppReady) window.markAppReady();
     return;
   }
 
   try {
-    if (profileName) profileName.textContent = username;
+    if (profileName) {
+      profileName.removeAttribute('data-i18n');
+      profileName.textContent = username;
+    }
     setProfileAvatar(username);
 
     const userResponse = await fetch(`/api/users/${userId}`);
     if (userResponse.ok) {
       const userData = await userResponse.json();
-      if (profileEmail) profileEmail.textContent = userData.email || 'No email';
+      if (profileEmail) {
+        profileEmail.removeAttribute('data-i18n');
+        profileEmail.textContent = userData.email || tProfile('profile.noEmail', 'No email');
+      }
       if (userData.username) {
-        if (profileName) profileName.textContent = userData.username;
+        if (profileName) {
+          profileName.removeAttribute('data-i18n');
+          profileName.textContent = userData.username;
+        }
         setProfileAvatar(userData.username);
       }
+    } else if (profileEmail) {
+      profileEmail.removeAttribute('data-i18n');
+      profileEmail.textContent = tProfile('profile.errorLoad', 'Error loading profile');
     }
 
     if (accountSection) {
@@ -134,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          Logout
+          <span data-i18n="profile.logout">Logout</span>
         </button>
         </div>
       `;
@@ -146,11 +133,17 @@ document.addEventListener('DOMContentLoaded', async function () {
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
-          showConfirm('Are you sure you want to logout?', function () {
-            localStorage.removeItem('user_id');
-            localStorage.removeItem('username');
-            localStorage.removeItem('google_avatar_url');
-            localStorage.removeItem('access_token');
+          var confirmMsg = (window.i18n && window.i18n.t)
+            ? window.i18n.t('profile.logoutConfirm')
+            : 'Are you sure you want to logout?';
+          showConfirm(confirmMsg, function () {
+            if (window.clearAuthSession) window.clearAuthSession();
+            else {
+              localStorage.removeItem('user_id');
+              localStorage.removeItem('username');
+              localStorage.removeItem('google_avatar_url');
+              localStorage.removeItem('access_token');
+            }
             window.location.href = 'loginPage.html';
           });
         });
@@ -187,23 +180,19 @@ document.addEventListener('DOMContentLoaded', async function () {
       feedbackStatus.classList.add(isError ? 'profile-feedback-status--error' : 'profile-feedback-status--success');
     }
 
-    function tProfile(key, fallback) {
-      return window.i18n && window.i18n.t ? window.i18n.t(key) : fallback;
-    }
-
     var feedbackImagePicker = window.ImageUpload && feedbackImage
       ? window.ImageUpload.createPicker({
-          input: feedbackImage,
-          previewGrid: feedbackImagePreview,
-          errorsEl: feedbackImageErrors,
-          maxFiles: 1,
-          formatError: function (err) {
-            if (err.reason === 'size') {
-              return tProfile('profile.feedbackImageTooLarge', 'Image is too large (max 10MB).');
-            }
-            return tProfile('profile.feedbackImageInvalidType', 'Only PNG or JPEG files are allowed.');
+        input: feedbackImage,
+        previewGrid: feedbackImagePreview,
+        errorsEl: feedbackImageErrors,
+        maxFiles: 1,
+        formatError: function (err) {
+          if (err.reason === 'size') {
+            return tProfile('profile.feedbackImageTooLarge', 'Image is too large (max 10MB).');
           }
-        })
+          return tProfile('profile.feedbackImageInvalidType', 'Only PNG or JPEG files are allowed.');
+        }
+      })
       : null;
 
     if (feedbackForm && feedbackMessage) {
@@ -231,15 +220,31 @@ document.addEventListener('DOMContentLoaded', async function () {
             var errBody = await res.json().catch(function () { return {}; });
             var detail = errBody.detail;
             if (Array.isArray(detail)) {
-              detail = detail.map(function (d) { return d.msg || JSON.stringify(d); }).join(' ');
+              detail = detail.map(function (d) { return d.msg || ''; }).join(' ');
             }
-            throw new Error(detail || ('HTTP ' + res.status));
+            detail = typeof detail === 'string' ? detail : '';
+            var errKey = 'profile.feedbackFailed';
+            var errFallback = 'Could not send feedback. Please try again.';
+            if (/empty/i.test(detail)) {
+              errKey = 'profile.feedbackEmpty';
+              errFallback = 'Please enter a message.';
+            } else if (/too long/i.test(detail)) {
+              errKey = 'profile.feedbackTooLong';
+              errFallback = 'Message is too long (max 2000 characters).';
+            } else if (/unsupported|jpeg|png|image type/i.test(detail)) {
+              errKey = 'profile.feedbackImageInvalidType';
+              errFallback = 'Only PNG or JPEG files are allowed.';
+            } else if (/too large|10\s?MB/i.test(detail)) {
+              errKey = 'profile.feedbackImageTooLarge';
+              errFallback = 'Image is too large (max 10MB).';
+            }
+            setFeedbackStatus(tProfile(errKey, errFallback), true);
+            return;
           }
           feedbackMessage.value = '';
           if (feedbackImagePicker) feedbackImagePicker.clear();
           setFeedbackStatus(tProfile('profile.feedbackSent', 'Thanks! Your feedback was sent.'), false);
         } catch (err) {
-          console.error(err);
           setFeedbackStatus(tProfile('profile.feedbackFailed', 'Could not send feedback. Please try again.'), true);
         } finally {
           if (feedbackSubmit) feedbackSubmit.disabled = false;
@@ -247,9 +252,9 @@ document.addEventListener('DOMContentLoaded', async function () {
       });
     }
   } catch (error) {
-    console.error('Error loading profile data:', error);
     if (profileEmail) {
-      profileEmail.textContent = 'Error loading profile';
+      profileEmail.removeAttribute('data-i18n');
+      profileEmail.textContent = tProfile('profile.errorLoad', 'Error loading profile');
     }
   }
   if (window.markAppReady) window.markAppReady();

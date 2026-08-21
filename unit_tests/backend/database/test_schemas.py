@@ -96,22 +96,6 @@ def test_direct_route_default_flight_number():
 
     assert route.flight_number == "DIRECT"
 
-
-def test_feedback_create_valid():
-    fb = schemas.FeedbackCreate(message="Great trip planner")
-    assert fb.message == "Great trip planner"
-
-
-def test_feedback_create_rejects_empty():
-    with pytest.raises(ValidationError):
-        schemas.FeedbackCreate(message="")
-
-
-def test_feedback_create_rejects_too_long():
-    with pytest.raises(ValidationError):
-        schemas.FeedbackCreate(message="x" * 2001)
-
-
 def test_feedback_response_fields():
     from datetime import datetime
 

@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-defer-app-ready>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
-    <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="stylesheet" href="../../styles/editprofile.css">
     <link rel="icon" href="../../pictures/marker.png">
-    <title>Edit profile – TravelApp</title>
+    <title data-i18n="editProfile.pageTitle">Edit profile – TravelApp</title>
 
     <script src="../../scripts/utils/apiConfig.js"></script>
     <script src="../../scripts/utils/themeLoader.js"></script>
@@ -38,8 +37,8 @@
                         </div>
                     </div>
 
-                    <div class="card add-place-card">
-                        <form id="editProfileForm" class="add-place-form">
+                    <div class="card edit-profile-card">
+                        <form id="editProfileForm" class="edit-profile-form">
 
                             <div class="form-group">
                                 <label for="profileUsername" class="form-label" data-i18n="editProfile.username">
@@ -97,8 +96,7 @@
                             </div>
 
                             <p id="editProfileSuccess" class="edit-profile-message edit-profile-message--success"
-                                role="status" hidden data-i18n="editProfile.savedMessage">Profile updated successfully.
-                            </p>
+                                role="status" hidden></p>
                             <p id="editProfileError" class="edit-profile-message edit-profile-message--error"
                                 role="alert" hidden></p>
 

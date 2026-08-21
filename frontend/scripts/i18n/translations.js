@@ -1,5 +1,12 @@
 window.I18N_TRANSLATIONS = {
   en: {
+    common: {
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      areYouSure: 'Are you sure?',
+      ok: 'OK',
+      error: 'Error',
+    },
     nav: {
       home: 'Home',
       visitedPlaces: 'Visited Places',
@@ -14,6 +21,7 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Settings',
+      pageTitle: 'Settings – TravelApp',
       subtitle: 'Customize your TravelApp experience',
       theme: 'Theme',
       themeLight: 'Light',
@@ -29,6 +37,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Welcome to TravelApp!',
+      pageTitle: 'Main page – TravelApp',
       recentVisits: 'Most recent visits',
       moreVisits: 'More',
       europeChartTitle: 'European countries visited',
@@ -105,6 +114,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Visited Places',
+      pageTitle: 'Visited Places – TravelApp',
+      mapPageTitle: 'Map View – TravelApp',
       subtitle: 'Your travel memories and experiences',
       placesCountSuffix: 'places visited so far. Keep exploring!',
       mapView: 'Map View',
@@ -140,6 +151,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Add New Place',
+      pageTitle: 'Add New Place – TravelApp',
       subtitle: 'Document your latest travel adventure',
       placeName: 'Place Name *',
       country: 'Country *',
@@ -169,6 +181,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Plan your next trip!',
+      pageTitle: 'Plan New Trip – TravelApp',
       fromVisitedPlaces: 'From Visited Places',
       fromVisitedDesc: 'Use your previously visited places as a starting point.',
       fromUnvisitedPlaces: 'From Unvisited Places',
@@ -221,6 +234,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Planned Trips',
+      pageTitle: 'Planned Trips – TravelApp',
+      sharedPageTitle: 'Shared Trip – TravelApp',
       subtitle: 'Your upcoming adventures',
       noTripsPlannedYet: 'No trips planned yet',
       planFirstTrip: 'Plan Your First Trip',
@@ -314,12 +329,17 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Edit Profile',
+      logout: 'Logout',
+      logoutConfirm: 'Are you sure you want to logout?',
       subtitle: 'Your account overview',
       account: 'Account',
+      pageTitle: 'Profile – TravelApp',
       manageYourAccountAndPreferences: 'Manage your account and preferences.',
-      notLoggedIn: 'You are not logged in.',
-      login: 'Login',
-      register: 'Register',
+      loading: 'Loading…',
+      noEmail: 'No email',
+      errorLoad: 'Error loading profile',
+      avatarLabel: 'Avatar for {{name}}',
+      avatarLabelEmpty: 'Avatar',
       feedbackTitle: 'Feedback',
       feedbackHint: 'Tell us what you like or what we should improve.',
       feedbackLabel: 'Message',
@@ -333,9 +353,11 @@ window.I18N_TRANSLATIONS = {
       feedbackSent: 'Thanks! Your feedback was sent.',
       feedbackFailed: 'Could not send feedback. Please try again.',
       feedbackEmpty: 'Please enter a message.',
+      feedbackTooLong: 'Message is too long (max 2000 characters).',
     },
     editProfile: {
       title: 'Edit profile',
+      pageTitle: 'Edit profile – TravelApp',
       subtitle: 'Update your username, email, or password',
       username: 'Username',
       email: 'Email',
@@ -351,6 +373,9 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Profile updated successfully.',
       errorLoad: 'Could not load your profile.',
       errorSave: 'Could not save changes.',
+      usernameTaken: 'Username already taken.',
+      emailTaken: 'Email already registered.',
+      userNotFound: 'User not found.',
       passwordMismatch: 'New passwords do not match.',
       passwordTooShort: 'Password must be at least 6 characters.',
       passwordBoth: 'Enter and confirm your new password.',
@@ -358,6 +383,7 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Log in',
+      pageTitle: 'Log in – TravelApp',
       subtitle: 'Sign in to your TravelApp account',
       username: 'Username *',
       password: 'Password *',
@@ -374,6 +400,7 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Register',
+      pageTitle: 'Register – TravelApp',
       subtitle: 'Create your TravelApp account',
       username: 'Username *',
       email: 'Email *',
@@ -402,6 +429,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Set new password',
+      pageTitle: 'Reset Password – TravelApp',
       subtitle: 'Choose a new password for your account',
       newPassword: 'New password *',
       newPasswordPlaceholder: 'New password (min. 6 characters)',
@@ -419,6 +447,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: data export / import',
+      pageTitle: 'Admin – TravelApp',
+      feedbackBrowserTitle: 'Admin feedback – TravelApp',
       subtitle: 'Migrate database contents between environments as a JSON file',
       secretLabel: 'Admin secret',
       secretPlaceholder: 'Enter the admin secret',
@@ -458,6 +488,13 @@ window.I18N_TRANSLATIONS = {
     map: { listView: 'List View' }
   },
   hu: {
+    common: {
+      cancel: 'Mégse',
+      confirm: 'Megerősítés',
+      areYouSure: 'Biztos vagy benne?',
+      ok: 'OK',
+      error: 'Hiba',
+    },
     nav: {
       home: 'Főoldal',
       visitedPlaces: 'Meglátogatott helyek',
@@ -472,6 +509,7 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Beállítások',
+      pageTitle: 'Beállítások – TravelApp',
       subtitle: 'Személyre szabhatod a TravelApp élményt',
       theme: 'Téma',
       themeLight: 'Világos',
@@ -487,6 +525,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Üdvözlünk a TravelAppben!',
+      pageTitle: 'Főoldal – TravelApp',
       recentVisits: 'Legutóbbi látogatások',
       moreVisits: 'Több',
       europeChartTitle: 'Meglátogatott európai országok',
@@ -563,6 +602,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Meglátogatott helyek',
+      pageTitle: 'Meglátogatott helyek – TravelApp',
+      mapPageTitle: 'Térkép nézet – TravelApp',
       subtitle: 'Utazási emlékeid és élményeid',
       placesCountSuffix: 'meglátogatott hely. Fedezz fel még!',
       mapView: 'Térkép nézet',
@@ -598,6 +639,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Új hely hozzáadása',
+      pageTitle: 'Új hely hozzáadása – TravelApp',
       subtitle: 'Örökítsd meg legújabb utazási élményedet',
       placeName: 'Hely neve *',
       country: 'Ország *',
@@ -627,6 +669,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Tervezd meg a következő utazásod!',
+      pageTitle: 'Új utazás tervezése – TravelApp',
       fromVisitedPlaces: 'Már látott helyekből',
       fromVisitedDesc: 'Használd a korábban meglátogatott helyeidet kiindulópontként.',
       fromUnvisitedPlaces: 'Még nem látott helyekből',
@@ -679,6 +722,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Tervezett utak',
+      pageTitle: 'Tervezett utak – TravelApp',
+      sharedPageTitle: 'Megosztott út – TravelApp',
       subtitle: 'A közelgő kalandjaid',
       noTripsPlannedYet: 'Még nincsenek tervezett utazások',
       planFirstTrip: 'Tervezd meg az első utazásod',
@@ -772,12 +817,17 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Profil szerkesztése',
+      logout: 'Kijelentkezés',
+      logoutConfirm: 'Biztosan ki szeretnél jelentkezni?',
       subtitle: 'Fiókod áttekintése',
       account: 'Fiók',
+      pageTitle: 'Profil – TravelApp',
       manageYourAccountAndPreferences: 'Kezeld a fiókodat és beállításaidat.',
-      notLoggedIn: 'Nem vagy bejelentkezve.',
-      login: 'Bejelentkezés',
-      register: 'Regisztráció',
+      loading: 'Betöltés…',
+      noEmail: 'Nincs e-mail',
+      errorLoad: 'A profil betöltése sikertelen.',
+      avatarLabel: 'Avatár: {{name}}',
+      avatarLabelEmpty: 'Avatár',
       feedbackTitle: 'Visszajelzés',
       feedbackHint: 'Írd meg, mi tetszik, vagy mit javítsunk.',
       feedbackLabel: 'Üzenet',
@@ -791,9 +841,11 @@ window.I18N_TRANSLATIONS = {
       feedbackSent: 'Köszi! A visszajelzésedet elküldtük.',
       feedbackFailed: 'Nem sikerült elküldeni. Próbáld újra.',
       feedbackEmpty: 'Írj be egy üzenetet.',
+      feedbackTooLong: 'Az üzenet túl hosszú (max. 2000 karakter).',
     },
     editProfile: {
       title: 'Profil szerkesztése',
+      pageTitle: 'Profil szerkesztése – TravelApp',
       subtitle: 'Frissítsd a felhasználóneved, e-mail címed vagy jelszavad',
       username: 'Felhasználónév',
       email: 'E-mail',
@@ -809,6 +861,9 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Profil sikeresen frissítve.',
       errorLoad: 'A profil betöltése sikertelen.',
       errorSave: 'A mentés sikertelen.',
+      usernameTaken: 'Ez a felhasználónév már foglalt.',
+      emailTaken: 'Ez az e-mail cím már regisztrálva van.',
+      userNotFound: 'A felhasználó nem található.',
       passwordMismatch: 'Az új jelszavak nem egyeznek.',
       passwordTooShort: 'A jelszónak legalább 6 karakterből kell állnia.',
       passwordBoth: 'Add meg és erősítsd meg az új jelszót.',
@@ -816,6 +871,7 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Bejelentkezés',
+      pageTitle: 'Bejelentkezés – TravelApp',
       subtitle: 'Jelentkezz be a TravelApp fiókodba',
       username: 'Felhasználónév *',
       password: 'Jelszó *',
@@ -832,6 +888,7 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Regisztráció',
+      pageTitle: 'Regisztráció – TravelApp',
       subtitle: 'Hozz létre egy új TravelApp fiókot',
       username: 'Felhasználónév *',
       email: 'E-mail *',
@@ -860,6 +917,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Új jelszó beállítása',
+      pageTitle: 'Jelszó visszaállítása – TravelApp',
       subtitle: 'Válassz új jelszót a fiókodhoz',
       newPassword: 'Új jelszó *',
       newPasswordPlaceholder: 'Új jelszó (min. 6 karakter)',
@@ -877,6 +935,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: adat export / import',
+      pageTitle: 'Admin – TravelApp',
+      feedbackBrowserTitle: 'Admin visszajelzés – TravelApp',
       subtitle: 'Adatbázis-tartalom átvitele környezetek között JSON fájlként',
       secretLabel: 'Admin jelszó',
       secretPlaceholder: 'Add meg az admin jelszót',
@@ -916,6 +976,13 @@ window.I18N_TRANSLATIONS = {
     map: { listView: 'Lista nézet' }
   },
   de: {
+    common: {
+      cancel: 'Abbrechen',
+      confirm: 'Bestätigen',
+      areYouSure: 'Bist du sicher?',
+      ok: 'OK',
+      error: 'Fehler',
+    },
     nav: {
       home: 'Startseite',
       visitedPlaces: 'Besuchte Orte',
@@ -930,6 +997,7 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Einstellungen',
+      pageTitle: 'Einstellungen – TravelApp',
       subtitle: 'Passe dein TravelApp-Erlebnis an',
       theme: 'Design',
       themeLight: 'Hell',
@@ -945,6 +1013,7 @@ window.I18N_TRANSLATIONS = {
     },
     mainPage: {
       title: 'Willkommen bei TravelApp!',
+      pageTitle: 'Startseite – TravelApp',
       recentVisits: 'Neueste Besuche',
       moreVisits: 'Mehr',
       europeChartTitle: 'Besuchte europäische Länder',
@@ -1021,6 +1090,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Besuchte Orte',
+      pageTitle: 'Besuchte Orte – TravelApp',
+      mapPageTitle: 'Kartenansicht – TravelApp',
       subtitle: 'Deine Reiseerinnerungen und Erfahrungen',
       placesCountSuffix: 'besuchte Orte. Entdecke weiter!',
       mapView: 'Kartenansicht',
@@ -1056,6 +1127,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Ort hinzufügen',
+      pageTitle: 'Ort hinzufügen – TravelApp',
       subtitle: 'Dokumentiere dein neuestes Reiseabenteuer',
       placeName: 'Ort *',
       country: 'Land *',
@@ -1085,6 +1157,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Plan deine nächste Reise!',
+      pageTitle: 'Neue Reise planen – TravelApp',
       fromVisitedPlaces: 'Aus besuchten Orten',
       fromVisitedDesc: 'Nutze deine zuvor besuchten Orte als Ausgangspunkt.',
       fromUnvisitedPlaces: 'Aus unbesuchten Orten',
@@ -1137,6 +1210,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Geplante Reisen',
+      pageTitle: 'Geplante Reisen – TravelApp',
+      sharedPageTitle: 'Geteilte Reise – TravelApp',
       subtitle: 'Deine bevorstehenden Abenteuer',
       noTripsPlannedYet: 'Noch keine Reisen geplant',
       planFirstTrip: 'Plan deine erste Reise',
@@ -1230,12 +1305,17 @@ window.I18N_TRANSLATIONS = {
     },
     profile: {
       editProfile: 'Profil bearbeiten',
+      logout: 'Abmelden',
+      logoutConfirm: 'Möchtest du dich wirklich abmelden?',
       subtitle: 'Dein Konto auf einen Blick',
       account: 'Konto',
+      pageTitle: 'Profil – TravelApp',
       manageYourAccountAndPreferences: 'Verwalte dein Konto und deine Einstellungen.',
-      notLoggedIn: 'Du bist nicht angemeldet.',
-      login: 'Anmelden',
-      register: 'Registrieren',
+      loading: 'Lädt…',
+      noEmail: 'Keine E-Mail',
+      errorLoad: 'Profil konnte nicht geladen werden.',
+      avatarLabel: 'Avatar für {{name}}',
+      avatarLabelEmpty: 'Avatar',
       feedbackTitle: 'Feedback',
       feedbackHint: 'Schreib uns, was dir gefällt oder was wir verbessern sollen.',
       feedbackLabel: 'Nachricht',
@@ -1249,9 +1329,11 @@ window.I18N_TRANSLATIONS = {
       feedbackSent: 'Danke! Dein Feedback wurde gesendet.',
       feedbackFailed: 'Feedback konnte nicht gesendet werden. Bitte erneut versuchen.',
       feedbackEmpty: 'Bitte eine Nachricht eingeben.',
+      feedbackTooLong: 'Nachricht ist zu lang (max. 2000 Zeichen).',
     },
     editProfile: {
       title: 'Profil bearbeiten',
+      pageTitle: 'Profil bearbeiten – TravelApp',
       subtitle: 'Aktualisiere Benutzername, E-Mail oder Passwort',
       username: 'Benutzername',
       email: 'E-Mail',
@@ -1267,6 +1349,9 @@ window.I18N_TRANSLATIONS = {
       savedMessage: 'Profil erfolgreich aktualisiert.',
       errorLoad: 'Profil konnte nicht geladen werden.',
       errorSave: 'Speichern fehlgeschlagen.',
+      usernameTaken: 'Benutzername bereits vergeben.',
+      emailTaken: 'E-Mail bereits registriert.',
+      userNotFound: 'Benutzer nicht gefunden.',
       passwordMismatch: 'Die neuen Passwörter stimmen nicht überein.',
       passwordTooShort: 'Das Passwort muss mindestens 6 Zeichen haben.',
       passwordBoth: 'Neues Passwort eingeben und bestätigen.',
@@ -1274,6 +1359,7 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Anmelden',
+      pageTitle: 'Anmelden – TravelApp',
       subtitle: 'Melde dich bei deinem TravelApp-Konto an',
       username: 'Benutzername *',
       password: 'Passwort *',
@@ -1290,6 +1376,7 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Registrieren',
+      pageTitle: 'Registrieren – TravelApp',
       subtitle: 'Erstelle ein neues TravelApp-Konto',
       username: 'Benutzername *',
       email: 'E-Mail *',
@@ -1318,6 +1405,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Neues Passwort festlegen',
+      pageTitle: 'Passwort zurücksetzen – TravelApp',
       subtitle: 'Wähle ein neues Passwort für dein Konto',
       newPassword: 'Neues Passwort *',
       newPasswordPlaceholder: 'Neues Passwort (mind. 6 Zeichen)',
@@ -1335,6 +1423,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: Datenexport / -import',
+      pageTitle: 'Admin – TravelApp',
+      feedbackBrowserTitle: 'Admin-Feedback – TravelApp',
       subtitle: 'Datenbankinhalte zwischen Umgebungen als JSON-Datei migrieren',
       secretLabel: 'Admin-Geheimnis',
       secretPlaceholder: 'Admin-Geheimnis eingeben',

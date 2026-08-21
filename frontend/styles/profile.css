@@ -63,36 +63,6 @@ body.page-profile .profile-email {
     margin-top: 0.35rem;
 }
 
-body.page-profile .profile-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-body.page-profile .profile-stat {
-    background: var(--color-profile-stat-inner);
-    border-radius: 12px;
-    padding: 1rem;
-    text-align: center;
-    border: 1px solid var(--color-surface-border);
-}
-
-body.page-profile .profile-stat-value {
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--color-accent);
-    display: block;
-    line-height: 1.2;
-}
-
-body.page-profile .profile-stat-label {
-    font-size: 0.75rem;
-    margin-top: 0.4rem;
-    color: var(--color-text-muted);
-    display: block;
-    line-height: 1.35;
-}
-
 body.page-profile .profile-account-buttons {
     display: flex;
     flex-direction: column;
@@ -116,12 +86,6 @@ body.page-profile .profile-actions .btn-add.btn-add-danger {
     width: 100%;
     justify-content: center;
     margin-top: 0;
-}
-
-@media (max-width: 768px) {
-    body.page-profile .profile-stats-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 body.page-profile .profile-feedback {
@@ -154,4 +118,41 @@ body.page-profile .profile-feedback-status--error {
     background: var(--color-danger-bg);
     color: var(--color-danger-text);
     border: 1px solid var(--color-danger-border);
+}
+
+body.page-profile .profile-feedback-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+body.page-profile .profile-feedback-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+}
+
+body.page-profile .profile-feedback-form .form-textarea {
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    resize: vertical;
+    min-height: 6rem;
+    font-family: inherit;
+}
+
+body.page-profile .profile-feedback-form .form-textarea:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
+}
+
+body.page-profile .profile-feedback-form .form-textarea::placeholder {
+    color: var(--color-text-faint);
 }

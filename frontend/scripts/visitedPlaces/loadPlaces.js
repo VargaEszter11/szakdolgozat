@@ -579,27 +579,27 @@
 
     var newPhotoPicker = window.ImageUpload
       ? window.ImageUpload.createPicker({
-          input: photosInput,
-          previewGrid: newPreviewGrid,
-          errorsEl: photoErrors,
-          removeAriaLabel: t('visitedPlaces.clearNewPhoto', 'Remove new photo'),
-          formatError: function (err) {
-            var name = (err.file && err.file.name) || 'file';
-            var msg;
-            if (err.reason === 'size') {
-              msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
-              if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-                msg = 'File too large (max 10 MB): ' + name;
-              }
-            } else {
-              msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
-              if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
-                msg = 'Only PNG or JPEG files are allowed: ' + name;
-              }
+        input: photosInput,
+        previewGrid: newPreviewGrid,
+        errorsEl: photoErrors,
+        removeAriaLabel: t('visitedPlaces.clearNewPhoto', 'Remove new photo'),
+        formatError: function (err) {
+          var name = (err.file && err.file.name) || 'file';
+          var msg;
+          if (err.reason === 'size') {
+            msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
+            if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+              msg = 'File too large (max 10 MB): ' + name;
             }
-            return msg;
+          } else {
+            msg = tpl(t('addNewPlace.photoInvalidType'), { name: name });
+            if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
+              msg = 'Only PNG or JPEG files are allowed: ' + name;
+            }
           }
-        })
+          return msg;
+        }
+      })
       : null;
 
     var footer = document.createElement('div');
@@ -630,7 +630,7 @@
     overlay.appendChild(modal);
 
     function cleanupOverlay() {
-      revokePreviewUrls();
+      if (newPhotoPicker) newPhotoPicker.clear();
       closeEditModal(overlay);
     }
 

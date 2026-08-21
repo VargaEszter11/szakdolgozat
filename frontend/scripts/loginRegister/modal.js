@@ -100,6 +100,12 @@ function showError(message, onClose) {
 }
 
 function showConfirm(message, onConfirm, onCancel) {
+    function tModal(key, fallback) {
+        if (!(window.i18n && typeof window.i18n.t === 'function')) return fallback;
+        var val = window.i18n.t(key);
+        return (!val || val === key) ? fallback : val;
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'custom-modal-overlay';
 
@@ -112,7 +118,7 @@ function showConfirm(message, onConfirm, onCancel) {
 
     const titleEl = document.createElement('h3');
     titleEl.className = 'custom-modal-title';
-    titleEl.textContent = 'Are you sure?';
+    titleEl.textContent = tModal('common.areYouSure', 'Are you sure?');
 
     const header = document.createElement('div');
     header.className = 'custom-modal-header';
@@ -125,11 +131,11 @@ function showConfirm(message, onConfirm, onCancel) {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = tModal('common.cancel', 'Cancel');
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'custom-modal-btn custom-modal-btn-primary';
-    confirmBtn.textContent = 'Confirm';
+    confirmBtn.textContent = tModal('common.confirm', 'Confirm');
 
     const actions = document.createElement('div');
     actions.className = 'custom-modal-actions';

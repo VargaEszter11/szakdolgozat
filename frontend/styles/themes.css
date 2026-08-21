@@ -69,7 +69,6 @@ html:not([data-theme]) {
     --color-icon-muted: rgba(255, 255, 255, 0.55);
     --color-profile-avatar-bg: #16161D;
     --color-profile-avatar-border: rgba(255, 255, 255, 0.1);
-    --color-profile-stat-inner: #16161D;
     --color-shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.5);
     --color-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.25);
     --color-popup-backdrop: rgba(10, 10, 14, 0.78);
@@ -150,7 +149,6 @@ html[data-theme="light"] {
     --color-icon-muted: rgba(0, 0, 0, 0.45);
     --color-profile-avatar-bg: #e8eaf0;
     --color-profile-avatar-border: rgba(0, 0, 0, 0.1);
-    --color-profile-stat-inner: #f3f4f8;
     --color-shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.12);
     --color-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.08);
     --color-popup-backdrop: rgba(15, 15, 22, 0.45);

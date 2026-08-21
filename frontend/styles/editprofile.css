@@ -1,3 +1,50 @@
+body.page-edit-profile .edit-profile-card {
+    background: var(--color-surface);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--color-surface-border);
+}
+
+body.page-edit-profile .edit-profile-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+body.page-edit-profile .edit-profile-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+}
+
+body.page-edit-profile .edit-profile-form .form-input {
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+body.page-edit-profile .edit-profile-form .form-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
+}
+
+body.page-edit-profile .edit-profile-form .form-input:not(:placeholder-shown),
+body.page-edit-profile .edit-profile-form .form-input.has-value {
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
+}
+
+body.page-edit-profile .edit-profile-form .form-input::placeholder {
+    color: var(--color-text-faint);
+}
+
 body.page-edit-profile #editProfileForm .main-page-panel-title:not(:first-of-type) {
     margin-top: 1.5rem;
 }

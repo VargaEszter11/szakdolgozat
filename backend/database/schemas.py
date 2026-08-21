@@ -407,10 +407,6 @@ class DirectRouteResponse(DirectRouteBase):
 
 # ============= Feedback Schemas =============
 
-class FeedbackCreate(BaseModel):
-    message: str = Field(..., min_length=1, max_length=2000)
-
-
 class FeedbackResponse(BaseModel):
     id: int
     user_id: int

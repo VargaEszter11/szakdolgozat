@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var saveBtn = document.getElementById('saveProfileBtn');
     var successTimer = null;
 
+    function t(key, fallback) {
+        if (window.i18n && typeof window.i18n.t === 'function') {
+            return window.i18n.t(key);
+        }
+        return fallback;
+    }
+
     function hideMessages() {
         if (errorEl) errorEl.hidden = true;
         if (successEl) successEl.hidden = true;
@@ -49,14 +56,22 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(detail);
     }
 
-    function t(key, fallback) {
-        if (window.i18n && typeof window.i18n.t === 'function') {
-            return window.i18n.t(key);
+    function mapApiError(detail) {
+        var text = formatApiDetail(detail);
+        if (/username already taken/i.test(text)) {
+            return t('editProfile.usernameTaken', 'Username already taken.');
         }
-        return fallback;
+        if (/email already registered/i.test(text)) {
+            return t('editProfile.emailTaken', 'Email already registered.');
+        }
+        if (/user not found/i.test(text)) {
+            return t('editProfile.userNotFound', 'User not found.');
+        }
+        return t('editProfile.errorSave', 'Could not save changes.');
     }
 
     if (!userId || !form) {
+        if (window.markAppReady) window.markAppReady();
         return;
     }
 
@@ -72,6 +87,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(function () {
             showError(t('editProfile.errorLoad', 'Could not load your profile.'));
+        })
+        .finally(function () {
+            if (window.markAppReady) window.markAppReady();
         });
 
     form.addEventListener('submit', function (e) {
@@ -132,14 +150,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     localStorage.setItem('username', result.body.username || username);
                     if (newPasswordInput) newPasswordInput.value = '';
                     if (confirmPasswordInput) confirmPasswordInput.value = '';
-                    if (window.i18n && typeof window.i18n.applyToPage === 'function') {
-                        window.i18n.applyToPage();
+                    if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
+                        window.appShell.refreshHeaderProfileAvatar();
                     }
                     showSuccess();
                     return;
                 }
-                var msg = formatApiDetail(result.body && result.body.detail);
-                showError(msg || t('editProfile.errorSave', 'Could not save changes.'));
+                showError(mapApiError(result.body && result.body.detail));
             })
             .catch(function () {
                 showError(t('editProfile.errorSave', 'Could not save changes.'));
