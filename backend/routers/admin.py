@@ -1,12 +1,9 @@
-"""Secret-protected data export/import for migrating between environments
-(e.g. local dev -> a freshly deployed Coolify instance) via a JSON blob,
-since the production database is intentionally not reachable directly.
-"""
 import base64
 import os
 import secrets
 from datetime import date, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Any, Optional, cast
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -15,13 +12,13 @@ from sqlalchemy.orm import Session
 
 from database import models, schemas, get_db, crud
 from utils.place_image_upload import PLACE_IMAGES_DIR, ensure_place_images_dir
+from utils.feedback_image_upload import FEEDBACK_IMAGES_DIR, ensure_feedback_images_dir
 
 router = APIRouter()
 
-# Parent tables before the children that reference them (import insert order).
-# Wipe uses TRUNCATE ... CASCADE so it doesn't need to respect this order.
 _EXPORT_MODELS = [
     ("users", models.User),
+    ("password_reset_tokens", models.PasswordResetToken),
     ("airlines", models.Airline),
     ("airports", models.Airport),
     ("direct_routes", models.DirectRoute),
@@ -34,9 +31,6 @@ _EXPORT_MODELS = [
     ("feedbacks", models.Feedback),
 ]
 
-# Tables with a plain integer "id" primary key whose sequence needs resetting
-# after importing explicit id values. Airlines/airports use a natural (iata)
-# primary key and have no sequence to reset.
 _SEQUENCE_TABLES = [
     name for name, model in _EXPORT_MODELS if name not in ("airlines", "airports")
 ]
@@ -68,6 +62,27 @@ def _row_to_dict(row: Any) -> dict:
     return {attr.key: _json_safe(getattr(row, attr.key)) for attr in mapper.column_attrs}
 
 
+def _collect_uploaded_files(rows: list[dict], path_key: str, images_dir: Path) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for row in rows:
+        filename = os.path.basename(row.get(path_key) or "")
+        if not filename or filename in out:
+            continue
+        file_path = images_dir / filename
+        if file_path.is_file():
+            out[filename] = base64.b64encode(file_path.read_bytes()).decode("ascii")
+    return out
+
+
+def _write_uploaded_files(image_files: dict[str, str], images_dir: Path) -> None:
+    images_dir.mkdir(parents=True, exist_ok=True)
+    for filename, b64content in image_files.items():
+        safe_name = os.path.basename(filename)
+        if not safe_name:
+            continue
+        (images_dir / safe_name).write_bytes(base64.b64decode(b64content))
+
+
 @router.get("/admin/export")
 def admin_export(db: Session = Depends(get_db), _: None = Depends(require_admin)):
     data: dict[str, Any] = {"version": 1}
@@ -76,15 +91,13 @@ def admin_export(db: Session = Depends(get_db), _: None = Depends(require_admin)
         data[table_name] = [_row_to_dict(row) for row in rows]
 
     ensure_place_images_dir()
-    image_files: dict[str, str] = {}
-    for image_row in data["images"]:
-        filename = os.path.basename(image_row.get("image_path") or "")
-        if not filename:
-            continue
-        file_path = PLACE_IMAGES_DIR / filename
-        if file_path.is_file():
-            image_files[filename] = base64.b64encode(file_path.read_bytes()).decode("ascii")
-    data["image_files"] = image_files
+    ensure_feedback_images_dir()
+    data["image_files"] = _collect_uploaded_files(
+        data.get("images") or [], "image_path", PLACE_IMAGES_DIR
+    )
+    data["feedback_image_files"] = _collect_uploaded_files(
+        data.get("feedbacks") or [], "image_path", FEEDBACK_IMAGES_DIR
+    )
 
     return data
 
@@ -146,18 +159,16 @@ def admin_import(
             )
 
         ensure_place_images_dir()
-        image_files: dict[str, str] = payload.get("image_files") or {}
-        for filename, b64content in image_files.items():
-            safe_name = os.path.basename(filename)
-            if not safe_name:
-                continue
-            (PLACE_IMAGES_DIR / safe_name).write_bytes(base64.b64decode(b64content))
+        ensure_feedback_images_dir()
+        _write_uploaded_files(payload.get("image_files") or {}, PLACE_IMAGES_DIR)
+        _write_uploaded_files(payload.get("feedback_image_files") or {}, FEEDBACK_IMAGES_DIR)
 
         db.commit()
         return {"success": True, "counts": counts}
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Import failed: {exc}") from exc
+
 
 @router.get("/admin/feedback", response_model=list[schemas.FeedbackResponse])
 def admin_list_feedback(

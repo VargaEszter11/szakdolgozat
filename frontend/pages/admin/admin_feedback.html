@@ -7,7 +7,6 @@
     <meta name="robots" content="noindex, nofollow">
     <script src="../../scripts/utils/boot.js"></script>
     <link rel="stylesheet" href="../../styles/main.css">
-    <link rel="stylesheet" href="../../styles/add-place.css">
     <link rel="stylesheet" href="../../styles/admin.css">
     <link rel="icon" href="../../pictures/marker.png">
     <title data-i18n="admin.feedbackBrowserTitle">Admin feedback – TravelApp</title>
@@ -20,13 +19,7 @@
 
 <body class="page-admin page-admin-feedback">
     <div class="main-page main-page-home">
-
-        <header id="app-header" class="main-header main-page-home-header" style="display:none"></header>
-
         <div class="main-page-home-body">
-
-            <aside id="app-sidebar" class="main-page-home-sidebar" style="display:none"></aside>
-
             <main class="main-content main-page-home-content">
                 <div class="main-page-home-content-inner">
 
@@ -39,8 +32,8 @@
                         </div>
                     </div>
 
-                    <div id="adminLoginCard" class="card add-place-card">
-                        <form id="adminLoginForm" class="add-place-form">
+                    <div id="adminLoginCard" class="card admin-card">
+                        <form id="adminLoginForm" class="admin-form">
                             <div class="form-group">
                                 <label for="adminSecret" class="form-label" data-i18n="admin.secretLabel">Admin
                                     secret</label>
@@ -61,21 +54,18 @@
                         </form>
                     </div>
 
-                    <div id="adminPanel" class="card add-place-card add-place-form hidden">
+                    <p id="adminStatus" class="admin-message" hidden role="status"></p>
+
+                    <div id="adminPanel" class="card admin-card admin-form hidden">
                         <nav class="admin-nav" aria-label="Admin sections">
                             <a href="admin.html" class="admin-nav-link" data-i18n="admin.navData">Data export / import</a>
                             <a href="admin_feedback.html" class="admin-nav-link is-active"
                                 data-i18n="admin.navFeedback">Feedback</a>
                         </nav>
 
-                        <p class="form-hint" data-i18n="admin.feedbackHint">
-                            Messages submitted by users from their profile page.
-                        </p>
                         <div id="adminFeedbackList" class="admin-feedback-list">
                             <p class="muted" data-i18n="admin.feedbackLoading">Loading…</p>
                         </div>
-
-                        <p id="adminStatus" class="admin-message" hidden></p>
                     </div>
 
                 </div>
@@ -84,6 +74,7 @@
     </div>
 
     <script src="../../scripts/loginRegister/modal.js"></script>
+    <script src="../../scripts/admin/adminAuth.js"></script>
     <script src="../../scripts/admin/adminFeedback.js"></script>
 
 </body>

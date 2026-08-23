@@ -119,6 +119,7 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
 
     table_rows = {
         "users": [{"id": 1}],
+        "password_reset_tokens": [],
         "airlines": [],
         "airports": [],
         "direct_routes": [],
@@ -128,7 +129,14 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
         "images": [{"id": 9, "image_path": "uploads/place_images/photo.jpg"}],
         "trip_share_links": [],
         "trip_share_invitations": [],
-        "feedbacks": [{"id": 3, "user_id": 1, "message": "hello"}],
+        "feedbacks": [
+            {
+                "id": 3,
+                "user_id": 1,
+                "message": "hello",
+                "image_path": "/uploads/feedback_images/fb.jpg",
+            }
+        ],
     }
 
     def query_side_effect(model):
@@ -139,16 +147,26 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
 
     db_mock.query.side_effect = query_side_effect
 
+    fb_dir = tmp_path / "feedback_images"
+    fb_dir.mkdir()
+    (fb_dir / "fb.jpg").write_bytes(b"fb-bytes")
+    monkeypatch.setattr(admin, "FEEDBACK_IMAGES_DIR", fb_dir)
+    monkeypatch.setattr(admin, "ensure_feedback_images_dir", lambda: None)
+
     res = client.get("/api/admin/export", headers={"X-Admin-Secret": "secret"})
 
     assert res.status_code == 200
     body = res.json()
     assert body["version"] == 1
     assert body["users"] == [{"id": 1}]
-    assert body["feedbacks"] == [{"id": 3, "user_id": 1, "message": "hello"}]
+    assert body["password_reset_tokens"] == []
+    assert body["feedbacks"][0]["id"] == 3
     assert body["image_files"]["photo.jpg"] == base64.b64encode(b"img-bytes").decode("ascii")
+    assert body["feedback_image_files"]["fb.jpg"] == base64.b64encode(b"fb-bytes").decode("ascii")
     assert "feedbacks" in {name for name, _ in admin._EXPORT_MODELS}
+    assert "password_reset_tokens" in {name for name, _ in admin._EXPORT_MODELS}
     assert "feedbacks" in admin._SEQUENCE_TABLES
+    assert "password_reset_tokens" in admin._SEQUENCE_TABLES
 
 
 def test_admin_import_invalid_payload_list_rejected_by_schema(monkeypatch, client, db_mock):
@@ -191,6 +209,9 @@ def test_admin_import_success(monkeypatch, client, db_mock, tmp_path):
     img_dir = tmp_path / "place_images"
     monkeypatch.setattr(admin, "PLACE_IMAGES_DIR", img_dir)
     monkeypatch.setattr(admin, "ensure_place_images_dir", lambda: img_dir.mkdir(parents=True, exist_ok=True))
+    fb_dir = tmp_path / "feedback_images"
+    monkeypatch.setattr(admin, "FEEDBACK_IMAGES_DIR", fb_dir)
+    monkeypatch.setattr(admin, "ensure_feedback_images_dir", lambda: fb_dir.mkdir(parents=True, exist_ok=True))
     monkeypatch.setattr(admin, "_parse_value", lambda model, key, value: value)
 
     # Avoid constructing real SQLAlchemy models with arbitrary kwargs.
@@ -210,6 +231,7 @@ def test_admin_import_success(monkeypatch, client, db_mock, tmp_path):
     payload = {
         "version": 1,
         "image_files": {"a.png": base64.b64encode(b"png").decode("ascii")},
+        "feedback_image_files": {"fb.jpg": base64.b64encode(b"fb").decode("ascii")},
         "users": [{"id": 1, "username": "ada"}],
     }
     for name, _model in original_models:
@@ -227,6 +249,7 @@ def test_admin_import_success(monkeypatch, client, db_mock, tmp_path):
     assert body["counts"]["users"] == 1
     assert created[0]["username"] == "ada"
     assert (img_dir / "a.png").read_bytes() == b"png"
+    assert (fb_dir / "fb.jpg").read_bytes() == b"fb"
     db_mock.commit.assert_called()
 
 

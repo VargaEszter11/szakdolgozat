@@ -1,3 +1,50 @@
+body.page-admin .admin-card {
+    background: var(--color-surface);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--color-surface-border);
+}
+
+body.page-admin .admin-form .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+body.page-admin .admin-form .form-label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--color-text);
+}
+
+body.page-admin .admin-form .form-input {
+    padding: 0.6rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+body.page-admin .admin-form .form-input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px var(--color-accent-ring);
+}
+
+body.page-admin .admin-form .form-input:not(:placeholder-shown),
+body.page-admin .admin-form .form-input.has-value {
+    border-color: var(--color-accent-muted);
+    background: var(--color-input-bg-focus);
+}
+
+body.page-admin .admin-form .form-input::placeholder {
+    color: var(--color-text-faint);
+}
+
 body.page-admin #adminPanel .main-page-panel-title:not(:first-of-type) {
     margin-top: 1.5rem;
 }
@@ -14,7 +61,7 @@ body.page-admin #adminPanel .form-hint--danger {
 }
 
 body.page-admin .admin-message {
-    margin-top: 1rem;
+    margin: 0 0 1rem 0;
     padding: 0.75rem 1rem;
     border-radius: 8px;
     font-size: 0.875rem;
