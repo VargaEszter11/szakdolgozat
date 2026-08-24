@@ -20,7 +20,6 @@
     <script src="../../scripts/utils/sidebarHeader.js" defer></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hu.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
@@ -53,8 +52,8 @@
                                     Place Name *
                                 </label>
                                 <input type="text" id="placeName" name="placeName" required
-                                    data-i18n-placeholder="addNewPlace.placeNamePlaceholder"
-                                    placeholder="e.g. Budapest, Hungary" class="form-input">
+                                    data-i18n-placeholder="addNewPlace.placeNamePlaceholder" placeholder="e.g. Paris"
+                                    class="form-input">
                             </div>
 
                             <div class="form-group">
@@ -63,7 +62,7 @@
                                 </label>
                                 <input type="text" id="country" name="country" required
                                     data-i18n-placeholder="addNewPlace.countryPlaceholder"
-                                    placeholder="Start typing, e.g. Hungary" class="form-input" autocomplete="off">
+                                    placeholder="Start typing, e.g. France" class="form-input" autocomplete="off">
                             </div>
 
                             <div class="form-row-2">
@@ -129,18 +128,9 @@
                                 <label for="description" class="form-label" data-i18n="addNewPlace.description">
                                     Short Description
                                 </label>
-                                <input type="text" id="description" name="description"
+                                <textarea id="description" name="description" rows="4"
                                     data-i18n-placeholder="addNewPlace.descriptionPlaceholder"
-                                    placeholder="Brief highlight of your visit" class="form-input">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="notes" class="form-label" data-i18n="addNewPlace.notes">
-                                    Notes & Memories
-                                </label>
-                                <textarea id="notes" name="notes" rows="4"
-                                    data-i18n-placeholder="addNewPlace.notesPlaceholder"
-                                    placeholder="Share your experiences, recommendations, and favorite moments..."
+                                    placeholder="Brief highlight of your visit"
                                     class="form-input form-textarea"></textarea>
                             </div>
 
@@ -157,7 +147,8 @@
                                         </svg>
                                         <p class="upload-text" data-i18n="addNewPlace.photosPlaceholder">Click to upload
                                             photos</p>
-                                        <p class="upload-hint" data-i18n="addNewPlace.photosHint">PNG, JPG up to 10MB
+                                        <p class="upload-hint" data-i18n="addNewPlace.photosHint">PNG or JPG, max 10 MB
+                                            each; you can add several
                                         </p>
                                         <input type="file" id="photos" name="photos"
                                             accept="image/png,image/jpeg,image/jpg" class="upload-input" multiple>

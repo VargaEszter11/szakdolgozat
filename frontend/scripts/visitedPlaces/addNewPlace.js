@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     ? window.showError.bind(window)
     : function (msg, onClose) { alert(msg); if (typeof onClose === 'function') onClose(); };
 
+  var DRAFT_KEY = 'add_new_place_draft_v1';
+
   function goToVisitedPlaces() {
     window.location.href = 'visited_places.html';
   }
@@ -15,11 +17,29 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  function readDraft() {
+    try {
+      var raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      return data && typeof data === 'object' ? data : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearDraft() {
+    try {
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
   /** @returns {HTMLElement | null} */
   function progressEl() {
     return document.getElementById('submitProgress');
   }
 
+  // Inline status banner during save/upload
   function showProgress(text, variant) {
     var el = progressEl();
     if (!el) return;
@@ -38,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
     el.classList.remove('submit-progress--ok', 'submit-progress--error');
   }
 
+  // Normalizing FastAPI error bodies
   async function responseDetail(res) {
     var j = await res.json().catch(function () { return null; });
     if (!j) return 'HTTP ' + res.status;
@@ -53,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return res.statusText || ('HTTP ' + res.status);
   }
 
+  // Form field references
   const form = document.getElementById('addPlaceForm');
   const cancelBtn = document.getElementById('cancelBtn');
   const visitedDateInput = document.getElementById('visitedDate');
@@ -60,10 +82,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const ratingInput = document.getElementById('rating');
   const starBtns = document.querySelectorAll('.star-btn');
   const countryInputEl = document.getElementById('country');
+  const placeNameInput = document.getElementById('placeName');
+  const descriptionInput = document.getElementById('description');
+
+  // Country autocomplete based on ISO codes
+  var draft = readDraft();
+  if (draft && countryInputEl && draft.countryCode) {
+    countryInputEl.dataset.countryCode = draft.countryCode;
+  }
+
   if (countryInputEl && window.Countries) {
     window.Countries.mountAutocomplete(countryInputEl);
   }
 
+  var startPicker = null;
+  var endPicker = null;
+  // Auto-set end date from start date
+  var lastAutoEnd = '';
+  var setRating = null;
+
+  // Linked date picker, max date today
   if (typeof flatpickr === 'function') {
     var LOCALE_MAP = { hu: 'hu', de: 'de' };
     var lang = localStorage.getItem('language') || 'en';
@@ -76,14 +114,14 @@ document.addEventListener('DOMContentLoaded', function () {
       disableMobile: true
     };
 
-    var endPicker = visitedEndDateInput ? flatpickr(visitedEndDateInput, Object.assign({}, fpOpts, {
+    endPicker = visitedEndDateInput ? flatpickr(visitedEndDateInput, Object.assign({}, fpOpts, {
       onOpen: function (selectedDates, dateStr, instance) {
         var jumpTo = dateStr || (instance.input && instance.input.value) || '';
         if (jumpTo) instance.jumpToDate(jumpTo, false);
       }
     })) : null;
     if (visitedDateInput) {
-      flatpickr(visitedDateInput, Object.assign({}, fpOpts, {
+      startPicker = flatpickr(visitedDateInput, Object.assign({}, fpOpts, {
         onOpen: function (selectedDates, dateStr, instance) {
           var jumpTo = dateStr || (instance.input && instance.input.value) || '';
           if (jumpTo) instance.jumpToDate(jumpTo, false);
@@ -92,27 +130,17 @@ document.addEventListener('DOMContentLoaded', function () {
           if (!dateStr || !endPicker) return;
           endPicker.set('minDate', dateStr);
           var endVal = endPicker.input.value || '';
-          if (!endVal || endVal < dateStr) {
+          if (!endVal || endVal < dateStr || endVal === lastAutoEnd) {
             endPicker.setDate(dateStr, true);
+            lastAutoEnd = dateStr;
           }
-          endPicker.jumpToDate(dateStr, true);
+          endPicker.jumpToDate(endPicker.input.value || dateStr, true);
         }
       }));
-      var initialStart = visitedDateInput.value || '';
-      if (initialStart && endPicker) {
-        endPicker.set('minDate', initialStart);
-        var endVal = endPicker.input.value || '';
-        if (!endVal || endVal < initialStart) {
-          endPicker.setDate(initialStart, true);
-        }
-        endPicker.jumpToDate(initialStart, true);
-      }
-      if (initialStart && visitedDateInput._flatpickr) {
-        visitedDateInput._flatpickr.jumpToDate(initialStart, true);
-      }
     }
   }
 
+  // Rating, optional
   if (starBtns.length && ratingInput) {
     function paintStars(value) {
       var n = parseInt(value, 10);
@@ -130,42 +158,118 @@ document.addEventListener('DOMContentLoaded', function () {
       return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 0;
     }
 
-    function setRating(value) {
+    setRating = function (value) {
       var n = parseInt(value, 10);
       if (!Number.isFinite(n) || n < 1) n = 0;
       if (n > 5) n = 5;
       ratingInput.value = n > 0 ? String(n) : '';
       paintStars(n);
-    }
+    };
 
     var starRating = document.querySelector('.star-rating');
     starBtns.forEach(function (btn) {
       btn.addEventListener('mouseenter', function () {
-        paintStars(parseInt(btn.getAttribute('data-rating'), 10));
+        paintStars(parseInt(btn.getAttribute('data-rating'), 10)); // hover preview
       });
       btn.addEventListener('focus', function () {
         paintStars(parseInt(btn.getAttribute('data-rating'), 10));
       });
       btn.addEventListener('click', function () {
-        setRating(parseInt(btn.getAttribute('data-rating'), 10));
+        setRating(parseInt(btn.getAttribute('data-rating'), 10)); // commit selection
+        saveDraft();
       });
     });
     if (starRating) {
       starRating.addEventListener('mouseleave', function () {
-        paintStars(currentRating());
+        paintStars(currentRating()); // revert preview to committed value
       });
     }
     setRating(0);
   }
 
+  // Save fields content when page reload
+  function saveDraft() {
+    if (!form) return;
+    var payload = {
+      placeName: placeNameInput ? placeNameInput.value : '',
+      countryCode: (window.Countries && countryInputEl)
+        ? (window.Countries.getCode(countryInputEl) || '')
+        : '',
+      countryLabel: countryInputEl ? countryInputEl.value : '',
+      visitedDate: visitedDateInput ? visitedDateInput.value : '',
+      visitedEndDate: visitedEndDateInput ? visitedEndDateInput.value : '',
+      lastAutoEnd: lastAutoEnd || '',
+      rating: ratingInput ? ratingInput.value : '',
+      description: descriptionInput ? descriptionInput.value : ''
+    };
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch (e) { /* ignore quota */ }
+  }
+
+  function restoreDraft() {
+    if (!draft) return;
+    if (placeNameInput && draft.placeName) placeNameInput.value = draft.placeName;
+    if (descriptionInput && draft.description) descriptionInput.value = draft.description;
+    if (countryInputEl && draft.countryCode) {
+      countryInputEl.dataset.countryCode = draft.countryCode;
+      // Re-localize display name if the user changed app language since last save.
+      if (typeof countryInputEl._countrySyncLanguage === 'function') {
+        countryInputEl._countrySyncLanguage();
+      } else if (draft.countryLabel) {
+        countryInputEl.value = draft.countryLabel;
+      }
+    }
+    if (draft.visitedDate && startPicker) {
+      startPicker.setDate(draft.visitedDate, false);
+      if (endPicker) endPicker.set('minDate', draft.visitedDate);
+    } else if (draft.visitedDate && visitedDateInput) {
+      visitedDateInput.value = draft.visitedDate;
+    }
+    if (draft.visitedEndDate && endPicker) {
+      endPicker.setDate(draft.visitedEndDate, false);
+    } else if (draft.visitedEndDate && visitedEndDateInput) {
+      visitedEndDateInput.value = draft.visitedEndDate;
+    }
+    if (draft.lastAutoEnd) lastAutoEnd = draft.lastAutoEnd;
+    else if (draft.visitedDate && draft.visitedEndDate === draft.visitedDate) {
+      lastAutoEnd = draft.visitedDate;
+    }
+    if (setRating && draft.rating) setRating(draft.rating);
+  }
+
+  restoreDraft();
+
+  // Flatpickr does not fire input/change on the underlying field
+  function bindSaveOnChange(picker) {
+    if (!picker || !picker.config) return;
+    var existing = picker.config.onChange;
+    if (Array.isArray(existing)) {
+      existing.push(saveDraft);
+    } else if (typeof existing === 'function') {
+      picker.config.onChange = [existing, saveDraft];
+    } else {
+      picker.config.onChange = [saveDraft];
+    }
+  }
+
+  if (form) {
+    form.addEventListener('input', saveDraft);
+    form.addEventListener('change', saveDraft);
+  }
+  bindSaveOnChange(startPicker);
+  bindSaveOnChange(endPicker);
+
   if (cancelBtn) {
     cancelBtn.addEventListener('click', function () {
+      clearDraft();
       window.location.href = 'visited_places.html';
     });
   }
 
   if (!form) return;
 
+  // Photo upload
   var photosInput = document.getElementById('photos');
   var photoPreviewGrid = document.getElementById('photoPreviewGrid');
   var photoFormatErrors = document.getElementById('photoFormatErrors');
@@ -182,6 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var msg;
         if (err.reason === 'size') {
           msg = tpl(t('addNewPlace.photoTooLarge'), { name: name });
+          // Fallback if i18n key missing
           if (msg.indexOf('addNewPlace.') === 0 || msg.indexOf('{{name}}') >= 0) {
             msg = 'File too large (max 10 MB): ' + name;
           }
@@ -200,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var submitLabelSpan = submitBtn ? submitBtn.querySelector('span') : null;
   var submitLabelOriginal = submitLabelSpan ? submitLabelSpan.textContent : '';
 
+  // Disables submit/cancel and swaps button label while async work runs
   function setSubmitLoading(loading, labelKeyOrText) {
     if (!submitBtn) return;
     submitBtn.disabled = loading;
@@ -216,12 +322,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // Submit button handler
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     var userId = localStorage.getItem('user_id');
     if (!userId) {
-      showErrorMsg('Please log in to add a place.', function () {
+      showErrorMsg(t('addNewPlace.loginRequired'), function () {
         window.location.href = '../loginRegister/loginPage.html';
       });
       return;
@@ -234,37 +341,32 @@ document.addEventListener('DOMContentLoaded', function () {
     var visitedDate = document.getElementById('visitedDate').value;
     var visitedEndDate = document.getElementById('visitedEndDate').value;
     var description = document.getElementById('description').value.trim();
-    var notes = document.getElementById('notes').value.trim();
     var ratingRaw = parseInt(document.getElementById('rating').value, 10);
     var rating = Number.isFinite(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : null;
 
     if (!placeName || !country || !visitedDate) {
+      // Free-text country without a resolved ISO code gets a specific hint
       showErrorMsg(
         !country && (countryInput && countryInput.value.trim())
-          ? 'Please select a country from the suggestions list.'
-          : 'Please fill in Place Name, Country and Start Date.'
+          ? t('addNewPlace.selectCountryFromList')
+          : t('addNewPlace.fillRequired')
       );
       return;
     }
 
     if (visitedEndDate && visitedEndDate < visitedDate) {
-      showErrorMsg('End date must be on or after the start date.');
+      showErrorMsg(t('addNewPlace.endDateBeforeStart'));
       return;
     }
 
-    var fullDescription = description;
-    if (notes) {
-      fullDescription = description ? description + '\n\n' + notes : notes;
-    }
-
     var requestBody = {
-      user_id: parseInt(userId, 10),
+      user_id: parseInt(userId, 10), // schema field; server overwrites from JWT anyway
       place_name: placeName,
       country: country,
       date: visitedDate,
       end_date: visitedEndDate || null,
-      rating: rating,
-      description: fullDescription || null
+      rating: rating, // null when not set, optional field
+      description: description || null
     };
 
     var filesToUpload = photoPicker ? photoPicker.getFiles() : [];
@@ -275,6 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
     showProgress(t('addNewPlace.progressSaving'));
 
     try {
+      // Step 1: create the place record, backend geocodes place name and country to lat/lon, failure saves without coordinates
       var response = await fetch('/api/visited-places', {
         method: 'POST',
         headers: {
@@ -296,14 +399,17 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (fileCount === 0) {
+        clearDraft();
         hideProgress();
         setSubmitLoading(false);
         goToVisitedPlaces();
         return;
       }
 
+      // Photos are uploaded sequentially
       setSubmitLoading(true, 'addNewPlace.buttonUploading');
 
+      // Step 2: upload each selected photo
       for (var fi = 0; fi < filesToUpload.length; fi++) {
         var upLine = t('addNewPlace.progressUploadSingle');
         if (!upLine || upLine === 'addNewPlace.progressUploadSingle') {
@@ -330,29 +436,43 @@ document.addEventListener('DOMContentLoaded', function () {
           if (partialMsg.indexOf('addNewPlace.') === 0 || partialMsg.indexOf('{{details}}') >= 0) {
             partialMsg = 'Place saved, but a photo failed to upload:\n' + failDetail;
           }
+          // Place already saved
+          clearDraft();
           setSubmitLoading(false);
           showErrorMsg(partialMsg);
           return;
         }
       }
 
-      var okLine = t('addNewPlace.progressPhotoUploaded');
-      if (!okLine || okLine === 'addNewPlace.progressPhotoUploaded') {
-        okLine = 'Photo uploaded.';
-      }
+      var okLine;
       if (filesToUpload.length > 1) {
-        okLine = filesToUpload.length + ' photos uploaded.';
+        okLine = tpl(t('addNewPlace.photosUploaded'), { count: filesToUpload.length });
+        if (!okLine || okLine.indexOf('addNewPlace.') === 0 || okLine.indexOf('{{count}}') >= 0) {
+          okLine = filesToUpload.length + ' photos uploaded.';
+        }
+      } else {
+        okLine = t('addNewPlace.progressPhotoUploaded');
+        if (!okLine || okLine === 'addNewPlace.progressPhotoUploaded') {
+          okLine = 'Photo uploaded.';
+        }
       }
       showProgress(okLine, 'ok');
 
+      clearDraft();
       setSubmitLoading(false);
       hideProgress();
       goToVisitedPlaces();
     } catch (error) {
-      console.error('Error adding place:', error);
+      // Step 1 failed, place was not created, draft stays so the user can fix and retry
       hideProgress();
       setSubmitLoading(false);
-      showErrorMsg('Failed to add place: ' + (error.message || String(error)));
+      var failMsg = tpl(t('addNewPlace.addFailed'), {
+        details: error.message || String(error)
+      });
+      if (!failMsg || failMsg.indexOf('addNewPlace.') === 0 || failMsg.indexOf('{{details}}') >= 0) {
+        failMsg = 'Failed to add place: ' + (error.message || String(error));
+      }
+      showErrorMsg(failMsg);
     }
   });
 });
