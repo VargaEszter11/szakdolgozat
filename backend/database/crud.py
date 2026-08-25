@@ -11,9 +11,10 @@ from .airport_regions import is_europe_country
 from utils.place_image_upload import delete_file_for_public_path
 
 
+# Password hashing
+
 def hash_password(password: str) -> str:
-    """Hash a password using bcrypt"""
-    # Convert password to bytes and hash it
+    """Hash a password using bcrypt."""
     password_bytes = password.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password_bytes, salt)
@@ -21,7 +22,7 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against a hash"""
+    """Verify a password against a bcrypt hash."""
     password_bytes = plain_password.encode('utf-8')
     hashed_bytes = hashed_password.encode('utf-8')
     return bcrypt.checkpw(password_bytes, hashed_bytes)
@@ -30,7 +31,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ============= User CRUD Operations =============
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    """Create a new user with hashed password"""
+    """Create a new user with a bcrypt-hashed password."""
     hashed_password = hash_password(user.password)
     db_user = models.User(
         username=user.username,
@@ -44,7 +45,7 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 
 
 def create_google_user(db: Session, email: str, display_name: Optional[str] = None) -> models.User:
-    """Create a new user account for Google Sign-In."""
+    """Create a user for Google Sign-In (unique username + random unusable password)."""
     base_name = (display_name or email.split("@")[0] or "google_user").strip().lower()
     base_name = re.sub(r"[^a-z0-9_]", "_", base_name)
     if len(base_name) < 3:
@@ -57,6 +58,7 @@ def create_google_user(db: Session, email: str, display_name: Optional[str] = No
         username = f"{base_name[: max(1, 50 - len(suffix_text))]}{suffix_text}"
         suffix += 1
 
+    # Schema requires a password; random value is not usable for normal login
     random_password = secrets.token_urlsafe(32)
     db_user = models.User(
         username=username,

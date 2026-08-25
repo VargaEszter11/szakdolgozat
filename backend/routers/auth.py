@@ -48,43 +48,43 @@ def _public_base_url(request: Request) -> str:
     return str(request.base_url).rstrip("/")
 
 
+# Register
+
 @router.post("/register", response_model=schemas.RegisterResponse)
 def register(request: schemas.RegisterRequest, db: Session = Depends(get_db)):
-    """Register a new user"""
-    # Check if username already exists
+    """Register a new user (username + email unique; password hashed in create_user)."""
     existing_user = crud.get_user_by_username(db, username=request.username)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered"
         )
-    
-    # Check if email already exists
+
     existing_email = crud.get_user_by_email(db, email=request.email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
-    # Create the user
+
     user_data = schemas.UserCreate(
         username=request.username,
         email=request.email,
         password=request.password
     )
     crud.create_user(db=db, user=user_data)
-    
+
     return schemas.RegisterResponse(
         success=True,
         message="User registered successfully"
     )
 
+#Login
 
 @router.post("/login", response_model=schemas.LoginResponse)
 def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
-    """Authenticate a user and return login info"""
-    # Get user by username
+    """Authenticate with username/password; return JWT + tutorial_completed flag."""
+    # Same message for unknown user and bad password (no username enumeration)
     user = crud.get_user_by_username(db, username=request.username)
     if not user:
         raise HTTPException(
@@ -92,14 +92,13 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
             detail="Invalid username or password"
         )
     user_row = cast(Any, user)
-    
-    # Verify password
+
     if not crud.verify_password(request.password, user_row.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password"
         )
-    
+
     return schemas.LoginResponse(
         success=True,
         user_id=user_row.id,
@@ -112,9 +111,11 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     )
 
 
+# Google Sign-In
+
 @router.post("/google-login", response_model=schemas.LoginResponse)
 def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_db)):
-    """Authenticate or create a user via a Google OAuth 2.0 authorization code."""
+    """Auth code → tokens → verify ID token; login or create Google user."""
     google_client_id = get_google_client_id()
     google_client_secret = get_google_client_secret()
 
@@ -190,11 +191,13 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
 
 @router.get("/google-config")
 def google_config():
-    """Expose public Google OAuth configuration to frontend."""
+    """Public client_id for the frontend Google Identity script."""
     return {
         "client_id": get_google_client_id()
     }
 
+
+# Password reset
 
 _FORGOT_PASSWORD_GENERIC_MESSAGE = (
     "If an account with that email exists, we've sent a password reset link to it."
@@ -205,10 +208,10 @@ _FORGOT_PASSWORD_GENERIC_MESSAGE = (
 def forgot_password_request(
     request: schemas.ForgotPasswordRequest, http_request: Request, db: Session = Depends(get_db)
 ):
-    """Email a password reset link if the address belongs to an account.
+    """Email a reset link if the address belongs to an account.
 
-    Always responds with the same generic message regardless of whether the
-    email is registered, so this endpoint can't be used to enumerate accounts.
+    Always returns the same generic message so this endpoint cannot be used to
+    enumerate registered emails.
     """
     user = crud.get_user_by_email(db, email=request.email)
     if user:
@@ -226,7 +229,7 @@ def forgot_password_request(
 
 @router.post("/forgot-password/reset", response_model=schemas.ForgotPasswordResetResponse)
 def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Session = Depends(get_db)):
-    """Reset a password using a token issued by /forgot-password/request."""
+    """Set a new password using a valid, unused, unexpired reset token."""
     token_row = crud.get_valid_password_reset_token(db, raw_token=request.token)
     if not token_row:
         raise HTTPException(

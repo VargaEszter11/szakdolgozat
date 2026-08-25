@@ -90,6 +90,22 @@ function showSuccess(message, onClose) {
     }
 }
 
+/** Normalize FastAPI error bodies (string or validation array) for display. */
+function apiErrorDetail(data, fallback) {
+    if (!data) return fallback;
+    var d = data.detail;
+    if (typeof d === 'string' && d) return d;
+    if (Array.isArray(d)) {
+        var parts = d.map(function (e) {
+            if (typeof e === 'string') return e;
+            if (e && typeof e.msg === 'string') return e.msg;
+            return '';
+        }).filter(Boolean);
+        if (parts.length) return parts.join('; ');
+    }
+    return fallback;
+}
+
 function showError(message, onClose) {
     showModal({
         title: 'Error',

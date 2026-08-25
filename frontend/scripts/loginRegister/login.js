@@ -1,3 +1,12 @@
+function loginT(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === "function") {
+        var v = window.i18n.t(key);
+        if (v && v !== key) return v;
+    }
+    return fallback != null ? fallback : key;
+}
+
+// Session / tutorial
 function clearLegacyTutorialLocalStorage() {
     [
         "tutorial_completed",
@@ -18,6 +27,7 @@ function migrateLegacyTutorialCompleted(userId) {
     }).catch(function () { /* ignore */ });
 }
 
+// Save session and redirect
 function saveSessionAndRedirect(data) {
     localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("username", data.username);
@@ -43,11 +53,14 @@ function saveSessionAndRedirect(data) {
     window.location.href = "../main_page.html";
 }
 
+// Password login
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+    const submitBtn = e.target.querySelector('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
 
     try {
         const response = await fetch("/api/login", {
@@ -65,22 +78,20 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         if (data.success) {
             localStorage.removeItem("google_avatar_url");
             saveSessionAndRedirect(data);
-        } else {
-            showError(data.detail || "Login failed");
+            return;
         }
+        showError(
+            apiErrorDetail(data, loginT("login.failed", "Login failed"))
+        );
     } catch (error) {
         console.error(error);
-        showError("Server error. Please try again later.");
+        showError(loginT("login.serverError", "Server error. Please try again later."));
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
     }
 });
 
-function toggleGoogleSection(show) {
-    var divider = document.querySelector(".google-login-divider");
-    var host = document.getElementById("googleSignInButton");
-    if (divider) divider.style.display = show ? "" : "none";
-    if (host) host.style.display = show ? "" : "none";
-}
-
+// Google Sign-In
 function getAppLanguageCode() {
     var lang =
         window.i18n && typeof window.i18n.getLanguage === "function"
@@ -168,7 +179,9 @@ async function handleGoogleAuthCode(code) {
 
     const data = await response.json();
     if (!response.ok || !data.success) {
-        throw new Error(data.detail || "Google login failed");
+        throw new Error(
+            apiErrorDetail(data, loginT("login.googleFailed", "Google login failed"))
+        );
     }
 
     if (data.avatar_url && typeof data.avatar_url === "string") {
@@ -209,7 +222,7 @@ async function initGoogleLogin() {
                 if (!response || !response.code) {
                     if (response && response.error && response.error !== "popup_closed") {
                         console.error(response.error);
-                        showError("Google login failed");
+                        showError(loginT("login.googleFailed", "Google login failed"));
                     }
                     return;
                 }
@@ -218,7 +231,10 @@ async function initGoogleLogin() {
                     saveSessionAndRedirect(data);
                 } catch (error) {
                     console.error(error);
-                    showError(error.message || "Google login failed");
+                    showError(
+                        (error && error.message) ||
+                        loginT("login.googleFailed", "Google login failed")
+                    );
                 }
             }
         });

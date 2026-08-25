@@ -54,7 +54,7 @@ function getResetTokenFromUrl() {
             if (response.ok && data.success) {
                 window.location.href = '/pages/loginRegister/loginPage.html';
             } else {
-                showError(data.detail || resetPasswordT('resetPassword.resetFailed', 'Reset failed.'));
+                showError(apiErrorDetail(data, resetPasswordT('resetPassword.resetFailed', 'Reset failed.')));
             }
         } catch {
             showError(resetPasswordT('resetPassword.serverError', 'Server error. Please try again later.'));

@@ -82,6 +82,7 @@ function showRequestStep() {
         if (e.target === overlay) closeModal();
     });
 
+    // Always show a generic success message
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         sendBtn.disabled = true;
@@ -109,7 +110,7 @@ function showRequestStep() {
                     type: 'success'
                 });
             } else {
-                showError(data.detail || forgotPasswordT('forgotPassword.sendFailed', 'Could not send reset email.'));
+                showError(apiErrorDetail(data, forgotPasswordT('forgotPassword.sendFailed', 'Could not send reset email.')));
             }
         } catch {
             showError(forgotPasswordT('forgotPassword.serverError', 'Server error. Please try again later.'));

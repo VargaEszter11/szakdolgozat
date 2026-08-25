@@ -35,6 +35,7 @@ class UserResponse(UserBase):
 
 
 # ============= Authentication Schemas =============
+# Request/response bodies for /api/register, /login, /google-login, forgot-password
 
 class LoginRequest(BaseModel):
     username: str
@@ -42,7 +43,7 @@ class LoginRequest(BaseModel):
 
 
 class GoogleLoginRequest(BaseModel):
-    code: str
+    code: str  # OAuth authorization code from Google Identity (popup code client)
 
 
 class LoginResponse(BaseModel):

@@ -28,6 +28,7 @@ def jwt_secret() -> str:
 
 
 def create_access_token(*, user_id: int, username: str) -> str:
+    """Issue a signed JWT used by the frontend as Bearer access_token."""
     expire = datetime.now(timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     payload = {
         "sub": str(user_id),
@@ -41,6 +42,7 @@ def get_current_user(
     creds: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: Session = Depends(get_db),
 ) -> models.User:
+    """FastAPI dependency: require a valid Bearer JWT and load the user."""
     if creds is None or not (creds.credentials or "").strip():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -76,6 +78,7 @@ def current_user_id(user: models.User) -> int:
 
 
 def require_self(user_id: int, current_user: models.User) -> None:
+    """Reject if the path user_id is not the authenticated user."""
     if current_user_id(current_user) != int(user_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

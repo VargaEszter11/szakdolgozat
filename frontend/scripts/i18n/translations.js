@@ -413,6 +413,12 @@ window.I18N_TRANSLATIONS = {
       googleUnavailable: 'Google sign-in is currently unavailable.',
       googleNotConfigured: 'Google sign-in is not configured on the server.',
       googleLoadFailed: 'Google sign-in failed to load. Please try refreshing.',
+      googleFailed: 'Google login failed',
+      failed: 'Login failed',
+      serverError: 'Server error. Please try again later.',
+      forgotPasswordLink: 'Forgot your password?',
+      showPassword: 'Show password',
+      hidePassword: 'Hide password',
       dontHaveAnAccount: 'Don\'t have an account? <a href="registerPage.html">Register here</a>'
     },
     register: {
@@ -429,7 +435,11 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Choose a password',
       confirmPasswordPlaceholder: 'Confirm your password',
       register: 'Register',
-      cancel: 'Cancel'
+      cancel: 'Cancel',
+      passwordMismatch: 'Passwords do not match.',
+      passwordTooShort: 'Password must be at least 6 characters.',
+      failed: 'Registration failed',
+      serverError: 'Server error. Please try again later.'
     },
     forgotPassword: {
       title: 'Reset Password',
@@ -918,6 +928,12 @@ window.I18N_TRANSLATIONS = {
       googleUnavailable: 'A Google bejelentkezés jelenleg nem érhető el.',
       googleNotConfigured: 'A Google bejelentkezés nincs beállítva a szerveren.',
       googleLoadFailed: 'A Google bejelentkezés nem töltődött be. Próbáld újratölteni az oldalt.',
+      googleFailed: 'A Google bejelentkezés sikertelen',
+      failed: 'Bejelentkezés sikertelen',
+      serverError: 'Szerverhiba. Próbáld újra később.',
+      forgotPasswordLink: 'Elfelejtetted a jelszavad?',
+      showPassword: 'Jelszó megjelenítése',
+      hidePassword: 'Jelszó elrejtése',
       dontHaveAnAccount: 'Még nincs fiókod? <a href="registerPage.html">Regisztrálj itt</a>'
     },
     register: {
@@ -934,7 +950,11 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Válassz jelszót',
       confirmPasswordPlaceholder: 'Erősítsd meg a jelszót',
       register: 'Regisztráció',
-      cancel: 'Mégse'
+      cancel: 'Mégse',
+      passwordMismatch: 'A jelszavak nem egyeznek.',
+      passwordTooShort: 'A jelszónak legalább 6 karakterből kell állnia.',
+      failed: 'A regisztráció sikertelen',
+      serverError: 'Szerverhiba. Próbáld újra később.'
     },
     forgotPassword: {
       title: 'Jelszó visszaállítása',
@@ -1423,6 +1443,12 @@ window.I18N_TRANSLATIONS = {
       googleUnavailable: 'Google-Anmeldung ist derzeit nicht verfügbar.',
       googleNotConfigured: 'Google-Anmeldung ist auf dem Server nicht konfiguriert.',
       googleLoadFailed: 'Google-Anmeldung konnte nicht geladen werden. Bitte die Seite neu laden.',
+      googleFailed: 'Google-Anmeldung fehlgeschlagen',
+      failed: 'Anmeldung fehlgeschlagen',
+      serverError: 'Serverfehler. Bitte versuche es später erneut.',
+      forgotPasswordLink: 'Passwort vergessen?',
+      showPassword: 'Passwort anzeigen',
+      hidePassword: 'Passwort verbergen',
       dontHaveAnAccount: 'Noch kein Konto? <a href="registerPage.html">Hier registrieren</a>'
     },
     register: {
@@ -1439,7 +1465,11 @@ window.I18N_TRANSLATIONS = {
       passwordPlaceholder: 'Passwort wählen',
       confirmPasswordPlaceholder: 'Passwort bestätigen',
       register: 'Registrieren',
-      cancel: 'Abbrechen'
+      cancel: 'Abbrechen',
+      passwordMismatch: 'Die Passwörter stimmen nicht überein.',
+      passwordTooShort: 'Das Passwort muss mindestens 6 Zeichen haben.',
+      failed: 'Registrierung fehlgeschlagen',
+      serverError: 'Serverfehler. Bitte versuche es später erneut.'
     },
     forgotPassword: {
       title: 'Passwort zurücksetzen',
