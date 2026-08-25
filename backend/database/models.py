@@ -37,6 +37,12 @@ class User(Base):
         server_default=text("'deepseek'"),
     )
     home_city = Column(Text, nullable=True)
+    tutorial_completed = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
 
     # Relationships
     planned_trips = relationship("PlannedTrip", back_populates="user", cascade="all, delete-orphan")

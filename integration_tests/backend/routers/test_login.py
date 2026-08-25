@@ -24,6 +24,7 @@ class TestLogin:
         assert data["user_id"] == test_user["id"]
         assert data.get("access_token")
         assert data.get("token_type") == "bearer"
+        assert data.get("tutorial_completed") is False
 
     def test_login_user_not_found(self, client):
         """Test login with non-existent username."""

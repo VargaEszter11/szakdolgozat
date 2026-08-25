@@ -150,6 +150,29 @@ class TestUpdateUser:
         assert response.status_code == 200
         assert response.json()["home_city"] == ""
 
+    def test_update_user_sets_tutorial_completed(self, client, test_user, auth_headers):
+        response = client.put(
+            f"/api/users/{test_user['id']}",
+            headers=auth_headers,
+            json={"tutorial_completed": True},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["tutorial_completed"] is True
+
+        refetched = client.get(f"/api/users/{test_user['id']}", headers=auth_headers)
+        assert refetched.json()["tutorial_completed"] is True
+
+        login = client.post(
+            "/api/login",
+            json={
+                "username": test_user["username"],
+                "password": test_user["password"],
+            },
+        )
+        assert login.status_code == 200
+        assert login.json()["tutorial_completed"] is True
+
 
 class TestDeleteUser:
     """Integration tests for DELETE /api/users/{user_id}."""

@@ -46,6 +46,14 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE users
+                    ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     ALTER TABLE direct_routes
                     ADD COLUMN IF NOT EXISTS is_seasonal BOOLEAN NULL,
                     ADD COLUMN IF NOT EXISTS effective_from DATE NULL,

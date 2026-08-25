@@ -21,6 +21,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = Field(default=None, min_length=6)
     preferred_llm_provider: Optional[Literal["deepseek"]] = None
     home_city: Optional[str] = Field(default=None, max_length=255)
+    tutorial_completed: Optional[bool] = None
 
 
 class UserResponse(UserBase):
@@ -28,6 +29,7 @@ class UserResponse(UserBase):
     created_at: dt.datetime
     preferred_llm_provider: str = "deepseek"
     home_city: Optional[str] = None
+    tutorial_completed: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,6 +52,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     avatar_url: Optional[str] = None
+    tutorial_completed: bool = False
 
 
 class RegisterRequest(BaseModel):

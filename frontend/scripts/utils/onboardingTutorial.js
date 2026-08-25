@@ -3,9 +3,9 @@
   window.__onboardingTutorialInit = true;
 
   var PENDING_KEY = 'pending_tutorial';
-  var DONE_KEY = 'tutorial_completed';
   var STEP_KEY = 'tutorial_step';
   var LANG_READY_KEY = 'tutorial_language_ready';
+  var LEGACY_DONE_KEY = 'tutorial_completed';
   var PAD = 8;
   var FADE_MS = 220;
   var HOLE_MS = 320;
@@ -167,7 +167,7 @@
   }
 
   function getStep() {
-    var n = parseInt(localStorage.getItem(STEP_KEY) || '1', 10);
+    var n = parseInt(sessionStorage.getItem(STEP_KEY) || '1', 10);
     if (isNaN(n) || n < 1) return 1;
     var max = totalSteps();
     if (n > max) return max;
@@ -175,18 +175,40 @@
   }
 
   function setStep(n) {
-    localStorage.setItem(STEP_KEY, String(n));
+    sessionStorage.setItem(STEP_KEY, String(n));
   }
 
-  function markDone() {
-    localStorage.setItem(DONE_KEY, '1');
+  function clearTutorialSession() {
+    sessionStorage.removeItem(PENDING_KEY);
+    sessionStorage.removeItem(STEP_KEY);
+    sessionStorage.removeItem(LANG_READY_KEY);
+  }
+
+  function clearLegacyTutorialLocalStorage() {
+    localStorage.removeItem(LEGACY_DONE_KEY);
     localStorage.removeItem(PENDING_KEY);
     localStorage.removeItem(STEP_KEY);
     localStorage.removeItem(LANG_READY_KEY);
   }
 
+  function persistTutorialCompleted(done) {
+    var userId = localStorage.getItem('user_id');
+    if (!userId) return;
+    fetch('/api/users/' + userId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tutorial_completed: !!done }),
+    }).catch(function () { /* ignore */ });
+  }
+
+  function markDone() {
+    clearTutorialSession();
+    clearLegacyTutorialLocalStorage();
+    persistTutorialCompleted(true);
+  }
+
   function needsLanguagePrompt() {
-    if (localStorage.getItem(LANG_READY_KEY) === '1') return false;
+    if (sessionStorage.getItem(LANG_READY_KEY) === '1') return false;
     return getStep() <= 1;
   }
 
@@ -324,7 +346,7 @@
     startBtn.addEventListener('click', function (e) {
       e.preventDefault();
       applyLanguage(selected);
-      localStorage.setItem(LANG_READY_KEY, '1');
+      sessionStorage.setItem(LANG_READY_KEY, '1');
       setStep(1);
       destroyLanguagePrompt();
       showTour();
@@ -341,10 +363,11 @@
     try {
       var params = new URLSearchParams(location.search || '');
       if (params.get('tutorial') !== '1') return;
-      localStorage.removeItem(DONE_KEY);
-      localStorage.removeItem(LANG_READY_KEY);
-      localStorage.setItem(PENDING_KEY, '1');
-      localStorage.setItem(STEP_KEY, '1');
+      clearLegacyTutorialLocalStorage();
+      persistTutorialCompleted(false);
+      sessionStorage.setItem(PENDING_KEY, '1');
+      sessionStorage.setItem(STEP_KEY, '1');
+      sessionStorage.removeItem(LANG_READY_KEY);
       params.delete('tutorial');
       var next =
         location.pathname + (params.toString() ? '?' + params.toString() : '') + (location.hash || '');
@@ -361,10 +384,9 @@
       queryForced = true;
     }
     if (!localStorage.getItem('user_id') || !localStorage.getItem('access_token')) return false;
-    var pending = String(localStorage.getItem(PENDING_KEY) || '').trim();
+    var pending = String(sessionStorage.getItem(PENDING_KEY) || '').trim();
     if (pending !== '1') return false;
-    if (localStorage.getItem(DONE_KEY) === '1') localStorage.removeItem(DONE_KEY);
-    if (!localStorage.getItem(STEP_KEY)) setStep(1);
+    if (!sessionStorage.getItem(STEP_KEY)) setStep(1);
     return true;
   }
 
@@ -421,7 +443,7 @@
       return null;
     }
     setStep(next);
-    localStorage.setItem(PENDING_KEY, '1');
+    sessionStorage.setItem(PENDING_KEY, '1');
     return next;
   }
 
@@ -819,10 +841,11 @@
   }
 
   window.resetTravelTutorial = function () {
-    localStorage.removeItem(DONE_KEY);
-    localStorage.removeItem(LANG_READY_KEY);
-    localStorage.setItem(PENDING_KEY, '1');
-    localStorage.setItem(STEP_KEY, '1');
+    clearLegacyTutorialLocalStorage();
+    persistTutorialCompleted(false);
+    sessionStorage.setItem(PENDING_KEY, '1');
+    sessionStorage.setItem(STEP_KEY, '1');
+    sessionStorage.removeItem(LANG_READY_KEY);
     if (tour) destroyTour(tour);
     destroyLanguagePrompt();
     var orphanRoot = document.querySelector('.tutorial-tour-root');

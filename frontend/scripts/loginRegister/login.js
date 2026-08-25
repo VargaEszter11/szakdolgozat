@@ -1,12 +1,44 @@
+function clearLegacyTutorialLocalStorage() {
+    [
+        "tutorial_completed",
+        "pending_tutorial",
+        "tutorial_step",
+        "tutorial_language_ready",
+    ].forEach(function (key) {
+        localStorage.removeItem(key);
+    });
+}
+
+function migrateLegacyTutorialCompleted(userId) {
+    if (!userId) return;
+    fetch("/api/users/" + userId, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tutorial_completed: true }),
+    }).catch(function () { /* ignore */ });
+}
+
 function saveSessionAndRedirect(data) {
     localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("username", data.username);
     if (data.access_token) {
         localStorage.setItem("access_token", data.access_token);
     }
-    if (localStorage.getItem("tutorial_completed") !== "1") {
-        localStorage.setItem("pending_tutorial", "1");
-        localStorage.setItem("tutorial_step", "1");
+
+    var legacyDone = localStorage.getItem("tutorial_completed") === "1";
+    clearLegacyTutorialLocalStorage();
+
+    if (data.tutorial_completed || legacyDone) {
+        if (!data.tutorial_completed && legacyDone) {
+            migrateLegacyTutorialCompleted(data.user_id);
+        }
+        sessionStorage.removeItem("pending_tutorial");
+        sessionStorage.removeItem("tutorial_step");
+        sessionStorage.removeItem("tutorial_language_ready");
+    } else {
+        sessionStorage.setItem("pending_tutorial", "1");
+        sessionStorage.setItem("tutorial_step", "1");
+        sessionStorage.removeItem("tutorial_language_ready");
     }
     window.location.href = "../main_page.html";
 }

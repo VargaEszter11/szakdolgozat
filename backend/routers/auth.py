@@ -108,6 +108,7 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
             user_id=int(user_row.id),
             username=str(user_row.username),
         ),
+        tutorial_completed=bool(getattr(user_row, "tutorial_completed", False)),
     )
 
 
@@ -183,6 +184,7 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
             username=str(user_row.username),
         ),
         avatar_url=id_info.get("picture"),
+        tutorial_completed=bool(getattr(user_row, "tutorial_completed", False)),
     )
 
 
