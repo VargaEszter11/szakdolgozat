@@ -16,7 +16,6 @@
   <script src="../../scripts/utils/authGuard.js"></script>
   <script src="../../scripts/utils/countries.js"></script>
   <script src="../../scripts/utils/sidebarHeader.js"></script>
-  <script src="../../scripts/utils/navToggle.js" defer></script>
   <script src="../../scripts/i18n/translations.js"></script>
   <script src="../../scripts/i18n/i18n.js"></script>
 </head>
@@ -44,6 +43,15 @@
             </div>
 
             <div class="visited-places-header-actions">
+              <a href="add_new_place.html" class="btn-add">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v8" />
+                  <path d="M8 12h8" />
+                </svg>
+                <span data-i18n="nav.addPlace">Add Place</span>
+              </a>
               <a href="visited_places.html" class="btn-add btn-add-outline">
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2">
@@ -61,10 +69,8 @@
 
           <div class="map-view-wrap">
             <div id="map"></div>
-            <div class="map-controls">
-              <a href="visited_places.html" class="btn-add btn-add-outline" data-i18n="map.listView">List View</a>
-            </div>
           </div>
+          <p id="mapStatus" class="map-status muted" hidden role="status"></p>
 
         </div>
       </main>
@@ -72,6 +78,7 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../../scripts/utils/mapHelper.js"></script>
   <script src="../../scripts/visitedPlaces/loadPlacesMap.js" defer></script>
 </body>
 

@@ -1,10 +1,24 @@
 (function () {
-  var STORAGE_KEY = 'visitedPlaces';
-  var JSON_URL = '../../../dummy_places/places.json';
   var map;
-
   var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
 
+  // i18n helpers
+  function t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      var v = window.i18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback != null ? fallback : key;
+  }
+
+  function tpl(template, vars) {
+    if (!template || typeof template !== 'string') return '';
+    return template.replace(/\{\{(\w+)\}\}/g, function (_, key) {
+      return vars[key] != null ? String(vars[key]) : '';
+    });
+  }
+
+  // date / HTML helpers
   function formatDate(value) {
     if (!value) return '—';
     var d = new Date(value);
@@ -33,19 +47,31 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Status line under the map
+  function setMapStatus(text) {
+    var el = document.getElementById('mapStatus');
+    if (!el) return;
+    if (!text) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = text;
+  }
+
+  // Normalize API place
   function normalizePlace(item) {
-    // API response uses: place_name, country, date, description, latitude, longitude
     var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
     var name =
       window.Countries && window.Countries.formatPlace
         ? window.Countries.formatPlace(placeName, country)
         : placeName + (country ? ', ' + country : '');
-    if (!name.trim()) name = 'Unnamed place';
+    if (!name.trim()) name = t('visitedPlaces.unnamedPlace', 'Unnamed place');
     var dateValue = item.date || item.visitedDate || item.dateVisited;
     var endDateValue = item.end_date || item.endDate || item.visitedEndDate;
 
-    // Build coordinates object from latitude/longitude fields
     var coordinates = null;
     if (item.latitude != null && item.longitude != null) {
       coordinates = {
@@ -55,7 +81,7 @@
     }
 
     return {
-      name: placeName.trim() || 'Unknown',
+      name: placeName.trim() || t('visitedPlaces.unnamedPlace', 'Unnamed place'),
       country: country || '',
       displayName: name,
       dateVisited: formatVisitDates(dateValue, endDateValue),
@@ -64,52 +90,81 @@
     };
   }
 
-  function getPlacesFromStorage() {
-    var list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    return list.map(normalizePlace);
-  }
-
+  // Place markers
   function loadCities(places) {
-    var markerGroup = L.featureGroup();
+    var visitedLabel = t('visitedPlaces.mapVisitedLabel', 'Visited:');
+    var points = [];
 
     for (var i = 0; i < places.length; i++) {
       var place = places[i];
 
-      // Only use stored coordinates
+      // Skip places without coordinates
       if (place.coordinates && place.coordinates.lat && place.coordinates.lon) {
         var coords = place.coordinates;
-        var popupHtml = '<b>' + escapeHtml(place.displayName) + '</b><br>Visited: ' + escapeHtml(place.dateVisited) + '<br>' + escapeHtml(place.description);
-        var marker = L.marker([coords.lat, coords.lon])
-          .addTo(map)
-          .bindPopup(popupHtml);
-        markerGroup.addLayer(marker);
-      } else {
-        console.warn('Place has no coordinates:', place.name);
+        var popupHtml =
+          '<b>' + escapeHtml(place.displayName) + '</b><br>' +
+          escapeHtml(visitedLabel) + ' ' + escapeHtml(place.dateVisited);
+        if (place.description) {
+          popupHtml += '<br>' + escapeHtml(place.description);
+        }
+        points.push({
+          lat: coords.lat,
+          lon: coords.lon,
+          popupContent: popupHtml
+        });
       }
     }
 
-    if (markerGroup.getLayers().length > 0) {
-      map.fitBounds(markerGroup.getBounds().pad(0.2));
+    if (window.MapHelper) {
+      MapHelper.addMarkersWithPopups(map, points);
+      if (points.length === 1) {
+        // Single marker: Europe overview instead of street-level zoom
+        var EUROPE_BOUNDS = [[34, -25], [66, 34]];
+        map.fitBounds(EUROPE_BOUNDS, { padding: [24, 24] });
+      } else if (points.length > 1) {
+        MapHelper.fitBounds(map, points);
+      }
+    }
+
+    var shown = points.length;
+    var total = places.length;
+
+    if (total === 0) {
+      setMapStatus(t('visitedPlaces.mapEmpty', 'No places to show on the map yet.'));
+    } else if (shown < total) {
+      setMapStatus(
+        tpl(t('visitedPlaces.mapNoCoordinates', '{{shown}} of {{total}} places have coordinates and are shown on the map.'), {
+          shown: shown,
+          total: total
+        })
+      );
+    } else {
+      setMapStatus(null);
     }
   }
 
+  // Create map, fetch places, draw markers
   async function initMap() {
     var mapEl = document.getElementById('map');
     if (!mapEl) return;
 
-    map = L.map('map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    if (window.MapHelper) {
+      map = MapHelper.createMap(mapEl, [20, 0], 2);
+    } else if (typeof L !== 'undefined') {
+      map = L.map(mapEl).setView([20, 0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+    }
+    if (!map) return;
 
     setTimeout(function () {
       if (map) map.invalidateSize();
     }, 100);
 
-    // Get user_id from localStorage (set during login)
     var userId = localStorage.getItem('user_id');
     if (!userId) {
-      console.warn('No user_id found. User not logged in.');
+      setMapStatus(t('visitedPlaces.mapLoadFailed', 'Could not load places for the map.'));
       if (window.markAppReady) window.markAppReady();
       return;
     }
@@ -120,24 +175,19 @@
       var response = await fetch(apiUrl);
       if (response.ok) {
         var data = await response.json();
-        console.log('Raw API data:', data);
-        // API returns array of visited places directly
         var list = Array.isArray(data) ? data : [];
         places = list.map(normalizePlace);
-        console.log('Normalized places:', places);
-        console.log('Places with coordinates:', places.filter(function (p) { return p.coordinates; }).length);
       } else if (response.status === 404) {
-        console.log('No places found for this user.');
         places = [];
       } else {
         throw new Error('API request failed: ' + response.status);
       }
     } catch (err) {
-      console.error('Failed to load visited places from API:', err);
-      places = [];
+      setMapStatus(t('visitedPlaces.mapLoadFailed', 'Could not load places for the map.'));
+      if (window.markAppReady) window.markAppReady();
+      return;
     }
 
-    console.log('Loading cities on map. Total places:', places.length);
     loadCities(places);
     if (window.markAppReady) window.markAppReady();
   }

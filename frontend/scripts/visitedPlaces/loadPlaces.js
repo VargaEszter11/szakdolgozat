@@ -1,8 +1,8 @@
 (function () {
-  var STORAGE_KEY = 'visitedPlaces';
   var DEFAULT_IMAGE = '/pictures/placeholder.png';
   var lastPlaces = [];
 
+  // helpers (escape, dates, i18n, API errors)
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -60,6 +60,7 @@
     });
   }
 
+  // Normalize FastAPI error body to a readable string
   function responseDetail(res) {
     return res.json().catch(function () { return null; }).then(function (j) {
       if (!j) return 'HTTP ' + res.status;
@@ -111,15 +112,16 @@
     }
     var city = String(placeName || '').trim();
     var c = countryLabel(country);
-    if (!city) return c || 'Unnamed place';
+    if (!city) return c || t('visitedPlaces.unnamedPlace', 'Unnamed place');
     return c ? city + ', ' + c : city;
   }
 
+  // Map API place
   function normalizePlace(item, index) {
     var placeName = item.place_name || item.placeName || item.name || '';
     var country = item.country || '';
     var name = formatPlaceTitle(placeName, country);
-    if (!name.trim()) name = 'Unnamed place';
+    if (!name.trim()) name = t('visitedPlaces.unnamedPlace', 'Unnamed place');
     var dateValue = item.date || item.visitedDate || item.dateVisited;
     var endDateValue = item.end_date || item.endDate || item.visitedEndDate;
     var d = dateValue ? new Date(dateValue) : null;
@@ -149,6 +151,7 @@
     };
   }
 
+  // One place card HTML
   function renderCard(place) {
     return (
       '<div class="travel-log-card visited-place-card" data-id="' + escapeHtml(place.id) + '">' +
@@ -182,7 +185,7 @@
       '<path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>' +
       '</svg>' +
       '</button>' +
-      '<button type="button" class="place-delete-btn" data-id="' + escapeHtml(place.id) + '" title="Delete" aria-label="Delete place">' +
+      '<button type="button" class="place-delete-btn" data-id="' + escapeHtml(place.id) + '" title="' + escapeHtml(t('visitedPlaces.deletePlace', 'Delete place')) + '" aria-label="' + escapeHtml(t('visitedPlaces.deletePlace', 'Delete place')) + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
       '<path d="M3 6h18"/>' +
       '<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>' +
@@ -198,7 +201,7 @@
       '<div class="log-date">' + escapeHtml(place.date) + '</div>' +
 
       '<p class="log-notes">' +
-      escapeHtml(place.description || 'No description.') +
+      escapeHtml(place.description || t('visitedPlaces.noDescription', 'No description.')) +
       '</p>' +
 
       '</div>' +
@@ -206,6 +209,7 @@
     );
   }
 
+  // Delete / edit modal
   function deletePlace(id) {
     fetch('/api/visited-places/' + id, { method: 'DELETE' })
       .then(function (res) {
@@ -213,17 +217,27 @@
         loadPlaces();
       })
       .catch(function (err) {
-        console.error('Error deleting place:', err);
-        showError('Failed to delete place. Please try again.');
+        showError(t('visitedPlaces.deleteFailed', 'Failed to delete place. Please try again.'));
       });
   }
 
+  // Remove edit overlay
   function closeEditModal(overlay) {
-    if (overlay && overlay.parentNode) {
+    if (!overlay) return;
+    if (overlay._startPicker) {
+      try { overlay._startPicker.destroy(); } catch (e) { /* ignore */ }
+      overlay._startPicker = null;
+    }
+    if (overlay._endPicker) {
+      try { overlay._endPicker.destroy(); } catch (e) { /* ignore */ }
+      overlay._endPicker = null;
+    }
+    if (overlay.parentNode) {
       overlay.parentNode.removeChild(overlay);
     }
   }
 
+  // Load images, build edit dialog
   function openEditPlaceModal(placeId) {
     var rawId = parseInt(placeId, 10);
     if (Number.isNaN(rawId)) {
@@ -248,13 +262,14 @@
     });
   }
 
+  // Build edit form
   function mountEditPlaceModal(place, rawId, existingImages) {
     var uid = 'ep-' + rawId + '-' + String(Date.now()).slice(-6);
     var removedImageIds = {};
     var clearLegacyPhoto = false;
 
     document.querySelectorAll('.visited-place-details-overlay, .edit-place-modal-overlay').forEach(function (el) {
-      if (el.parentNode) el.parentNode.removeChild(el);
+      closeEditModal(el);
     });
 
     var overlay = document.createElement('div');
@@ -333,21 +348,23 @@
 
     var dateId = uid + '-date';
     var dateInput = document.createElement('input');
-    dateInput.type = 'date';
+    dateInput.type = typeof flatpickr === 'function' ? 'text' : 'date';
     dateInput.className = 'form-input';
     dateInput.id = dateId;
     dateInput.name = 'date';
     dateInput.value = place.dateIso || '';
+    dateInput.autocomplete = 'off';
     syncHasValue(dateInput);
     dateInput.addEventListener('change', function () { syncHasValue(dateInput); });
 
     var endDateId = uid + '-end-date';
     var endDateInput = document.createElement('input');
-    endDateInput.type = 'date';
+    endDateInput.type = typeof flatpickr === 'function' ? 'text' : 'date';
     endDateInput.className = 'form-input';
     endDateInput.id = endDateId;
     endDateInput.name = 'end_date';
     endDateInput.value = place.endDateIso || '';
+    endDateInput.autocomplete = 'off';
     syncHasValue(endDateInput);
     endDateInput.addEventListener('change', function () { syncHasValue(endDateInput); });
 
@@ -376,6 +393,64 @@
     dateRow.appendChild(formGroup(endDateId, t('addNewPlace.visitedEndDate', 'End date'), endDateInput));
     bodyWrap.appendChild(dateRow);
 
+    // Linked flatpickr
+    var startPicker = null;
+    var endPicker = null;
+    var lastAutoEnd = '';
+    if (typeof flatpickr === 'function') {
+      var FP_LOCALE = { hu: 'hu', de: 'de' };
+      var fpLang = localStorage.getItem('language') || 'en';
+      var fpLocale = FP_LOCALE[fpLang] || 'default';
+      var fpOpts = {
+        dateFormat: 'Y-m-d',
+        maxDate: 'today',
+        locale: fpLocale,
+        disableMobile: true
+      };
+      endPicker = flatpickr(endDateInput, Object.assign({}, fpOpts, {
+        onOpen: function (selectedDates, dateStr, instance) {
+          var jumpTo = dateStr || (instance.input && instance.input.value) || '';
+          if (jumpTo) instance.jumpToDate(jumpTo, false);
+        },
+        onChange: function () {
+          syncHasValue(endDateInput);
+        }
+      }));
+      startPicker = flatpickr(dateInput, Object.assign({}, fpOpts, {
+        onOpen: function (selectedDates, dateStr, instance) {
+          var jumpTo = dateStr || (instance.input && instance.input.value) || '';
+          if (jumpTo) instance.jumpToDate(jumpTo, false);
+        },
+        onChange: function (selectedDates, dateStr) {
+          syncHasValue(dateInput);
+          if (!dateStr || !endPicker) return;
+          endPicker.set('minDate', dateStr);
+          var endVal = endPicker.input.value || '';
+          if (!endVal || endVal < dateStr || endVal === lastAutoEnd) {
+            endPicker.setDate(dateStr, true);
+            lastAutoEnd = dateStr;
+          }
+          endPicker.jumpToDate(endPicker.input.value || dateStr, true);
+          syncHasValue(endDateInput);
+        }
+      }));
+      if (place.dateIso) {
+        startPicker.setDate(place.dateIso, false);
+        endPicker.set('minDate', place.dateIso);
+      }
+      if (place.endDateIso) {
+        endPicker.setDate(place.endDateIso, false);
+        if (place.dateIso && place.endDateIso === place.dateIso) {
+          lastAutoEnd = place.dateIso;
+        }
+      }
+      syncHasValue(dateInput);
+      syncHasValue(endDateInput);
+      overlay._startPicker = startPicker;
+      overlay._endPicker = endPicker;
+    }
+
+    // Star rating
     var ratingGroup = document.createElement('div');
     ratingGroup.className = 'form-group';
     var ratingLabel = document.createElement('span');
@@ -403,7 +478,16 @@
       starBtn.type = 'button';
       starBtn.className = 'star-btn';
       starBtn.setAttribute('data-rating', String(si));
-      starBtn.setAttribute('aria-label', si + (si === 1 ? ' star' : ' stars'));
+      starBtn.setAttribute(
+        'aria-label',
+        tpl(
+          t(
+            si === 1 ? 'addNewPlace.starLabelOne' : 'addNewPlace.starLabelMany',
+            si === 1 ? '{{n}} star' : '{{n}} stars'
+          ),
+          { n: si }
+        )
+      );
       starBtn.innerHTML =
         '<svg class="star-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
         '<polygon points="' + starPoly + '" /></svg>';
@@ -453,6 +537,7 @@
 
     bodyWrap.appendChild(formGroup(descId, t('addNewPlace.description', 'Description'), descInput));
 
+    // Existing photos + new uploads
     var photoGroup = document.createElement('div');
     photoGroup.className = 'form-group';
     var photoLabel = document.createElement('span');
@@ -645,6 +730,7 @@
       if (e.target === overlay) cleanupOverlay();
     });
 
+    // After PUT: delete removed images, upload new ones
     function applyPhotoChangesAfterPut() {
       var chain = Promise.resolve();
       var idsToDelete = Object.keys(removedImageIds)
@@ -684,6 +770,7 @@
       return chain;
     }
 
+    // Validate + PUT place, then apply photo changes
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       var pn = (nameInput.value || '').trim();
@@ -709,7 +796,7 @@
         description: (descInput.value || '').trim() || null
       };
       if (!body.country) {
-        showError(t('addNewPlace.countryRequired', 'Please select a country from the list.'));
+        showError(t('addNewPlace.selectCountryFromList', 'Please select a country from the list.'));
         return;
       }
       if (clearLegacyPhoto) {
@@ -738,7 +825,6 @@
           loadPlaces();
         })
         .catch(function (err) {
-          console.error('Error updating place:', err);
           showError(
             (err && err.message) ||
             t('visitedPlaces.editFailed', 'Could not save changes. Please try again.')
@@ -754,12 +840,14 @@
     nameInput.select();
   }
 
+  // Details modal
   function formatRatingDisplay(rating) {
     if (rating == null || rating === '') return '\u2014';
     var n = Math.min(5, Math.max(0, parseInt(rating, 10) || 0));
     return String(n) + '/5';
   }
 
+  // Gallery URLs
   function collectPhotoUrls(place, images) {
     var urls = [];
     var seen = {};
@@ -776,12 +864,13 @@
     return urls;
   }
 
+  // Clone template, fill place/details/photos, wire close handlers
   function showPlaceDetails(placeId) {
     var rawId = parseInt(placeId, 10);
     if (Number.isNaN(rawId)) return;
 
     document.querySelectorAll('.visited-place-details-overlay, .edit-place-modal-overlay').forEach(function (el) {
-      if (el.parentNode) el.parentNode.removeChild(el);
+      closeEditModal(el);
     });
 
     Promise.all([
@@ -878,7 +967,7 @@
           if (desc.trim()) {
             descEl.textContent = desc;
           } else {
-            descEl.textContent = t('visitedPlaces.detailsNoDescription', 'No notes for this place.');
+            descEl.textContent = t('visitedPlaces.detailsNoDescription', 'No description for this place.');
             descEl.classList.add('place-details-description--empty');
           }
         }
@@ -909,11 +998,11 @@
         document.addEventListener('keydown', handleEsc);
       })
       .catch(function (err) {
-        console.error('Error loading place details:', err);
         showError(t('visitedPlaces.detailsLoadFailed', 'Could not load place details.'));
       });
   }
 
+  // List: click handlers, sort, render, fetch
   function bindPlaceCardActions() {
     var container = document.getElementById('placeCards');
     if (!container || container.dataset.placeActionsBound === '1') return;
@@ -934,10 +1023,10 @@
         var raw = delBtn.getAttribute('data-id');
         var delId = parseInt(raw, 10);
         if (raw == null || String(raw).trim() === '' || Number.isNaN(delId)) {
-          showError('Cannot delete this place.');
+          showError(t('visitedPlaces.deleteInvalid', 'Cannot delete this place.'));
           return;
         }
-        showConfirm('Are you sure you want to delete this place?', function () {
+        showConfirm(t('visitedPlaces.deleteConfirm', 'Are you sure you want to delete this place?'), function () {
           deletePlace(delId);
         });
         return;
@@ -950,12 +1039,14 @@
     });
   }
 
+  // Newest visit first
   function sortByVisitDate(places) {
     return places.slice().sort(function (a, b) {
       return (b.dateSortKey || 0) - (a.dateSortKey || 0);
     });
   }
 
+  // Cards
   function render(places) {
     var container = document.getElementById('placeCards');
     var countEl = document.getElementById('placeCount');
@@ -976,13 +1067,17 @@
     if (window.markAppReady) window.markAppReady();
   }
 
+  // Fetch user's places from API
   function loadPlaces() {
     var userId = localStorage.getItem('user_id');
     if (!userId) {
-      console.error('No user_id found. Please log in.');
       var container = document.getElementById('placeCards');
       if (container) {
-        container.innerHTML = '<p class="place-cards-empty">Please log in to view your places. <a href="../loginRegister/loginPage.html">Log in here</a>.</p>';
+        container.innerHTML = '<p class="place-cards-empty">' +
+          tpl(t('visitedPlaces.loginRequiredHtml', 'Please log in to view your places. <a href="{{href}}">Log in here</a>.'), {
+            href: '../loginRegister/loginPage.html'
+          }) +
+          '</p>';
       }
       if (window.markAppReady) window.markAppReady();
       return;
@@ -1009,10 +1104,11 @@
         render(places);
       })
       .catch(function (err) {
-        console.error('Failed to load visited places from API:', err);
         var container = document.getElementById('placeCards');
         if (container) {
-          container.innerHTML = '<p class="place-cards-empty">Failed to load places. Please try again later.</p>';
+          container.innerHTML = '<p class="place-cards-empty">' +
+            escapeHtml(t('visitedPlaces.loadFailed', 'Failed to load places. Please try again later.')) +
+            '</p>';
         }
         if (window.markAppReady) window.markAppReady();
       });

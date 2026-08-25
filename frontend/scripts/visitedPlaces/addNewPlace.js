@@ -167,6 +167,26 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     var starRating = document.querySelector('.star-rating');
+
+    function applyStarAriaLabels() {
+      starBtns.forEach(function (btn) {
+        var si = parseInt(btn.getAttribute('data-rating'), 10);
+        if (!Number.isFinite(si) || si < 1) return;
+        var key = si === 1 ? 'addNewPlace.starLabelOne' : 'addNewPlace.starLabelMany';
+        var fallback = si === 1 ? '{{n}} star' : '{{n}} stars';
+        var label = t(key);
+        if (!label || label === key) label = fallback;
+        btn.setAttribute('aria-label', tpl(label, { n: si }));
+      });
+      if (starRating) {
+        var ratingLabel = t('addNewPlace.rating');
+        if (!ratingLabel || ratingLabel === 'addNewPlace.rating') ratingLabel = 'Rating';
+        starRating.setAttribute('aria-label', ratingLabel);
+      }
+    }
+    applyStarAriaLabels();
+    window.addEventListener('app:languagechange', applyStarAriaLabels);
+
     starBtns.forEach(function (btn) {
       btn.addEventListener('mouseenter', function () {
         paintStars(parseInt(btn.getAttribute('data-rating'), 10)); // hover preview

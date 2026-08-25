@@ -14,13 +14,24 @@
     gap: 1.25rem;
 }
 
-.visited-places-page .empty-state {
+.visited-places-page .place-cards-empty {
+    margin: 0;
     text-align: center;
     padding: 2rem;
     border-radius: 16px;
     background: var(--color-surface);
     border: 1px solid var(--color-surface-border);
     color: var(--color-text-muted);
+}
+
+.visited-places-page .place-cards-empty a {
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.visited-places-page .place-cards-empty a:hover {
+    text-decoration: underline;
 }
 
 .visited-places-footer {
@@ -62,11 +73,13 @@
 
     .visited-places-page .main-page-home-content-header .visited-places-header-actions {
         width: 100%;
-        justify-content: center;
+        justify-content: stretch;
     }
 
     .visited-places-page .main-page-home-content-header .btn-add {
+        flex: 1 1 auto;
         justify-content: center;
+        min-width: 0;
     }
 
     .visited-places-footer {

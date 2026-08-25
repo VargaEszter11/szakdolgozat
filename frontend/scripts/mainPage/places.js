@@ -34,7 +34,14 @@ export function normalizePlace(item) {
     window.Countries && window.Countries.formatPlace
       ? window.Countries.formatPlace(placeName, country)
       : placeName + (country ? ', ' + country : '');
-  if (!name.trim()) name = 'Unnamed place';
+  if (!name.trim()) {
+    var unnamed = 'Unnamed place';
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      var v = window.i18n.t('visitedPlaces.unnamedPlace');
+      if (v && v !== 'visitedPlaces.unnamedPlace') unnamed = v;
+    }
+    name = unnamed;
+  }
 
   var dateValue = item.date || item.visitedDate || item.dateVisited;
   var endDateValue = item.end_date || item.endDate || item.visitedEndDate;

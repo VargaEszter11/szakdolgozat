@@ -19,6 +19,10 @@
     <script src="../../scripts/i18n/translations.js"></script>
     <script src="../../scripts/i18n/i18n.js"></script>
     <script src="../../scripts/utils/sidebarHeader.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hu.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
 </head>
 
 <body>
@@ -51,7 +55,7 @@
                                     <path d="M12 8v8" />
                                     <path d="M8 12h8" />
                                 </svg>
-                                <span data-i18n="nav.addNewPlace">Add Place</span>
+                                <span data-i18n="nav.addPlace">Add Place</span>
                             </a>
                             <a href="places_map_view.html" class="btn-add btn-add-outline">
                                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -98,7 +102,8 @@
                         </svg>
                         <h2 id="placeDetailsTitle" class="place-details-title"></h2>
                     </div>
-                    <button type="button" class="place-details-close" data-place-details-close aria-label="Close">
+                    <button type="button" class="place-details-close" data-place-details-close
+                        aria-label="Close" data-i18n-aria-label="visitedPlaces.detailsClose">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -133,7 +138,7 @@
                             data-i18n="visitedPlaces.detailsNoPhotos">No photos for this place yet.</p>
                     </div>
                     <div class="place-details-section place-details-notes">
-                        <h3 data-i18n="visitedPlaces.detailsNotesHeading">Notes</h3>
+                        <h3 data-i18n="visitedPlaces.detailsDescriptionHeading">Description</h3>
                         <div id="placeDetailsDescription" class="place-details-description"></div>
                     </div>
                 </div>

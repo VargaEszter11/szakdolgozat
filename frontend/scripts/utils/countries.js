@@ -180,7 +180,12 @@
   function formatPlace(placeName, country) {
     var city = String(placeName || '').trim();
     var label = displayName(country);
-    if (!city) return label || 'Unnamed place';
+    var unnamed = 'Unnamed place';
+    if (global.i18n && typeof global.i18n.t === 'function') {
+      var v = global.i18n.t('visitedPlaces.unnamedPlace');
+      if (v && v !== 'visitedPlaces.unnamedPlace') unnamed = v;
+    }
+    if (!city) return label || unnamed;
     return label ? city + ', ' + label : city;
   }
 
