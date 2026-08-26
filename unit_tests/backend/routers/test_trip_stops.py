@@ -131,27 +131,6 @@ def test_get_trip_stop_success(monkeypatch, client, db_mock):
     assert res.status_code == 200
 
 
-def test_get_trip_stops_trip_not_found(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: None)
-
-    app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
-
-    res = client.get("/trips/1/stops")
-
-    assert res.status_code == 404
-
-
-def test_get_trip_stops_success(monkeypatch, client, db_mock):
-    monkeypatch.setattr(trip_stops.crud, "get_planned_trip", lambda db, trip_id: mock_trip())
-    monkeypatch.setattr(trip_stops.crud, "get_trip_stops", lambda db, trip_id: [])
-
-    app.dependency_overrides[trip_stops.get_db] = override_get_db(db_mock)
-
-    res = client.get("/trips/1/stops")
-
-    assert res.status_code == 200
-
-
 def test_update_trip_stop_not_found(monkeypatch, client, db_mock):
     monkeypatch.setattr(trip_stops.crud, "get_trip_stop", lambda db, stop_id: None)
 

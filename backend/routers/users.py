@@ -140,6 +140,7 @@ def get_user_visited_places(
             detail="User not found",
         )
 
+    crud.sync_completed_booked_trips_for_user(db, user_id)
     places = crud.get_user_visited_places(db, user_id=user_id)
     return [
         schemas.VisitedPlaceResponse.model_validate(p).model_copy(
@@ -164,4 +165,6 @@ def get_user_planned_trips(
             detail="User not found",
         )
 
-    return crud.get_user_planned_trips(db, user_id=user_id)
+    return crud.planned_trips_to_response(
+        db, crud.get_user_planned_trips(db, user_id=user_id)
+    )

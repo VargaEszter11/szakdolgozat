@@ -267,5 +267,30 @@ def apply_startup_schema_patches() -> None:
                     """
                 )
             )
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE planned_trips
+                    ADD COLUMN IF NOT EXISTS shared_from_user_id INTEGER
+                    REFERENCES users(id) ON DELETE SET NULL
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE planned_trips
+                    ADD COLUMN IF NOT EXISTS start_latitude DOUBLE PRECISION
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE planned_trips
+                    ADD COLUMN IF NOT EXISTS start_longitude DOUBLE PRECISION
+                    """
+                )
+            )
     except SQLAlchemyError as exc:
         logger.warning("Could not apply startup schema patch: %s", exc)

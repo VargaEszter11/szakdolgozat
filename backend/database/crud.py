@@ -208,8 +208,27 @@ def consume_password_reset_token(db: Session, token_row: models.PasswordResetTok
 
 # ============= Planned Trip CRUD Operations =============
 
+def planned_trip_to_response(db: Session, trip: models.PlannedTrip) -> schemas.PlannedTripResponse:
+    """Serialize a planned trip and resolve shared_from_username when present."""
+    resp = schemas.PlannedTripResponse.model_validate(trip)
+    if resp.shared_from_user_id is None:
+        return resp
+    sharer = get_user(db, int(resp.shared_from_user_id))
+    if sharer is None:
+        return resp
+    return resp.model_copy(
+        update={"shared_from_username": str(cast(Any, sharer).username)}
+    )
+
+
+def planned_trips_to_response(
+    db: Session, trips: List[models.PlannedTrip]
+) -> List[schemas.PlannedTripResponse]:
+    return [planned_trip_to_response(db, trip) for trip in trips or []]
+
+
 def create_planned_trip(db: Session, trip: schemas.PlannedTripCreate) -> models.PlannedTrip:
-    """Create a new planned trip"""
+    """Persist a planned trip row (caller may already have filled start lat/lon)."""
     db_trip = models.PlannedTrip(**trip.model_dump())
     db.add(db_trip)
     db.commit()
@@ -227,9 +246,64 @@ def get_user_planned_trips(db: Session, user_id: int) -> List[models.PlannedTrip
     return db.query(models.PlannedTrip).filter(models.PlannedTrip.user_id == user_id).all()
 
 
-def get_planned_trips(db: Session, skip: int = 0, limit: int = 100) -> List[models.PlannedTrip]:
-    """Get a list of planned trips"""
-    return db.query(models.PlannedTrip).offset(skip).limit(limit).all()
+def _place_key(place_name: Optional[str], country: Optional[str]) -> tuple[str, str]:
+    return ((place_name or "").strip().lower(), (country or "").strip().lower())
+
+
+def sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
+    """
+    When a booked trip's end_date is before today, copy each stop into visited_places
+    (skipping a final “return home” stop that matches start_city). Idempotent per place key.
+    """
+    from datetime import date
+
+    if not trip or not trip.is_booked or not trip.end_date or trip.end_date >= date.today():
+        return
+
+    existing = {
+        _place_key(cast(Any, place).place_name, cast(Any, place).country)
+        for place in get_user_visited_places(db, trip.user_id)
+    }
+    stops = sorted(trip.stops or [], key=lambda stop: stop.stop_order or 0)
+    for index, stop in enumerate(stops):
+        if not stop.place_name:
+            continue
+        # Last stop that names the start city is treated as return-home, not a visit.
+        is_return_home = index == len(stops) - 1 and trip.start_city and (
+            stop.place_name.strip().lower() == trip.start_city.strip().lower()
+        )
+        if is_return_home:
+            continue
+
+        key = _place_key(stop.place_name, stop.country)
+        if key in existing:
+            continue
+
+        create_visited_place(
+            db,
+            schemas.VisitedPlaceCreate.model_validate(
+                {
+                    "user_id": int(cast(Any, trip).user_id),
+                    "place_name": stop.place_name,
+                    "country": stop.country,
+                    "date": stop.arrival_date or trip.end_date,
+                    "rating": None,
+                    "latitude": stop.latitude,
+                    "longitude": stop.longitude,
+                }
+            ),
+        )
+        existing.add(key)
+
+
+def sync_completed_booked_trips_to_visited(db: Session, trips) -> None:
+    for trip in trips or []:
+        sync_completed_booked_trip_to_visited(db, trip)
+
+
+def sync_completed_booked_trips_for_user(db: Session, user_id: int) -> None:
+    """Run booked→visited sync for all of a user's planned trips."""
+    sync_completed_booked_trips_to_visited(db, get_user_planned_trips(db, user_id))
 
 
 def update_planned_trip(db: Session, trip_id: int, trip_update: schemas.PlannedTripUpdate) -> Optional[models.PlannedTrip]:
@@ -761,6 +835,7 @@ def _assert_trip_owner(trip: Optional[models.PlannedTrip], user_id: int) -> mode
 
 
 def share_url_for_token(share_token: str) -> str:
+    """Frontend-relative path; the Planned Trips UI prefixes location.origin."""
     return f"/share?token={share_token}"
 
 
@@ -833,8 +908,12 @@ def copy_planned_trip_for_user(
     recipient_user_id: int,
     *,
     title_prefix: str = "Shared: ",
+    shared_from_user_id: Optional[int] = None,
 ) -> models.PlannedTrip:
-    """Duplicate a planned trip and its stops for another user."""
+    """
+    Duplicate a planned trip and its stops for another user (invitation accept).
+    Copies start/stop coordinates so the recipient's map does not need to re-geocode.
+    """
     source_row = cast(Any, source_trip)
     title = str(source_row.title or "Trip")
     if title_prefix and not title.startswith(title_prefix):
@@ -846,8 +925,11 @@ def copy_planned_trip_for_user(
         start_date=source_row.start_date,
         end_date=source_row.end_date,
         start_city=source_row.start_city,
+        start_latitude=source_row.start_latitude,
+        start_longitude=source_row.start_longitude,
         people=source_row.people or 1,
         is_booked=False,
+        shared_from_user_id=shared_from_user_id,
     )
     db.add(new_trip)
     db.flush()
@@ -880,6 +962,7 @@ def copy_planned_trip_for_user(
 def create_trip_share_invitation(
     db: Session, trip_id: int, from_user_id: int, to_user_id: int
 ) -> models.TripShareInvitation:
+    """Create a pending inbox invitation (one pending invite per trip→recipient)."""
     if from_user_id == to_user_id:
         raise ValueError("cannot_share_with_self")
 
@@ -924,6 +1007,7 @@ def get_trip_share_invitation(db: Session, invitation_id: int) -> Optional[model
 def list_trip_share_invitations_for_user(
     db: Session, user_id: int, status: str = "pending"
 ) -> List[models.TripShareInvitation]:
+    """Invitations addressed to this user (Planned Trips inbox uses status=pending)."""
     query = db.query(models.TripShareInvitation).filter(
         models.TripShareInvitation.to_user_id == user_id
     )
@@ -935,6 +1019,7 @@ def list_trip_share_invitations_for_user(
 def accept_trip_share_invitation(
     db: Session, invitation_id: int, user_id: int
 ) -> models.TripShareInvitation:
+    """Recipient accepts: copy trip, set shared_from_user_id, store result_trip_id."""
     invitation = get_trip_share_invitation(db, invitation_id)
     if invitation is None:
         raise ValueError("invitation_not_found")
@@ -949,7 +1034,12 @@ def accept_trip_share_invitation(
     if source_trip is None:
         raise ValueError("source_trip_not_found")
 
-    new_trip = copy_planned_trip_for_user(db, source_trip, user_id)
+    new_trip = copy_planned_trip_for_user(
+        db,
+        source_trip,
+        user_id,
+        shared_from_user_id=int(inv_row.from_user_id),
+    )
     inv_row.status = "accepted"
     inv_row.responded_at = _utcnow_naive()
     inv_row.result_trip_id = new_trip.id
@@ -961,6 +1051,7 @@ def accept_trip_share_invitation(
 def decline_trip_share_invitation(
     db: Session, invitation_id: int, user_id: int
 ) -> models.TripShareInvitation:
+    """Recipient declines; no trip is created."""
     invitation = get_trip_share_invitation(db, invitation_id)
     if invitation is None:
         raise ValueError("invitation_not_found")

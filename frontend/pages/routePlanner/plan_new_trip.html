@@ -75,6 +75,14 @@
                     <div class="card add-place-card">
                         <form id="tripPlanForm" class="add-place-form">
                             <div class="form-group">
+                                <label for="tripTitle" class="form-label"
+                                    data-i18n="planNewTrip.tripTitle">Trip title (optional)</label>
+                                <input type="text" id="tripTitle" name="tripTitle"
+                                    data-i18n-placeholder="planNewTrip.tripTitlePlaceholder"
+                                    placeholder="e.g. Summer in Italy" class="form-input" maxlength="120"
+                                    autocomplete="off">
+                            </div>
+                            <div class="form-group">
                                 <label for="startingCity" class="form-label"
                                     data-i18n="planNewTrip.startingCity">Starting City *</label>
                                 <input type="text" id="startingCity" name="startingCity"

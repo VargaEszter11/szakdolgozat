@@ -1,3 +1,14 @@
+"""
+Trip sharing API: two flows used from the Planned Trips page.
+
+1) Public link — owner creates a token; anyone with /share?token=… can read the trip
+   (no login). Served by GET /api/shared-trips/{token} → shared_trip.html.
+2) User-to-user invitation — owner invites another account; recipient sees it in the
+   share inbox, then accept (copies the trip) or decline.
+
+Identity for mutating routes comes from the access token; optional body user_id
+fields are ignored when present (legacy clients).
+"""
 from typing import Any, List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,6 +23,7 @@ router = APIRouter()
 def _invitation_response(
     db: Session, invitation: models.TripShareInvitation
 ) -> schemas.TripShareInvitationResponse:
+    """Enrich invitation with from_username and a short source-trip summary for the inbox UI."""
     inv_row = cast(Any, invitation)
     from_user = crud.get_user(db, int(inv_row.from_user_id))
     source_trip = crud.get_planned_trip(db, int(inv_row.source_trip_id))
@@ -40,6 +52,7 @@ def _invitation_response(
 
 
 def _trip_public_response(trip: models.PlannedTrip, db: Session) -> schemas.SharedTripPublicResponse:
+    """Read-only itinerary payload for the public share page (includes map coordinates)."""
     trip_row = cast(Any, trip)
     stops = crud.get_trip_stops(db, int(trip_row.id))
     return schemas.SharedTripPublicResponse(
@@ -47,10 +60,14 @@ def _trip_public_response(trip: models.PlannedTrip, db: Session) -> schemas.Shar
         start_date=trip_row.start_date,
         end_date=trip_row.end_date,
         start_city=trip_row.start_city,
+        start_latitude=trip_row.start_latitude,
+        start_longitude=trip_row.start_longitude,
         people=int(trip_row.people or 1),
         stops=[schemas.TripStopResponse.model_validate(s) for s in stops],
     )
 
+
+# Public share links
 
 @router.post(
     "/planned-trips/{trip_id}/share-link",
@@ -62,6 +79,7 @@ def create_trip_share_link(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Create or reuse an active public link for an owned trip."""
     del body  # user identity comes from the access token
     try:
         link = crud.create_or_get_trip_share_link(db, trip_id, current_user_id(current_user))
@@ -87,6 +105,7 @@ def revoke_trip_share_link(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Deactivate all active public links for an owned trip."""
     del body
     try:
         crud.revoke_trip_share_link(db, trip_id, current_user_id(current_user))
@@ -102,6 +121,7 @@ def revoke_trip_share_link(
 
 @router.get("/shared-trips/{token}", response_model=schemas.SharedTripPublicResponse)
 def get_shared_trip(token: str, db: Session = Depends(get_db)):
+    """Unauthenticated read of a trip via an active share token (shared_trip.html)."""
     link = crud.get_active_share_link_by_token(db, token)
     if link is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Share link not found")
@@ -111,6 +131,8 @@ def get_shared_trip(token: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
     return _trip_public_response(trip, db)
 
+
+# User-to-user invitations
 
 @router.post(
     "/planned-trips/{trip_id}/share",
@@ -123,6 +145,7 @@ def share_trip_with_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Invite another user."""
     try:
         invitation = crud.create_trip_share_invitation(
             db, trip_id, current_user_id(current_user), body.to_user_id
@@ -159,6 +182,7 @@ def list_trip_share_invitations(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Inbox for the current user (self only); Planned Trips page loads status=pending."""
     require_self(user_id, current_user)
     user = crud.get_user(db, user_id)
     if user is None:
@@ -177,6 +201,7 @@ def accept_trip_share_invitation(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Recipient only: copy source trip into their account (shared_from_user_id set)."""
     del body
     try:
         invitation = crud.accept_trip_share_invitation(
@@ -209,6 +234,7 @@ def decline_trip_share_invitation(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    """Recipient only: mark invitation declined (no trip copy)."""
     del body
     try:
         invitation = crud.decline_trip_share_invitation(

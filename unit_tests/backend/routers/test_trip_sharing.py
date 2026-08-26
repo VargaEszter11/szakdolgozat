@@ -40,6 +40,8 @@ def sample_trip(**overrides):
         "start_date": date(2026, 7, 1),
         "end_date": date(2026, 7, 14),
         "start_city": "Budapest",
+        "start_latitude": 47.5,
+        "start_longitude": 19.04,
         "people": 2,
         "is_booked": False,
     }

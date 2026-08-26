@@ -61,7 +61,17 @@
                         <div id="shareInbox" class="share-inbox-list" aria-live="polite"></div>
                     </section>
 
-                    <div id="tripCards" class="travel-logs-list" aria-live="polite">
+                    <div id="tripLists" class="planned-trips-lists">
+                        <section id="upcomingTripsSection" class="trip-list-section hidden">
+                            <h2 class="trip-list-section-title" data-i18n="plannedTrips.upcomingSection">Upcoming trips
+                            </h2>
+                            <div id="tripCards" class="travel-logs-list" aria-live="polite"></div>
+                        </section>
+
+                        <section id="pastTripsSection" class="trip-list-section hidden">
+                            <h2 class="trip-list-section-title" data-i18n="plannedTrips.pastSection">Past trips</h2>
+                            <div id="pastTripCards" class="travel-logs-list" aria-live="polite"></div>
+                        </section>
                     </div>
 
                     <div id="emptyState" class="card empty-state hidden">
@@ -84,7 +94,8 @@
             <div class="trip-details-modal planned-trips-trip-popup__panel" id="tripDetailsModalBox">
                 <div class="trip-details-header planned-trips-trip-popup__header">
                     <h2 id="tripDetailsTitle" class="trip-details-title"></h2>
-                    <button type="button" class="trip-details-close" aria-label="Close">
+                    <button type="button" class="trip-details-close" aria-label="Close"
+                        data-i18n-aria-label="plannedTrips.editCloseAria">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -106,6 +117,10 @@
                         <p id="tripDetailsStartCityWrap" class="hidden">
                             <strong data-i18n="plannedTrips.editFieldStartCity">Starting city</strong>:
                             <span id="tripDetailsStartCity"></span>
+                        </p>
+                        <p id="tripDetailsSharedByWrap" class="hidden">
+                            <strong data-i18n="plannedTrips.sharedByLabel">Shared by</strong>:
+                            <span id="tripDetailsSharedBy"></span>
                         </p>
                     </div>
 
@@ -135,7 +150,8 @@
                 <div class="trip-details-header planned-trips-trip-popup__header">
                     <h2 id="tripEditHeading" class="trip-details-title" data-i18n="plannedTrips.editModalTitle">Edit
                         trip</h2>
-                    <button type="button" class="trip-details-close" aria-label="Close">
+                    <button type="button" class="trip-details-close" aria-label="Close"
+                        data-i18n-aria-label="plannedTrips.editCloseAria">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -197,7 +213,8 @@
                 <div class="trip-details-header planned-trips-trip-popup__header">
                     <h2 id="tripShareTitle" class="trip-details-title" data-i18n="plannedTrips.shareTrip">Share trip
                     </h2>
-                    <button type="button" class="trip-details-close" aria-label="Close">
+                    <button type="button" class="trip-details-close" aria-label="Close"
+                        data-i18n-aria-label="plannedTrips.editCloseAria">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -232,6 +249,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../scripts/loginRegister/modal.js"></script>
+    <script src="../../scripts/utils/tripMapHelper.js"></script>
     <script src="../../scripts/routePlanner/loadPlans.js" defer></script>
 
 </body>

@@ -539,6 +539,17 @@
     margin-bottom: 1.5rem;
 }
 
+.planned-trips-lists {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.trip-list-section-title {
+    font-size: 1.15rem;
+    margin: 0 0 0.75rem;
+}
+
 .share-inbox-title {
     font-size: 1.15rem;
     margin: 0 0 0.75rem;

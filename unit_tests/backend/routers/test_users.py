@@ -146,9 +146,27 @@ def test_get_user_visited_places(db):
 
 
 def test_get_user_planned_trips(db):
+    trip = SimpleNamespace(
+        id=1,
+        title="Trip",
+        user_id=1,
+        start_date=None,
+        end_date=None,
+        start_city=None,
+        start_latitude=None,
+        start_longitude=None,
+        people=1,
+        is_booked=False,
+        shared_from_user_id=None,
+        stops=[],
+    )
+
     with patch("routers.users.crud.get_user", return_value=True), \
-         patch("routers.users.crud.get_user_planned_trips", return_value=[{"id": 1}]):
+         patch("routers.users.crud.get_user_planned_trips", return_value=[trip]):
 
         result = users_router.get_user_planned_trips(1, db, fake_user(1))
 
-    assert result == [{"id": 1}]
+    assert len(result) == 1
+    assert result[0].id == 1
+    assert result[0].title == "Trip"
+    assert result[0].shared_from_username is None

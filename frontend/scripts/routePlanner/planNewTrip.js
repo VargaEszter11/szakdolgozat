@@ -350,6 +350,7 @@ function syncLinkedDatePickers(startValue, endValue) {
 
 function readFormSnapshot() {
     return {
+        tripTitle: document.getElementById('tripTitle')?.value || '',
         startingCity: document.getElementById('startingCity')?.value || '',
         startDate: document.getElementById('startDate')?.value || '',
         endDate: document.getElementById('endDate')?.value || '',
@@ -370,6 +371,7 @@ function applyFormSnapshot(form) {
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
     };
+    setVal('tripTitle', form.tripTitle);
     setVal('startingCity', form.startingCity);
     setVal('people', form.people);
     setVal('preferredTransport', form.preferredTransport);
@@ -472,6 +474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data.userStartDate = meta.startDate;
             data.userEndDate = meta.endDate;
             data.userPeople = meta.people;
+            data.userTripTitle = meta.tripTitle || '';
 
             savePlannerSession({
                 status: 'ready',
@@ -554,6 +557,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshPlannerDbHints();
 
         if (session.status === 'ready' && session.resultData && session.resultData.draft_plan) {
+            if (!session.resultData.userTripTitle && session.form && session.form.tripTitle) {
+                session.resultData.userTripTitle = session.form.tripTitle;
+            }
             if (plannerSessionApi() && typeof plannerSessionApi().clearReadyAttention === 'function') {
                 plannerSessionApi().clearReadyAttention();
             } else {
@@ -573,7 +579,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             await runGeneration(session.selectedPlan || selectedPlan, session.requestBody, {
                 startDate: session.requestBody.startDate || session.form?.startDate,
                 endDate: session.requestBody.endDate || session.form?.endDate,
-                people: session.requestBody.people || Number(session.form?.people) || 1
+                people: session.requestBody.people || Number(session.form?.people) || 1,
+                tripTitle: (session.form && session.form.tripTitle) || ''
             });
         }
     }
@@ -581,6 +588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const tripTitle = (document.getElementById('tripTitle')?.value || '').trim();
         const startingCity = document.getElementById('startingCity').value.trim();
         const preferredTransport = document.getElementById('preferredTransport').value.trim();
         const peopleRaw = (document.getElementById('people').value || '').trim();
@@ -662,6 +670,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        await runGeneration(selectedPlan, body, { startDate, endDate, people });
+        await runGeneration(selectedPlan, body, { startDate, endDate, people, tripTitle });
     });
 });

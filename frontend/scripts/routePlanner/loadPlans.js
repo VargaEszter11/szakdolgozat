@@ -1,16 +1,19 @@
 (function () {
+  // Display helpers
   function normalizeTrip(trip) {
-    // Map API response fields to frontend fields
-    // API provides: id, user_id, title, start_date, end_date, start_city, stops
+
     return {
       id: trip.id,
       destination: trip.title || 'Unknown destination',
       startDate: formatApiDate(trip.start_date),
       endDate: formatApiDate(trip.end_date),
       startDateSort: trip.start_date || null,
+      endDateSort: trip.end_date || null,
       people: trip.people || 1,
       isBooked: !!trip.is_booked,
-      stopCount: trip.stops ? trip.stops.length : 0
+      stopCount: trip.stops ? trip.stops.length : 0,
+      sharedFromUserId: trip.shared_from_user_id || null,
+      sharedFromUsername: trip.shared_from_username || null
     };
   }
 
@@ -32,14 +35,30 @@
     }
   }
 
-  var NOMINATIM_DELAY_MS = 1100;
-
   function plannedTripsT(key, fallback) {
     if (window.i18n && typeof window.i18n.t === 'function') {
       var v = window.i18n.t('plannedTrips.' + key);
       if (v && v.indexOf('plannedTrips.' + key) !== 0) return v;
     }
     return fallback;
+  }
+
+  var H = window.TripMapHelper;
+  // Thin wrappers so call sites stay readable, implementations live in tripMapHelper.js.
+  function countryDisplay(value) {
+    return H.countryDisplay(value);
+  }
+  function placeDisplay(placeName, country) {
+    return H.placeDisplay(placeName, country);
+  }
+  function buildAllRoutePoints(trip, orderedStops) {
+    return H.buildAllRoutePoints(trip, orderedStops, plannedTripsT);
+  }
+  function destroyTripMap(mapEl) {
+    return H.destroyTripMap(mapEl);
+  }
+  function renderTripMap(accentHostEl, mapEl, noteEl, section, points, showPartialNote) {
+    return H.renderTripMap(accentHostEl, mapEl, noteEl, section, points, showPartialNote, plannedTripsT);
   }
 
   function transportLabel(transport) {
@@ -80,138 +99,7 @@
     return t ? t : null;
   }
 
-  function sleep(ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  function nominatimGeocode(query) {
-    if (!query || !String(query).trim()) return Promise.resolve(null);
-    var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
-      q: String(query).trim(),
-      format: 'json',
-      limit: '1'
-    });
-    return fetch(url, { headers: { Accept: 'application/json' } })
-      .then(function (res) {
-        if (!res.ok) return null;
-        return res.json();
-      })
-      .then(function (data) {
-        return Array.isArray(data) && data.length ? data[0] : null;
-      })
-      .catch(function () {
-        return null;
-      });
-  }
-
-  function countryDisplay(value) {
-    return window.Countries && window.Countries.displayName
-      ? window.Countries.displayName(value)
-      : String(value || '').trim();
-  }
-
-  function placeDisplay(placeName, country) {
-    return window.Countries && window.Countries.formatPlace
-      ? window.Countries.formatPlace(placeName, country)
-      : (placeName || '') + (country ? ', ' + country : '');
-  }
-
-  function labelForStop(stop) {
-    var ord = stop.stop_order != null ? String(stop.stop_order) : '?';
-    return ord + '. ' + placeDisplay(stop.place_name, stop.country);
-  }
-
-  /**
-   * Ordered points: starting city (if any), then each stop in stop_order.
-   * Uses stored lat/lon when present; otherwise Nominatim (throttled).
-   */
-  function buildAllRoutePoints(trip, orderedStops) {
-    var points = [];
-    var hadNetworkRequest = false;
-    var chain = Promise.resolve();
-
-    function beforeNetwork() {
-      var p = hadNetworkRequest ? sleep(NOMINATIM_DELAY_MS) : Promise.resolve();
-      hadNetworkRequest = true;
-      return p;
-    }
-
-    if (trip.start_city && String(trip.start_city).trim()) {
-      var startQuery = String(trip.start_city).trim();
-      var startPopup = plannedTripsT('mapStartCityLabel', 'Start') + ': ' + startQuery;
-      chain = chain
-        .then(function () {
-          return beforeNetwork().then(function () {
-            return nominatimGeocode(startQuery);
-          });
-        })
-        .then(function (hit) {
-          if (hit) {
-            points.push({
-              lat: parseFloat(hit.lat),
-              lng: parseFloat(hit.lon),
-              label: startPopup,
-              kind: 'start',
-              startCityName: startQuery
-            });
-          }
-        });
-    }
-
-    for (var i = 0; i < orderedStops.length; i++) {
-      (function (stop) {
-        chain = chain.then(function () {
-          var lat = stop.latitude;
-          var lon = stop.longitude;
-          if (lat != null && lon != null && !isNaN(lat) && !isNaN(lon)) {
-            points.push({
-              lat: lat,
-              lng: lon,
-              label: labelForStop(stop),
-              kind: 'stop',
-              order: stop.stop_order
-            });
-            return undefined;
-          }
-          var q = (stop.place_name || '').trim();
-          if (!q) return undefined;
-          if (stop.country) q += ', ' + countryDisplay(stop.country);
-          return beforeNetwork()
-            .then(function () {
-              return nominatimGeocode(q);
-            })
-            .then(function (hit) {
-              if (hit) {
-                points.push({
-                  lat: parseFloat(hit.lat),
-                  lng: parseFloat(hit.lon),
-                  label: labelForStop(stop),
-                  kind: 'stop',
-                  order: stop.stop_order
-                });
-              }
-            });
-        });
-      })(orderedStops[i]);
-    }
-
-    return chain.then(function () {
-      return points;
-    });
-  }
-
-  function destroyTripMap(mapEl) {
-    if (!mapEl || !mapEl._leaflet_map) return;
-    try {
-      mapEl._leaflet_map.remove();
-    } catch (e) {
-      /* ignore */
-    }
-    mapEl._leaflet_map = null;
-    mapEl.innerHTML = '';
-  }
+  // Trip details map (Leaflet via TripMapHelper)
 
   function destroyPlannedTripPopups() {
     document.querySelectorAll('.trip-details-modal-overlay').forEach(function (el) {
@@ -221,6 +109,7 @@
     });
   }
 
+  // Resolve route points then draw the details-modal map
   function initTripDetailsMap(modal, trip, orderedStops) {
     var section = modal.querySelector('#tripDetailsMapSection');
     var mapEl = modal.querySelector('#tripDetailsMap');
@@ -229,8 +118,17 @@
 
     destroyTripMap(mapEl);
 
+    function showMapUnavailable() {
+      section.classList.remove('hidden');
+      noteEl.classList.remove('hidden');
+      noteEl.textContent = plannedTripsT(
+        'mapUnavailable',
+        'Map could not be loaded. Check your connection or try again later.'
+      );
+    }
+
     if (typeof L === 'undefined') {
-      section.classList.add('hidden');
+      showMapUnavailable();
       return Promise.resolve();
     }
 
@@ -248,7 +146,7 @@
         noteEl.textContent = '';
         noteEl.classList.add('hidden');
         if (points.length === 0) {
-          section.classList.add('hidden');
+          showMapUnavailable();
           return;
         }
         var startResolved = points.some(function (p) {
@@ -263,186 +161,25 @@
       })
       .catch(function (err) {
         console.error('Trip map:', err);
-        noteEl.textContent = '';
-        noteEl.classList.add('hidden');
-        section.classList.add('hidden');
+        showMapUnavailable();
       });
   }
 
-  function renderTripMap(modal, mapEl, noteEl, section, points, showPartialNote) {
-    section.classList.remove('hidden');
-
-    var latlngs = points.map(function (p) {
-      return [p.lat, p.lng];
-    });
-    var accent = getComputedStyle(modal).getPropertyValue('--pt-popup-accent').trim() || '#6366f1';
-
-    var map = L.map(mapEl, {
-      zoomControl: true,
-      scrollWheelZoom: false
-    });
-    mapEl._leaflet_map = map;
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-    }).addTo(map);
-
-    if (latlngs.length >= 2) {
-      L.polyline(latlngs, {
-        color: accent,
-        weight: 3,
-        opacity: 0.92
-      }).addTo(map);
-    }
-
-    points.forEach(function (p) {
-      var isStart = p.kind === 'start';
-      var popupEl = document.createElement('div');
-      if (isStart) {
-        popupEl.style.textAlign = 'center';
-        var sub = document.createElement('div');
-        sub.style.fontSize = '0.72rem';
-        sub.style.fontWeight = '600';
-        sub.style.textTransform = 'uppercase';
-        sub.style.letterSpacing = '0.06em';
-        sub.style.color = 'var(--pt-popup-muted, #64748b)';
-        sub.textContent = plannedTripsT('mapStartMarkerSubtitle', 'Starting city');
-        var name = document.createElement('div');
-        name.style.fontWeight = '700';
-        name.style.fontSize = '1rem';
-        name.style.marginTop = '0.35rem';
-        name.style.color = 'var(--pt-popup-text, #0f172a)';
-        name.textContent = p.startCityName || (p.label && p.label.indexOf(': ') >= 0 ? p.label.split(': ').slice(1).join(': ') : p.label);
-        popupEl.appendChild(sub);
-        popupEl.appendChild(name);
-      } else {
-        popupEl.style.fontWeight = '600';
-        popupEl.style.fontSize = '0.9rem';
-        popupEl.textContent = p.label;
-      }
-      var markerOpts = isStart
-        ? {
-          radius: 11,
-          color: '#ffffff',
-          weight: 3,
-          fillColor: accent,
-          fillOpacity: 1
-        }
-        : {
-          radius: 8,
-          color: accent,
-          weight: 2,
-          fillColor: '#ffffff',
-          fillOpacity: 1
-        };
-      var marker = L.circleMarker([p.lat, p.lng], markerOpts)
-        .addTo(map)
-        .bindPopup(popupEl, { maxWidth: 260 });
-
-      if (isStart) {
-        var cityText = (p.startCityName && String(p.startCityName).trim()) || '';
-        if (cityText) {
-          var tip = document.createElement('div');
-          tip.className = 'trip-map-onmap-start-label';
-          var kSpan = document.createElement('span');
-          kSpan.className = 'trip-map-onmap-start-k';
-          kSpan.textContent = plannedTripsT('mapStartCityLabel', 'Start');
-          var citySpan = document.createElement('span');
-          citySpan.className = 'trip-map-onmap-start-city';
-          citySpan.textContent = cityText;
-          tip.appendChild(kSpan);
-          tip.appendChild(citySpan);
-          marker.bindTooltip(tip, {
-            permanent: true,
-            direction: 'top',
-            offset: [0, -8],
-            opacity: 1,
-            interactive: false,
-            className: 'trip-map-start-tooltip'
-          });
-        }
-      }
-    });
-
-    if (latlngs.length === 1) {
-      map.setView(latlngs[0], 6);
-    } else {
-      var hasStartPoint = points.some(function (p) {
-        return p.kind === 'start';
-      });
-      var pad = hasStartPoint ? [52, 52] : [28, 28];
-      try {
-        map.fitBounds(L.latLngBounds(latlngs), {
-          padding: pad,
-          maxZoom: 12
-        });
-      } catch (e) {
-        console.warn('fitBounds failed, using setView fallback', e);
-        map.setView(latlngs[0], 6);
-      }
-    }
-
-    setTimeout(function () {
-      if (!mapEl._leaflet_map) return;
-      try {
-        mapEl._leaflet_map.invalidateSize();
-        mapEl._leaflet_map.eachLayer(function (layer) {
-          try {
-            if (layer.openTooltip && layer.getTooltip && layer.getTooltip()) {
-              var tt = layer.getTooltip();
-              if (tt && tt.options && tt.options.permanent) {
-                layer.openTooltip();
-              }
-            }
-          } catch (e2) {
-            /* ignore per-layer */
-          }
-        });
-      } catch (e) {
-        /* ignore */
-      }
-    }, 120);
-
-    if (showPartialNote) {
-      noteEl.textContent = plannedTripsT(
-        'mapPartialRoute',
-        'Some stops could not be located; the line shows the cities we could find, in visit order.'
-      );
-      noteEl.classList.remove('hidden');
-    }
-
-    if (window.i18n && typeof window.i18n.applyToPage === 'function') {
-      window.i18n.applyToPage(section);
-    }
-
-    setTimeout(function () {
-      if (mapEl._leaflet_map) mapEl._leaflet_map.invalidateSize();
-    }, 450);
-  }
-
+  // Trip list API
   async function getTrips() {
-    // Get user_id from localStorage (set during login)
-    var userId = localStorage.getItem('user_id');
-    if (!userId) {
+    if (!localStorage.getItem('user_id')) {
       console.warn('No user_id found. User not logged in.');
       return [];
     }
 
     try {
-      var apiUrl = '/api/users/' + userId + '/planned-trips';
-      var response = await fetch(apiUrl);
+      var response = await fetch('/api/planned-trips');
 
       if (!response.ok) {
-        if (response.status === 404) {
-          // No trips found for this user
-          return [];
-        }
         throw new Error('API request failed: ' + response.status);
       }
 
       var data = await response.json();
-      // API returns array of planned trips directly
       var list = Array.isArray(data) ? data : [];
       return list.map(normalizeTrip);
     } catch (error) {
@@ -458,13 +195,13 @@
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete trip: ' + response.status);
+        throw new Error(plannedTripsT('deleteFailed', 'Failed to delete trip') + ': ' + response.status);
       }
 
       await render();
     } catch (error) {
       console.error('Error deleting trip:', error);
-      showError('Failed to delete trip: ' + error.message);
+      showError(plannedTripsT('deleteFailed', 'Failed to delete trip') + ': ' + error.message);
     }
   }
 
@@ -477,7 +214,7 @@
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update trip: ' + response.status);
+        throw new Error(plannedTripsT('updateFailed', 'Failed to update trip') + ': ' + response.status);
       }
 
       await render();
@@ -487,6 +224,7 @@
     }
   }
 
+  // List rendering
   function escapeHtml(str) {
     if (!str) return '';
     var div = document.createElement('div');
@@ -515,65 +253,111 @@
       '<button type="button" class="place-delete-btn trip-share" data-id="' + trip.id + '" title="' + escapeHtml(plannedTripsT('shareTrip', 'Share trip')) + '" aria-label="' + escapeHtml(plannedTripsT('shareTrip', 'Share trip')) + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>' +
       '</button>' +
-      '<button type="button" class="place-delete-btn trip-edit" data-id="' + trip.id + '" title="Edit" aria-label="Edit trip">' +
+      '<button type="button" class="place-delete-btn trip-edit" data-id="' + trip.id + '" title="' + escapeHtml(plannedTripsT('editTripAria', 'Edit trip')) + '" aria-label="' + escapeHtml(plannedTripsT('editTripAria', 'Edit trip')) + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>' +
       '</button>' +
-      '<button type="button" class="place-delete-btn trip-delete" data-id="' + trip.id + '" title="Delete" aria-label="Delete trip">' +
+      '<button type="button" class="place-delete-btn trip-delete" data-id="' + trip.id + '" title="' + escapeHtml(plannedTripsT('deleteTripAria', 'Delete trip')) + '" aria-label="' + escapeHtml(plannedTripsT('deleteTripAria', 'Delete trip')) + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>' +
       '</button>' +
       '</div>' +
       '</div>' +
       '<div class="log-date">' + escapeHtml(trip.startDate) + ' – ' + escapeHtml(trip.endDate) + '</div>' +
-      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + ' · ' + escapeHtml(plannedTripsT('people', 'People')) + ': ' + escapeHtml(trip.people || 1) + (trip.isBooked ? ' · ' + escapeHtml(plannedTripsT('booked', 'Booked')) : '') + '</p>' +
+      '<p class="log-notes">' + escapeHtml(stopsSummaryLine(trip.stopCount || 0)) + ' · ' + escapeHtml(plannedTripsT('people', 'People')) + ': ' + escapeHtml(trip.people || 1) + (trip.isBooked ? ' · ' + escapeHtml(plannedTripsT('booked', 'Booked')) : '') + (trip.sharedFromUsername ? ' · ' + escapeHtml(plannedTripsT('shareFromUser', 'From {{user}}').replace('{{user}}', trip.sharedFromUsername)) : '') + '</p>' +
       '</div>' +
       '</div>'
     );
   }
 
-  function sortTripsByStartDate(trips) {
+  function todayIsoLocal() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  // Past trip
+  function isPastTrip(trip) {
+    if (!trip || !trip.endDateSort) return false;
+    return String(trip.endDateSort).slice(0, 10) < todayIsoLocal();
+  }
+
+  function sortTripsByStartDate(trips, descending) {
     return trips.slice().sort(function (a, b) {
       var tA = a.startDateSort ? new Date(a.startDateSort).getTime() : 0;
       var tB = b.startDateSort ? new Date(b.startDateSort).getTime() : 0;
-      return tA - tB;
+      return descending ? (tB - tA) : (tA - tB);
     });
   }
 
   async function render() {
-    var container = document.getElementById('tripCards');
+    var upcomingSection = document.getElementById('upcomingTripsSection');
+    var pastSection = document.getElementById('pastTripsSection');
+    var upcomingContainer = document.getElementById('tripCards');
+    var pastContainer = document.getElementById('pastTripCards');
     var emptyState = document.getElementById('emptyState');
-    if (!container || !emptyState) {
+    if (!upcomingContainer || !pastContainer || !emptyState || !upcomingSection || !pastSection) {
       if (window.markAppReady) window.markAppReady();
       return;
     }
 
     var trips = await getTrips();
-    var sortedTrips = sortTripsByStartDate(trips);
+    var upcoming = [];
+    var past = [];
+    trips.forEach(function (trip) {
+      if (isPastTrip(trip)) past.push(trip);
+      else upcoming.push(trip);
+    });
+    upcoming = sortTripsByStartDate(upcoming, false);
+    past = sortTripsByStartDate(past, true);
 
-    if (sortedTrips.length === 0) {
-      container.classList.add('hidden');
+    if (upcoming.length === 0 && past.length === 0) {
+      upcomingSection.classList.add('hidden');
+      pastSection.classList.add('hidden');
+      upcomingContainer.innerHTML = '';
+      pastContainer.innerHTML = '';
       emptyState.classList.remove('hidden');
       if (window.markAppReady) window.markAppReady();
       return;
     }
 
     emptyState.classList.add('hidden');
-    container.classList.remove('hidden');
-    container.innerHTML = sortedTrips.map(renderCard).join('');
+
+    if (upcoming.length) {
+      upcomingSection.classList.remove('hidden');
+      upcomingContainer.innerHTML = upcoming.map(renderCard).join('');
+    } else {
+      upcomingSection.classList.add('hidden');
+      upcomingContainer.innerHTML = '';
+    }
+
+    if (past.length) {
+      pastSection.classList.remove('hidden');
+      pastContainer.innerHTML = past.map(renderCard).join('');
+    } else {
+      pastSection.classList.add('hidden');
+      pastContainer.innerHTML = '';
+    }
+
+    if (window.i18n && typeof window.i18n.applyToPage === 'function') {
+      window.i18n.applyToPage(document.getElementById('tripLists') || document.body);
+    }
     if (window.markAppReady) window.markAppReady();
   }
 
+  // Card buttons
   function bindTripListActions() {
-    var container = document.getElementById('tripCards');
-    if (!container || container.dataset.tripListBound === '1') return;
-    container.dataset.tripListBound = '1';
-    container.addEventListener('click', function (e) {
+    var root = document.getElementById('tripLists');
+    if (!root || root.dataset.tripListBound === '1') return;
+    root.dataset.tripListBound = '1';
+    root.addEventListener('click', function (e) {
       var delBtn = e.target.closest('.trip-delete');
       if (delBtn) {
         e.preventDefault();
         e.stopPropagation();
         var did = parseInt(delBtn.getAttribute('data-id'), 10);
         if (Number.isNaN(did)) return;
-        showConfirm('Delete this trip?', function () { deleteTrip(did); });
+        showConfirm(plannedTripsT('deleteConfirm', 'Delete this trip?'), function () { deleteTrip(did); });
         return;
       }
       var bookedBtn = e.target.closest('.trip-booked');
@@ -610,6 +394,7 @@
     });
   }
 
+  // Inline edit modal
   function renumberEditStops(listEl) {
     if (!listEl) return;
     var rows = listEl.querySelectorAll('.trip-stop-card');
@@ -833,7 +618,7 @@
       place_name: place,
       country: trimOrNull(
         (window.Countries && window.Countries.getCode(countryIn)) ||
-          (countryIn && countryIn.value)
+        (countryIn && countryIn.value)
       ),
       arrival_date: fromDateInputVal(arrIn && arrIn.value),
       departure_date: fromDateInputVal(depIn && depIn.value),
@@ -1084,6 +869,7 @@
     }
   }
 
+  // Trip details modal
   function buildStopCard(stop, people, isLastStop, isBooked) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
@@ -1156,7 +942,7 @@
       destroyPlannedTripPopups();
 
       var response = await fetch('/api/planned-trips/' + tripId);
-      if (!response.ok) throw new Error('Failed to load trip details');
+      if (!response.ok) throw new Error(plannedTripsT('loadDetailsFailed', 'Failed to load trip details'));
       var trip = await response.json();
 
       var template = document.getElementById('tripDetailsModalTemplate');
@@ -1186,6 +972,16 @@
         if (startCityEl) startCityEl.textContent = trip.start_city;
       } else {
         if (startCityWrap) startCityWrap.classList.add('hidden');
+      }
+      var sharedByWrap = modal.querySelector('#tripDetailsSharedByWrap');
+      var sharedByEl = modal.querySelector('#tripDetailsSharedBy');
+      var sharerName = trip.shared_from_username
+        || (trip.shared_from_user_id ? ('#' + trip.shared_from_user_id) : '');
+      if (sharerName) {
+        if (sharedByWrap) sharedByWrap.classList.remove('hidden');
+        if (sharedByEl) sharedByEl.textContent = sharerName;
+      } else if (sharedByWrap) {
+        sharedByWrap.classList.add('hidden');
       }
 
       var stops = (trip.stops || []).slice().sort(function (a, b) { return (a.stop_order || 0) - (b.stop_order || 0); });
@@ -1231,16 +1027,16 @@
       document.addEventListener('keydown', handleEsc);
     } catch (error) {
       console.error('Error loading trip details:', error);
-      showError('Failed to load trip details: ' + error.message);
+      showError(plannedTripsT('loadDetailsFailed', 'Failed to load trip details') + ': ' + error.message);
     }
   }
 
+  // Sharing: public link + user-to-user invitation inbox
   function absoluteShareUrl(relativePath) {
     if (!relativePath) return '';
     if (/^https?:\/\//i.test(relativePath)) return relativePath;
-    var base = (window.API_BASE_URL && String(window.API_BASE_URL).length)
-      ? String(window.API_BASE_URL).replace(/\/$/, '')
-      : (window.location.origin || '');
+    // Public /share page is served with the frontend origin
+    var base = window.location.origin || '';
     if (relativePath.charAt(0) === '/') return base + relativePath;
     return base + '/' + relativePath;
   }
@@ -1441,16 +1237,20 @@
         return;
       }
       var invitations = await response.json();
+      section.classList.remove('hidden');
       if (!Array.isArray(invitations) || invitations.length === 0) {
-        section.classList.add('hidden');
-        inbox.innerHTML = '';
+        inbox.innerHTML =
+          '<p class="muted share-inbox-empty">' +
+          escapeHtml(plannedTripsT('shareInboxEmpty', 'No pending trip invitations.')) +
+          '</p>';
         return;
       }
 
-      section.classList.remove('hidden');
       inbox.innerHTML = invitations.map(function (inv) {
         var title = inv.source_trip && inv.source_trip.title ? inv.source_trip.title : 'Trip';
-        var fromLabel = plannedTripsT('shareFromUser', 'From {{user}}').replace('{{user}}', inv.from_username || 'User');
+        var sharer = inv.from_username
+          || (inv.from_user_id != null ? ('#' + inv.from_user_id) : 'User');
+        var fromLabel = plannedTripsT('shareFromUser', 'From {{user}}').replace('{{user}}', String(sharer));
         return (
           '<div class="share-inbox-card" data-invitation-id="' + inv.id + '">' +
           '<div><strong>' + escapeHtml(title) + '</strong><br><span class="muted">' + escapeHtml(fromLabel) + '</span></div>' +
@@ -1495,6 +1295,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // List click handlers + share inbox
     bindTripListActions();
     bindShareInboxActions();
     loadShareInbox();

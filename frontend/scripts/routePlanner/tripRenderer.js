@@ -93,7 +93,7 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
         return;
     }
 
-    const html = renderTripDetails(data.draft_plan, data.userPeople || 1);
+    const html = renderTripDetails(data.draft_plan, data.userPeople || 1, data.userTripTitle);
 
     tripResults.innerHTML = html;
     resultsContainer.style.display = 'block';
@@ -107,21 +107,24 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
                 data.userStartDate,
                 data.userEndDate,
                 data.userPeople,
-                { onSaved: options.onSaved }
+                { onSaved: options.onSaved, tripTitle: data.userTripTitle }
             );
         });
     }
     bindRetryButton(tripResults, options.onRetry);
 }
 
-export function renderTripDetails(trip, people = 1) {
+export function renderTripDetails(trip, people = 1, tripTitle = '') {
     const dateRange = trip.startDate && trip.endDate
         ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}`
         : `${trip.tripLengthDays || 0} days`;
+    const heading = (tripTitle && String(tripTitle).trim())
+        || trip.startingPoint
+        || 'Your Trip';
 
     let html = `
         <div class="trip-header">
-            <h3>${escapeHtml(trip.startingPoint || 'Your Trip')}</h3>
+            <h3>${escapeHtml(heading)}</h3>
             <span class="trip-length">${dateRange}</span>
         </div>
     `;
@@ -248,9 +251,10 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
         const startDate = userStartDate ? new Date(userStartDate) : new Date();
         const endDate = userEndDate ? new Date(userEndDate) : new Date(startDate.getTime() + (trip.tripLengthDays || 0) * 86400000);
 
+        const customTitle = options.tripTitle && String(options.tripTitle).trim();
         const tripData = {
             user_id: parseInt(userId),
-            title: trip.startingPoint || 'My Trip',
+            title: customTitle || trip.startingPoint || 'My Trip',
             start_date: startDate.toISOString().split('T')[0],
             end_date: endDate.toISOString().split('T')[0],
             start_city: trip.startingPoint || null,

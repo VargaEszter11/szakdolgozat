@@ -1,6 +1,6 @@
 (function () {
-  var NOMINATIM_DELAY_MS = 1100;
   var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
+  var H = window.TripMapHelper;
 
   function plannedTripsT(key, fallback) {
     if (window.i18n && typeof window.i18n.t === 'function') {
@@ -34,127 +34,16 @@
     return label || transport;
   }
 
-  function sleep(ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  function nominatimGeocode(query) {
-    if (!query || !String(query).trim()) return Promise.resolve(null);
-    var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
-      q: String(query).trim(),
-      format: 'json',
-      limit: '1'
-    });
-    return fetch(url, { headers: { Accept: 'application/json' } })
-      .then(function (res) { return res.ok ? res.json() : null; })
-      .then(function (data) { return Array.isArray(data) && data.length ? data[0] : null; })
-      .catch(function () { return null; });
-  }
-
   function placeDisplay(placeName, country) {
-    return window.Countries && window.Countries.formatPlace
-      ? window.Countries.formatPlace(placeName, country)
-      : (placeName || '') + (country ? ', ' + country : '');
-  }
-
-  function labelForStop(stop) {
-    var ord = stop.stop_order != null ? String(stop.stop_order) : '?';
-    return ord + '. ' + placeDisplay(stop.place_name, stop.country);
+    return H.placeDisplay(placeName, country);
   }
 
   function buildAllRoutePoints(trip, orderedStops) {
-    var points = [];
-    var hadNetworkRequest = false;
-    var chain = Promise.resolve();
-
-    function beforeNetwork() {
-      var p = hadNetworkRequest ? sleep(NOMINATIM_DELAY_MS) : Promise.resolve();
-      hadNetworkRequest = true;
-      return p;
-    }
-
-    if (trip.start_city && String(trip.start_city).trim()) {
-      var startQuery = String(trip.start_city).trim();
-      chain = chain
-        .then(function () {
-          return beforeNetwork().then(function () { return nominatimGeocode(startQuery); });
-        })
-        .then(function (hit) {
-          if (hit) {
-            points.push({
-              lat: parseFloat(hit.lat),
-              lng: parseFloat(hit.lon),
-              label: plannedTripsT('mapStartCityLabel', 'Start') + ': ' + startQuery,
-              kind: 'start',
-              startCityName: startQuery
-            });
-          }
-        });
-    }
-
-    for (var i = 0; i < orderedStops.length; i++) {
-      (function (stop) {
-        chain = chain.then(function () {
-          var lat = stop.latitude;
-          var lon = stop.longitude;
-          if (lat != null && lon != null && !isNaN(lat) && !isNaN(lon)) {
-            points.push({ lat: lat, lng: lon, label: labelForStop(stop), kind: 'stop' });
-            return undefined;
-          }
-          var q = (stop.place_name || '').trim();
-          if (!q) return undefined;
-          if (stop.country) q += ', ' + countryDisplay(stop.country);
-          return beforeNetwork()
-            .then(function () { return nominatimGeocode(q); })
-            .then(function (hit) {
-              if (hit) {
-                points.push({
-                  lat: parseFloat(hit.lat),
-                  lng: parseFloat(hit.lon),
-                  label: labelForStop(stop),
-                  kind: 'stop'
-                });
-              }
-            });
-        });
-      })(orderedStops[i]);
-    }
-
-    return chain.then(function () { return points; });
+    return H.buildAllRoutePoints(trip, orderedStops, plannedTripsT);
   }
 
   function renderTripMap(rootEl, mapEl, noteEl, section, points, showPartialNote) {
-    section.classList.remove('hidden');
-    var latlngs = points.map(function (p) { return [p.lat, p.lng]; });
-    var accentHost = rootEl || document.querySelector('.shared-trip-view') || document.documentElement;
-    var accent = getComputedStyle(accentHost).getPropertyValue('--pt-popup-accent').trim() || '#6366f1';
-    var map = L.map(mapEl, { zoomControl: true, scrollWheelZoom: false });
-    mapEl._leaflet_map = map;
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    if (latlngs.length >= 2) {
-      L.polyline(latlngs, { color: accent, weight: 3, opacity: 0.92 }).addTo(map);
-    }
-    points.forEach(function (p) {
-      L.circleMarker([p.lat, p.lng], {
-        radius: p.kind === 'start' ? 11 : 8,
-        color: p.kind === 'start' ? '#ffffff' : accent,
-        weight: p.kind === 'start' ? 3 : 2,
-        fillColor: p.kind === 'start' ? accent : '#ffffff',
-        fillOpacity: 1
-      }).addTo(map).bindPopup(p.label);
-    });
-    if (latlngs.length === 1) map.setView(latlngs[0], 6);
-    else map.fitBounds(L.latLngBounds(latlngs), { padding: [28, 28], maxZoom: 12 });
-    if (showPartialNote) {
-      noteEl.textContent = plannedTripsT('mapPartialRoute', 'Some stops could not be located.');
-      noteEl.classList.remove('hidden');
-    }
-    setTimeout(function () { if (mapEl._leaflet_map) mapEl._leaflet_map.invalidateSize(); }, 200);
+    return H.renderTripMap(rootEl, mapEl, noteEl, section, points, showPartialNote, plannedTripsT);
   }
 
   function buildStopCard(stop) {
@@ -205,6 +94,7 @@
     if (errBox) errBox.classList.remove('hidden');
   }
 
+  //Share token
   function getTokenFromUrl() {
     try {
       return new URLSearchParams(window.location.search).get('token') || '';
@@ -257,6 +147,7 @@
         window.i18n.applyToPage(document.body);
       }
 
+      // Prefer stored start/stop coordinates from the API
       if (typeof L !== 'undefined') {
         var rootEl = document.getElementById('sharedTripContent');
         var mapEl = document.getElementById('sharedTripMap');
@@ -265,6 +156,24 @@
         var points = await buildAllRoutePoints(trip, stops);
         if (points.length) {
           renderTripMap(rootEl, mapEl, noteEl, section, points, points.filter(function (p) { return p.kind === 'stop'; }).length < stops.length);
+        } else if (section && noteEl) {
+          section.classList.remove('hidden');
+          noteEl.classList.remove('hidden');
+          noteEl.textContent = plannedTripsT(
+            'mapUnavailable',
+            'Map could not be loaded. Check your connection or try again later.'
+          );
+        }
+      } else {
+        var mapSection = document.getElementById('sharedTripMapSection');
+        var mapNote = document.getElementById('sharedTripMapNote');
+        if (mapSection && mapNote) {
+          mapSection.classList.remove('hidden');
+          mapNote.classList.remove('hidden');
+          mapNote.textContent = plannedTripsT(
+            'mapUnavailable',
+            'Map could not be loaded. Check your connection or try again later.'
+          );
         }
       }
     } catch (err) {

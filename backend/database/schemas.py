@@ -177,12 +177,13 @@ class TripStopResponse(TripStopBase):
 
 
 # ============= Planned Trip Schemas =============
-
 class PlannedTripBase(BaseModel):
     title: str
     start_date: Optional[dt.date] = None
     end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
+    start_latitude: Optional[float] = None
+    start_longitude: Optional[float] = None
     people: int = 1
     is_booked: bool = False
 
@@ -196,6 +197,8 @@ class PlannedTripUpdate(BaseModel):
     start_date: Optional[dt.date] = None
     end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
+    start_latitude: Optional[float] = None
+    start_longitude: Optional[float] = None
     people: Optional[int] = None
     is_booked: Optional[bool] = None
 
@@ -203,6 +206,8 @@ class PlannedTripUpdate(BaseModel):
 class PlannedTripResponse(PlannedTripBase):
     id: int
     user_id: int
+    shared_from_user_id: Optional[int] = None
+    shared_from_username: Optional[str] = None
     stops: List[TripStopResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
@@ -229,6 +234,7 @@ class TripShareInvitationAction(BaseModel):
 
 
 class TripShareSourceSummary(BaseModel):
+    """Compact trip info embedded in invitation responses for the share inbox cards."""
     id: int
     title: str
     start_date: Optional[dt.date] = None
@@ -252,10 +258,13 @@ class TripShareInvitationResponse(BaseModel):
 
 
 class SharedTripPublicResponse(BaseModel):
+    """Unauthenticated payload for shared_trip.html (no owner ids)."""
     title: str
     start_date: Optional[dt.date] = None
     end_date: Optional[dt.date] = None
     start_city: Optional[str] = None
+    start_latitude: Optional[float] = None
+    start_longitude: Optional[float] = None
     people: int = 1
     stops: List[TripStopResponse] = []
 

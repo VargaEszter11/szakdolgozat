@@ -136,7 +136,7 @@
         ),
         page: /planned_trips\.html/,
         goto: '/pages/routePlanner/planned_trips.html',
-        selectors: ['#tripCards', '#shareInboxSection', '.main-page-home-content-inner'],
+        selectors: ['#tripLists', '#tripCards', '#shareInboxSection', '.main-page-home-content-inner'],
         mode: 'next',
       },
       {

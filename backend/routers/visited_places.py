@@ -82,7 +82,9 @@ def list_visited_places(
 ):
     """List visited places for the authenticated user."""
     del skip, limit
-    return crud.get_user_visited_places(db, user_id=current_user_id(current_user))
+    uid = current_user_id(current_user)
+    crud.sync_completed_booked_trips_for_user(db, uid)
+    return crud.get_user_visited_places(db, user_id=uid)
 
 
 @router.put("/visited-places/{place_id}", response_model=schemas.VisitedPlaceResponse)

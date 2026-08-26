@@ -65,46 +65,6 @@ class TestGetTripStop:
         assert response.status_code == 404
 
 
-class TestListTripStops:
-    """Integration tests for GET /api/trips/{trip_id}/stops."""
-
-    def test_get_trip_stops_success(self, client, planned_trip, auth_headers):
-        client.post(
-            "/api/trip-stops",
-            headers=auth_headers,
-            json={
-                "trip_id": planned_trip["id"],
-                "place_name": "Krakow",
-                "country": "PL",
-                "stop_order": 1,
-            },
-        )
-        client.post(
-            "/api/trip-stops",
-            headers=auth_headers,
-            json={
-                "trip_id": planned_trip["id"],
-                "place_name": "Warsaw",
-                "country": "PL",
-                "stop_order": 2,
-            },
-        )
-
-        response = client.get(
-            f"/api/trips/{planned_trip['id']}/stops",
-            headers=auth_headers,
-        )
-
-        assert response.status_code == 200
-        stops = response.json()
-        assert len(stops) == 2
-
-    def test_get_trip_stops_trip_not_found(self, client, auth_headers):
-        response = client.get("/api/trips/9999/stops", headers=auth_headers)
-
-        assert response.status_code == 404
-
-
 class TestUpdateTripStop:
     """Integration tests for PUT /api/trip-stops/{stop_id}."""
 

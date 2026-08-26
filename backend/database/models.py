@@ -45,7 +45,12 @@ class User(Base):
     )
 
     # Relationships
-    planned_trips = relationship("PlannedTrip", back_populates="user", cascade="all, delete-orphan")
+    planned_trips = relationship(
+        "PlannedTrip",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="PlannedTrip.user_id",
+    )
     visited_places = relationship("VisitedPlace", back_populates="user", cascade="all, delete-orphan")
     feedbacks = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
 
@@ -68,7 +73,7 @@ class PasswordResetToken(Base):
 
 
 class PlannedTrip(Base):
-    """Planned trip model for user's planned trips"""
+    """User itinerary shown on the Planned Trips page (title, dates, start city, stops)."""
     __tablename__ = "planned_trips"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -77,16 +82,23 @@ class PlannedTrip(Base):
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     start_city = Column(Text, nullable=True)
+    start_latitude = Column(Float, nullable=True)
+    start_longitude = Column(Float, nullable=True)
     people = Column(Integer, nullable=False, default=1, server_default="1")
     is_booked = Column(Boolean, nullable=False, default=False, server_default="false")
+    # Set when this trip was created by accepting a user-to-user share invitation
+    shared_from_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
     # Relationships
-    user = relationship("User", back_populates="planned_trips")
+    user = relationship("User", back_populates="planned_trips", foreign_keys=[user_id])
+    shared_from_user = relationship("User", foreign_keys=[shared_from_user_id])
     stops = relationship("PlannedTripStop", back_populates="trip", cascade="all, delete-orphan")
 
 
 class PlannedTripStop(Base):
-    """Individual stop within a planned trip"""
+    """One city/stop on a planned trip; latitude/longitude set when the stop is created."""
     __tablename__ = "planned_trip_stops"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -109,7 +121,7 @@ class PlannedTripStop(Base):
 
 
 class TripShareLink(Base):
-    """Public read-only share link for a planned trip."""
+    """Public read-only share link (?token=) for a planned trip; deactivate via is_active."""
     __tablename__ = "trip_share_links"
     __table_args__ = (
         Index("idx_trip_share_links_token", "share_token", unique=True),
@@ -128,7 +140,7 @@ class TripShareLink(Base):
 
 
 class TripShareInvitation(Base):
-    """In-app trip share invitation (inbox accept/decline flow)."""
+    """In-app share invite; accept copies the trip and sets planned_trips.shared_from_user_id."""
     __tablename__ = "trip_share_invitations"
     __table_args__ = (
         Index("idx_trip_share_invitations_to_status", "to_user_id", "status"),
