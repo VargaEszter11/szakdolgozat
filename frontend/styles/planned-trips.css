@@ -306,7 +306,7 @@
     margin-bottom: 0.75rem;
 }
 
-.planned-trips-trip-popup .trip-details-content .trip-stops-list + .btn-add {
+.planned-trips-trip-popup .trip-details-content .trip-stops-list+.btn-add {
     margin-top: 0.35rem;
     margin-bottom: 0.15rem;
 }
@@ -508,31 +508,6 @@
     .planned-trips-trip-popup .trip-details-content {
         padding: 1rem;
     }
-}
-
-.planner-db-toggle-wrap {
-    margin-bottom: 1.25rem;
-    padding: 1rem 1.25rem;
-}
-
-.planner-db-toggle {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin: 0;
-}
-
-.planner-db-toggle input {
-    margin-top: 0.2rem;
-    flex-shrink: 0;
-}
-
-.planner-db-toggle-hint {
-    margin: 0.5rem 0 0;
-    font-size: 0.9rem;
-    line-height: 1.45;
 }
 
 .share-inbox-section {

@@ -19,7 +19,7 @@ async def test_resolve_direct_ground_when_close(monkeypatch):
     monkeypatch.setattr(
         pa,
         "nearest_airport",
-        AsyncMock(return_value={"iata": "BUD", "city": "Budapest", "country": "HU", "distance_km": 10}),
+        lambda lat, lon, db=None: {"iata": "BUD", "city": "Budapest", "country": "HU", "distance_km": 10},
     )
     monkeypatch.setattr(pa, "can_use_ground_transport", lambda a, b: True)
 
@@ -54,7 +54,7 @@ async def test_resolve_via_airport_when_far(monkeypatch):
     monkeypatch.setattr(
         pa,
         "nearest_airport",
-        AsyncMock(return_value={"iata": "SZG", "city": "Salzburg", "country": "AT", "distance_km": 50}),
+        lambda lat, lon, db=None: {"iata": "SZG", "city": "Salzburg", "country": "AT", "distance_km": 50},
     )
 
     # Force "not worth direct ground from current" by failing ground-area check from BUD,
@@ -99,7 +99,7 @@ async def test_resolve_none_when_train_bus_but_too_far(monkeypatch):
     monkeypatch.setattr(
         pa,
         "nearest_airport",
-        AsyncMock(return_value={"iata": "FCO", "city": "Rome", "country": "IT", "distance_km": 20}),
+        lambda lat, lon, db=None: {"iata": "FCO", "city": "Rome", "country": "IT", "distance_km": 20},
     )
     monkeypatch.setattr(pa, "calculate_distance_km", lambda *args: 900.0)
     monkeypatch.setattr(pa, "can_use_ground_transport", lambda a, b: True)
@@ -130,7 +130,7 @@ async def test_resolve_none_for_flight_only_off_airport(monkeypatch):
     monkeypatch.setattr(
         pa,
         "nearest_airport",
-        AsyncMock(return_value={"iata": "SZG", "city": "Salzburg", "country": "AT", "distance_km": 50}),
+        lambda lat, lon, db=None: {"iata": "SZG", "city": "Salzburg", "country": "AT", "distance_km": 50},
     )
     monkeypatch.setattr(pa, "calculate_distance_km", lambda *args: 400.0)
     monkeypatch.setattr(pa, "can_use_ground_transport", lambda a, b: True)

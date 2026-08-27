@@ -47,6 +47,7 @@ def is_forbidden(city_name: str, country_name: str, visited_cities: set, visited
 
 
 def place_matches_candidate(place: str, candidate: dict) -> bool:
+    """True when a user-typed place matches a route or off-airport candidate."""
     place_city = extract_city(place)
     if not place_city:
         return False

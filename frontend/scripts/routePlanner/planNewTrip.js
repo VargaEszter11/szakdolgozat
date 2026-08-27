@@ -1,4 +1,4 @@
-import { displayResults, showError } from './tripRenderer.js';
+import { displayResults, showError, planNewTripT, localizePlannerErrorDetail } from './tripRenderer.js';
 
 const API_BASE_URL = window.API_BASE_URL || '';
 
@@ -7,39 +7,13 @@ function plannerSessionApi() {
 }
 
 function loadPlannerSession() {
-    const api = plannerSessionApi();
-    if (api) return api.load();
-    try {
-        const raw = sessionStorage.getItem('planner_generation_session_v1');
-        return raw ? JSON.parse(raw) : null;
-    } catch (err) {
-        return null;
-    }
+    return window.PlannerSession ? window.PlannerSession.load() : null;
 }
-
 function savePlannerSession(patch) {
-    const api = plannerSessionApi();
-    if (api) return api.save(patch);
-    try {
-        const current = loadPlannerSession() || {};
-        sessionStorage.setItem(
-            'planner_generation_session_v1',
-            JSON.stringify({ ...current, ...patch, updatedAt: Date.now() })
-        );
-    } catch (err) {
-        console.warn('Could not persist planner session:', err);
-    }
+    if (window.PlannerSession) return window.PlannerSession.save(patch);
 }
-
 function clearPlannerSession() {
-    const api = plannerSessionApi();
-    if (api) {
-        api.clear();
-        return;
-    }
-    try {
-        sessionStorage.removeItem('planner_generation_session_v1');
-    } catch (err) { /* ignore */ }
+    if (window.PlannerSession) window.PlannerSession.clear();
 }
 
 function clearPlannerResults() {
@@ -64,6 +38,7 @@ function resetPlannerFormFields() {
     setEmpty('startingCity');
     setEmpty('preferences');
     setEmpty('placesList');
+    setEmpty('tripTitle');
 
     const people = document.getElementById('people');
     if (people) {
@@ -95,10 +70,20 @@ function resetPlannerFormFields() {
 }
 
 function resetPlannerUi() {
+    if (activeGenerationAbort) {
+        try { activeGenerationAbort.abort(); } catch (_) { }
+        activeGenerationAbort = null;
+    }
+    if (window.__plannerBackgroundAbort) {
+        try { window.__plannerBackgroundAbort.abort(); } catch (_) { }
+        window.__plannerBackgroundAbort = null;
+    }
     generationInFlight = false;
+    window.__plannerGenerationRunning = false;
     clearPlannerSession();
     resetPlannerFormFields();
     clearPlannerResults();
+    selectPlanType('random');
     const generateBtn = document.getElementById('generateBtn');
     if (generateBtn) generateBtn.disabled = false;
 }
@@ -110,8 +95,8 @@ const ENDPOINTS = {
 };
 
 let selectedPlan = 'random';
-let savedVisitedPlaces = [];
 let generationInFlight = false;
+let activeGenerationAbort = null;
 
 function useTravelLogFromDb() {
     const el = document.getElementById('useTravelLogInPlanner');
@@ -149,6 +134,18 @@ function refreshHomeCityButton() {
     const { key, text } = homeCityButtonLabel();
     label.setAttribute('data-i18n', key);
     label.textContent = text;
+}
+
+async function userHasSavedVisitedPlaces(userId) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/users/${userId}/visited-places`);
+        if (!res.ok) return null;
+        const places = await res.json();
+        return Array.isArray(places) && places.length > 0;
+    } catch (err) {
+        console.warn('Could not check saved visited places:', err);
+        return null;
+    }
 }
 
 async function saveHomeCity(userId, city) {
@@ -199,9 +196,8 @@ async function loadHomeCity() {
             const tripResults = document.getElementById('tripResults');
             const resultsContainer = document.getElementById('resultsContainer');
             if (tripResults && resultsContainer) {
-                const t = window.i18n ? window.i18n.t.bind(window.i18n) : (k, f) => f;
                 showError(
-                    t('planNewTrip.homeCityRequired', 'Type a starting city first, then click again to save it as your home city.'),
+                    planNewTripT('homeCityRequired', 'Type a starting city first, then click again to save it as your home city.'),
                     '',
                     tripResults,
                     resultsContainer
@@ -217,32 +213,42 @@ async function loadHomeCity() {
             refreshHomeCityButton();
         } catch (err) {
             console.warn('Could not save home city:', err);
+            const tripResults = document.getElementById('tripResults');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const msg = planNewTripT('homeCitySaveFailed', 'Could not save home city. Please try again.');
+            if (tripResults && resultsContainer) {
+                showError(msg, (err && err.message) || '', tripResults, resultsContainer);
+            } else if (typeof window.showError === 'function') {
+                window.showError(msg);
+            }
         } finally {
             btn.disabled = false;
         }
     });
 }
 
-async function loadSavedPlaces() {
-    const userId = localStorage.getItem('user_id');
-    if (!userId) return;
-    try {
-        const res = await fetch(`${API_BASE_URL}/api/users/${userId}/visited-places`);
-        if (res.ok) {
-            const places = await res.json();
-            if (Array.isArray(places) && places.length > 0) {
-                savedVisitedPlaces = [...new Set(
-                    places.map(p => {
-                        const name = p.place_name || '';
-                        const country = p.country || '';
-                        return country ? `${name}, ${country}` : name;
-                    }).filter(n => n)
-                )];
-            }
-        }
-    } catch (err) {
-        console.warn('Could not load visited places:', err);
+function patchStalePlannerSession(session) {
+    if (!session || session.status !== 'generating' || !session.requestBody) {
+        return session;
     }
+    const formWantsDb = session.form?.useTravelLog !== false;
+    const body = session.requestBody;
+    if (!formWantsDb || body.userId != null) {
+        return session;
+    }
+    const plan = session.selectedPlan;
+    if (plan !== 'visited' && plan !== 'unvisited') {
+        return session;
+    }
+    const uid = localStorage.getItem('user_id');
+    const parsed = uid ? parseInt(uid, 10) : NaN;
+    if (!Number.isFinite(parsed)) {
+        return session;
+    }
+    body.userId = parsed;
+    savePlannerSession({ requestBody: body });
+    session.requestBody = body;
+    return session;
 }
 
 function updatePlacesField() {
@@ -306,12 +312,13 @@ function initDatePickers() {
         ...opts,
         onChange: function (selectedDates, dateStr) {
             if (!dateStr || !endDatePicker) return;
-            endDatePicker.set('minDate', dateStr);
+            const minEnd = dayAfterIso(dateStr);
+            if (minEnd) endDatePicker.set('minDate', minEnd);
             const endVal = endDatePicker.input.value || '';
-            if (!endVal || endVal < dateStr) {
-                endDatePicker.setDate(dateStr, true);
+            if (!endVal || endVal <= dateStr) {
+                endDatePicker.setDate(minEnd, true);
             }
-            endDatePicker.jumpToDate(dateStr, true);
+            endDatePicker.jumpToDate(minEnd || dateStr, true);
         }
     });
 
@@ -321,9 +328,21 @@ function initDatePickers() {
     );
 }
 
+function dayAfterIso(isoDate) {
+    if (!isoDate) return null;
+    const d = new Date(String(isoDate).trim() + 'T12:00:00');
+    if (Number.isNaN(d.getTime())) return null;
+    d.setDate(d.getDate() + 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
 function syncLinkedDatePickers(startValue, endValue) {
     const start = (startValue || '').trim();
     const end = (endValue || '').trim();
+    const minEnd = dayAfterIso(start);
 
     if (startDatePicker) {
         if (start) {
@@ -335,10 +354,11 @@ function syncLinkedDatePickers(startValue, endValue) {
     }
 
     if (endDatePicker) {
-        if (start) endDatePicker.set('minDate', start);
+        if (minEnd) endDatePicker.set('minDate', minEnd);
         else endDatePicker.set('minDate', null);
 
-        const resolvedEnd = end && (!start || end >= start) ? end : (start || '');
+        // End must be strictly after start (planner cannot do same-day trips).
+        const resolvedEnd = end && (!start || end > start) ? end : (minEnd || '');
         if (resolvedEnd) {
             endDatePicker.setDate(resolvedEnd, false);
             endDatePicker.jumpToDate(resolvedEnd, true);
@@ -399,10 +419,29 @@ function persistFormOnly() {
     });
 }
 
+function scrollPlannerResultsIntoView() {
+    const target =
+        document.getElementById('resultsContainer') ||
+        document.getElementById('tripResults');
+    if (!target) return;
+    // Wait a frame so the results block is visible before scrolling.
+    requestAnimationFrame(function () {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // Register before any await so the travel-log toggle hook can find them.
+    window.onTravelLogPlannerPrefChanged = () => {
+        refreshPlannerDbHints();
+        persistFormOnly();
+    };
+    window.onTravelLogPlannerPrefLoaded = () => refreshPlannerDbHints();
+
     const form = document.getElementById('tripPlanForm');
     trackFilledInputs();
     initDatePickers();
+    refreshPlannerDbHints();
     const loadingState = document.getElementById('loadingState');
     const resultsContainer = document.getElementById('resultsContainer');
     const tripResults = document.getElementById('tripResults');
@@ -422,22 +461,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultOptions = () => ({
         onRetry: retryGeneration,
         onSaved: () => {
-            resetPlannerUi();
+            // Clear planner session before redirect to planned trips.
+            clearPlannerSession();
         },
-        onCancel: () => {
-            resetPlannerUi();
-        }
     });
 
     async function runGeneration(planType, body, meta) {
-        if (generationInFlight) return;
+        if (generationInFlight || window.__plannerGenerationRunning) return;
         generationInFlight = true;
+        window.__plannerGenerationRunning = true;
+
+        if (window.__plannerBackgroundAbort) {
+            try { window.__plannerBackgroundAbort.abort(); } catch (_) { /* ignore */ }
+            window.__plannerBackgroundAbort = null;
+        }
+
+        if (activeGenerationAbort) {
+            try { activeGenerationAbort.abort(); } catch (_) { /* ignore */ }
+        }
+        activeGenerationAbort = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const generationId = Date.now();
 
         savePlannerSession({
             status: 'generating',
             selectedPlan: planType,
             form: readFormSnapshot(),
             requestBody: body,
+            generationId: generationId,
             resultData: null,
             errorMessage: null,
             errorDetails: null,
@@ -448,14 +498,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         resultsContainer.style.display = 'none';
         generateBtn.disabled = true;
         const originalBtnContent = generateBtn.innerHTML;
-        generateBtn.textContent = window.i18n ? window.i18n.t('planNewTrip.generating') : 'Generating...';
+        generateBtn.textContent = planNewTripT('generating', 'Generating...');
 
         try {
-            const response = await fetch(`${API_BASE_URL}${ENDPOINTS[planType]}`, {
+            const fetchOpts = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
-            });
+            };
+            if (activeGenerationAbort) fetchOpts.signal = activeGenerationAbort.signal;
+
+            const response = await fetch(`${API_BASE_URL}${ENDPOINTS[planType]}`, fetchOpts);
 
             if (!response.ok) {
                 let detail = `HTTP ${response.status}`;
@@ -476,11 +529,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             data.userPeople = meta.people;
             data.userTripTitle = meta.tripTitle || '';
 
+            // Ignore stale responses if a newer generation was started.
+            const latest = loadPlannerSession();
+            if (!latest || latest.status !== 'generating' || latest.generationId !== generationId) {
+                return;
+            }
+
             savePlannerSession({
                 status: 'ready',
                 selectedPlan: planType,
                 form: readFormSnapshot(),
                 requestBody: body,
+                generationId: generationId,
                 resultData: data,
                 errorMessage: null,
                 errorDetails: null,
@@ -488,38 +548,118 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             displayResults(data, tripResults, resultsContainer, resultOptions());
+            scrollPlannerResultsIntoView();
         } catch (error) {
+            // Leaving the page aborts the fetch so background resume can take over — do not mark error.
+            if (error && (error.name === 'AbortError' || error.code === 20)) {
+                return;
+            }
             console.error('Error generating trip:', error);
+            const latest = loadPlannerSession();
+            if (latest && latest.generationId && latest.generationId !== generationId) {
+                return;
+            }
             savePlannerSession({
                 status: 'error',
                 selectedPlan: planType,
                 form: readFormSnapshot(),
                 requestBody: body,
+                generationId: generationId,
                 resultData: null,
-                errorMessage: 'Failed to generate trip. Please try again.',
-                errorDetails: error.message,
+                errorMessage: planNewTripT('generateFailed', 'Failed to generate trip. Please try again.'),
+                errorDetails: localizePlannerErrorDetail(error.message),
                 notifyPending: false
             });
             showError(
-                'Failed to generate trip. Please try again.',
-                error.message,
+                planNewTripT('generateFailed', 'Failed to generate trip. Please try again.'),
+                localizePlannerErrorDetail(error.message),
                 tripResults,
                 resultsContainer,
                 resultOptions()
             );
         } finally {
             generationInFlight = false;
+            window.__plannerGenerationRunning = false;
             loadingState.style.display = 'none';
             generateBtn.disabled = false;
             generateBtn.innerHTML = originalBtnContent;
         }
     }
 
-    window.onTravelLogPlannerPrefChanged = () => {
-        refreshPlannerDbHints();
-        persistFormOnly();
-    };
-    window.onTravelLogPlannerPrefLoaded = () => refreshPlannerDbHints();
+    /** Wait for a background (or other-tab) generation to leave status=generating. */
+    function waitForPlannerSessionSettled(timeoutMs) {
+        const limit = typeof timeoutMs === 'number' ? timeoutMs : 10 * 60 * 1000;
+        const started = Date.now();
+        return new Promise((resolve) => {
+            const tick = () => {
+                const s = loadPlannerSession();
+                if (!s || s.status === 'ready' || s.status === 'error') {
+                    resolve({ session: s, timedOut: false });
+                    return;
+                }
+                if (Date.now() - started > limit) {
+                    resolve({ session: s, timedOut: true });
+                    return;
+                }
+                setTimeout(tick, 400);
+            };
+            tick();
+        });
+    }
+
+    async function resumeOrAwaitGeneration(session) {
+        const meta = {
+            startDate: session.requestBody.startDate || session.form?.startDate,
+            endDate: session.requestBody.endDate || session.form?.endDate,
+            people: session.requestBody.people || Number(session.form?.people) || 1,
+            tripTitle: (session.form && session.form.tripTitle) || ''
+        };
+        loadingState.style.display = 'block';
+        resultsContainer.style.display = 'none';
+        generateBtn.disabled = true;
+
+        // Background fetch still running (user navigated away mid-request) — do not start a duplicate.
+        if (window.__plannerGenerationRunning) {
+            const waitResult = await waitForPlannerSessionSettled();
+            const settled = waitResult.session;
+            loadingState.style.display = 'none';
+            generateBtn.disabled = false;
+
+            if (waitResult.timedOut && settled && settled.status === 'generating') {
+                const timeoutMsg = planNewTripT('generationTimedOut', 'Trip generation is taking too long. Please try again.');
+                savePlannerSession({
+                    status: 'error',
+                    errorMessage: timeoutMsg,
+                    errorDetails: null,
+                    notifyPending: false
+                });
+                showError(timeoutMsg, '', tripResults, resultsContainer, resultOptions());
+                return;
+            }
+
+            if (settled && settled.status === 'ready' && settled.resultData && settled.resultData.draft_plan) {
+                if (!settled.resultData.userTripTitle && settled.form && settled.form.tripTitle) {
+                    settled.resultData.userTripTitle = settled.form.tripTitle;
+                }
+                if (plannerSessionApi() && typeof plannerSessionApi().clearReadyAttention === 'function') {
+                    plannerSessionApi().clearReadyAttention();
+                }
+                displayResults(settled.resultData, tripResults, resultsContainer, resultOptions());
+                scrollPlannerResultsIntoView();
+            } else if (settled && settled.status === 'error') {
+                showError(
+                    settled.errorMessage || planNewTripT('generateFailed', 'Failed to generate trip. Please try again.'),
+                    localizePlannerErrorDetail(settled.errorDetails || ''),
+                    tripResults,
+                    resultsContainer,
+                    resultOptions()
+                );
+            }
+            return;
+        }
+
+        await runGeneration(session.selectedPlan || selectedPlan, session.requestBody, meta);
+    }
 
     planCards.forEach(card => {
         card.addEventListener('click', () => {
@@ -539,16 +679,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const dbToggle = document.getElementById('useTravelLogInPlanner');
-    if (dbToggle) {
-        dbToggle.addEventListener('change', () => {
-            refreshPlannerDbHints();
-            persistFormOnly();
-        });
-    }
-
     updatePlacesField();
-    await Promise.all([loadSavedPlaces(), loadHomeCity()]);
+    await loadHomeCity();
 
     const session = loadPlannerSession();
     if (session) {
@@ -566,22 +698,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 savePlannerSession({ notifyPending: false });
             }
             displayResults(session.resultData, tripResults, resultsContainer, resultOptions());
+            // Toast "View plan" links to #resultsContainer — scroll to the itinerary.
+            if ((window.location.hash || '') === '#resultsContainer') {
+                scrollPlannerResultsIntoView();
+            }
         } else if (session.status === 'error') {
             showError(
-                session.errorMessage || 'Failed to generate trip. Please try again.',
-                session.errorDetails || '',
+                session.errorMessage || planNewTripT('generateFailed', 'Failed to generate trip. Please try again.'),
+                localizePlannerErrorDetail(session.errorDetails || ''),
                 tripResults,
                 resultsContainer,
                 resultOptions()
             );
         } else if (session.status === 'generating' && session.requestBody) {
-            // Page was left mid-request; resume with the same payload.
-            await runGeneration(session.selectedPlan || selectedPlan, session.requestBody, {
-                startDate: session.requestBody.startDate || session.form?.startDate,
-                endDate: session.requestBody.endDate || session.form?.endDate,
-                people: session.requestBody.people || Number(session.form?.people) || 1,
-                tripTitle: (session.form && session.form.tripTitle) || ''
-            });
+            // Resume or wait for an in-flight background request (avoid a second LLM call).
+            await resumeOrAwaitGeneration(patchStalePlannerSession(session));
         }
     }
 
@@ -598,12 +729,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         const endDate = document.getElementById('endDate').value;
         const preferencesInput = document.getElementById('preferences').value.trim();
 
-        if (!startDate || !endDate) {
-            showError('Please select both start and end dates.', '', tripResults, resultsContainer);
+        if (!startingCity) {
+            showError(planNewTripT('startingCityRequired', 'Please enter a starting city.'), '', tripResults, resultsContainer);
             return;
         }
-        if (endDate < startDate) {
-            showError('End date must be on or after start date.', '', tripResults, resultsContainer);
+        if (!startDate || !endDate) {
+            showError(planNewTripT('datesRequired', 'Please select both start and end dates.'), '', tripResults, resultsContainer);
+            return;
+        }
+        if (endDate <= startDate) {
+            showError(planNewTripT('endDateAfterStart', 'End date must be after start date.'), '', tripResults, resultsContainer);
             return;
         }
 
@@ -624,14 +759,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             body.preferredTransport = preferredTransport;
         }
 
-        const plannerUid = localStorage.getItem('user_id');
-        if (plannerUid) {
-            const p = parseInt(plannerUid, 10);
-            if (!Number.isNaN(p)) {
-                body.plannerUserId = p;
-            }
-        }
-
         const placesInput = (document.getElementById('placesList')?.value || '').trim();
         const manualPlaces = placesInput
             ? placesInput.split(',').map(p => p.trim()).filter(p => p)
@@ -640,30 +767,63 @@ document.addEventListener('DOMContentLoaded', async () => {
         const useDb = useTravelLogFromDb();
 
         if (selectedPlan === 'visited') {
-            const fromDb = useDb ? savedVisitedPlaces : [];
-            body.visitedPlaces = fromDb;
+            body.visitedPlaces = [];
             body.extraPlaces = manualPlaces;
-            if (!body.visitedPlaces.length && !body.extraPlaces.length) {
-                const msg = window.i18n && window.i18n.t
-                    ? window.i18n.t('planNewTrip.manualPlacesRequired')
-                    : 'Add at least one place below, or turn on using your travel log from the database.';
-                showError(msg, '', tripResults, resultsContainer);
-                return;
-            }
-        } else if (selectedPlan === 'unvisited') {
-            body.additionalExclusions = manualPlaces;
             if (useDb) {
                 const uid = localStorage.getItem('user_id');
                 if (!uid) {
-                    const msg = window.i18n && window.i18n.t
-                        ? window.i18n.t('planNewTrip.unvisitedRequiresLogin')
-                        : 'Please log in. Unvisited trips load your saved places on the server to exclude them.';
-                    showError(msg, '', tripResults, resultsContainer);
+                    showError(
+                        planNewTripT('visitedRequiresLogin', 'Please log in. Visited trips load your saved places on the server.'),
+                        '',
+                        tripResults,
+                        resultsContainer
+                    );
                     return;
                 }
                 const parsed = parseInt(uid, 10);
                 if (Number.isNaN(parsed)) {
-                    showError('Invalid user session.', '', tripResults, resultsContainer);
+                    showError(planNewTripT('invalidSession', 'Invalid user session.'), '', tripResults, resultsContainer);
+                    return;
+                }
+                body.userId = parsed;
+                if (!manualPlaces.length) {
+                    const hasSavedPlaces = await userHasSavedVisitedPlaces(uid);
+                    if (hasSavedPlaces === false) {
+                        showError(
+                            planNewTripT('manualPlacesRequired', 'Add at least one place in the field above, or turn on using your travel log from the database.'),
+                            '',
+                            tripResults,
+                            resultsContainer
+                        );
+                        return;
+                    }
+                }
+            } else if (!manualPlaces.length) {
+                showError(
+                    planNewTripT('manualPlacesRequired', 'Add at least one place below, or turn on using your travel log from the database.'),
+                    '',
+                    tripResults,
+                    resultsContainer
+                );
+                return;
+            }
+        } else if (selectedPlan === 'unvisited') {
+            body.additionalExclusions = manualPlaces;
+            // Opt-in: only send userId when DB travel-log exclusions are enabled.
+            if (useDb) {
+                const uid = localStorage.getItem('user_id');
+                if (!uid) {
+                    showError(
+                        planNewTripT('unvisitedRequiresLogin', 'Please log in. Unvisited trips load your saved places on the server to exclude them.'),
+                        '',
+                        tripResults,
+                        resultsContainer
+                    );
+                    return;
+                }
+                const parsed = parseInt(uid, 10);
+                if (Number.isNaN(parsed)) {
+                    showError(planNewTripT('invalidSession', 'Invalid user session.'), '', tripResults, resultsContainer);
                     return;
                 }
                 body.userId = parsed;
@@ -671,5 +831,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         await runGeneration(selectedPlan, body, { startDate, endDate, people, tripTitle });
+    });
+
+    // Hand off to background resume on other pages: abort local fetch without marking error.
+    window.addEventListener('pagehide', () => {
+        if (activeGenerationAbort) {
+            try { activeGenerationAbort.abort(); } catch (_) { /* ignore */ }
+        }
     });
 });

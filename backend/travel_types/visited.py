@@ -1,5 +1,10 @@
-from typing import List, Optional
+"""Visited-places strategy: include requested destinations in the itinerary.
 
+When ``starting_airport_iata`` is known (normal path via ``plan_requests``),
+delegates to the DB planner. The LLM-only branch below is a legacy fallback
+when no hub could be resolved.
+"""
+from typing import List, Optional
 from .common import (
     destination_label,
     destinations_text,

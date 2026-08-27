@@ -1,6 +1,5 @@
 (function (global) {
-  var SESSION_KEY = 'planner_generation_session_v1';
-  var ENDPOINTS = {
+  var SESSION_KEY = 'planner_generation_session_v1'; var ENDPOINTS = {
     visited: '/generate_travel_plans/visited',
     unvisited: '/generate_travel_plans/unvisited',
     random: '/generate_travel_plans/random'
@@ -64,6 +63,27 @@
     return fallback;
   }
 
+  function localizeDetail(detail) {
+    if (detail == null || detail === '') return detail;
+    var s = String(detail);
+    if (/add at least one place/i.test(s) || /travel log/i.test(s)) {
+      return t(
+        'planNewTrip.manualPlacesRequired',
+        'Add at least one place in the field above, or turn on using your travel log from the database.'
+      );
+    }
+    if (/end date must be after/i.test(s)) {
+      return t('planNewTrip.endDateAfterStart', 'End date must be after start date.');
+    }
+    return detail;
+  }
+
+  function isActiveGenerationSession(session, expectedId) {
+    if (!session || session.status !== 'generating') return false;
+    if (session.generationId != null && session.generationId !== expectedId) return false;
+    return true;
+  }
+
   function dismissToast() {
     var el = document.getElementById('plannerReadyToast');
     if (el && el.parentNode) el.parentNode.removeChild(el);
@@ -96,7 +116,8 @@
 
     var viewBtn = document.createElement('a');
     viewBtn.className = 'btn-add';
-    viewBtn.href = plannerPageUrl();
+    // Land on the results block at the bottom of the planner page.
+    viewBtn.href = plannerPageUrl() + '#resultsContainer';
     viewBtn.textContent = t('planNewTrip.viewPlan', 'View plan');
     viewBtn.addEventListener('click', function () {
       clearReadyAttention();
@@ -107,7 +128,7 @@
     dismissBtn.className = 'btn-add btn-add-outline';
     dismissBtn.textContent = t('planNewTrip.dismissNotification', 'Dismiss');
     dismissBtn.addEventListener('click', function () {
-      dismissToast();
+      clearReadyAttention();
     });
 
     actions.appendChild(viewBtn);
@@ -133,14 +154,25 @@
 
     var planType = session.selectedPlan || 'random';
     if (!ENDPOINTS[planType]) planType = 'random';
+    var generationId = session.generationId || Date.now();
+
+    if (!isActiveGenerationSession(load(), generationId)) return;
+
+    var abortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    global.__plannerBackgroundAbort = abortController;
 
     global.__plannerGenerationRunning = true;
     try {
-      var response = await fetch(apiBase() + ENDPOINTS[planType], {
+      var fetchOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(session.requestBody)
-      });
+      };
+      if (abortController) fetchOpts.signal = abortController.signal;
+
+      var response = await fetch(apiBase() + ENDPOINTS[planType], fetchOpts);
+
+      if (!isActiveGenerationSession(load(), generationId)) return;
 
       if (!response.ok) {
         var detail = 'HTTP ' + response.status;
@@ -156,16 +188,26 @@
       }
 
       var data = await response.json();
+
+      if (!isActiveGenerationSession(load(), generationId)) return;
+
       var body = session.requestBody || {};
       data.userStartDate = body.startDate || (session.form && session.form.startDate) || null;
       data.userEndDate = body.endDate || (session.form && session.form.endDate) || null;
       data.userPeople = body.people || Number(session.form && session.form.people) || 1;
+      data.userTripTitle = (session.form && session.form.tripTitle) || '';
 
-      // User may have returned to the planner while this request finished.
+      var latest = load();
+      if (!isActiveGenerationSession(latest, generationId)) {
+        return;
+      }
+
+      // User may have returned to the planner while this request finished
       if (isPlannerPage()) {
         save({
           status: 'ready',
           resultData: data,
+          generationId: generationId,
           errorMessage: null,
           errorDetails: null,
           notifyPending: false
@@ -176,21 +218,33 @@
       save({
         status: 'ready',
         resultData: data,
+        generationId: generationId,
         errorMessage: null,
         errorDetails: null,
         notifyPending: true
       });
       showReadyToast();
     } catch (err) {
+      if (err && (err.name === 'AbortError' || err.code === 20)) {
+        return;
+      }
       console.error('Background trip generation failed:', err);
+      var latestErr = load();
+      if (!isActiveGenerationSession(latestErr, generationId)) {
+        return;
+      }
       save({
         status: 'error',
         resultData: null,
-        errorMessage: 'Failed to generate trip. Please try again.',
-        errorDetails: (err && err.message) || String(err),
+        generationId: generationId,
+        errorMessage: t('planNewTrip.generateFailed', 'Failed to generate trip. Please try again.'),
+        errorDetails: localizeDetail((err && err.message) || String(err)),
         notifyPending: false
       });
     } finally {
+      if (global.__plannerBackgroundAbort === abortController) {
+        global.__plannerBackgroundAbort = null;
+      }
       global.__plannerGenerationRunning = false;
     }
   }

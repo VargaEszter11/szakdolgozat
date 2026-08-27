@@ -14,9 +14,13 @@
     if (!cb) return;
 
     syncCheckboxFromStorage();
-    if (typeof window.onTravelLogPlannerPrefLoaded === 'function') {
-      window.onTravelLogPlannerPrefLoaded(cb.checked);
-    }
+
+    // Defer so ES modules (planNewTrip.js) can register hooks first.
+    setTimeout(function () {
+      if (typeof window.onTravelLogPlannerPrefLoaded === 'function') {
+        window.onTravelLogPlannerPrefLoaded(cb.checked);
+      }
+    }, 0);
 
     cb.addEventListener('change', function () {
       localStorage.setItem(STORAGE_KEY, cb.checked ? '1' : '0');

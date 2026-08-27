@@ -16,14 +16,50 @@ _GEOCODE_COUNTRYCODES = ",".join(
 
 
 async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, float]:
+    return await _nominatim_search(
+        place_name,
+        language=language,
+        featuretype=None,
+    )
+
+
+async def geocode_city_center(
+    city: str,
+    country_label: str = "",
+    *,
+    language: str = "en",
+) -> Tuple[float, float]:
+    """Geocode a city label, preferring municipality center over airport POIs."""
+    city = (city or "").strip()
+    if not city:
+        raise ValueError("City name is required")
+    query = f"{city}, {country_label}".strip(", ") if (country_label or "").strip() else city
+    try:
+        return await _nominatim_search(
+            query,
+            language=language,
+            featuretype="city",
+        )
+    except ValueError:
+        return await geocode_place(query, language=language)
+
+
+async def _nominatim_search(
+    query: str,
+    *,
+    language: str = "en",
+    featuretype: str | None = None,
+) -> Tuple[float, float]:
     url = "https://nominatim.openstreetmap.org/search"
     params = {
-        "q": place_name,
+        "q": query,
         "format": "json",
         "limit": 1,
         "accept-language": language,
         "countrycodes": _GEOCODE_COUNTRYCODES,
     }
+    if featuretype:
+        params["featuretype"] = featuretype
     user_agent = (os.getenv("NOMINATIM_USER_AGENT") or "").strip() or _DEFAULT_UA
     headers = {
         "User-Agent": user_agent,
@@ -45,10 +81,10 @@ async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, f
 
         results = resp.json()
         if not results:
-            raise ValueError(f"Place '{place_name}' not found online")
+            raise ValueError(f"Place '{query}' not found online")
         lat = float(results[0]["lat"])
         lon = float(results[0]["lon"])
 
-        print(f"Geocoded '{place_name}' to coordinates: ({lat}, {lon})")
+        print(f"Geocoded '{query}' to coordinates: ({lat}, {lon})")
 
         return lat, lon

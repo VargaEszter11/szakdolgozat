@@ -42,7 +42,7 @@ class TestPlanRequestsGeneration:
         async def fake_coords(name):
             return 47.5, 19.0
 
-        async def fake_nearest(lat, lon, db=None):
+        def fake_nearest(lat, lon, db=None):
             return {"iata": "BUD", "name": "Budapest"}
 
         async def fake_cache(database, iata):

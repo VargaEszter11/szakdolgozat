@@ -135,7 +135,7 @@ def test_fallback_and_stop_from_choice(monkeypatch):
     )
 
 
-def test_append_return_home_and_missing_places(monkeypatch):
+def test_append_return_home(monkeypatch):
     monkeypatch.setattr(
         plan_builder,
         "return_flight_booking_details",
@@ -260,9 +260,38 @@ def test_append_return_home_and_missing_places(monkeypatch):
     assert first[0]["departure_local_transport"] == "bus"
     assert first[0]["departure_from_city"] == "Miskolc"
 
-    monkeypatch.setattr(plan_builder, "place_used_in_plan", lambda place, plan: False)
-    assert plan_builder._missing_requested_places(strategy="random", requested_places=["Paris"], plan=[]) == []
-    assert plan_builder._missing_requested_places(strategy="visited", requested_places=["Paris"], plan=[]) == ["Paris"]
+    assert first[0]["departure_from_city"] == "Miskolc"
+
+
+def test_missing_requested_places_lists_all_unused():
+    """Visited strategy must report every unused requested place, not stop at the first hit."""
+    plan = [{"city": "Paris", "country": "France"}]
+
+    assert plan_builder._missing_requested_places(
+        strategy="random",
+        requested_places=["Paris", "Rome"],
+        plan=plan,
+    ) == []
+    assert plan_builder._missing_requested_places(
+        strategy="visited",
+        requested_places=[],
+        plan=plan,
+    ) == []
+    assert plan_builder._missing_requested_places(
+        strategy="visited",
+        requested_places=["Paris", "Rome", "Vienna"],
+        plan=[],
+    ) == ["Paris", "Rome", "Vienna"]
+    assert plan_builder._missing_requested_places(
+        strategy="visited",
+        requested_places=["Paris", "Rome", "Vienna"],
+        plan=plan,
+    ) == ["Rome", "Vienna"]
+    assert plan_builder._missing_requested_places(
+        strategy="visited",
+        requested_places=["Paris"],
+        plan=plan,
+    ) == []
 
 
 def test_candidate_choices_for_date(monkeypatch):

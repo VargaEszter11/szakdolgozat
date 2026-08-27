@@ -1,5 +1,9 @@
-"""Resolve typed places that are not airport hubs (geocode + ground vs airport access)."""
+"""Resolve typed places that are not airport hubs (geocode + ground vs airport access).
 
+Used in visited mode when a requested place does not match any direct-route
+candidate. Each resolution becomes an injectable planner candidate: either a
+single off-airport ground leg or fly-to-hub + ground transfer (via_airport).
+"""
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -95,7 +99,7 @@ async def resolve_place_access(
             cache[cache_key] = None
         return None
 
-    nearest = await nearest_airport(lat, lon, db=db)
+    nearest = nearest_airport(lat, lon, db=db)
     country = _country_hint(text, nearest)
     place_point = _point(lat, lon, country)
 
@@ -116,10 +120,10 @@ async def resolve_place_access(
 
     result: Optional[Dict[str, Any]] = None
 
+    # Path A: reachable by ground from the current hub (same landmass, within range).
     if can_ground_from_current:
         transport = transport_for_ground_distance(distance_from_current)
-        result = {
-            "kind": "direct_ground",
+        result = {            "kind": "direct_ground",
             "city": (split_place_label(text)[0] or text).strip().title(),
             "country": hub_country,
             "iata": hub_iata,
@@ -130,6 +134,7 @@ async def resolve_place_access(
             "latitude": lat,
             "longitude": lon,
         }
+    # Path B: fly (or ground) to the airport nearest the typed place, then transfer.
     elif _flight_allowed(preferred_transport) and nearest and nearest.get("iata"):
         access_iata = _iata(nearest["iata"])
         access_airport = _airport_by_iata(db, access_iata)
@@ -163,9 +168,10 @@ async def resolve_place_access(
                 # Flight-only cannot complete an off-airport place visit.
                 result = None
             else:
+                # Two-leg visit: flight candidate to access_iata carries ground_transfer
+                # metadata; plan_builder merges them into one off-airport stop.
                 transfer_transport = transport_for_ground_distance(transfer_distance)
-                result = {
-                    "kind": "via_airport",
+                result = {                    "kind": "via_airport",
                     "access_iata": access_iata,
                     "access_city": nearest.get("city") or access_iata,
                     "access_country": nearest.get("country") or country,
@@ -200,7 +206,11 @@ def candidates_for_unmatched_places(
     reachable_iatas: Set[str],
     current_airport: str,
 ) -> List[dict]:
-    """Turn place-access resolutions into planner candidates for this step."""
+    """Turn place-access resolutions into planner candidates for this step.
+
+    via_airport entries only appear when the access hub is the current airport
+    or has a direct route from it; otherwise the leg is skipped this turn.
+    """
     current = _iata(current_airport)
     out: List[dict] = []
     seen: Set[str] = set()
@@ -237,10 +247,10 @@ def candidates_for_unmatched_places(
             continue
 
         if access == current and resolution.get("ground_transfer"):
+            # Already at the hub — emit only the ground leg to the typed place.
             transfer = dict(resolution["ground_transfer"])
             key = f"place:{(transfer.get('requested_place') or '').lower()}"
-            if key in seen:
-                continue
+            if key in seen:                continue
             seen.add(key)
             out.append(
                 {
@@ -259,8 +269,8 @@ def candidates_for_unmatched_places(
         if key in seen:
             continue
         seen.add(key)
-        candidate = {
-            "city": resolution.get("access_city") or access,
+        # Hub visit city is access_city; ground_transfer holds the real destination.
+        candidate = {            "city": resolution.get("access_city") or access,
             "country": resolution.get("access_country") or "",
             "iata": access,
             "transport": "flight",
@@ -341,6 +351,7 @@ def remaining_unmatched_places(
     plan: List[Dict[str, Any]],
     airport_candidates: List[dict],
 ) -> List[str]:
+    """Requested places not yet in the plan and not covered by route candidates."""
     remaining = [
         place for place in requested_places if place and not place_used_in_plan(place, plan)
     ]

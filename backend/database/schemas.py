@@ -189,7 +189,8 @@ class PlannedTripBase(BaseModel):
 
 
 class PlannedTripCreate(PlannedTripBase):
-    user_id: int
+    # Optional in the body; create endpoint always sets it from the access token.
+    user_id: Optional[int] = None
 
 
 class PlannedTripUpdate(BaseModel):

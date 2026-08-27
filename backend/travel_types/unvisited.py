@@ -1,5 +1,9 @@
-from typing import List, Optional
+"""Unvisited-places strategy: explore destinations not in the user's travel log.
 
+``forbidden_places`` merges manual exclusions with DB visited places when
+``userId`` is sent (travel-log toggle on).
+"""
+from typing import List, Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -25,7 +29,6 @@ class UnvisitedGenerationRequest(BaseModel):
     userId: Optional[int] = None
     plannerUserId: Optional[int] = None
     startingPoint: str
-    budget: Optional[int] = None
     startDate: str
     endDate: str
     people: int = 1
@@ -53,6 +56,17 @@ def build_unvisited_forbidden_places(
     rows = crud.get_user_visited_places(db, user_id)
     from_db = format_user_visited_place_strings(rows)
     return merge_exclusion_lists(from_db, additional_exclusions)
+
+
+def build_visited_places_from_db(
+    db: Session, user_id: int, client_places: List[str]
+) -> List[str]:
+    """Load saved visited places for the user and merge with client-supplied names."""
+    from database import crud
+
+    rows = crud.get_user_visited_places(db, user_id)
+    from_db = format_user_visited_place_strings(rows)
+    return merge_exclusion_lists(from_db, client_places)
 
 
 def _extract_city(place_str: str) -> str:

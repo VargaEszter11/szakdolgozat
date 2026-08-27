@@ -22,12 +22,16 @@ def calculate_distance_km(lat1: float, lng1: float, lat2: float, lng2: float) ->
     return earth_radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-async def nearest_airport(lat, lng, db: Optional[Session] = None, distance_km: Optional[float] = None):
+def nearest_airport(
+    lat,
+    lng,
+    db: Optional[Session] = None,
+    distance_km: Optional[float] = None,
+) -> Optional[dict[str, Any]]:
     """Return the nearest airport to given coordinates using cached DB airport coordinates."""
     if db is None:
         logger.warning("Database session missing; nearest airport lookup skipped")
         return None
-
     try:
         origin_lat = float(lat)
         origin_lng = float(lng)

@@ -1,3 +1,14 @@
+"""API orchestration for travel plan generation.
+
+Pipeline (``generate_plan_with_location``):
+  1. Geocode starting city → nearest airport + direct destinations
+  2. Call strategy-specific generator (visited / unvisited / random)
+  3. Post-process: normalize city labels, lodging coords, booking URLs
+
+``userId`` on requests is opt-in: the frontend sends it only when the
+"use travel log from database" toggle is on.
+"""
+import asyncio
 import json
 from datetime import datetime
 from typing import Any, List, Optional, cast
@@ -7,22 +18,26 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import crud, models
+from database.airport_city import airport_name_as_city
 from travel_types import (
     UnvisitedGenerationRequest,
     build_unvisited_forbidden_places,
+    build_visited_places_from_db,
     generate_travel_plan_random,
     generate_travel_plan_unvisited,
     generate_travel_plan_visited,
     merge_exclusion_lists,
 )
 from travel_types.booking import booking_url
-from utils.coordinates import geocode_place
+from utils.coordinates import geocode_city_center, geocode_place
+from utils.countries import geocode_country_label
 from utils.direct_destinations_cache import get_direct_destinations_cached
 from utils.nearest_airport import nearest_airport
 from utils.plan_enrichment import normalize_planner_response
 
 
 class GenerationRequest(BaseModel):
+    """Visited mode: include listed places (manual + optional DB travel log)."""
     visitedPlaces: List[str]
     extraPlaces: List[str] = []
     startingPoint: str
@@ -69,12 +84,24 @@ async def geocode_places(request: GeocodeRequest) -> list:
 
 async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict:
     travel_length, llm_provider = planner_context(request, db)
+    visited_places = list(request.visitedPlaces)
+    if request.userId is not None:
+        visited_places = build_visited_places_from_db(
+            db, request.userId, request.visitedPlaces
+        )
+    if not merge_exclusion_lists(visited_places, request.extraPlaces):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Add at least one place, or turn on using your travel log from the database."
+            ),
+        )
     return await generate_plan_with_location(
         generate_travel_plan_visited,
         request.startingPoint,
         travel_length,
         request.preferences,
-        request.visitedPlaces,
+        visited_places,
         starting_point=request.startingPoint,
         start_date=request.startDate,
         end_date=request.endDate,
@@ -145,10 +172,13 @@ def planner_account_id(request) -> Optional[int]:
 
 
 def travel_length_days(start_date: str, end_date: str) -> int:
+    """Number of days between start and end; end must be strictly after start."""
     start_dt = datetime.strptime(start_date, "%Y-%m-%d")
     end_dt = datetime.strptime(end_date, "%Y-%m-%d")
     if end_dt <= start_dt:
-        raise HTTPException(status_code=400, detail="End date must be after start date.")
+        raise HTTPException(
+            status_code=400, detail="End date must be after start date."
+        )
     return (end_dt - start_dt).days
 
 
@@ -177,9 +207,11 @@ async def generate_plan_with_location(
     db: Optional[Session] = None,
     **kwargs,
 ):
+    """Shared entry for all three planner modes after the form is validated."""
     lat, lon = await get_coordinates(starting_point)
-    airport = await nearest_airport(lat, lon, db=db)
+    airport = nearest_airport(lat, lon, db=db)
     preferred_transport = kwargs.get("preferredTransport") or "allModes"
+    # Ground-only modes skip flight route loading entirely.
     should_load_direct_destinations = preferred_transport not in {"trainBus", "trainBusFerry"}
     direct_destinations = (
         await get_direct_destinations_cached(db, airport["iata"])
@@ -204,6 +236,7 @@ async def generate_plan_with_location(
     )
     if db is not None:
         clean_plan_city_names(draft_plan, db)
+        await attach_lodging_coordinates(draft_plan)
     apply_people_to_booking_links(draft_plan, people)
     return {
         "draft_plan": normalize_planner_response(draft_plan),
@@ -230,6 +263,11 @@ def apply_people_to_booking_links(plan: dict, people: int = 1) -> None:
 
 
 def clean_plan_city_names(plan: dict, db: Session) -> None:
+    """Normalize stop city labels for display and accommodation search.
+
+    IATA codes are routing hubs only. Prefer the user's ``requested_place``,
+    then derive a tourist-facing name from the airport row (with IATA overrides).
+    """
     for trip in plan.get("trips", [plan]):
         for stop in trip.get("plan", []):
             if not isinstance(stop, dict):
@@ -244,17 +282,59 @@ def clean_plan_city_names(plan: dict, db: Session) -> None:
                 if requested:
                     stop["city"] = requested.split(",")[0].strip().title()
                 continue
+            requested = (stop.get("requested_place") or "").strip()
+            if requested:
+                stop["city"] = requested.split(",")[0].strip().title()
+                continue
             iata = (stop.get("iata") or "").strip().upper()
             if not iata:
                 continue
             airport = db.query(models.Airport).filter(models.Airport.iata == iata).first()
             if airport is not None:
                 airport_row = cast(Any, airport)
-                if airport_row.city:
-                    stop["city"] = airport_row.city
+                city = airport_name_as_city(airport_row.name, iata)
+                if not city or city.upper() == iata:
+                    city = (airport_row.city or "").strip()
+                if city:
+                    stop["city"] = city
+
+
+async def attach_lodging_coordinates(plan: dict) -> None:
+    """Attach city-center coordinates for accommodation search (not airport POIs).
+
+    Booking.com text search often resolves to the airport; lat/lon anchors the
+    map on the municipality. Reuses off-airport coords when already present.
+    Sleeps between Nominatim calls to respect the 1 req/s usage policy.
+    """
+    for trip in plan.get("trips", [plan]):
+        stops = trip.get("plan", [])
+        for index, stop in enumerate(stops):
+            if not isinstance(stop, dict):
+                continue
+            if stop.get("lodging_latitude") is not None and stop.get("lodging_longitude") is not None:
+                continue
+            lat = stop.get("latitude")
+            lon = stop.get("longitude")
+            if lat is not None and lon is not None:
+                stop["lodging_latitude"] = lat
+                stop["lodging_longitude"] = lon
+                continue
+            city = (stop.get("city") or "").strip()
+            if not city:
+                continue
+            country_label = geocode_country_label(stop.get("country") or "")
+            try:
+                if index > 0:
+                    await asyncio.sleep(1.1)
+                lat, lon = await geocode_city_center(city, country_label)
+                stop["lodging_latitude"] = lat
+                stop["lodging_longitude"] = lon
+            except Exception:
+                continue
 
 
 def parse_planner_json(raw: str) -> dict:
+    """Parse LLM output; strips markdown fences if the model wrapped JSON in ```."""
     try:
         text = (raw or "").strip()
         if text.startswith("```"):

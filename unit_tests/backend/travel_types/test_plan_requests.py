@@ -12,6 +12,10 @@ def test_travel_length_days_ok_and_invalid():
     with pytest.raises(HTTPException) as exc:
         pg.travel_length_days("2026-07-08", "2026-07-01")
     assert exc.value.status_code == 400
+    with pytest.raises(HTTPException) as exc_same:
+        pg.travel_length_days("2026-07-01", "2026-07-01")
+    assert exc_same.value.status_code == 400
+    assert "after" in str(exc_same.value.detail).lower()
 
 
 def test_parse_planner_json():
@@ -68,11 +72,42 @@ def test_apply_people_to_booking_links(monkeypatch):
 
 def test_clean_plan_city_names():
     db = MagicMock()
-    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(city="Rome")
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(
+        city="Rome",
+        name="Rome Fiumicino",
+    )
     plan = {"plan": [{"iata": "FCO", "city": "Fiumicino"}, {"city": "NoIata"}]}
     pg.clean_plan_city_names(plan, db)
     assert plan["plan"][0]["city"] == "Rome"
     assert plan["plan"][1]["city"] == "NoIata"
+
+
+def test_clean_plan_city_names_uses_iata_city_override():
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(
+        city="Kraków John Paul II International Airport",
+        name="Kraków John Paul II International Airport",
+    )
+    plan = {"plan": [{"iata": "KRK", "city": "Kraków Airport"}]}
+    pg.clean_plan_city_names(plan, db)
+    assert plan["plan"][0]["city"] == "Krakow"
+
+
+def test_clean_plan_city_names_prefers_requested_place_on_flight_hub():
+    db = MagicMock()
+    db.query.return_value.filter.return_value.first.return_value = SimpleNamespace(city="Fiumicino")
+    plan = {
+        "plan": [
+            {
+                "iata": "FCO",
+                "city": "Fiumicino",
+                "requested_place": "Rome, Italy",
+            }
+        ]
+    }
+    pg.clean_plan_city_names(plan, db)
+    assert plan["plan"][0]["city"] == "Rome"
+    db.query.assert_not_called()
 
 
 def test_clean_plan_city_names_keeps_off_airport_place():
@@ -146,7 +181,7 @@ async def test_generate_plan_with_location(monkeypatch):
     async def coords(name):
         return 47.5, 19.0
 
-    async def nearest(lat, lon, db=None):
+    def nearest(lat, lon, db=None):
         return {"iata": "BUD"}
 
     async def cache(db, iata):
@@ -178,12 +213,17 @@ async def test_generate_plan_with_location(monkeypatch):
 @pytest.mark.asyncio
 async def test_generate_plan_wrappers_delegate(monkeypatch):
     async def fake_with_location(func, *args, **kwargs):
-        return {"ok": True, "func": func.__name__}
+        return {"ok": True, "func": func.__name__, "args": args}
 
     monkeypatch.setattr(pg, "generate_plan_with_location", fake_with_location)
     monkeypatch.setattr(pg, "planner_context", lambda request, db: (5, "deepseek"))
     monkeypatch.setattr(pg, "build_unvisited_forbidden_places", lambda db, user_id, extras: ["Paris"])
-    monkeypatch.setattr(pg, "merge_exclusion_lists", lambda a, b: b)
+    monkeypatch.setattr(
+        pg,
+        "build_visited_places_from_db",
+        lambda db, user_id, client: ["Paris, France", "Rome, Italy"],
+    )
+    monkeypatch.setattr(pg, "merge_exclusion_lists", lambda *groups: [p for g in groups for p in (g or [])])
 
     visited_req = pg.GenerationRequest(
         visitedPlaces=["Vienna"],
@@ -192,6 +232,31 @@ async def test_generate_plan_wrappers_delegate(monkeypatch):
         endDate="2026-07-06",
     )
     assert (await pg.generate_visited_plan(visited_req, MagicMock()))["func"] == "generate_travel_plan_visited"
+
+    visited_db_req = pg.GenerationRequest(
+        visitedPlaces=[],
+        extraPlaces=["Berlin"],
+        userId=1,
+        startingPoint="Budapest",
+        startDate="2026-07-01",
+        endDate="2026-07-06",
+    )
+    out = await pg.generate_visited_plan(visited_db_req, MagicMock())
+    assert out["func"] == "generate_travel_plan_visited"
+    assert out["args"][3] == ["Paris, France", "Rome, Italy"]
+
+    with pytest.raises(HTTPException) as exc:
+        await pg.generate_visited_plan(
+            pg.GenerationRequest(
+                visitedPlaces=[],
+                extraPlaces=[],
+                startingPoint="Budapest",
+                startDate="2026-07-01",
+                endDate="2026-07-06",
+            ),
+            MagicMock(),
+        )
+    assert exc.value.status_code == 400
 
     unvisited_req = pg.UnvisitedGenerationRequest(
         startingPoint="Budapest",

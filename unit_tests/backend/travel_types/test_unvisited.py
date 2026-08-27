@@ -31,6 +31,21 @@ def test_build_unvisited_forbidden_places(monkeypatch):
     assert out == ["Vienna, Austria", "Berlin"]
 
 
+def test_build_visited_places_from_db(monkeypatch):
+    monkeypatch.setattr(
+        "database.crud.get_user_visited_places",
+        lambda db, user_id: [
+            SimpleNamespace(place_name="Paris", country="France"),
+            SimpleNamespace(place_name="Rome", country="Italy"),
+        ],
+    )
+    out = unvisited.build_visited_places_from_db(MagicMock(), 2, ["Berlin"])
+    assert out == ["Paris, France", "Rome, Italy", "Berlin"]
+
+    empty_db = unvisited.build_visited_places_from_db(MagicMock(), 2, [])
+    assert empty_db == ["Paris, France", "Rome, Italy"]
+
+
 def test_extract_city_and_is_visited():
     assert unvisited._extract_city("Paris, France") == "paris"
     assert unvisited._extract_city("Rome") == "rome"

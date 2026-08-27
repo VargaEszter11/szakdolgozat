@@ -1,5 +1,10 @@
-from __future__ import annotations
+"""Stop-by-stop itinerary builder backed by DB routes and an LLM picker.
 
+Each leg: load candidates from ``direct_routes`` (+ ground/ferry/off-airport
+access), ask the LLM to pick one (or fall back to heuristics), append a stop,
+then move the cursor airport forward. Ends with an optional return-home leg.
+"""
+from __future__ import annotations
 import json
 import random
 from datetime import datetime, timedelta
@@ -129,14 +134,23 @@ def _requested_candidate_matches(
     requested_places: List[str],
     plan: List[Dict[str, Any]],
 ) -> List[dict]:
-    remaining_places = [
-        place for place in requested_places if not place_used_in_plan(place, plan)
+    """Candidates that satisfy a not-yet-visited requested place.
+
+    Copies the matching place string onto ``requested_place`` so downstream
+    city normalization and accommodation search use the user's label.
+    """
+    remaining_places = [        place for place in requested_places if not place_used_in_plan(place, plan)
     ]
-    return [
-        candidate
-        for candidate in candidates
-        if any(place_matches_candidate(place, candidate) for place in remaining_places)
-    ]
+    matches: List[dict] = []
+    for candidate in candidates:
+        for place in remaining_places:
+            if place_matches_candidate(place, candidate):
+                enriched = dict(candidate)
+                if not enriched.get("requested_place"):
+                    enriched["requested_place"] = place
+                matches.append(enriched)
+                break
+    return matches
 
 
 def _merge_place_lists(*groups: Optional[List[str]]) -> List[str]:
@@ -305,8 +319,12 @@ async def _ranked_step_candidates(
     language: str = "en",
     place_access_cache: Optional[Dict[str, Any]] = None,
 ) -> tuple[List[dict], List[dict]]:
-    candidates = await build_candidates(
-        db,
+    """Candidates for the next leg from ``current_airport``.
+
+    Visited mode also geocodes unmatched typed places and may inject
+    via-airport + ground-transfer options (e.g. Trogir via SPU).
+    """
+    candidates = await build_candidates(        db,
         strategy=strategy,
         current_airport=current_airport,
         hub_iata=starting_airport_iata,
@@ -467,6 +485,11 @@ def _stop_from_choice(
     cursor: datetime,
     remaining_days: int,
 ) -> Optional[Dict[str, Any]]:
+    """Build one plan stop from an LLM/heuristic choice.
+
+    Returns None when a flight leg has no bookable direct route in the DB
+    (caller skips the leg and may stop building).
+    """
     days = _clamp_days(choice.get("days"), remaining_days)
     departure_date = cursor.strftime("%Y-%m-%d")
     booking_details = {}
@@ -498,9 +521,7 @@ def _stop_from_choice(
         "direct_flights_queried_from": current_airport,
         **booking_details,
     }
-    if choice.get("requested_place") and (
-        choice.get("off_airport") or choice.get("is_ground_transfer")
-    ):
+    if choice.get("requested_place"):
         stop["requested_place"] = choice["requested_place"]
     if choice.get("off_airport"):
         stop["off_airport"] = True
@@ -659,8 +680,6 @@ def _missing_requested_places(
 ) -> List[str]:
     if strategy != "visited" or not requested_places:
         return []
-    if any(place_used_in_plan(place, plan) for place in requested_places):
-        return []
     return [
         place for place in requested_places if not place_used_in_plan(place, plan)
     ]
@@ -682,6 +701,7 @@ async def build_plan(
     extra_places: Optional[List[str]] = None,
     preferred_transport: str = "allModes",
 ) -> Dict[str, Any]:
+    """Main itinerary loop: hub → next stop → … → return home."""
     home_city, home_country = split_place_label(starting_point)
     requested_places = _merge_place_lists(visited_places, extra_places)
     visited_places = requested_places
@@ -771,6 +791,7 @@ async def build_plan(
 
             stop = None
             if choice.get("ground_transfer"):
+                # Fly/bus to hub, then ground leg to the typed place (off-airport visit).
                 transfer = dict(choice["ground_transfer"])
                 place_choice = {
                     "city": transfer.get("city") or choice.get("city"),

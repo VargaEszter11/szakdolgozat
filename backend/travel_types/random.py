@@ -1,5 +1,9 @@
-from typing import List, Optional
+"""Random strategy: varied route without a fixed place list.
 
+DB planner picks from ranked candidates at each hub; LLM fallback generates
+five trip variants when no starting airport is available.
+"""
+from typing import List, Optional
 from .common import (
     as_json,
     destination_label,

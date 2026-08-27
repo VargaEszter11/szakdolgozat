@@ -28,10 +28,9 @@
   }
 
   function transportLabel(transport) {
-    if (!transport) return 'N/A';
-    var key = String(transport).trim().toLowerCase();
-    var label = plannedTripsT('transportTypes.' + key, null);
-    return label || transport;
+    return window.TripDisplayHelper
+      ? window.TripDisplayHelper.transportLabel(transport)
+      : (transport || 'N/A');
   }
 
   function placeDisplay(placeName, country) {

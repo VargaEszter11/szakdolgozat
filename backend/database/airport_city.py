@@ -1,5 +1,10 @@
-"""Helpers for deriving display city names from cached airport rows."""
+"""Helpers for deriving display city names from cached airport rows.
 
+Airport DB ``city`` fields often name the airport municipality or full
+facility name. ``CITY_OVERRIDES_BY_IATA`` maps common European hubs to the
+tourist city used in plans and Booking.com search (e.g. KRK → Krakow).
+``airport_name_as_city`` strips facility words from names when no override exists.
+"""
 from __future__ import annotations
 
 import re
@@ -16,6 +21,7 @@ CITY_OVERRIDES_BY_IATA = {
     "BVA": "Paris",
     "CND": "Constanta",
     "FMM": "Memmingen",
+    "FCO": "Rome",
     "FRU": "Bishkek",
     "GDN": "Gdansk",
     "GRX": "Granada",

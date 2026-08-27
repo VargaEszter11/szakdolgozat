@@ -44,7 +44,7 @@
   }
 
   var H = window.TripMapHelper;
-  // Thin wrappers so call sites stay readable, implementations live in tripMapHelper.js.
+  // Thin wrappers so call sites stay readable; implementations live in shared helpers.
   function countryDisplay(value) {
     return H.countryDisplay(value);
   }
@@ -62,6 +62,9 @@
   }
 
   function transportLabel(transport) {
+    if (window.TripDisplayHelper && typeof window.TripDisplayHelper.transportLabel === 'function') {
+      return window.TripDisplayHelper.transportLabel(transport);
+    }
     if (!transport) return 'N/A';
     var key = String(transport).trim().toLowerCase();
     var label = plannedTripsT('transportTypes.' + key, null);
@@ -69,6 +72,9 @@
   }
 
   function accommodationBookingUrl(city, country, checkin, checkout, people) {
+    if (window.TripDisplayHelper && typeof window.TripDisplayHelper.accommodationBookingUrl === 'function') {
+      return window.TripDisplayHelper.accommodationBookingUrl(city, country, checkin, checkout, people);
+    }
     if (!city || !checkin || !checkout || checkin === checkout) return null;
     var params = new URLSearchParams({
       ss: [city, country].filter(Boolean).join(', '),
@@ -639,6 +645,11 @@
     var listEl = modal.querySelector('#editStopsList');
     var rows = listEl ? listEl.querySelectorAll('.trip-stop-card') : [];
 
+    if (!rows.length) {
+      showError(plannedTripsT('editStopsRequired', 'A trip must have at least one stop.'));
+      return false;
+    }
+
     var collected = [];
     for (var i = 0; i < rows.length; i++) {
       var data = readStopRow(rows[i], i + 1);
@@ -909,13 +920,23 @@
           escapeHtml(flightLinkText) +
           '</a>';
       }
-      var accommodationUrl = accommodationBookingUrl(
-        isLastStop ? null : stop.place_name,
-        countryDisplay(stop.country),
-        stop.arrival_date,
-        stop.departure_date,
-        people
-      );
+      // No accommodation on return-home last stop; TripDisplayHelper uses stop coords when saved.
+      var accommodationUrl = !isLastStop && window.TripDisplayHelper
+        && typeof window.TripDisplayHelper.accommodationBookingUrlForStop === 'function'
+        ? window.TripDisplayHelper.accommodationBookingUrlForStop(
+          stop,
+          countryDisplay(stop.country),
+          stop.arrival_date,
+          stop.departure_date,
+          people
+        )
+        : accommodationBookingUrl(
+          isLastStop ? null : stop.place_name,
+          countryDisplay(stop.country),
+          stop.arrival_date,
+          stop.departure_date,
+          people
+        );
       if (accommodationUrl) {
         actions.innerHTML += '<a class="btn-add trip-stop-action-link" href="' + escapeHtml(accommodationUrl) + '" target="_blank" rel="noopener noreferrer">' +
           escapeHtml(plannedTripsT('findAccommodation', 'Find accommodation')) +

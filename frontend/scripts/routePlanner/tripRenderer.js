@@ -17,16 +17,56 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+function plannedTripsLabel(key, fallback) {
+    if (window.TripDisplayHelper && typeof window.TripDisplayHelper.plannedTripsT === 'function') {
+        const v = window.TripDisplayHelper.plannedTripsT(key, fallback);
+        return v != null ? v : fallback;
+    }
+    if (window.i18n && typeof window.i18n.t === 'function') {
+        const v = window.i18n.t('plannedTrips.' + key);
+        if (v && String(v).indexOf('plannedTrips.' + key) !== 0) return v;
+    }
+    return fallback;
+}
+
+export function planNewTripT(key, fallback, vars) {
+    let text = fallback;
+    if (window.i18n && typeof window.i18n.t === 'function') {
+        const v = window.i18n.t('planNewTrip.' + key);
+        if (v && !String(v).startsWith('planNewTrip.')) text = v;
+    }
+    if (vars) {
+        Object.keys(vars).forEach(function (k) {
+            text = text.replace(new RegExp('\\{\\{' + k + '\\}\\}', 'g'), String(vars[k]));
+        });
+    }
+    return text;
+}
+
+// Map known English API error details to localized planner strings
+export function localizePlannerErrorDetail(detail) {
+    if (detail == null || detail === '') return detail;
+    const s = String(detail);
+    if (/add at least one place/i.test(s) || /travel log/i.test(s)) {
+        return planNewTripT(
+            'manualPlacesRequired',
+            'Add at least one place in the field above, or turn on using your travel log from the database.'
+        );
+    }
+    if (/end date must be after/i.test(s)) {
+        return planNewTripT('endDateAfterStart', 'End date must be after start date.');
+    }
+    return detail;
+}
+
 function transportLabel(transport) {
-    if (!transport) return 'N/A';
-    const key = String(transport).trim().toLowerCase();
-    const label = window.i18n && window.i18n.t
-        ? window.i18n.t(`plannedTrips.transportTypes.${key}`)
-        : null;
-    return label && !label.startsWith('plannedTrips.') ? label : transport;
+    return window.TripDisplayHelper
+        ? window.TripDisplayHelper.transportLabel(transport)
+        : (transport || 'N/A');
 }
 
 function formatStopTransport(destination) {
+    // Hub airport names (access_city) appear in the label only — not as the visit city.
     const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
     function tpl(key, fallback) {
         if (!t) return fallback;
@@ -73,23 +113,56 @@ function formatStopTransport(destination) {
 }
 
 function accommodationBookingUrl(city, country, checkin, checkout, people) {
-    if (!city || !checkin || !checkout || checkin === checkout) return null;
-    const params = new URLSearchParams({
-        ss: [city, country].filter(Boolean).join(', '),
-        checkin: checkin,
-        checkout: checkout,
-        group_adults: String(Math.max(1, parseInt(people, 10) || 1)),
-        no_rooms: '1',
-        group_children: '0'
-    });
-    return `https://www.booking.com/searchresults.html?${params.toString()}`;
+    return window.TripDisplayHelper
+        ? window.TripDisplayHelper.accommodationBookingUrl(city, country, checkin, checkout, people)
+        : null;
+}
+
+function hasPlanStops(trip) {
+    return !!(trip && Array.isArray(trip.plan) && trip.plan.length > 0);
+}
+
+/** Parse YYYY-MM-DD at local noon — avoids UTC day shifts from Date/toISOString. */
+function parseIsoLocal(iso) {
+    const s = String(iso || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+    const d = new Date(s + 'T12:00:00');
+    return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatIsoLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+}
+
+function isoDateOnly(value) {
+    const s = String(value || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    const d = parseIsoLocal(s.slice(0, 10));
+    return d ? formatIsoLocal(d) : s.slice(0, 10);
+}
+
+function addDaysIso(iso, days) {
+    const d = parseIsoLocal(iso);
+    if (!d) return iso;
+    d.setDate(d.getDate() + days);
+    return formatIsoLocal(d);
+}
+
+function todayIsoLocal() {
+    return formatIsoLocal(new Date());
 }
 
 export function displayResults(data, tripResults, resultsContainer, options = {}) {
+    // Guard before rendering Save: backend may return an empty plan on edge cases.
     if (!data.draft_plan) {
-        tripResults.innerHTML = '<p class="error-message">No trip plan was generated. Please try again.</p>';
-        resultsContainer.style.display = 'block';
-        bindRetryButton(tripResults, options.onRetry);
+        showError(planNewTripT('noPlanGenerated', 'No trip plan was generated. Please try again.'), null, tripResults, resultsContainer, options);
+        return;
+    }
+    if (!hasPlanStops(data.draft_plan)) {
+        showError(planNewTripT('planNoStops', 'This plan has no stops. Please try again.'), null, tripResults, resultsContainer, options);
         return;
     }
 
@@ -117,10 +190,10 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
 export function renderTripDetails(trip, people = 1, tripTitle = '') {
     const dateRange = trip.startDate && trip.endDate
         ? `${formatDate(trip.startDate)} — ${formatDate(trip.endDate)}`
-        : `${trip.tripLengthDays || 0} days`;
+        : planNewTripT('tripDays', '{{n}} days', { n: trip.tripLengthDays || 0 });
     const heading = (tripTitle && String(tripTitle).trim())
         || trip.startingPoint
-        || 'Your Trip';
+        || planNewTripT('yourTrip', 'Your Trip');
 
     let html = `
         <div class="trip-header">
@@ -132,7 +205,7 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
     if (Array.isArray(trip.requestedPlacesMissing) && trip.requestedPlacesMissing.length) {
         html += `
             <p class="error-message">
-                Could not include these requested places with the current route data:
+                ${escapeHtml(planNewTripT('requestedPlacesMissing', 'Could not include these requested places with the current route data:'))}
                 ${trip.requestedPlacesMissing.map(p => escapeHtml(p)).join(', ')}
             </p>
         `;
@@ -151,13 +224,22 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                 .filter(Boolean)
                 .map(escapeHtml)
                 .join(', ');
-            const accommodationUrl = accommodationBookingUrl(
-                destination.city,
-                countryLabel,
-                destination.arrivalDate,
-                destination.departureDate,
-                people
-            );
+            const accommodationUrl = window.TripDisplayHelper
+                && typeof window.TripDisplayHelper.accommodationBookingUrlForStop === 'function'
+                ? window.TripDisplayHelper.accommodationBookingUrlForStop(
+                    destination,
+                    countryLabel,
+                    destination.arrivalDate,
+                    destination.departureDate,
+                    people
+                )
+                : accommodationBookingUrl(
+                    destination.city,
+                    countryLabel,
+                    destination.arrivalDate,
+                    destination.departureDate,
+                    people
+                );
             html += `
                 <div class="destination-card">
                     <div class="destination-number">${idx + 1}</div>
@@ -165,27 +247,29 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                         <h4 class="destination-city">${cityLine}</h4>
                         <p class="destination-info">
                             ${destination.arrivalDate && destination.departureDate
-                    ? `<strong>${window.i18n.t('plannedTrips.dates')}:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)}`
-                    : `<strong>${window.i18n.t('plannedTrips.days')}:</strong> ${destination.days}`}
-                             | <strong>${window.i18n.t('plannedTrips.transport')}:</strong> ${escapeHtml(formatStopTransport(destination))}
+                    ? `<strong>${escapeHtml(plannedTripsLabel('dates', 'Dates'))}:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)}`
+                    : `<strong>${escapeHtml(plannedTripsLabel('days', 'Days'))}:</strong> ${destination.days}`}
+                             | <strong>${escapeHtml(plannedTripsLabel('transport', 'Transport'))}:</strong> ${escapeHtml(formatStopTransport(destination))}
                         </p>
                         ${destination.booking_url || accommodationUrl ? `
                             <div class="trip-stop-actions">
                                 ${destination.booking_url ? `
                                     <a class="btn-add trip-stop-action-link" href="${escapeHtml(destination.booking_url)}" target="_blank" rel="noopener noreferrer">
-                                        ${destination.flight_availability_verified ? window.i18n.t('plannedTrips.bookThisFlight') : window.i18n.t('plannedTrips.checkFlightAvailability')}
+                                        ${escapeHtml(destination.flight_availability_verified
+                        ? plannedTripsLabel('bookThisFlight', 'Book this flight')
+                        : plannedTripsLabel('checkFlightAvailability', 'Check flight availability'))}
                                     </a>
                                 ` : ''}
                                 ${accommodationUrl ? `
                                     <a class="btn-add trip-stop-action-link" href="${escapeHtml(accommodationUrl)}" target="_blank" rel="noopener noreferrer">
-                                        ${window.i18n.t('plannedTrips.findAccommodation')}
+                                        ${escapeHtml(plannedTripsLabel('findAccommodation', 'Find accommodation'))}
                                     </a>
                                 ` : ''}
                             </div>
                         ` : ''}
                         ${destination.activities && destination.activities.length > 0 ? `
                             <div class="activities">
-                                <strong>${window.i18n.t('plannedTrips.suggestedActivities')}:</strong>
+                                <strong>${escapeHtml(plannedTripsLabel('suggestedActivities', 'Suggested activities'))}:</strong>
                                 <ul>
                                     ${destination.activities.map(a => `<li>${escapeHtml(a)}</li>`).join('')}
                                 </ul>
@@ -199,9 +283,8 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
     }
 
     // Save / retry actions
-    const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
-    const saveLabel = t ? t('planNewTrip.saveTrip') : 'Save Trip';
-    const retryLabel = t ? t('planNewTrip.retryPlan') : 'Retry';
+    const saveLabel = planNewTripT('saveTrip', 'Save Trip');
+    const retryLabel = planNewTripT('retryPlan', 'Retry');
     html += `
         <div class="trip-actions">
             <button type="button" id="retryTripBtn" class="btn-add btn-add-outline">
@@ -210,7 +293,7 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                     <polyline points="1 20 1 14 7 14"/>
                     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                 </svg>
-                ${escapeHtml(retryLabel && !String(retryLabel).startsWith('planNewTrip.') ? retryLabel : 'Retry')}
+                ${escapeHtml(retryLabel)}
             </button>
             <button type="button" id="saveTripBtn" class="btn-add">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 0.5rem;">
@@ -218,7 +301,7 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                     <polyline points="17 21 17 13 7 13 7 21"/>
                     <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                ${escapeHtml(saveLabel && !String(saveLabel).startsWith('planNewTrip.') ? saveLabel : 'Save Trip')}
+                ${escapeHtml(saveLabel)}
             </button>
         </div>
     `;
@@ -235,28 +318,36 @@ function bindRetryButton(root, onRetry) {
 }
 
 async function saveTripToDatabase(trip, button, userStartDate, userEndDate, userPeople, options = {}) {
+    // Two-step save: trip shell, then stops. Failed stop POST rolls back the trip.
     const userId = localStorage.getItem('user_id');
     if (!userId) {
-        window.showError('Please log in to save trips.', function () {
+        window.showError(planNewTripT('loginToSave', 'Please log in to save trips.'), function () {
             window.location.href = '../loginRegister/loginPage.html';
         });
         return;
     }
 
+    if (!hasPlanStops(trip)) {
+        window.showError(planNewTripT('planNoStopsToSave', 'This plan has no stops to save.'));
+        return;
+    }
+
     const originalText = button.innerHTML;
     button.disabled = true;
-    button.textContent = 'Saving...';
+    button.textContent = planNewTripT('savingTrip', 'Saving…');
 
     try {
-        const startDate = userStartDate ? new Date(userStartDate) : new Date();
-        const endDate = userEndDate ? new Date(userEndDate) : new Date(startDate.getTime() + (trip.tripLengthDays || 0) * 86400000);
+        const startIso = isoDateOnly(userStartDate) || todayIsoLocal();
+        const endIso = userEndDate
+            ? isoDateOnly(userEndDate)
+            : addDaysIso(startIso, trip.tripLengthDays || 0);
 
         const customTitle = options.tripTitle && String(options.tripTitle).trim();
+        // user_id comes from the access token on the server — do not send it from the client.
         const tripData = {
-            user_id: parseInt(userId),
-            title: customTitle || trip.startingPoint || 'My Trip',
-            start_date: startDate.toISOString().split('T')[0],
-            end_date: endDate.toISOString().split('T')[0],
+            title: customTitle || trip.startingPoint || planNewTripT('myTrip', 'My Trip'),
+            start_date: startIso,
+            end_date: endIso,
             start_city: trip.startingPoint || null,
             people: userPeople || trip.people || 1
         };
@@ -269,27 +360,27 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
         });
 
         if (!tripResponse.ok) {
-            throw new Error('Failed to create trip');
+            throw new Error(planNewTripT('createTripFailed', 'Failed to create trip'));
         }
 
         const createdTrip = await tripResponse.json();
         const tripId = createdTrip.id;
 
         if (trip.plan && Array.isArray(trip.plan)) {
-            let currentDate = new Date(startDate.getTime());
+            let currentIso = startIso;
 
             for (let i = 0; i < trip.plan.length; i++) {
                 const destination = trip.plan[i];
                 let arrivalStr, departureStr;
 
                 if (destination.arrivalDate && destination.departureDate) {
-                    arrivalStr = destination.arrivalDate;
-                    departureStr = destination.departureDate;
-                    currentDate = new Date(destination.departureDate);
+                    arrivalStr = isoDateOnly(destination.arrivalDate);
+                    departureStr = isoDateOnly(destination.departureDate);
+                    currentIso = departureStr;
                 } else {
-                    arrivalStr = currentDate.toISOString().split('T')[0];
-                    currentDate.setDate(currentDate.getDate() + (destination.days || 1));
-                    departureStr = currentDate.toISOString().split('T')[0];
+                    arrivalStr = currentIso;
+                    departureStr = addDaysIso(currentIso, destination.days || 1);
+                    currentIso = departureStr;
                 }
 
                 const stopData = {
@@ -305,11 +396,31 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
                     flight_availability_verified: destination.flight_availability_verified ?? null
                 };
 
-                await fetch(base + '/api/trip-stops', {
+                const stopResponse = await fetch(base + '/api/trip-stops', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(stopData)
                 });
+                if (!stopResponse.ok) {
+                    let rollbackFailed = false;
+                    try {
+                        const delRes = await fetch(base + '/api/planned-trips/' + tripId, { method: 'DELETE' });
+                        rollbackFailed = !delRes.ok && delRes.status !== 404;
+                    } catch (_) {
+                        rollbackFailed = true;
+                    }
+                    let msg = planNewTripT('saveStopFailed', 'Failed to save stop {{n}} (HTTP {{status}})', {
+                        n: i + 1,
+                        status: stopResponse.status
+                    });
+                    if (rollbackFailed) {
+                        msg += ' ' + planNewTripT(
+                            'orphanTripHint',
+                            'An empty trip may have been left in Planned Trips — delete it manually.'
+                        );
+                    }
+                    throw new Error(msg);
+                }
             }
         }
 
@@ -317,33 +428,38 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
             options.onSaved();
         }
 
+        const goToPlannedTrips = function () {
+            window.location.href = 'planned_trips.html';
+        };
+
         if (typeof window.showModal === 'function') {
             window.showModal({
-                title: (window.i18n && window.i18n.t('planNewTrip.saveTrip')) || 'Save Trip',
-                message: (window.i18n && window.i18n.t('planNewTrip.savedMessage')) || 'Trip saved successfully.',
-                type: 'success'
+                title: planNewTripT('saveTrip', 'Save Trip'),
+                message: planNewTripT('savedMessage', 'Trip saved successfully. You can find it under Planned Trips.'),
+                type: 'success',
+                onClose: goToPlannedTrips
             });
-        } else if (typeof window.showError === 'function') {
-            // fallback: avoid leaving user without feedback
-            console.info('Trip saved successfully.');
+        } else {
+            goToPlannedTrips();
         }
 
     } catch (error) {
         console.error('Error saving trip:', error);
-        window.showError('Failed to save trip: ' + error.message);
+        window.showError(planNewTripT('saveTripFailed', 'Failed to save trip: {{detail}}', {
+            detail: error.message
+        }));
         button.disabled = false;
         button.innerHTML = originalText;
     }
 }
 
 export function showError(message, details, tripResults, resultsContainer, options = {}) {
-    const t = window.i18n && typeof window.i18n.t === 'function' ? window.i18n.t.bind(window.i18n) : null;
-    const retryLabel = t ? t('planNewTrip.retryPlan') : 'Retry';
-    const retryText = retryLabel && !String(retryLabel).startsWith('planNewTrip.') ? retryLabel : 'Retry';
+    const retryText = planNewTripT('retryPlan', 'Retry');
+    const errorLabel = planNewTripT('errorLabel', 'Error:');
     const showRetry = typeof options.onRetry === 'function';
     tripResults.innerHTML = `
         <div class="error-message">
-            <p><strong>Error:</strong> ${escapeHtml(message)}</p>
+            <p><strong>${escapeHtml(errorLabel)}</strong> ${escapeHtml(message)}</p>
             ${details ? `<p class="error-details">${escapeHtml(details)}</p>` : ''}
             ${showRetry ? `
                 <div class="trip-actions trip-actions--error">

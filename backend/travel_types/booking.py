@@ -1,5 +1,9 @@
-"""Flight availability and booking-link helpers for travel planning."""
+"""Flight availability and booking-link helpers for travel planning.
 
+Outbound legs require a matching active ``direct_routes`` row for the travel
+date. Return-home may fall back to an unverified Skyscanner link when no route
+exists. Links use Skyscanner's /origin/dest/YYMMDD/ URL shape.
+"""
 from __future__ import annotations
 
 import re
@@ -41,6 +45,7 @@ def booking_url(
     departure_date: str,
     people: int = 1,
 ) -> Optional[str]:
+    """Build a Skyscanner search URL. ``airline_iata`` is reserved for future direct-airline links."""
     origin = (origin or "").strip().upper()
     destination = (destination or "").strip().upper()
     people = _people_count(people)
@@ -114,6 +119,7 @@ def direct_route_for_leg(db, origin: str, destination: str, airline_iata: Option
 
 
 def route_operates_on_date(route, departure_date: str) -> bool:
+    """False when the leg is outside the route's seasonal effective window."""
     if not route:
         return False
     try:
@@ -135,6 +141,7 @@ def available_flight_candidates(
     candidates: List[dict],
     departure_date: str,
 ) -> List[dict]:
+    """Keep only flight candidates with a DB route that operates on ``departure_date``."""
     return [
         candidate
         for candidate in candidates
@@ -159,6 +166,10 @@ def flight_booking_details(
     airline_iata: Optional[str] = None,
     people: int = 1,
 ) -> dict:
+    """Attach booking metadata for a verified direct route, or {} if none operates that day.
+
+    Empty dict causes plan_builder to skip the flight leg entirely.
+    """
     route = direct_route_for_leg(db, origin, destination, airline_iata)
     if not route_operates_on_date(route, departure_date):
         return {}
@@ -190,6 +201,7 @@ def _soft_flight_booking_details(
     departure_date: str,
     people: int = 1,
 ) -> dict:
+    """Skyscanner link without insisting on a cached route (used for return-home fallback)."""
     origin_code = (origin or "").strip().upper()
     destination_code = (destination or "").strip().upper()
     if not origin_code or not destination_code or origin_code == destination_code:
@@ -216,6 +228,7 @@ def _soft_flight_booking_details(
             "flight_availability_verified": False,
         }
 
+    # No DB route — still offer a generic Skyscanner search for the airport pair.
     url = booking_url(None, origin_code, destination_code, departure_date, people)
     if not url:
         return {}
@@ -252,6 +265,7 @@ def refresh_booking_details(
     starting_airport_iata: str,
     people: int = 1,
 ) -> None:
+    """Recompute flight URLs after dates are finalized at the end of ``build_plan``."""
     previous_iata = starting_airport_iata
     for stop in plan:
         selected_airline_iata = stop.get("airline_iata")
@@ -270,10 +284,10 @@ def refresh_booking_details(
                     travel_date,
                     selected_airline_iata,
                     people,
+                    # Return leg may lack a cached route; still show a check-availability link.
                     allow_unverified=is_return_home,
                 )
             )
-
         if destination_iata:
             previous_iata = destination_iata
 
