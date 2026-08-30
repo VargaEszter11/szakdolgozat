@@ -1,5 +1,6 @@
 /* Shell + shared components*/
 @import url("themes.css");
+@import url("dropdown.css");
 @import url("settings.css");
 
 html:not(.app-ready) body {
@@ -202,6 +203,7 @@ body {
 .main-page-home .sidebar-link.sidebar-link-active {
     color: var(--color-nav-active);
     background: var(--color-nav-active-bg);
+    font-weight: 600;
 }
 
 .main-page-home .sidebar-link.sidebar-link-active .sidebar-icon {
@@ -485,6 +487,9 @@ button.btn-cancel:hover {
     border-radius: 12px;
     background: var(--color-input-bg);
     border: 1px solid var(--color-surface-border);
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .main-page-home .main-stat-icon {
@@ -499,6 +504,11 @@ button.btn-cancel:hover {
     flex-shrink: 0;
 }
 
+.main-page-home .main-stat-body {
+    min-width: 0;
+    flex: 1;
+}
+
 .main-page-home .main-stat-value {
     font-size: 1.45rem;
     font-weight: 700;
@@ -511,8 +521,11 @@ button.btn-cancel:hover {
     margin-top: 0.15rem;
     font-size: 0.75rem;
     font-weight: 500;
+    line-height: 1.25;
     color: var(--color-text-muted, var(--color-modal-message));
     opacity: 0.9;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .main-page-home .main-page-panel .travel-logs-list {
@@ -707,17 +720,67 @@ button.btn-cancel:hover {
 }
 
 @media (max-width: 520px) {
-    .main-page-home .main-stats-strip {
-        grid-template-columns: 1fr 1fr;
+    .main-page-home .main-page-panel {
+        padding: 1rem 0.85rem;
     }
 
-    .main-page-home .main-recent-card .log-image-wrapper {
-        width: 88px;
-        min-height: 96px;
+    .main-page-home .main-stats-strip {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        justify-items: stretch;
+        width: 100%;
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+    }
+
+    .main-page-home .main-stat-card {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.4rem;
+        padding: 0.7rem 0.55rem;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .main-page-home .main-stat-body {
+        width: 100%;
     }
 
     .main-page-home .main-stat-value {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
+    }
+
+    .main-page-home .main-stat-label {
+        font-size: 0.68rem;
+    }
+
+    .main-page-home .main-recent-card .log-image-wrapper {
+        width: 72px;
+        min-height: 88px;
+    }
+
+    .main-page-home .main-recent-card .log-content {
+        padding: 0.7rem 0.75rem;
+    }
+
+    /* Place name and date stack so long dates cannot cover the title. */
+    .main-page-home .main-recent-card .log-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+    }
+
+    .main-page-home .main-recent-card .log-dest {
+        width: 100%;
+    }
+
+    .main-page-home .main-recent-card .log-date {
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 }
 
@@ -766,6 +829,8 @@ button.btn-cancel:hover {
     margin: 0;
     line-height: 1.3;
     color: var(--color-text);
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .main-page-home .travel-log-card .log-date {
@@ -819,8 +884,8 @@ body.page-profile .main-page-home-content-inner>section.card {
     color: var(--color-text);
 }
 
-/* ── Mobile view ── */
-@media (max-width: 768px) {
+/* ── Mobile / tablet view (drawer nav below ~iPad landscape) ── */
+@media (max-width: 1024px) {
 
     .main-page-home {
         --nav-drawer-offset-top: calc(48px + 20px + env(safe-area-inset-top, 0px));
@@ -1070,8 +1135,8 @@ body.page-profile .main-page-home-content-inner>section.card {
     }
 }
 
-/* Desktop: hide menu button (injected for mobile) */
-@media (min-width: 769px) {
+/* Desktop: hide menu button (injected for mobile/tablet) */
+@media (min-width: 1025px) {
     .main-page-home-header .hamburger-btn {
         display: none !important;
     }
@@ -1472,60 +1537,6 @@ body.tutorial-tour-active {
     .tutorial-target-active {
         transition: none !important;
     }
-}
-
-/* ── Country autocomplete ── */
-.country-autocomplete {
-    position: relative;
-    width: 100%;
-}
-
-.country-autocomplete .form-input,
-.country-autocomplete .trip-details-text-input {
-    width: 100%;
-}
-
-.country-autocomplete-list {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 4px);
-    z-index: 40;
-    margin: 0;
-    padding: 0.35rem 0;
-    list-style: none;
-    max-height: 14rem;
-    overflow-y: auto;
-    background: var(--color-modal-surface, var(--color-surface));
-    border: 1px solid var(--color-modal-border, var(--color-surface-border));
-    border-radius: 10px;
-    box-shadow: var(--color-modal-shadow, 0 8px 24px rgba(0, 0, 0, 0.25));
-}
-
-.country-autocomplete-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.55rem 0.85rem;
-    cursor: pointer;
-    color: var(--color-text);
-}
-
-.country-autocomplete-option:hover,
-.country-autocomplete-option.is-active {
-    background: var(--color-nav-hover-bg-strong, rgba(255, 255, 255, 0.06));
-}
-
-.country-autocomplete-name {
-    font-size: 0.9rem;
-}
-
-.country-autocomplete-code {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--color-modal-message, var(--color-text-muted, #888));
 }
 
 /* Planner ready notification — non-blocking corner toast */

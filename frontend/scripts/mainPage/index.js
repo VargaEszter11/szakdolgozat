@@ -8,10 +8,13 @@ function reveal() {
   if (window.markAppReady) window.markAppReady();
 }
 
-function render(places, tripCount) {
+function render(places, tripCount, homeCity) {
   renderStats(places, tripCount);
   renderRecentPlaces(places);
-  renderEuropeCoverage(places);
+  renderEuropeCoverage(places, {
+    homeCity: homeCity || '',
+    userId: localStorage.getItem('user_id') || ''
+  });
   if (window.i18n && window.i18n.applyToPage) window.i18n.applyToPage();
   reveal();
 }
@@ -51,12 +54,21 @@ function loadTravelLog() {
     fetchJson('/api/users/' + uid + '/visited-places'),
     fetchJson('/api/planned-trips').catch(function () {
       return [];
-    })
+    }),
+    fetch('/api/users/' + uid)
+      .then(function (res) {
+        return res.ok ? res.json() : null;
+      })
+      .catch(function () {
+        return null;
+      })
   ])
     .then(function (results) {
       var placesRaw = Array.isArray(results[0]) ? results[0] : [];
       var tripsRaw = Array.isArray(results[1]) ? results[1] : [];
-      render(placesRaw.map(normalizePlace), tripsRaw.length);
+      var user = results[2] && typeof results[2] === 'object' ? results[2] : null;
+      var homeCity = user && user.home_city ? String(user.home_city).trim() : '';
+      render(placesRaw.map(normalizePlace), tripsRaw.length, homeCity);
     })
     .catch(function (err) {
       console.error('Failed to load travel log:', err);

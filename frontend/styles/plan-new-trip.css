@@ -1,4 +1,4 @@
-/* layout inherited from main.css */
+﻿/* layout inherited from main.css */
 
 .route-planner-options {
     display: flex;
@@ -384,7 +384,7 @@ html[data-theme="light"] .error-details {
     color: rgba(153, 27, 27, 0.75);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .route-planner-options {
         flex-direction: column;
     }

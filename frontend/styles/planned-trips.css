@@ -1,4 +1,4 @@
-.planned-trips-page {
+﻿.planned-trips-page {
     padding: 2rem 1rem;
 }
 
@@ -41,7 +41,7 @@
     color: var(--color-log-date-soft);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .planned-trips-page .main-page-home-content-header {
         flex-direction: column;
         align-items: stretch;
@@ -49,7 +49,13 @@
 
     .planned-trips-page .planned-trips-header-actions {
         width: 100%;
+        justify-content: stretch;
+    }
+
+    .planned-trips-page .main-page-home-content-header .btn-add {
+        flex: 1 1 auto;
         justify-content: center;
+        min-width: 0;
     }
 
     .empty-state {
@@ -334,7 +340,7 @@
     color: var(--pt-popup-text);
 }
 
-/* Permanent “Start + city” label on the map (Leaflet tooltip) */
+/* Permanent â€śStart + cityâ€ť label on the map (Leaflet tooltip) */
 .planned-trips-trip-popup .leaflet-tooltip.trip-map-start-tooltip {
     background: transparent !important;
     border: none !important;

@@ -226,7 +226,7 @@
 
         bindSidebarLinks();
 
-        var mq = window.matchMedia('(min-width: 769px)');
+        var mq = window.matchMedia('(min-width: 1025px)');
         function onViewportChange() {
             if (mq.matches) closeDrawer();
         }

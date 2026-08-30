@@ -235,152 +235,73 @@
     return limit > 0 ? matches.slice(0, limit) : matches;
   }
 
-  function closeList(wrap) {
-    var list = wrap && wrap.querySelector('.country-autocomplete-list');
-    if (list) {
-      list.hidden = true;
-      list.innerHTML = '';
-    }
-  }
-
   function mountAutocomplete(input, options) {
     options = options || {};
     if (!input || input.dataset.countryAutocomplete === '1') return input;
-    if (!input.parentNode) return input;
+    if (!global.Dropdown || typeof global.Dropdown.mountAutocomplete !== 'function') {
+      return input;
+    }
 
-    var wrap = document.createElement('div');
-    wrap.className = 'country-autocomplete';
-    input.parentNode.insertBefore(wrap, input);
-    wrap.appendChild(input);
     input.dataset.countryAutocomplete = '1';
-    input.setAttribute('autocomplete', 'off');
-    input.setAttribute('role', 'combobox');
-    input.setAttribute('aria-autocomplete', 'list');
-    input.setAttribute('aria-expanded', 'false');
-
-    var list = document.createElement('ul');
-    list.className = 'country-autocomplete-list';
-    list.hidden = true;
-    list.setAttribute('role', 'listbox');
-    wrap.appendChild(list);
-
-    var activeIndex = -1;
-
-    function setValueFromCode(code) {
-      if (!code) {
-        input.dataset.countryCode = '';
-        return;
-      }
-      input.dataset.countryCode = code;
-      input.value = localizedName(code) || CODE_TO_NAME[code] || code;
-      if (typeof options.onChange === 'function') options.onChange(code, input.value);
-    }
-
-    function syncLanguage() {
-      var code = normalizeCode(input.dataset.countryCode) || codeFromTypedName(input.value);
-      if (code) setValueFromCode(code);
-      if (!list.hidden) refresh();
-    }
-
-    input._countrySyncLanguage = syncLanguage;
 
     var initial =
       normalizeCode(input.dataset.countryCode || '') ||
       normalizeCode(input.value) ||
-      codeFromTypedName(input.value);
-    if (initial) setValueFromCode(initial);
+      codeFromTypedName(input.value) ||
+      '';
 
-    function renderSuggestions(items) {
-      list.innerHTML = '';
-      activeIndex = -1;
-      if (!items.length) {
-        closeList(wrap);
-        input.setAttribute('aria-expanded', 'false');
-        return;
-      }
-      items.forEach(function (item, idx) {
-        var li = document.createElement('li');
-        li.className = 'country-autocomplete-option';
-        li.setAttribute('role', 'option');
-        li.dataset.code = item.code;
-        li.id = (input.id || 'country') + '-opt-' + idx;
-        li.innerHTML =
-          '<span class="country-autocomplete-name"></span>' +
-          '<span class="country-autocomplete-code"></span>';
-        li.querySelector('.country-autocomplete-name').textContent = item.name;
-        li.querySelector('.country-autocomplete-code').textContent = item.code;
-        li.addEventListener('mousedown', function (e) {
-          e.preventDefault();
-          setValueFromCode(item.code);
-          closeList(wrap);
-          input.setAttribute('aria-expanded', 'false');
+    global.Dropdown.mountAutocomplete(input, {
+      clearOnClose: true,
+      initialValue: initial,
+      getDisplay: function (code) {
+        return localizedName(code) || CODE_TO_NAME[code] || code;
+      },
+      getItems: function (query) {
+        return search(query, options.limit || 8).map(function (item) {
+          return { value: item.code, label: item.name, code: item.code };
         });
-        list.appendChild(li);
-      });
-      list.hidden = false;
-      input.setAttribute('aria-expanded', 'true');
-    }
+      },
+      resolveValue: function (text) {
+        var code = codeFromTypedName(text);
+        if (!code) return null;
+        return {
+          value: code,
+          label: localizedName(code) || CODE_TO_NAME[code] || code
+        };
+      },
+      onChange: function (code, label) {
+        input.dataset.countryCode = code || '';
+        if (typeof options.onChange === 'function') options.onChange(code, label);
+      }
+    });
 
-    function refresh() {
-      renderSuggestions(search(input.value, options.limit || 8));
-    }
-
-    function commitTyped() {
-      var code = codeFromTypedName(input.value);
-      if (code) setValueFromCode(code);
-      else input.dataset.countryCode = '';
-      closeList(wrap);
-      input.setAttribute('aria-expanded', 'false');
-    }
+    if (initial) input.dataset.countryCode = initial;
 
     input.addEventListener('input', function () {
-      input.dataset.countryCode = codeFromTypedName(input.value) || '';
-      refresh();
-    });
-    input.addEventListener('focus', function () {
-      refresh();
-    });
-    input.addEventListener('blur', function () {
-      setTimeout(function () {
-        commitTyped();
-      }, 120);
-    });
-    input.addEventListener('keydown', function (e) {
-      var optionsEls = list.querySelectorAll('.country-autocomplete-option');
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (list.hidden) refresh();
-        activeIndex = Math.min(activeIndex + 1, optionsEls.length - 1);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        activeIndex = Math.max(activeIndex - 1, 0);
-      } else if (e.key === 'Enter') {
-        if (!list.hidden && activeIndex >= 0 && optionsEls[activeIndex]) {
-          e.preventDefault();
-          setValueFromCode(optionsEls[activeIndex].dataset.code);
-          closeList(wrap);
-        } else {
-          commitTyped();
-        }
-        return;
-      } else if (e.key === 'Escape') {
-        closeList(wrap);
-        return;
-      } else {
-        return;
-      }
-      for (var i = 0; i < optionsEls.length; i++) {
-        optionsEls[i].classList.toggle('is-active', i === activeIndex);
-      }
-      if (optionsEls[activeIndex]) {
-        input.setAttribute('aria-activedescendant', optionsEls[activeIndex].id);
-      }
+      input.dataset.countryCode =
+        codeFromTypedName(input.value) ||
+        normalizeCode(input.dataset.dropdownValue) ||
+        '';
     });
 
-    document.addEventListener('click', function (e) {
-      if (!wrap.contains(e.target)) closeList(wrap);
-    });
+    function syncLanguage() {
+      var code =
+        normalizeCode(input.dataset.countryCode) ||
+        normalizeCode(input.dataset.dropdownValue) ||
+        codeFromTypedName(input.value);
+      if (!code) return;
+      input.dataset.countryCode = code;
+      var label = localizedName(code) || CODE_TO_NAME[code] || code;
+      if (input._dropdownApi) input._dropdownApi.setValue(code, label);
+      else input.value = label;
+      if (input._dropdownApi && typeof input._dropdownApi.refresh === 'function') {
+        var wrap = input._dropdownApi.wrap;
+        var list = wrap && wrap.querySelector('.' + global.Dropdown.CLS.list);
+        if (list && !list.hidden) input._dropdownApi.refresh();
+      }
+    }
 
+    input._countrySyncLanguage = syncLanguage;
     return input;
   }
 
@@ -388,6 +309,7 @@
     if (!input) return '';
     return (
       normalizeCode(input.dataset.countryCode) ||
+      normalizeCode(input.dataset.dropdownValue) ||
       codeFromTypedName(input.value) ||
       ''
     );

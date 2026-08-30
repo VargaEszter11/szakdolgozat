@@ -8,13 +8,17 @@
     }
 
     // Client-side geocode, used only when DB coordinates are missing
-    function nominatimGeocode(query) {
+    function nominatimGeocode(query, options) {
+        options = options || {};
         if (!query || !String(query).trim()) return Promise.resolve(null);
-        var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
+        var params = {
             q: String(query).trim(),
             format: 'json',
-            limit: '1'
-        });
+            limit: String(options.limit || 1)
+        };
+        if (options.addressdetails) params.addressdetails = '1';
+        if (options.featuretype) params.featuretype = String(options.featuretype);
+        var url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams(params);
         return fetch(url, { headers: { Accept: 'application/json' } })
             .then(function (res) {
                 return res.ok ? res.json() : null;

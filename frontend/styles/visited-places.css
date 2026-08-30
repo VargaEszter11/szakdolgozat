@@ -1,4 +1,4 @@
-.visited-places-page .main-page-home-content-inner {
+﻿.visited-places-page .main-page-home-content-inner {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -65,7 +65,7 @@
     flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .visited-places-page .main-page-home-content-header {
         flex-direction: column;
         align-items: stretch;
@@ -237,7 +237,7 @@
     margin-top: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .edit-place-modal-footer {
         padding: 1rem 1.15rem 1.15rem;
     }
@@ -252,7 +252,7 @@
     cursor: default;
 }
 
-/* ── Place details modal (matches travel-log cards + page background) ── */
+/* â”€â”€ Place details modal (matches travel-log cards + page background) â”€â”€ */
 @keyframes place-details-overlay-in {
     from {
         opacity: 0;
@@ -304,7 +304,7 @@
     animation: place-details-panel-in 0.26s ease;
 }
 
-/* Visited places "more info" — match travel-log cards (flat surface, log-title typography) */
+/* Visited places "more info" â€” match travel-log cards (flat surface, log-title typography) */
 .place-details-title-wrap {
     display: flex;
     align-items: flex-start;
@@ -528,7 +528,7 @@
     filter: brightness(1.04);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .main-page-home .travel-log-card:has(.log-image-wrapper) {
         flex-direction: column;
         align-items: stretch;

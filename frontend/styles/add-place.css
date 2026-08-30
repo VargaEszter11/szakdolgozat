@@ -1,4 +1,4 @@
-.add-place-card {
+﻿.add-place-card {
     background: var(--color-surface);
     border-radius: 16px;
     padding: 2rem;
@@ -205,12 +205,6 @@ span.flatpickr-weekday {
 
 #resultsContainer {
     margin-top: 2rem;
-}
-
-@media (max-width: 768px) {
-    .star-rating {
-        justify-content: space-between;
-    }
 }
 
 .submit-progress {

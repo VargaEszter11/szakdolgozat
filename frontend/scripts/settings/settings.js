@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var languageSelect = document.getElementById('languageSelect');
     var savedMessageEl = document.getElementById('settingsSavedMessage');
 
-    if (!form || !themeSelect || !languageSelect) {
+    if (!form || !themeSelect || !languageSelect || !window.Dropdown) {
         return;
     }
 
@@ -29,18 +29,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    themeSelect.value = savedTheme;
+    var themeWrap = themeSelect.closest('.app-dropdown');
+    var languageWrap = languageSelect.closest('.app-dropdown');
+
+    var themeWidget = window.Dropdown.mountSelect(themeWrap, { onChange: applyTheme });
+    var languageWidget = window.Dropdown.mountSelect(languageWrap, {
+        onChange: function (lang) {
+            applyLanguage(lang);
+            if (themeWidget) themeWidget.refreshLabel();
+            if (languageWidget) languageWidget.refreshLabel();
+        }
+    });
+
+    if (themeWidget) themeWidget.setValue(savedTheme);
+    if (languageWidget) languageWidget.setValue(savedLanguage);
     applyTheme(savedTheme);
-    languageSelect.value = savedLanguage;
     applyLanguage(savedLanguage);
-
-    themeSelect.addEventListener('change', function () {
-        applyTheme(themeSelect.value);
-    });
-
-    languageSelect.addEventListener('change', function () {
-        applyLanguage(languageSelect.value);
-    });
+    if (themeWidget) themeWidget.refreshLabel();
+    if (languageWidget) languageWidget.refreshLabel();
 
     function persistSettings() {
         savedTheme = themeSelect.value;
@@ -69,10 +75,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var cancelBtn = document.getElementById('cancelBtn');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', function () {
-            themeSelect.value = savedTheme;
-            languageSelect.value = savedLanguage;
+            if (themeWidget) themeWidget.setValue(savedTheme);
+            if (languageWidget) languageWidget.setValue(savedLanguage);
             applyTheme(savedTheme);
             applyLanguage(savedLanguage);
+            if (themeWidget) themeWidget.refreshLabel();
+            if (languageWidget) languageWidget.refreshLabel();
         });
     }
 });

@@ -401,7 +401,7 @@
 
   function openDrawerIfNeeded(target) {
     if (!target || !target.closest || !target.closest('#app-sidebar')) return;
-    if (window.matchMedia && window.matchMedia('(min-width: 769px)').matches) return;
+    if (window.matchMedia && window.matchMedia('(min-width: 1025px)').matches) return;
     document.body.classList.add('nav-drawer-open');
     var toggle = document.getElementById('app-menu-toggle');
     if (toggle) toggle.setAttribute('aria-expanded', 'true');

@@ -15,6 +15,7 @@
     <script src="../../scripts/i18n/translations.js" defer></script>
     <script src="../../scripts/i18n/i18n.js" defer></script>
     <script src="../../scripts/utils/sidebarHeader.js" defer></script>
+    <script src="../../scripts/utils/dropdown.js" defer></script>
 </head>
 
 <body class="page-settings">
@@ -40,22 +41,58 @@
                         <form id="settingsForm" class="add-place-form">
 
                             <div class="form-group">
-                                <label for="themeSelect" class="form-label" data-i18n="settings.theme">Theme</label>
-                                <select id="themeSelect" name="theme" class="form-input">
-                                    <option value="light" data-i18n="settings.themeLight">Light</option>
-                                    <option value="dark" data-i18n="settings.themeDark">Dark</option>
-                                    <option value="auto" data-i18n="settings.themeAuto">Auto (System)</option>
-                                </select>
+                                <span class="form-label" id="themeSelectLabel"
+                                    data-i18n="settings.theme">Theme</span>
+                                <div class="app-dropdown">
+                                    <button type="button" class="form-input app-dropdown-trigger" id="themeSelectTrigger"
+                                        aria-haspopup="listbox" aria-expanded="false" aria-labelledby="themeSelectLabel">
+                                        <span class="app-dropdown-label"></span>
+                                    </button>
+                                    <ul class="app-dropdown-list" id="themeSelectList" role="listbox"
+                                        aria-labelledby="themeSelectLabel" hidden>
+                                        <li class="app-dropdown-option" role="option" data-value="light" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.themeLight">Light</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="dark" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.themeDark">Dark</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="auto" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.themeAuto">Auto (System)</span>
+                                        </li>
+                                    </ul>
+                                    <input type="hidden" id="themeSelect" name="theme" value="dark">
+                                </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="languageSelect" class="form-label"
-                                    data-i18n="settings.language">Language</label>
-                                <select id="languageSelect" name="language" class="form-input">
-                                    <option value="en" data-i18n="settings.langOptionEn">English</option>
-                                    <option value="hu" data-i18n="settings.langOptionHu">Magyar</option>
-                                    <option value="de" data-i18n="settings.langOptionDe">Deutsch</option>
-                                </select>
+                                <span class="form-label" id="languageSelectLabel"
+                                    data-i18n="settings.language">Language</span>
+                                <div class="app-dropdown">
+                                    <button type="button" class="form-input app-dropdown-trigger"
+                                        id="languageSelectTrigger" aria-haspopup="listbox" aria-expanded="false"
+                                        aria-labelledby="languageSelectLabel">
+                                        <span class="app-dropdown-label"></span>
+                                    </button>
+                                    <ul class="app-dropdown-list" id="languageSelectList" role="listbox"
+                                        aria-labelledby="languageSelectLabel" hidden>
+                                        <li class="app-dropdown-option" role="option" data-value="en" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.langOptionEn">English</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="hu" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.langOptionHu">Magyar (Hungarian)</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="de" tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="settings.langOptionDe">Deutsch (German)</span>
+                                        </li>
+                                    </ul>
+                                    <input type="hidden" id="languageSelect" name="language" value="en">
+                                </div>
                             </div>
 
                             <p id="settingsSavedMessage" class="settings-saved-message" role="status" hidden
