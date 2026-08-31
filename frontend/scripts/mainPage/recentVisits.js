@@ -50,7 +50,7 @@ export function renderRecentPlaces(places) {
     container.innerHTML =
       '<p class="travel-logs-empty muted">' +
       t('mainPage.noTravelsYet', 'No travels yet.') +
-      ' <a href="visitedPlaces/add_new_place.html">' +
+      ' <a href="/places/new">' +
       t('visitedPlaces.addFirstPlace', 'Add your first place') +
       '</a>.</p>';
     return;

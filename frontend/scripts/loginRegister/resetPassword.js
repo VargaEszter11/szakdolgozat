@@ -52,7 +52,7 @@ function getResetTokenFromUrl() {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                window.location.href = '/pages/loginRegister/loginPage.html';
+                window.location.href = '/login';
             } else {
                 showError(apiErrorDetail(data, resetPasswordT('resetPassword.resetFailed', 'Reset failed.')));
             }

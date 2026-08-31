@@ -322,7 +322,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
     const userId = localStorage.getItem('user_id');
     if (!userId) {
         window.showError(planNewTripT('loginToSave', 'Please log in to save trips.'), function () {
-            window.location.href = '../loginRegister/loginPage.html';
+            window.location.href = '/login';
         });
         return;
     }
@@ -429,7 +429,7 @@ async function saveTripToDatabase(trip, button, userStartDate, userEndDate, user
         }
 
         const goToPlannedTrips = function () {
-            window.location.href = 'planned_trips.html';
+            window.location.href = '/trips';
         };
 
         if (typeof window.showModal === 'function') {

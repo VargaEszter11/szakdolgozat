@@ -43,7 +43,7 @@ function loadTravelLog() {
   if (!userId) {
     showMessageInBoth(
       tpl(t('mainPage.loginRequired', 'Please <a href="{{href}}">log in</a> to see your travel log.'), {
-        href: 'loginRegister/loginPage.html'
+        href: '/login'
       })
     );
     return;

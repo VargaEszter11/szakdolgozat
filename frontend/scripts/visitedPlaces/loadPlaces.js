@@ -1060,7 +1060,7 @@
     if (countEl) countEl.textContent = sorted.length;
 
     var tEmpty = window.i18n && window.i18n.t ? window.i18n.t.bind(window.i18n) : function (k) { return k; };
-    var emptyHtml = (tEmpty('visitedPlaces.emptyText') || 'No places yet.') + ' <a href="add_new_place.html">' + (tEmpty('visitedPlaces.addFirstPlace') || 'Add your first place') + '</a>.';
+    var emptyHtml = (tEmpty('visitedPlaces.emptyText') || 'No places yet.') + ' <a href="/places/new">' + (tEmpty('visitedPlaces.addFirstPlace') || 'Add your first place') + '</a>.';
     container.innerHTML = sorted.length
       ? sorted.map(renderCard).join('')
       : '<p class="place-cards-empty">' + emptyHtml + '</p>';
@@ -1075,7 +1075,7 @@
       if (container) {
         container.innerHTML = '<p class="place-cards-empty">' +
           tpl(t('visitedPlaces.loginRequiredHtml', 'Please log in to view your places. <a href="{{href}}">Log in here</a>.'), {
-            href: '../loginRegister/loginPage.html'
+            href: '/login'
           }) +
           '</p>';
       }

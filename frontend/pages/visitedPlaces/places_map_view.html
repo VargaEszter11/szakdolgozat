@@ -4,21 +4,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="../../scripts/utils/boot.js"></script>
-  <link rel="stylesheet" href="../../styles/main.css">
-  <link rel="stylesheet" href="../../styles/visited-places.css">
-  <link rel="stylesheet" href="../../styles/map-view.css">
+  <script src="/scripts/utils/boot.js"></script>
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/styles/visited-places.css">
+  <link rel="stylesheet" href="/styles/map-view.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="icon" href="../../pictures/marker.png">
+  <link rel="icon" href="/pictures/marker.png">
   <title data-i18n="visitedPlaces.mapPageTitle">Map View – TravelApp</title>
-  <script src="../../scripts/utils/apiConfig.js"></script>
-  <script src="../../scripts/utils/themeLoader.js"></script>
-  <script src="../../scripts/utils/authGuard.js"></script>
-  <script src="../../scripts/utils/dropdown.js"></script>
-  <script src="../../scripts/utils/countries.js"></script>
-  <script src="../../scripts/utils/sidebarHeader.js"></script>
-  <script src="../../scripts/i18n/translations.js"></script>
-  <script src="../../scripts/i18n/i18n.js"></script>
+  <script src="/scripts/utils/apiConfig.js"></script>
+  <script src="/scripts/utils/themeLoader.js"></script>
+  <script src="/scripts/utils/authGuard.js"></script>
+  <script src="/scripts/utils/dropdown.js"></script>
+  <script src="/scripts/utils/countries.js"></script>
+  <script src="/scripts/utils/sidebarHeader.js"></script>
+  <script src="/scripts/i18n/translations.js"></script>
+  <script src="/scripts/i18n/i18n.js"></script>
 </head>
 
 <body>
@@ -44,7 +44,7 @@
             </div>
 
             <div class="visited-places-header-actions">
-              <a href="add_new_place.html" class="btn-add">
+              <a href="/places/new" class="btn-add">
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10" />
@@ -53,7 +53,7 @@
                 </svg>
                 <span data-i18n="nav.addPlace">Add Place</span>
               </a>
-              <a href="visited_places.html" class="btn-add btn-add-outline">
+              <a href="/places" class="btn-add btn-add-outline">
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="8" y1="6" x2="21" y2="6" />
@@ -79,8 +79,8 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="../../scripts/utils/mapHelper.js"></script>
-  <script src="../../scripts/visitedPlaces/loadPlacesMap.js" defer></script>
+  <script src="/scripts/utils/mapHelper.js"></script>
+  <script src="/scripts/visitedPlaces/loadPlacesMap.js" defer></script>
 </body>
 
 </html>

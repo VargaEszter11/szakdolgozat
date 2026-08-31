@@ -38,6 +38,8 @@ docker compose up --build -d
 
 Open **http://localhost** (frontend on port 80; API proxied to the backend).
 
+Pretty URLs (via nginx): `/`, `/places`, `/places/map`, `/places/new`, `/trips`, `/trips/new`, `/share`, `/settings`, `/settings/profile`, `/profile`, `/login`, `/register`, `/reset-password`, `/admin`, `/admin/feedback`.
+
 Local Compose overrides (`docker-compose.override.yaml`) also publish Postgres on host port **5433**.
 
 Stop:

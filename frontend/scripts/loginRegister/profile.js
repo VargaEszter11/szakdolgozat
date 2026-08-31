@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         <h2 class="main-page-panel-title" data-i18n="profile.account">Account</h2>
         <p class="muted" data-i18n="profile.manageYourAccountAndPreferences">Manage your account and preferences.</p>
         <div class="profile-account-buttons">
-          <a href="../settings/editProfile.html" class="btn-add btn-add-outline profile-btn-edit">
+          <a href="/settings/profile" class="btn-add btn-add-outline profile-btn-edit">
             <svg class="profile-action-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
               localStorage.removeItem('google_avatar_url');
               localStorage.removeItem('access_token');
             }
-            window.location.href = 'loginPage.html';
+            window.location.href = '/login';
           });
         });
       }

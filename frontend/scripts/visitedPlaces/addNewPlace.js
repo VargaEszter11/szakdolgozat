@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var DRAFT_KEY = 'add_new_place_draft_v1';
 
   function goToVisitedPlaces() {
-    window.location.href = 'visited_places.html';
+    window.location.href = '/places';
   }
 
   function tpl(template, vars) {
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (cancelBtn) {
     cancelBtn.addEventListener('click', function () {
       clearDraft();
-      window.location.href = 'visited_places.html';
+      window.location.href = '/places';
     });
   }
 
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var userId = localStorage.getItem('user_id');
     if (!userId) {
       showErrorMsg(t('addNewPlace.loginRequired'), function () {
-        window.location.href = '../loginRegister/loginPage.html';
+        window.location.href = '/login';
       });
       return;
     }

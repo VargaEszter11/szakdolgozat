@@ -10,20 +10,11 @@
   }
 
   function isPlannerPage() {
-    return /plan_new_trip\.html$/i.test(global.location.pathname || '');
+    return /\/trips\/new\/?$/i.test(global.location.pathname || '');
   }
 
   function plannerPageUrl() {
-    if (global.appShell && typeof global.appShell.pagePrefix === 'string') {
-      return global.appShell.pagePrefix + 'routePlanner/plan_new_trip.html';
-    }
-    if (/\/routePlanner\//i.test(global.location.pathname || '')) {
-      return 'plan_new_trip.html';
-    }
-    if (/\/(visitedPlaces|settings|loginRegister|admin)\//i.test(global.location.pathname || '')) {
-      return '../routePlanner/plan_new_trip.html';
-    }
-    return 'routePlanner/plan_new_trip.html';
+    return '/trips/new';
   }
 
   function load() {

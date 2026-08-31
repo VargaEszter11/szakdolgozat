@@ -4,19 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../scripts/utils/boot.js"></script>
-    <link rel="stylesheet" href="../styles/main.css">
+    <script src="/scripts/utils/boot.js"></script>
+    <link rel="stylesheet" href="/styles/main.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="icon" href="../pictures/marker.png">
-    <title data-i18n="mainPage.pageTitle">Main page – TravelApp</title>
-    <script src="../scripts/utils/apiConfig.js"></script>
-    <script src="../scripts/utils/themeLoader.js"></script>
-    <script src="../scripts/utils/authGuard.js"></script>
-    <script src="../scripts/utils/dropdown.js"></script>
-    <script src="../scripts/utils/countries.js"></script>
-    <script src="../scripts/i18n/translations.js" defer></script>
-    <script src="../scripts/i18n/i18n.js" defer></script>
-    <script src="../scripts/utils/sidebarHeader.js" defer></script>
+    <link rel="icon" href="/pictures/marker.png">
+    <title data-i18n="mainPage.pageTitle">Main page – Planventure</title>
+    <script src="/scripts/utils/apiConfig.js"></script>
+    <script src="/scripts/utils/themeLoader.js"></script>
+    <script src="/scripts/utils/authGuard.js"></script>
+    <script src="/scripts/utils/dropdown.js"></script>
+    <script src="/scripts/utils/countries.js"></script>
+    <script src="/scripts/i18n/translations.js" defer></script>
+    <script src="/scripts/i18n/i18n.js" defer></script>
+    <script src="/scripts/utils/sidebarHeader.js" defer></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 </head>
 
@@ -31,9 +31,9 @@
                 <div class="main-page-home-content-inner">
                     <div class="main-page-home-content-header">
                         <div class="main-page-home-intro">
-                            <h1 class="main-page-home-title" data-i18n="mainPage.title">Welcome to TravelApp!</h1>
+                            <h1 class="main-page-home-title" data-i18n="mainPage.title">Welcome to Planventure!</h1>
                         </div>
-                        <a href="visitedPlaces/add_new_place.html" class="btn-add">
+                        <a href="/places/new" class="btn-add">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10" />
@@ -51,7 +51,7 @@
                             <h2 id="mainRecentHeading" class="main-page-panel-title" data-i18n="mainPage.recentVisits">
                                 Most recent visits
                             </h2>
-                            <a href="visitedPlaces/visited_places.html" class="main-page-panel-more"
+                            <a href="/places" class="main-page-panel-more"
                                 data-i18n="mainPage.moreVisits">More</a>
                         </div>
                         <div id="mainTravelLogs" class="travel-logs-list" aria-live="polite">
@@ -75,7 +75,7 @@
             </main>
         </div>
     </div>
-    <script type="module" src="../scripts/mainPage/index.js"></script>
+    <script type="module" src="/scripts/mainPage/index.js"></script>
 </body>
 
 </html>

@@ -44,7 +44,8 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         const data = await response.json();
 
         if (data.success) {
-            window.location.href = "loginPage.html";
+            window.location.href = "/login";
+
             return;
         }
         showError(

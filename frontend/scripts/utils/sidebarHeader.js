@@ -1,10 +1,4 @@
 (function () {
-    var scriptEl = document.currentScript;
-    var src = scriptEl ? scriptEl.getAttribute('src') : '';
-    var depth = (src.match(/\.\.\//g) || []).length;
-    var prefix = depth >= 2 ? '../../' : '../';
-    var pagePrefix = depth >= 2 ? '../' : '';
-
     var MENU_ICON =
         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
         '<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />' +
@@ -15,11 +9,11 @@
         '<button type="button" class="hamburger-btn" id="app-menu-toggle" aria-expanded="false" aria-controls="app-sidebar" aria-label="Menu">' +
         MENU_ICON +
         '</button>' +
-        '<a href="' + pagePrefix + 'main_page.html" class="nav-logo" data-i18n-title="nav.home" title="Home">' +
-        '<img src="' + prefix + 'pictures/marker.png" alt="TravelApp">' +
+        '<a href="/" class="nav-logo" data-i18n-title="nav.home" title="Home">' +
+        '<span class="nav-brand">Planventure</span>' +
         '</a>' +
         '</div>' +
-        '<a href="' + pagePrefix + 'loginRegister/profile.html" class="main-header-profile" data-i18n-title="nav.profile" title="Profile">' +
+        '<a href="/profile" class="main-header-profile" data-i18n-title="nav.profile" title="Profile">' +
         '<span class="main-header-profile-inner">' +
         '<img id="headerProfileAvatarImg" class="main-header-profile-img" alt="" width="28" height="28" decoding="async" />' +
         '<span id="headerProfileInitials" class="main-header-profile-initials" aria-hidden="true"></span>' +
@@ -48,37 +42,32 @@
         '<div class="sidebar-section-title">' + MAP_ICON +
         '<span data-i18n="nav.placesSection">Places</span>' +
         '</div>' +
-        '<a href="' + pagePrefix + 'visitedPlaces/visited_places.html" class="sidebar-link" data-i18n="nav.visitedPlaces" data-sidebar-id="visitedPlaces">Visited Places</a>' +
-        '<a href="' + pagePrefix + 'visitedPlaces/add_new_place.html" class="sidebar-link" data-i18n="nav.addNewPlace" data-sidebar-id="addNewPlace">Add New Place</a>' +
+        '<a href="/places" class="sidebar-link" data-i18n="nav.visitedPlaces" data-sidebar-id="visitedPlaces">Visited Places</a>' +
+        '<a href="/places/new" class="sidebar-link" data-i18n="nav.addNewPlace" data-sidebar-id="addNewPlace">Add New Place</a>' +
         '</div>' +
         '<div class="sidebar-section">' +
         '<div class="sidebar-section-title">' + PLANE_ICON +
         '<span data-i18n="nav.tripsSection">Trips</span>' +
         '</div>' +
-        '<a href="' + pagePrefix + 'routePlanner/planned_trips.html" class="sidebar-link" data-i18n="nav.plannedTrips" data-sidebar-id="plannedTrips">Planned Trips</a>' +
-        '<a href="' + pagePrefix + 'routePlanner/plan_new_trip.html" class="sidebar-link" data-i18n="nav.planNewTrip" data-sidebar-id="planNewTrip">Plan New Trip</a>' +
+        '<a href="/trips" class="sidebar-link" data-i18n="nav.plannedTrips" data-sidebar-id="plannedTrips">Planned Trips</a>' +
+        '<a href="/trips/new" class="sidebar-link" data-i18n="nav.planNewTrip" data-sidebar-id="planNewTrip">Plan New Trip</a>' +
         '</div>' +
         '<div class="sidebar-section sidebar-section-settings">' +
-        '<a href="' + pagePrefix + 'settings/settings.html" class="sidebar-link sidebar-link-single" data-sidebar-id="settings">' +
+        '<a href="/settings" class="sidebar-link sidebar-link-single" data-sidebar-id="settings">' +
         SETTINGS_ICON +
         '<span data-i18n="nav.settings">Settings</span>' +
         '</a>' +
         '</div>' +
         '</nav>';
 
-    var PAGE_MAP = {
-        'visited_places': 'visitedPlaces',
-        'add_new_place': 'addNewPlace',
-        'planned_trips': 'plannedTrips',
-        'plan_new_trip': 'planNewTrip',
-        'settings': 'settings',
-        'places_map_view': 'visitedPlaces'
-    };
-
     function highlightActive() {
-        var path = location.pathname;
-        var file = path.split('/').pop().replace('.html', '');
-        var activeId = PAGE_MAP[file];
+        var path = (location.pathname || '/').replace(/\/+$/, '') || '/';
+        var activeId = null;
+        if (path === '/places' || path === '/places/map') activeId = 'visitedPlaces';
+        else if (path === '/places/new') activeId = 'addNewPlace';
+        else if (path === '/trips') activeId = 'plannedTrips';
+        else if (path === '/trips/new') activeId = 'planNewTrip';
+        else if (path === '/settings' || path === '/settings/profile') activeId = 'settings';
         if (!activeId) return;
         var link = document.querySelector('[data-sidebar-id="' + activeId + '"]');
         if (link) link.classList.add('sidebar-link-active');
@@ -240,7 +229,7 @@
     function loadOnboardingTutorial() {
         if (document.querySelector('script[data-onboarding-tutorial]')) return;
         var s = document.createElement('script');
-        s.src = prefix + 'scripts/utils/onboardingTutorial.js';
+        s.src = '/scripts/utils/onboardingTutorial.js';
         s.setAttribute('data-onboarding-tutorial', '1');
         s.onload = function () {
             if (typeof window.startTravelTutorial === 'function') {
@@ -251,8 +240,8 @@
     }
 
     window.appShell = {
-        pagePrefix: pagePrefix,
-        assetPrefix: prefix,
+        pagePrefix: '/',
+        assetPrefix: '/',
         injectHeader: injectHeader,
         injectSidebar: injectSidebar,
         refreshHeaderProfileAvatar: refreshHeaderProfileAvatar,
@@ -272,7 +261,7 @@
     function loadPlannerSessionWatch() {
         if (document.querySelector('script[data-planner-session]')) return;
         var s = document.createElement('script');
-        s.src = prefix + 'scripts/routePlanner/plannerSession.js';
+        s.src = '/scripts/routePlanner/plannerSession.js';
         s.setAttribute('data-planner-session', '1');
         document.body.appendChild(s);
     }

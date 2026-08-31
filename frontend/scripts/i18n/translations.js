@@ -36,8 +36,8 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Deutsch (German)'
     },
     mainPage: {
-      title: 'Welcome to TravelApp!',
-      pageTitle: 'Main page – TravelApp',
+      title: 'Welcome to Planventure!',
+      pageTitle: 'Main page – Planventure',
       recentVisits: 'Most recent visits',
       moreVisits: 'More',
       europeChartTitle: 'European countries visited',
@@ -449,7 +449,7 @@ window.I18N_TRANSLATIONS = {
       forgotPasswordLink: 'Forgot your password?',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
-      dontHaveAnAccount: 'Don\'t have an account? <a href="registerPage.html">Register here</a>'
+      dontHaveAnAccount: 'Don\'t have an account? <a href="/register">Register here</a>'
     },
     register: {
       title: 'Register',
@@ -459,7 +459,7 @@ window.I18N_TRANSLATIONS = {
       email: 'Email *',
       password: 'Password *',
       confirmPassword: 'Confirm Password *',
-      alreadyHaveAnAccount: 'Already have an account? <a href="loginPage.html">Log in here</a>',
+      alreadyHaveAnAccount: 'Already have an account? <a href="/login">Log in here</a>',
       usernamePlaceholder: 'Choose a username',
       emailPlaceholder: 'Your email',
       passwordPlaceholder: 'Choose a password',
@@ -581,8 +581,8 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Német'
     },
     mainPage: {
-      title: 'Üdvözlünk a TravelAppben!',
-      pageTitle: 'Főoldal – TravelApp',
+      title: 'Üdvözlünk a Planventure-ben!',
+      pageTitle: 'Főoldal – Planventure',
       recentVisits: 'Legutóbbi látogatások',
       moreVisits: 'Több',
       europeChartTitle: 'Meglátogatott európai országok',
@@ -994,7 +994,7 @@ window.I18N_TRANSLATIONS = {
       forgotPasswordLink: 'Elfelejtetted a jelszavad?',
       showPassword: 'Jelszó megjelenítése',
       hidePassword: 'Jelszó elrejtése',
-      dontHaveAnAccount: 'Még nincs fiókod? <a href="registerPage.html">Regisztrálj itt</a>'
+      dontHaveAnAccount: 'Még nincs fiókod? <a href="/register">Regisztrálj itt</a>'
     },
     register: {
       title: 'Regisztráció',
@@ -1004,7 +1004,7 @@ window.I18N_TRANSLATIONS = {
       email: 'E-mail *',
       password: 'Jelszó *',
       confirmPassword: 'Jelszó megerősítése *',
-      alreadyHaveAnAccount: 'Már van fiókod? <a href="loginPage.html">Jelentkezz be itt</a>',
+      alreadyHaveAnAccount: 'Már van fiókod? <a href="/login">Jelentkezz be itt</a>',
       usernamePlaceholder: 'Válassz felhasználónevet',
       emailPlaceholder: 'E-mail címed',
       passwordPlaceholder: 'Válassz jelszót',
@@ -1126,8 +1126,8 @@ window.I18N_TRANSLATIONS = {
       langOptionDe: 'Deutsch'
     },
     mainPage: {
-      title: 'Willkommen bei TravelApp!',
-      pageTitle: 'Startseite – TravelApp',
+      title: 'Willkommen bei Planventure!',
+      pageTitle: 'Startseite – Planventure',
       recentVisits: 'Neueste Besuche',
       moreVisits: 'Mehr',
       europeChartTitle: 'Besuchte europäische Länder',
@@ -1539,7 +1539,7 @@ window.I18N_TRANSLATIONS = {
       forgotPasswordLink: 'Passwort vergessen?',
       showPassword: 'Passwort anzeigen',
       hidePassword: 'Passwort verbergen',
-      dontHaveAnAccount: 'Noch kein Konto? <a href="registerPage.html">Hier registrieren</a>'
+      dontHaveAnAccount: 'Noch kein Konto? <a href="/register">Hier registrieren</a>'
     },
     register: {
       title: 'Registrieren',
@@ -1549,7 +1549,7 @@ window.I18N_TRANSLATIONS = {
       email: 'E-Mail *',
       password: 'Passwort *',
       confirmPassword: 'Passwort bestätigen *',
-      alreadyHaveAnAccount: 'Bereits ein Konto? <a href="loginPage.html">Hier anmelden</a>',
+      alreadyHaveAnAccount: 'Bereits ein Konto? <a href="/login">Hier anmelden</a>',
       usernamePlaceholder: 'Benutzername wählen',
       emailPlaceholder: 'Deine E-Mail',
       passwordPlaceholder: 'Passwort wählen',

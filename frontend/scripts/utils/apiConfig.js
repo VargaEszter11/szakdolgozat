@@ -7,7 +7,7 @@
     var BACKEND = 'http://127.0.0.1:8000';
     var isLocalDevOnOtherPort =
         (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') &&
-        window.location.port && window.location.port !== '8000';
+        window.location.port && window.location.port !== '8000' && window.location.port !== '80';
 
     window.API_BASE_URL = isLocalDevOnOtherPort ? BACKEND : '';
 
@@ -34,6 +34,11 @@
 
     window.clearAuthSession = clearSession;
 
+    function isPublicPath(path) {
+        path = (path || '/').replace(/\/+$/, '') || '/';
+        return /^\/(login|register|share|reset-password|admin|admin\/feedback)$/.test(path);
+    }
+
     var _fetch = window.fetch;
     window.fetch = function (url, opts) {
         opts = opts || {};
@@ -53,23 +58,10 @@
         return _fetch.call(this, url, opts).then(function (res) {
             if (res.status === 401 && isApiUrl(url)) {
                 var path = location.pathname || '';
-                var isPublicPage = /(loginPage|registerPage|shared_trip|forgotPassword|resetPassword|admin(_feedback)?)\.html/.test(path);
-                if (!isPublicPage && localStorage.getItem('access_token')) {
+                if (!isPublicPath(path) && localStorage.getItem('access_token')) {
                     clearSession();
-                    var depth = (path.match(/\//g) || []).length;
-                    // pages/... → login under pages/loginRegister/
-                    var loginHref = depth >= 3
-                        ? '../loginRegister/loginPage.html'
-                        : 'loginRegister/loginPage.html';
-                    if (path.indexOf('/pages/') !== -1) {
-                        if (path.indexOf('/pages/main_page') !== -1) {
-                            loginHref = 'loginRegister/loginPage.html';
-                        } else if (path.indexOf('/pages/') !== -1) {
-                            loginHref = '../loginRegister/loginPage.html';
-                        }
-                    }
                     try {
-                        location.replace(loginHref);
+                        location.replace('/login');
                     } catch (e) { /* ignore */ }
                 }
             }

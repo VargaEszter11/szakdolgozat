@@ -50,7 +50,8 @@ function saveSessionAndRedirect(data) {
         sessionStorage.setItem("tutorial_step", "1");
         sessionStorage.removeItem("tutorial_language_ready");
     }
-    window.location.href = "../main_page.html";
+    window.location.href = "/";
+
 }
 
 // Password login

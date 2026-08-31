@@ -4,22 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../../scripts/utils/boot.js"></script>
-    <link rel="stylesheet" href="../../styles/main.css">
-    <link rel="stylesheet" href="../../styles/add-place.css">
-    <link rel="stylesheet" href="../../styles/imageUpload.css">
-    <link rel="stylesheet" href="../../styles/visited-places.css">
-    <link rel="icon" href="../../pictures/marker.png">
+    <script src="/scripts/utils/boot.js"></script>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/add-place.css">
+    <link rel="stylesheet" href="/styles/imageUpload.css">
+    <link rel="stylesheet" href="/styles/visited-places.css">
+    <link rel="icon" href="/pictures/marker.png">
     <title data-i18n="visitedPlaces.pageTitle">Visited Places – TravelApp</title>
-    <script src="../../scripts/utils/apiConfig.js"></script>
-    <script src="../../scripts/utils/themeLoader.js"></script>
-    <script src="../../scripts/utils/authGuard.js"></script>
-    <script src="../../scripts/utils/imageUpload.js"></script>
-    <script src="../../scripts/utils/dropdown.js"></script>
-    <script src="../../scripts/utils/countries.js"></script>
-    <script src="../../scripts/i18n/translations.js"></script>
-    <script src="../../scripts/i18n/i18n.js"></script>
-    <script src="../../scripts/utils/sidebarHeader.js"></script>
+    <script src="/scripts/utils/apiConfig.js"></script>
+    <script src="/scripts/utils/themeLoader.js"></script>
+    <script src="/scripts/utils/authGuard.js"></script>
+    <script src="/scripts/utils/imageUpload.js"></script>
+    <script src="/scripts/utils/dropdown.js"></script>
+    <script src="/scripts/utils/countries.js"></script>
+    <script src="/scripts/i18n/translations.js"></script>
+    <script src="/scripts/i18n/i18n.js"></script>
+    <script src="/scripts/utils/sidebarHeader.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/hu.js"></script>
@@ -49,7 +49,7 @@
                         </div>
 
                         <div class="visited-places-header-actions">
-                            <a href="add_new_place.html" class="btn-add">
+                            <a href="/places/new" class="btn-add">
                                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="10" />
@@ -58,7 +58,7 @@
                                 </svg>
                                 <span data-i18n="nav.addPlace">Add Place</span>
                             </a>
-                            <a href="places_map_view.html" class="btn-add btn-add-outline">
+                            <a href="/places/map" class="btn-add btn-add-outline">
                                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
@@ -87,8 +87,8 @@
         </div>
     </div>
 
-    <script src="../../scripts/loginRegister/modal.js"></script>
-    <script src="../../scripts/visitedPlaces/loadPlaces.js" defer></script>
+    <script src="/scripts/loginRegister/modal.js"></script>
+    <script src="/scripts/visitedPlaces/loadPlaces.js" defer></script>
 
     <template id="placeDetailsModalTemplate">
         <div class="place-details-overlay visited-place-details-overlay" role="dialog" aria-modal="true"

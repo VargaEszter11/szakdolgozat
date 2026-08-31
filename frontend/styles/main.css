@@ -112,13 +112,29 @@ body {
 }
 
 .main-page-home .nav-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--color-text);
+    text-decoration: none;
+    min-width: 0;
 }
 
 .main-page-home .nav-logo img {
     width: 24px;
     height: 24px;
+    flex-shrink: 0;
     filter: var(--filter-nav-logo);
+}
+
+.main-page-home .nav-brand {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Hamburger + home link grouped (mobile); desktop shows logo only when menu is hidden */
@@ -931,13 +947,18 @@ body.page-profile .main-page-home-content-inner>section.card {
     .main-page-home .main-header.main-page-home-header .nav-logo {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        min-width: 44px;
+        justify-content: flex-start;
+        flex-shrink: 1;
+        min-width: 0;
         min-height: 44px;
-        padding: 8px;
+        padding: 8px 10px 8px 8px;
         border-radius: 10px;
         text-decoration: none;
+        gap: 0.45rem;
+    }
+
+    .main-page-home .main-header.main-page-home-header .nav-brand {
+        font-size: 1rem;
     }
 
     .main-page-home .main-header.main-page-home-header .nav-logo:hover {

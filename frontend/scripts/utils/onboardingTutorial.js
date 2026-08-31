@@ -29,8 +29,8 @@
           'tutorial.welcomeBody',
           'TravelApp is your personal travel diary and automatic trip planner for Europe. You log places you have already visited and set a few preferences — then the app plans the trip for you (it is not a collaborative planner you build stop by stop).\n\nThis tour walks through the main screens step by step. You can skip anytime if you prefer to explore on your own.'
         ),
-        page: /main_page\.html/,
-        goto: '/pages/main_page.html',
+        page: /^\/$|^\/home$/,
+        goto: '/',
         selectors: [],
         mode: 'next',
       },
@@ -40,8 +40,8 @@
           'tutorial.homeLogBody',
           'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as photo cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in gold (with a small diagram summary beside it). It updates as you add more places.'
         ),
-        page: /main_page\.html/,
-        goto: '/pages/main_page.html',
+        page: /^\/$|^\/home$/,
+        goto: '/',
         selectors: ['#mainStatsStrip', '#mainTravelLogs', '#mainEuropeMap', '.main-page-panel'],
         mode: 'next',
       },
@@ -51,15 +51,15 @@
           'tutorial.addPlaceBody',
           'Start by logging cities and towns you have already been to. Each saved place feeds your visited list, the Europe chart, the map, and the trip planner.\n\nClick the highlighted Add button to open the form and create your first entry.'
         ),
-        page: /main_page\.html/,
-        goto: '/pages/main_page.html',
+        page: /^\/$|^\/home$/,
+        goto: '/',
         selectors: [
           '.main-page-home-content-header a.btn-add',
-          'a.btn-add[href*="add_new_place"]',
+          'a.btn-add[href*="/places/new"]',
           '[data-sidebar-id="addNewPlace"]',
         ],
         mode: 'click',
-        fallbackGoto: '/pages/visitedPlaces/add_new_place.html',
+        fallbackGoto: '/places/new',
       },
       {
         title: t('tutorial.addFormTitle', 'Fill in the place details'),
@@ -67,8 +67,8 @@
           'tutorial.addFormBody',
           'Enter the place name and choose the country from the suggestions so names stay consistent. Set a start date, and optionally an end date for multi-day stays.\n\nYou can rate the visit with stars, write a short description, and attach photos. After you save, the place shows up on Home, Visited Places, and the map.'
         ),
-        page: /add_new_place\.html/,
-        goto: '/pages/visitedPlaces/add_new_place.html',
+        page: /^\/places\/new$/,
+        goto: '/places/new',
         selectors: ['#addPlaceForm', '.add-place-card'],
         mode: 'next',
       },
@@ -78,8 +78,8 @@
           'tutorial.visitedBody',
           'Visited Places is the full list of everywhere you have logged, usually newest first.\n\nOpen a card to read details, notes, and photos. Use the pencil icon to edit name, country, dates, rating, description, or photos — or delete a place you no longer need.'
         ),
-        page: /visited_places\.html/,
-        goto: '/pages/visitedPlaces/visited_places.html',
+        page: /^\/places$/,
+        goto: '/places',
         selectors: ['.visited-places-header-actions', '#placeCards', '.visited-places-page'],
         mode: 'next',
       },
@@ -89,9 +89,9 @@
           'tutorial.mapBody',
           'Map View plots every logged stop on a geographic map so you can see clusters, routes, and gaps at a glance.\n\nUse it when deciding where to travel next, or to revisit a region you already know well.'
         ),
-        page: /visited_places\.html|places_map_view\.html/,
-        goto: '/pages/visitedPlaces/visited_places.html',
-        selectors: ['a.btn-add[href*="places_map_view"]', 'a[href*="places_map_view"]'],
+        page: /^\/places(\/map)?$/,
+        goto: '/places',
+        selectors: ['a.btn-add[href*="/places/map"]', 'a[href*="/places/map"]'],
         mode: 'next',
       },
       {
@@ -100,11 +100,11 @@
           'tutorial.planBody',
           'When you want a new itinerary, open Plan New Trip from the sidebar (or an Add button that links to the planner).\n\nImportant: the app plans the trip for you. You choose the mode and constraints; it generates the full day-by-day route with transport and activities — you do not assemble the itinerary together with the app.'
         ),
-        page: /^(?!.*plan_new_trip\.html).*$/,
+        page: /^(?!.*\/trips\/new).*$/,
         goto: null,
-        selectors: ['[data-sidebar-id="planNewTrip"]', 'a.btn-add[href*="plan_new_trip"]'],
+        selectors: ['[data-sidebar-id="planNewTrip"]', 'a.btn-add[href*="/trips/new"]'],
         mode: 'click',
-        fallbackGoto: '/pages/routePlanner/plan_new_trip.html',
+        fallbackGoto: '/trips/new',
       },
       {
         title: t('tutorial.modesTitle', 'Choose a planning mode'),
@@ -112,8 +112,8 @@
           'tutorial.modesBody',
           'First choose how destinations should be selected:\n\n• Visited — build a trip around places you already logged.\n• Unvisited — discover new cities while avoiding ones you already visited.\n• Random — let the app invent a surprise itinerary.\n\nPick the mode that matches your goal, then continue with the form below.'
         ),
-        page: /plan_new_trip\.html/,
-        goto: '/pages/routePlanner/plan_new_trip.html',
+        page: /^\/trips\/new$/,
+        goto: '/trips/new',
         selectors: ['#planTypeOptions', '.route-planner-options'],
         mode: 'next',
       },
@@ -123,8 +123,8 @@
           'tutorial.formBody',
           'Set your starting city, trip dates, number of travelers, and preferred transport (for example train and bus, or options that include flights). Optional notes help tailor the result.\n\nThen generate the trip: the app creates the complete plan for you. Review what it produced, save it to Planned Trips, and edit later if needed.'
         ),
-        page: /plan_new_trip\.html/,
-        goto: '/pages/routePlanner/plan_new_trip.html',
+        page: /^\/trips\/new$/,
+        goto: '/trips/new',
         selectors: ['#tripPlanForm', '.add-place-card'],
         mode: 'next',
       },
@@ -134,8 +134,8 @@
           'tutorial.plannedBody',
           'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another TravelApp user. Incoming invitations appear in the share inbox on this page.'
         ),
-        page: /planned_trips\.html/,
-        goto: '/pages/routePlanner/planned_trips.html',
+        page: /^\/trips$/,
+        goto: '/trips',
         selectors: ['#tripLists', '#tripCards', '#shareInboxSection', '.main-page-home-content-inner'],
         mode: 'next',
       },
@@ -854,8 +854,9 @@
     if (orphanTip) orphanTip.remove();
     document.body.classList.remove('tutorial-tour-active');
     clearElevate();
-    if (!/main_page\.html/.test(location.pathname || '')) {
-      window.location.href = '/pages/main_page.html?tutorial=1';
+    var homePath = (location.pathname || '/').replace(/\/+$/, '') || '/';
+    if (homePath !== '/' && homePath !== '/home') {
+      window.location.href = '/?tutorial=1';
       return;
     }
     beginTutorialFlow();
