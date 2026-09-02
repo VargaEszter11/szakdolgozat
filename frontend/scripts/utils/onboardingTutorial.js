@@ -24,10 +24,10 @@
   function stepDefs() {
     return [
       {
-        title: t('tutorial.welcomeTitle', 'Welcome to TravelApp'),
+        title: t('tutorial.welcomeTitle', 'Welcome to Planventure'),
         body: t(
           'tutorial.welcomeBody',
-          'TravelApp is your personal travel diary and automatic trip planner for Europe. You log places you have already visited and set a few preferences — then the app plans the trip for you (it is not a collaborative planner you build stop by stop).\n\nThis tour walks through the main screens step by step. You can skip anytime if you prefer to explore on your own.'
+          'Planventure is your personal travel diary and automatic trip planner for Europe. You log places you have already visited and set a few preferences — then the app plans the trip for you (it is not a collaborative planner you build stop by stop).\n\nThis tour walks through the main screens step by step. You can skip anytime if you prefer to explore on your own.'
         ),
         page: /^\/$|^\/home$/,
         goto: '/',
@@ -132,7 +132,7 @@
         title: t('tutorial.plannedTitle', 'Planned trips & sharing'),
         body: t(
           'tutorial.plannedBody',
-          'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another TravelApp user. Incoming invitations appear in the share inbox on this page.'
+          'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another Planventure user. Incoming invitations appear in the share inbox on this page.'
         ),
         page: /^\/trips$/,
         goto: '/trips',

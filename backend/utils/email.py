@@ -47,9 +47,9 @@ def send_email(to_address: str, subject: str, body: str) -> None:
 
 
 def send_password_reset_email(to_address: str, reset_url: str, ttl_minutes: int) -> None:
-    subject = "Reset your TravelApp password"
+    subject = "Reset your Planventure password"
     body = (
-        "We received a request to reset your TravelApp password.\n\n"
+        "We received a request to reset your Planventure password.\n\n"
         f"Click the link below to choose a new password (expires in {ttl_minutes} minutes):\n"
         f"{reset_url}\n\n"
         "If you didn't request this, you can safely ignore this email."

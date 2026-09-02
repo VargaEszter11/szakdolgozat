@@ -7,7 +7,7 @@ from utils.countries import EUROPE_COUNTRY_CODES
 
 # Nominatim requires a descriptive User-Agent (no generic library defaults). See:
 # https://operations.osmfoundation.org/policies/nominatim/
-_DEFAULT_UA = "TravelApp/1.0 (university project; configure NOMINATIM_USER_AGENT in .env)"
+_DEFAULT_UA = "Planventure/1.0 (university project; configure NOMINATIM_USER_AGENT in .env)"
 
 # Nominatim countrycodes uses lowercase ISO-2; skip XK (not in OSM countrycodes).
 _GEOCODE_COUNTRYCODES = ",".join(

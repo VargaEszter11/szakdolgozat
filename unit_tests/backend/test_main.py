@@ -52,6 +52,6 @@ def test_uploads_endpoint_accessible():
     assert response.status_code in (200, 404, 405)
 
 def test_app_metadata():
-    assert main.app.title == "TravelApp API"
+    assert main.app.title == "Planventure API"
     assert main.app.version == "1.0.0"
     assert "travel planning" in main.app.description.lower()

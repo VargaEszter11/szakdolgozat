@@ -13,7 +13,7 @@ import { renderDiagram } from './europeDiagram.js';
 var GEOJSON_URL =
   'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson';
 
-var HOME_GEOCODE_CACHE_KEY = 'travelapp.homeCountryGeocode.v1';
+var HOME_GEOCODE_CACHE_KEY = 'planventure.homeCountryGeocode.v1';
 
 var europeMap = null;
 var europeLayer = null;
@@ -362,8 +362,8 @@ export function renderEuropeCoverage(places, options) {
     loadGeoJson(),
     homeCity
       ? resolveHomeCountryIso(homeCity, userId).catch(function () {
-          return null;
-        })
+        return null;
+      })
       : Promise.resolve(null)
   ])
     .then(function (results) {

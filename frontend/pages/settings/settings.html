@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/styles/main.css">
     <link rel="stylesheet" href="/styles/add-place.css">
     <link rel="icon" href="/pictures/marker.png">
-    <title data-i18n="settings.pageTitle">Settings – TravelApp</title>
+    <title data-i18n="settings.pageTitle">Settings – Planventure</title>
 
     <script src="/scripts/utils/themeLoader.js"></script>
     <script src="/scripts/utils/authGuard.js"></script>
@@ -32,7 +32,7 @@
                         <div class="main-page-home-intro">
                             <h1 class="main-page-home-title" data-i18n="settings.title">Settings</h1>
                             <p class="main-page-home-subtitle muted" data-i18n="settings.subtitle">
-                                Customize your TravelApp experience
+                                Customize your Planventure experience
                             </p>
                         </div>
                     </div>
@@ -41,26 +41,24 @@
                         <form id="settingsForm" class="add-place-form">
 
                             <div class="form-group">
-                                <span class="form-label" id="themeSelectLabel"
-                                    data-i18n="settings.theme">Theme</span>
+                                <span class="form-label" id="themeSelectLabel" data-i18n="settings.theme">Theme</span>
                                 <div class="app-dropdown">
-                                    <button type="button" class="form-input app-dropdown-trigger" id="themeSelectTrigger"
-                                        aria-haspopup="listbox" aria-expanded="false" aria-labelledby="themeSelectLabel">
+                                    <button type="button" class="form-input app-dropdown-trigger"
+                                        id="themeSelectTrigger" aria-haspopup="listbox" aria-expanded="false"
+                                        aria-labelledby="themeSelectLabel">
                                         <span class="app-dropdown-label"></span>
                                     </button>
                                     <ul class="app-dropdown-list" id="themeSelectList" role="listbox"
                                         aria-labelledby="themeSelectLabel" hidden>
                                         <li class="app-dropdown-option" role="option" data-value="light" tabindex="-1">
-                                            <span class="app-dropdown-name"
-                                                data-i18n="settings.themeLight">Light</span>
+                                            <span class="app-dropdown-name" data-i18n="settings.themeLight">Light</span>
                                         </li>
                                         <li class="app-dropdown-option" role="option" data-value="dark" tabindex="-1">
-                                            <span class="app-dropdown-name"
-                                                data-i18n="settings.themeDark">Dark</span>
+                                            <span class="app-dropdown-name" data-i18n="settings.themeDark">Dark</span>
                                         </li>
                                         <li class="app-dropdown-option" role="option" data-value="auto" tabindex="-1">
-                                            <span class="app-dropdown-name"
-                                                data-i18n="settings.themeAuto">Auto (System)</span>
+                                            <span class="app-dropdown-name" data-i18n="settings.themeAuto">Auto
+                                                (System)</span>
                                         </li>
                                     </ul>
                                     <input type="hidden" id="themeSelect" name="theme" value="dark">
@@ -83,12 +81,12 @@
                                                 data-i18n="settings.langOptionEn">English</span>
                                         </li>
                                         <li class="app-dropdown-option" role="option" data-value="hu" tabindex="-1">
-                                            <span class="app-dropdown-name"
-                                                data-i18n="settings.langOptionHu">Magyar (Hungarian)</span>
+                                            <span class="app-dropdown-name" data-i18n="settings.langOptionHu">Magyar
+                                                (Hungarian)</span>
                                         </li>
                                         <li class="app-dropdown-option" role="option" data-value="de" tabindex="-1">
-                                            <span class="app-dropdown-name"
-                                                data-i18n="settings.langOptionDe">Deutsch (German)</span>
+                                            <span class="app-dropdown-name" data-i18n="settings.langOptionDe">Deutsch
+                                                (German)</span>
                                         </li>
                                     </ul>
                                     <input type="hidden" id="languageSelect" name="language" value="en">
@@ -109,8 +107,7 @@
                                     </svg>
                                     <span data-i18n="settings.saveSettings">Save Settings</span>
                                 </button>
-                                <a href="/" id="cancelBtn" class="btn-cancel"
-                                    data-i18n="settings.cancel">Cancel</a>
+                                <a href="/" id="cancelBtn" class="btn-cancel" data-i18n="settings.cancel">Cancel</a>
                             </div>
                         </form>
                     </div>

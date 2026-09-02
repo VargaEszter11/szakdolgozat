@@ -36,7 +36,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="TravelApp API",
+    title="Planventure API",
     description="API for travel planning and visited places tracking",
     version="1.0.0",
     lifespan=lifespan,

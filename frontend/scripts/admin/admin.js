@@ -60,7 +60,7 @@
       var a = document.createElement('a');
       var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
       a.href = url;
-      a.download = 'travelapp-export-' + stamp + '.json';
+      a.download = 'planventure-export-' + stamp + '.json';
       document.body.appendChild(a);
       a.click();
       a.remove();

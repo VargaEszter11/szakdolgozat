@@ -21,8 +21,8 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Settings',
-      pageTitle: 'Settings – TravelApp',
-      subtitle: 'Customize your TravelApp experience',
+      pageTitle: 'Settings – Planventure',
+      subtitle: 'Customize your Planventure experience',
       theme: 'Theme',
       themeLight: 'Light',
       themeDark: 'Dark',
@@ -76,9 +76,9 @@ window.I18N_TRANSLATIONS = {
       chooseLanguageBody:
         'Pick the language for the app and this tour. You can change it later in Settings.',
       startTour: 'Start tutorial',
-      welcomeTitle: 'Welcome to TravelApp',
+      welcomeTitle: 'Welcome to Planventure',
       welcomeBody:
-        'TravelApp is your personal travel diary and trip planner for Europe. Add the places you\'ve visited, pick a few preferences, and the app puts together a trip for you — no manual stop-by-stop planning needed.\n\nHere\'s a quick tour of the main screens. Feel free to skip if you\'d rather dive in yourself.',
+        'Planventure is your personal travel diary and trip planner for Europe. Add the places you\'ve visited, pick a few preferences, and the app puts together a trip for you — no manual stop-by-stop planning needed.\n\nHere\'s a quick tour of the main screens. Feel free to skip if you\'d rather dive in yourself.',
       homeLogTitle: 'Your travel log',
       homeLogBody:
         'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as photo cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in gold (with a small diagram summary beside it). It updates as you add more places.',
@@ -105,7 +105,7 @@ window.I18N_TRANSLATIONS = {
         'Set your starting city, trip dates, number of travelers, and preferred transport (for example land transport, or options that include flights). Optional notes help tailor the result.\n\nThen generate the trip: the app creates the complete plan for you. Review what it produced, generate a new plan if needed, save it to Planned Trips, and edit later if needed.',
       plannedTitle: 'Planned trips & sharing',
       plannedBody:
-        'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another TravelApp user. Incoming invitations appear in the share inbox on this page.',
+        'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another Planventure user. Incoming invitations appear in the share inbox on this page.',
       profileTitle: 'Profile & settings',
       profileBody:
         'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, change the interface language (English, Hungarian, or German), and choose which AI assistant should generate your trip plans.',
@@ -115,8 +115,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Visited Places',
-      pageTitle: 'Visited Places – TravelApp',
-      mapPageTitle: 'Map View – TravelApp',
+      pageTitle: 'Visited Places – Planventure',
+      mapPageTitle: 'Map View – Planventure',
       subtitle: 'Your travel memories and experiences',
       placesCountSuffix: 'places visited so far. Keep exploring!',
       mapView: 'Map View',
@@ -164,7 +164,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Add New Place',
-      pageTitle: 'Add New Place – TravelApp',
+      pageTitle: 'Add New Place – Planventure',
       subtitle: 'Document your latest travel adventure',
       placeName: 'Place Name *',
       country: 'Country *',
@@ -199,7 +199,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Plan your next trip!',
-      pageTitle: 'Plan New Trip – TravelApp',
+      pageTitle: 'Plan New Trip – Planventure',
       fromVisitedPlaces: 'From Visited Places',
       fromVisitedDesc: 'Use your previously visited places as a starting point.',
       fromUnvisitedPlaces: 'From Unvisited Places',
@@ -274,8 +274,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Planned Trips',
-      pageTitle: 'Planned Trips – TravelApp',
-      sharedPageTitle: 'Shared Trip – TravelApp',
+      pageTitle: 'Planned Trips – Planventure',
+      sharedPageTitle: 'Shared Trip – Planventure',
       subtitle: 'Your upcoming adventures',
       noTripsPlannedYet: 'No trips planned yet',
       upcomingSection: 'Upcoming trips',
@@ -380,7 +380,7 @@ window.I18N_TRANSLATIONS = {
       logoutConfirm: 'Are you sure you want to logout?',
       subtitle: 'Your account overview',
       account: 'Account',
-      pageTitle: 'Profile – TravelApp',
+      pageTitle: 'Profile – Planventure',
       manageYourAccountAndPreferences: 'Manage your account and preferences.',
       loading: 'Loading…',
       noEmail: 'No email',
@@ -404,7 +404,7 @@ window.I18N_TRANSLATIONS = {
     },
     editProfile: {
       title: 'Edit profile',
-      pageTitle: 'Edit profile – TravelApp',
+      pageTitle: 'Edit profile – Planventure',
       subtitle: 'Update your username, email, or password',
       username: 'Username',
       email: 'Email',
@@ -430,8 +430,8 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Log in',
-      pageTitle: 'Log in – TravelApp',
-      subtitle: 'Sign in to your TravelApp account',
+      pageTitle: 'Log in – Planventure',
+      subtitle: 'Sign in to your Planventure account',
       username: 'Username *',
       password: 'Password *',
       usernamePlaceholder: 'Your username',
@@ -453,8 +453,8 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Register',
-      pageTitle: 'Register – TravelApp',
-      subtitle: 'Create your TravelApp account',
+      pageTitle: 'Register – Planventure',
+      subtitle: 'Create your Planventure account',
       username: 'Username *',
       email: 'Email *',
       password: 'Password *',
@@ -486,7 +486,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Set new password',
-      pageTitle: 'Reset Password – TravelApp',
+      pageTitle: 'Reset Password – Planventure',
       subtitle: 'Choose a new password for your account',
       newPassword: 'New password *',
       newPasswordPlaceholder: 'New password (min. 6 characters)',
@@ -504,8 +504,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: data export / import',
-      pageTitle: 'Admin – TravelApp',
-      feedbackBrowserTitle: 'Admin feedback – TravelApp',
+      pageTitle: 'Admin – Planventure',
+      feedbackBrowserTitle: 'Admin feedback – Planventure',
       subtitle: 'Migrate database contents between environments as a JSON file',
       secretLabel: 'Admin secret',
       secretPlaceholder: 'Enter the admin secret',
@@ -566,8 +566,8 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Beállítások',
-      pageTitle: 'Beállítások – TravelApp',
-      subtitle: 'Személyre szabhatod a TravelApp élményt',
+      pageTitle: 'Beállítások – Planventure',
+      subtitle: 'Személyre szabhatod a Planventure élményt',
       theme: 'Téma',
       themeLight: 'Világos',
       themeDark: 'Sötét',
@@ -621,9 +621,9 @@ window.I18N_TRANSLATIONS = {
       chooseLanguageBody:
         'Válaszd ki az alkalmazás és a bemutató nyelvét. Később a Beállításokban bármikor módosíthatod.',
       startTour: 'Bemutató indítása',
-      welcomeTitle: 'Üdvözöl a TravelApp',
+      welcomeTitle: 'Üdvözöl a Planventure',
       welcomeBody:
-        'A TravelApp a személyes utazási naplód és automatikus európai utazás terveződ. Rögzítsd a már meglátogatott helyeidet, adj meg néhány preferenciát és hagyd, hogy az alkalmazás megtervezze neked a következő utazásodat, nem neked kell manuálisan megállóról megállóra összerakni.\n\nEz a bemutató lépésről lépésre végigvezet a fő képernyőkön. Bármikor kihagyhatod, ha inkább egyedül szeretnél felfedezni.',
+        'A Planventure a személyes utazási naplód és automatikus európai utazás terveződ. Rögzítsd a már meglátogatott helyeidet, adj meg néhány preferenciát és hagyd, hogy az alkalmazás megtervezze neked a következő utazásodat, nem neked kell manuálisan megállóról megállóra összerakni.\n\nEz a bemutató lépésről lépésre végigvezet a fő képernyőkön. Bármikor kihagyhatod, ha inkább egyedül szeretnél felfedezni.',
       homeLogTitle: 'Az utazási naplód',
       homeLogBody:
         'A főoldal a vezérlőpultod. Felül gyors statisztikák mutatják a városokat, utakat, országokat és a külföldi napokat. A legutóbbi látogatások fotós kártyákként jelennek meg.\n\nAlább egy Európa-térkép arannyal jelöli a meglátogatott országokat (mellett egy kis diagram összefoglalóval). Ahogy új helyeket adsz hozzá, frissül.',
@@ -650,7 +650,7 @@ window.I18N_TRANSLATIONS = {
         'Add meg a kiindulási várost, az út dátumait, az utasok számát és a preferált közlekedést (például szárazföldi közlekedés, vagy repülővel bővített opciók). Az opcionális megjegyzések segítenek finomhangolni az eredményt.\n\nEzután generáld az utat: az alkalmazás elkészíti a teljes tervet helyetted. Nézd át, mentsd a Tervezett utak közé, és később szükség szerint módosítsd.',
       plannedTitle: 'Tervezett utak és megosztás',
       plannedBody:
-        'A mentett útitervek a Tervezett utak alatt találhatók. Nyiss meg egy utat a megállók áttekintéséhez, részletek módosításához, foglalási linkek követéséhez, és ahhoz, hogy nyomon kövesd, hogy állsz a szervezéssel.\n\nMegoszthatsz egy utat nyilvános linkkel, vagy meghívhatsz egy másik TravelApp-felhasználót. A bejövő meghívók ezen az oldalon, a megosztási értesítéseknél jelennek meg.',
+        'A mentett útitervek a Tervezett utak alatt találhatók. Nyiss meg egy utat a megállók áttekintéséhez, részletek módosításához, foglalási linkek követéséhez, és ahhoz, hogy nyomon kövesd, hogy állsz a szervezéssel.\n\nMegoszthatsz egy utat nyilvános linkkel, vagy meghívhatsz egy másik Planventure-felhasználót. A bejövő meghívók ezen az oldalon, a megosztási értesítéseknél jelennek meg.',
       profileTitle: 'Profil és beállítások',
       profileBody:
         'A profilmenüd a felső sávban van a fiókkal kapcsolatos műveletekhez.\n\nA Beállításokban válthatsz világos, sötét vagy automatikus témát, módosíthatod a felület nyelvét (angol, magyar vagy német), és kiválaszthatod, melyik MI asszisztens generálja az útiterveidet.',
@@ -660,8 +660,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Meglátogatott helyek',
-      pageTitle: 'Meglátogatott helyek – TravelApp',
-      mapPageTitle: 'Térkép nézet – TravelApp',
+      pageTitle: 'Meglátogatott helyek – Planventure',
+      mapPageTitle: 'Térkép nézet – Planventure',
       subtitle: 'Utazási emlékeid és élményeid',
       placesCountSuffix: 'meglátogatott hely. Fedezz fel még!',
       mapView: 'Térkép nézet',
@@ -709,7 +709,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Új hely hozzáadása',
-      pageTitle: 'Új hely hozzáadása – TravelApp',
+      pageTitle: 'Új hely hozzáadása – Planventure',
       subtitle: 'Örökítsd meg legújabb utazási élményedet',
       placeName: 'Hely neve *',
       country: 'Ország *',
@@ -744,7 +744,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Tervezd meg a következő utazásod!',
-      pageTitle: 'Új utazás tervezése – TravelApp',
+      pageTitle: 'Új utazás tervezése – Planventure',
       fromVisitedPlaces: 'Már látott helyekből',
       fromVisitedDesc: 'Használd a korábban meglátogatott helyeidet kiindulópontként.',
       fromUnvisitedPlaces: 'Még nem látott helyekből',
@@ -819,8 +819,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Tervezett utak',
-      pageTitle: 'Tervezett utak – TravelApp',
-      sharedPageTitle: 'Megosztott út – TravelApp',
+      pageTitle: 'Tervezett utak – Planventure',
+      sharedPageTitle: 'Megosztott út – Planventure',
       subtitle: 'A közelgő kalandjaid',
       noTripsPlannedYet: 'Még nincsenek tervezett utazások',
       upcomingSection: 'Közelgő utak',
@@ -925,7 +925,7 @@ window.I18N_TRANSLATIONS = {
       logoutConfirm: 'Biztosan ki szeretnél jelentkezni?',
       subtitle: 'Fiókod áttekintése',
       account: 'Fiók',
-      pageTitle: 'Profil – TravelApp',
+      pageTitle: 'Profil – Planventure',
       manageYourAccountAndPreferences: 'Kezeld a fiókodat és beállításaidat.',
       loading: 'Betöltés…',
       noEmail: 'Nincs e-mail',
@@ -949,7 +949,7 @@ window.I18N_TRANSLATIONS = {
     },
     editProfile: {
       title: 'Profil szerkesztése',
-      pageTitle: 'Profil szerkesztése – TravelApp',
+      pageTitle: 'Profil szerkesztése – Planventure',
       subtitle: 'Frissítsd a felhasználóneved, e-mail címed vagy jelszavad',
       username: 'Felhasználónév',
       email: 'E-mail',
@@ -975,8 +975,8 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Bejelentkezés',
-      pageTitle: 'Bejelentkezés – TravelApp',
-      subtitle: 'Jelentkezz be a TravelApp fiókodba',
+      pageTitle: 'Bejelentkezés – Planventure',
+      subtitle: 'Jelentkezz be a Planventure fiókodba',
       username: 'Felhasználónév *',
       password: 'Jelszó *',
       usernamePlaceholder: 'Felhasználóneved',
@@ -998,8 +998,8 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Regisztráció',
-      pageTitle: 'Regisztráció – TravelApp',
-      subtitle: 'Hozz létre egy új TravelApp fiókot',
+      pageTitle: 'Regisztráció – Planventure',
+      subtitle: 'Hozz létre egy új Planventure fiókot',
       username: 'Felhasználónév *',
       email: 'E-mail *',
       password: 'Jelszó *',
@@ -1031,7 +1031,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Új jelszó beállítása',
-      pageTitle: 'Jelszó visszaállítása – TravelApp',
+      pageTitle: 'Jelszó visszaállítása – Planventure',
       subtitle: 'Válassz új jelszót a fiókodhoz',
       newPassword: 'Új jelszó *',
       newPasswordPlaceholder: 'Új jelszó (min. 6 karakter)',
@@ -1049,8 +1049,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: adat export / import',
-      pageTitle: 'Admin – TravelApp',
-      feedbackBrowserTitle: 'Admin visszajelzés – TravelApp',
+      pageTitle: 'Admin – Planventure',
+      feedbackBrowserTitle: 'Admin visszajelzés – Planventure',
       subtitle: 'Adatbázis-tartalom átvitele környezetek között JSON fájlként',
       secretLabel: 'Admin jelszó',
       secretPlaceholder: 'Add meg az admin jelszót',
@@ -1111,8 +1111,8 @@ window.I18N_TRANSLATIONS = {
     },
     settings: {
       title: 'Einstellungen',
-      pageTitle: 'Einstellungen – TravelApp',
-      subtitle: 'Passe dein TravelApp-Erlebnis an',
+      pageTitle: 'Einstellungen – Planventure',
+      subtitle: 'Passe dein Planventure-Erlebnis an',
       theme: 'Design',
       themeLight: 'Hell',
       themeDark: 'Dunkel',
@@ -1166,9 +1166,9 @@ window.I18N_TRANSLATIONS = {
       chooseLanguageBody:
         'Wähle die Sprache für die App und diese Tour. Später kannst du sie in den Einstellungen ändern.',
       startTour: 'Tutorial starten',
-      welcomeTitle: 'Willkommen bei TravelApp',
+      welcomeTitle: 'Willkommen bei Planventure',
       welcomeBody:
-        'TravelApp ist dein persönliches Reisetagebuch und automatischer Reiseplaner für Europa. Du trägst Orte ein, die du bereits besucht hast, legst ein paar Vorlieben fest — und die App plant die Reise für dich (du planst hier nicht selbst Station für Station).\n\nDiese kurze Tour zeigt dir die wichtigsten Bildschirme. Du kannst jederzeit überspringen, wenn du lieber selbst erkunden möchtest.',
+        'Planventure ist dein persönliches Reisetagebuch und automatischer Reiseplaner für Europa. Du trägst Orte ein, die du bereits besucht hast, legst ein paar Vorlieben fest — und die App plant die Reise für dich (du planst hier nicht selbst Station für Station).\n\nDiese kurze Tour zeigt dir die wichtigsten Bildschirme. Du kannst jederzeit überspringen, wenn du lieber selbst erkunden möchtest.',
       homeLogTitle: 'Dein Reisetagebuch',
       homeLogBody:
         'Die Startseite ist dein Dashboard. Oben zeigen Schnellstatistiken Städte, Reisen, Länder und Tage unterwegs. Kürzlich besuchte Orte erscheinen als Fotokarten.\n\nDarunter hebt eine Europakarte besuchte Länder in Gold hervor (daneben eine kleine Diagramm-Zusammenfassung). Sie aktualisiert sich, wenn du weitere Orte hinzufügst.',
@@ -1195,7 +1195,7 @@ window.I18N_TRANSLATIONS = {
         'Lege Startstadt, Reisedaten, Anzahl der Reisenden und bevorzugten Transport fest (zum Beispiel Zug/Bus oder Optionen mit Flügen). Optionale Notizen helfen, das Ergebnis anzupassen.\n\nDanach generierst du die Reise: Die App erstellt den kompletten Plan für dich. Prüfe das Ergebnis, speichere es unter Geplante Reisen und bearbeite es später bei Bedarf.',
       plannedTitle: 'Geplante Reisen & Teilen',
       plannedBody:
-        'Gespeicherte Routen findest du unter Geplante Reisen. Öffne eine Reise, um Stopps zu prüfen, Details anzupassen, Buchungslinks zu folgen und im Blick zu behalten, was du schon organisiert hast.\n\nDu kannst eine Reise per öffentlichem Link teilen oder einen anderen TravelApp-Nutzer einladen. Eingehende Einladungen erscheinen im Teilen-Posteingang auf dieser Seite.',
+        'Gespeicherte Routen findest du unter Geplante Reisen. Öffne eine Reise, um Stopps zu prüfen, Details anzupassen, Buchungslinks zu folgen und im Blick zu behalten, was du schon organisiert hast.\n\nDu kannst eine Reise per öffentlichem Link teilen oder einen anderen Planventure-Nutzer einladen. Eingehende Einladungen erscheinen im Teilen-Posteingang auf dieser Seite.',
       profileTitle: 'Profil & Einstellungen',
       profileBody:
         'Dein Profilmenü liegt in der oberen Leiste für kontobezogene Aktionen.\n\nIn den Einstellungen wechselst du Hell-, Dunkel- oder Auto-Theme, änderst die Sprache der Oberfläche (Englisch, Ungarisch oder Deutsch) und wählst, welcher KI-Assistent deine Reisepläne erzeugen soll.',
@@ -1205,8 +1205,8 @@ window.I18N_TRANSLATIONS = {
     },
     visitedPlaces: {
       title: 'Besuchte Orte',
-      pageTitle: 'Besuchte Orte – TravelApp',
-      mapPageTitle: 'Kartenansicht – TravelApp',
+      pageTitle: 'Besuchte Orte – Planventure',
+      mapPageTitle: 'Kartenansicht – Planventure',
       subtitle: 'Deine Reiseerinnerungen und Erfahrungen',
       placesCountSuffix: 'besuchte Orte. Entdecke weiter!',
       mapView: 'Kartenansicht',
@@ -1254,7 +1254,7 @@ window.I18N_TRANSLATIONS = {
     },
     addNewPlace: {
       title: 'Ort hinzufügen',
-      pageTitle: 'Ort hinzufügen – TravelApp',
+      pageTitle: 'Ort hinzufügen – Planventure',
       subtitle: 'Dokumentiere dein neuestes Reiseabenteuer',
       placeName: 'Ort *',
       country: 'Land *',
@@ -1289,7 +1289,7 @@ window.I18N_TRANSLATIONS = {
     },
     planNewTrip: {
       title: 'Plan deine nächste Reise!',
-      pageTitle: 'Neue Reise planen – TravelApp',
+      pageTitle: 'Neue Reise planen – Planventure',
       fromVisitedPlaces: 'Aus besuchten Orten',
       fromVisitedDesc: 'Nutze deine zuvor besuchten Orte als Ausgangspunkt.',
       fromUnvisitedPlaces: 'Aus unbesuchten Orten',
@@ -1364,8 +1364,8 @@ window.I18N_TRANSLATIONS = {
     },
     plannedTrips: {
       title: 'Geplante Reisen',
-      pageTitle: 'Geplante Reisen – TravelApp',
-      sharedPageTitle: 'Geteilte Reise – TravelApp',
+      pageTitle: 'Geplante Reisen – Planventure',
+      sharedPageTitle: 'Geteilte Reise – Planventure',
       subtitle: 'Deine bevorstehenden Abenteuer',
       noTripsPlannedYet: 'Noch keine Reisen geplant',
       upcomingSection: 'Kommende Reisen',
@@ -1470,7 +1470,7 @@ window.I18N_TRANSLATIONS = {
       logoutConfirm: 'Möchtest du dich wirklich abmelden?',
       subtitle: 'Dein Konto auf einen Blick',
       account: 'Konto',
-      pageTitle: 'Profil – TravelApp',
+      pageTitle: 'Profil – Planventure',
       manageYourAccountAndPreferences: 'Verwalte dein Konto und deine Einstellungen.',
       loading: 'Lädt…',
       noEmail: 'Keine E-Mail',
@@ -1494,7 +1494,7 @@ window.I18N_TRANSLATIONS = {
     },
     editProfile: {
       title: 'Profil bearbeiten',
-      pageTitle: 'Profil bearbeiten – TravelApp',
+      pageTitle: 'Profil bearbeiten – Planventure',
       subtitle: 'Aktualisiere Benutzername, E-Mail oder Passwort',
       username: 'Benutzername',
       email: 'E-Mail',
@@ -1520,8 +1520,8 @@ window.I18N_TRANSLATIONS = {
     },
     login: {
       title: 'Anmelden',
-      pageTitle: 'Anmelden – TravelApp',
-      subtitle: 'Melde dich bei deinem TravelApp-Konto an',
+      pageTitle: 'Anmelden – Planventure',
+      subtitle: 'Melde dich bei deinem Planventure-Konto an',
       username: 'Benutzername *',
       password: 'Passwort *',
       usernamePlaceholder: 'Dein Benutzername',
@@ -1543,8 +1543,8 @@ window.I18N_TRANSLATIONS = {
     },
     register: {
       title: 'Registrieren',
-      pageTitle: 'Registrieren – TravelApp',
-      subtitle: 'Erstelle ein neues TravelApp-Konto',
+      pageTitle: 'Registrieren – Planventure',
+      subtitle: 'Erstelle ein neues Planventure-Konto',
       username: 'Benutzername *',
       email: 'E-Mail *',
       password: 'Passwort *',
@@ -1576,7 +1576,7 @@ window.I18N_TRANSLATIONS = {
     },
     resetPassword: {
       title: 'Neues Passwort festlegen',
-      pageTitle: 'Passwort zurücksetzen – TravelApp',
+      pageTitle: 'Passwort zurücksetzen – Planventure',
       subtitle: 'Wähle ein neues Passwort für dein Konto',
       newPassword: 'Neues Passwort *',
       newPasswordPlaceholder: 'Neues Passwort (mind. 6 Zeichen)',
@@ -1594,8 +1594,8 @@ window.I18N_TRANSLATIONS = {
     },
     admin: {
       title: 'Admin: Datenexport / -import',
-      pageTitle: 'Admin – TravelApp',
-      feedbackBrowserTitle: 'Admin-Feedback – TravelApp',
+      pageTitle: 'Admin – Planventure',
+      feedbackBrowserTitle: 'Admin-Feedback – Planventure',
       subtitle: 'Datenbankinhalte zwischen Umgebungen als JSON-Datei migrieren',
       secretLabel: 'Admin-Geheimnis',
       secretPlaceholder: 'Admin-Geheimnis eingeben',
