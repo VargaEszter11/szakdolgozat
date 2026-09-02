@@ -156,6 +156,7 @@ def test_append_return_home(monkeypatch):
         end_date="2026-07-10",
     )
     assert plan[-1]["city"] == "Budapest"
+    assert plan[-1]["country"] == "HU"
     assert plan[-1]["transportFromPreviousCity"] == "flight"
     assert plan[-1]["is_return_home"] is True
 
@@ -173,6 +174,13 @@ def test_append_return_home(monkeypatch):
     )
     assert len(short) == 1
 
+    def db_with_airport(country_code):
+        db = MagicMock()
+        ap = MagicMock()
+        ap.country_code = country_code
+        db.query.return_value.filter.return_value.first.return_value = ap
+        return db
+
     monkeypatch.setattr(plan_builder, "return_flight_booking_details", lambda *a, **k: {})
     monkeypatch.setattr(plan_builder, "ground_transport_between_airports", lambda *a, **k: "bus")
     same_hub = [{"city": "Kosice", "iata": "KSC"}]
@@ -183,13 +191,40 @@ def test_append_return_home(monkeypatch):
         home_city="miskolc",
         home_country="",
         end_date="2026-08-19",
-        home_transfer={"access_city": "Kosice", "local_transport": "bus"},
+        home_transfer={
+            "access_city": "Kosice",
+            "local_transport": "bus",
+            "home_country": "HU",
+        },
     )
     assert same_hub[-1]["city"] == "Miskolc"
+    assert same_hub[-1]["country"] == "HU"
     assert same_hub[-1]["is_return_home"] is True
     assert same_hub[-1]["transportFromPreviousCity"] == "bus"
     assert same_hub[-1]["access_city"] == "Kosice"
     assert "local_transport" not in same_hub[-1]
+
+    # City-only start next to its hub airport → fill country from airport.
+    near_hub = [{"city": "Rome", "iata": "FCO"}]
+    monkeypatch.setattr(
+        plan_builder,
+        "return_flight_booking_details",
+        lambda *a, **k: {
+            "booking_url": "https://book",
+            "airline_iata": "FR",
+            "origin_airport_iata": "FCO",
+            "destination_airport_iata": "BUD",
+        },
+    )
+    plan_builder._append_return_home(
+        db_with_airport("HU"),
+        plan=near_hub,
+        starting_airport_iata="BUD",
+        home_city="Budapest",
+        home_country="",
+        end_date="2026-07-10",
+    )
+    assert near_hub[-1]["country"] == "HU"
 
     # Off-airport home + missing dated reverse flight: keep flight into hub, then bus home.
     soft_home = [{"city": "Vienna", "iata": "VIE"}]

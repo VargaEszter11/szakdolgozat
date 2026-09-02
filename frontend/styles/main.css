@@ -612,6 +612,12 @@ button.btn-cancel:hover {
     width: 100%;
     height: 100%;
     background: var(--color-page-bg);
+    cursor: default;
+    touch-action: none;
+}
+
+.main-page-home .main-europe-map .leaflet-interactive {
+    cursor: default;
 }
 
 .main-page-home .main-europe-map-fallback {

@@ -224,10 +224,13 @@ function ensureEuropeMap() {
     zoomControl: false,
     attributionControl: false,
     scrollWheelZoom: false,
-    dragging: true,
+    dragging: false,
     doubleClickZoom: false,
     boxZoom: false,
-    keyboard: false
+    keyboard: false,
+    touchZoom: false,
+    tap: false,
+    trackResize: true
   });
   europeMap.fitBounds(window.L.latLngBounds(EUROPE_FOCUS_BOUNDS), {
     padding: [6, 6],
@@ -274,6 +277,12 @@ function applyGeoJson(geojson) {
         sticky: true,
         direction: 'top',
         opacity: 0.95
+      });
+      layer.on('click', function (e) {
+        if (window.L && window.L.DomEvent) {
+          window.L.DomEvent.preventDefault(e);
+          window.L.DomEvent.stopPropagation(e);
+        }
       });
     }
   }).addTo(map);

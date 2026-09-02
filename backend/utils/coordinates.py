@@ -16,10 +16,24 @@ _GEOCODE_COUNTRYCODES = ",".join(
 
 
 async def geocode_place(place_name: str, language: str = "en") -> Tuple[float, float]:
+    lat, lon, _country = await _nominatim_search(
+        place_name,
+        language=language,
+        featuretype=None,
+        addressdetails=False,
+    )
+    return lat, lon
+
+
+async def geocode_place_with_country(
+    place_name: str, language: str = "en"
+) -> Tuple[float, float, str]:
+    """Like geocode_place, but also returns an ISO-2 country code when Nominatim provides one."""
     return await _nominatim_search(
         place_name,
         language=language,
         featuretype=None,
+        addressdetails=True,
     )
 
 
@@ -35,11 +49,13 @@ async def geocode_city_center(
         raise ValueError("City name is required")
     query = f"{city}, {country_label}".strip(", ") if (country_label or "").strip() else city
     try:
-        return await _nominatim_search(
+        lat, lon, _country = await _nominatim_search(
             query,
             language=language,
             featuretype="city",
+            addressdetails=False,
         )
+        return lat, lon
     except ValueError:
         return await geocode_place(query, language=language)
 
@@ -49,7 +65,8 @@ async def _nominatim_search(
     *,
     language: str = "en",
     featuretype: str | None = None,
-) -> Tuple[float, float]:
+    addressdetails: bool = False,
+) -> Tuple[float, float, str]:
     url = "https://nominatim.openstreetmap.org/search"
     params = {
         "q": query,
@@ -60,6 +77,8 @@ async def _nominatim_search(
     }
     if featuretype:
         params["featuretype"] = featuretype
+    if addressdetails:
+        params["addressdetails"] = "1"
     user_agent = (os.getenv("NOMINATIM_USER_AGENT") or "").strip() or _DEFAULT_UA
     headers = {
         "User-Agent": user_agent,
@@ -82,9 +101,17 @@ async def _nominatim_search(
         results = resp.json()
         if not results:
             raise ValueError(f"Place '{query}' not found online")
-        lat = float(results[0]["lat"])
-        lon = float(results[0]["lon"])
+        hit = results[0]
+        lat = float(hit["lat"])
+        lon = float(hit["lon"])
+        country = ""
+        if addressdetails:
+            addr = hit.get("address") or {}
+            raw = str(addr.get("country_code") or "").strip().upper()
+            if raw == "UK":
+                raw = "GB"
+            country = raw
 
         print(f"Geocoded '{query}' to coordinates: ({lat}, {lon})")
 
-        return lat, lon
+        return lat, lon, country

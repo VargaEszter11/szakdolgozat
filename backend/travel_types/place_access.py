@@ -9,8 +9,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Set
 
-from utils.coordinates import geocode_place
+from utils.coordinates import geocode_place, geocode_place_with_country
 from utils.nearest_airport import nearest_airport
+from utils.countries import resolve_country_code
 
 from .place_matching import place_matches_candidate, place_used_in_plan, split_place_label
 from .route_candidates import (
@@ -328,22 +329,38 @@ async def resolve_home_hub_transfer(
     preferred_transport: str = "allModes",
     language: str = "en",
 ) -> Optional[Dict[str, Any]]:
-    """Geocode the starting place and decide if a home↔hub ground transfer is needed."""
+    """Geocode the starting place and decide if a home↔hub ground transfer is needed.
+
+    Always includes ``home_country`` (ISO-2) when Nominatim provides it, even if
+    no ground transfer is required — used for the return-home stop country.
+    """
     text = (starting_point or "").strip()
     hub = _iata(starting_airport_iata)
     if not text or not hub:
         return None
+    home_country = ""
     try:
-        lat, lon = await geocode_place(text, language=language)
+        lat, lon, raw_cc = await geocode_place_with_country(text, language=language)
+        home_country = resolve_country_code(raw_cc) or (raw_cc or "").strip().upper()
     except Exception:
-        return None
-    return home_hub_transfer_from_coords(
+        try:
+            lat, lon = await geocode_place(text, language=language)
+        except Exception:
+            return None
+    transfer = home_hub_transfer_from_coords(
         db,
         home_lat=lat,
         home_lon=lon,
         hub_iata=hub,
         preferred_transport=preferred_transport,
     )
+    if transfer:
+        if home_country:
+            transfer["home_country"] = home_country
+        return transfer
+    if home_country:
+        return {"home_country": home_country}
+    return None
 
 
 def remaining_unmatched_places(

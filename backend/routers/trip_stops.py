@@ -28,14 +28,14 @@ async def create_trip_stop(
     current_user: models.User = Depends(get_current_user),
 ):
     """Add a stop to an owned trip and geocode place_name → latitude/longitude for the map."""
-    from utils.countries import geocode_country_label, normalize_country_code
+    from utils.countries import geocode_country_label, resolve_country_code
 
     db_trip = crud.get_planned_trip(db, trip_id=stop.trip_id)
     _require_trip_owner(db_trip, current_user_id(current_user))
 
     stop_dict = stop.model_dump()
     if stop_dict.get("country"):
-        stop_dict["country"] = normalize_country_code(stop_dict["country"]) or stop_dict["country"]
+        stop_dict["country"] = resolve_country_code(stop_dict["country"]) or stop_dict["country"]
     stop = schemas.TripStopCreate(**stop_dict)
 
     try:

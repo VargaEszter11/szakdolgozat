@@ -410,7 +410,59 @@
     }
   }
 
-  /** Trip start/end inputs follow first stop arrival (else departure) and last stop departure (else arrival). */
+  // Date parsing and formatting
+  function parseEditDay(s) {
+    if (!s || String(s).length < 10) return null;
+    var p = String(s).slice(0, 10).split('-');
+    var y = parseInt(p[0], 10);
+    var m = parseInt(p[1], 10) - 1;
+    var d = parseInt(p[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    var dt = new Date(Date.UTC(y, m, d));
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function fmtEditDay(dt) {
+    if (!dt) return '';
+    var mo = dt.getUTCMonth() + 1;
+    var day = dt.getUTCDate();
+    return dt.getUTCFullYear() + '-' + (mo < 10 ? '0' : '') + mo + '-' + (day < 10 ? '0' : '') + day;
+  }
+
+  function addEditDaysUTC(dt, n) {
+    var x = new Date(dt.getTime());
+    x.setUTCDate(x.getUTCDate() + n);
+    return x;
+  }
+
+  function dayDiffSigned(a, b) {
+    if (!a || !b) return 0;
+    return Math.round((b.getTime() - a.getTime()) / 86400000);
+  }
+
+  function dayDiffNonNeg(a, b) {
+    var ms = dayDiffSigned(a, b);
+    return ms >= 0 ? ms : 0;
+  }
+
+  function placeNamesMatch(a, b) {
+    var x = String(a || '').trim().toLowerCase();
+    var y = String(b || '').trim().toLowerCase();
+    return !!(x && y && x === y);
+  }
+
+  /** Last stop whose place matches the trip start city = return-home leg. */
+  function isReturnHomeEditStop(stop, startCity, index, total) {
+    if (index !== total - 1 || total < 1) return false;
+    return placeNamesMatch(stop && stop.place_name, startCity);
+  }
+
+  function isReturnHomeEditRow(row) {
+    return !!(row && row.getAttribute('data-return-home') === '1');
+  }
+
+  //Trip start follows first stop; end follows last destination departure.
+  //Return-home shows a single date mirrored from trip end.
   function syncTripBoundsFromStops(listEl) {
     if (!listEl) return;
     var modalRoot = listEl.closest('.trip-details-modal-overlay');
@@ -420,15 +472,45 @@
     var rows = listEl.querySelectorAll('.trip-stop-card');
     if (!rows.length) return;
     var first = rows[0];
-    var last = rows[rows.length - 1];
     var fa = first.querySelector('[data-field="arrival_date"]');
     var fd = first.querySelector('[data-field="departure_date"]');
-    var la = last.querySelector('[data-field="arrival_date"]');
-    var ld = last.querySelector('[data-field="departure_date"]');
     var startVal = (fa && fa.value) ? fa.value : fd && fd.value ? fd.value : '';
+
+    var endSource = rows[rows.length - 1];
+    if (isReturnHomeEditRow(endSource) && rows.length >= 2) {
+      endSource = rows[rows.length - 2];
+    }
+    var la = endSource.querySelector('[data-field="arrival_date"]');
+    var ld = endSource.querySelector('[data-field="departure_date"]');
     var endVal = (ld && ld.value) ? ld.value : la && la.value ? la.value : '';
+
     if (startVal) tripStart.value = String(startVal).slice(0, 10);
     if (endVal) tripEnd.value = String(endVal).slice(0, 10);
+
+    var last = rows[rows.length - 1];
+    if (isReturnHomeEditRow(last) && tripEnd.value) {
+      var retIn = last.querySelector('[data-field="return_date"]');
+      if (retIn) retIn.value = tripEnd.value;
+    }
+  }
+
+  //Slide every stop date by deltaDays so the itinerary stays consistent
+  function shiftAllEditStopDates(listEl, deltaDays) {
+    if (!listEl || !deltaDays) return;
+    var rows = listEl.querySelectorAll('.trip-stop-card');
+    for (var i = 0; i < rows.length; i++) {
+      var arrIn = rows[i].querySelector('[data-field="arrival_date"]');
+      var depIn = rows[i].querySelector('[data-field="departure_date"]');
+      if (arrIn && arrIn.value) {
+        var arr = parseEditDay(arrIn.value);
+        if (arr) arrIn.value = fmtEditDay(addEditDaysUTC(arr, deltaDays));
+      }
+      if (depIn && depIn.value) {
+        var dep = parseEditDay(depIn.value);
+        if (dep) depIn.value = fmtEditDay(addEditDaysUTC(dep, deltaDays));
+      }
+    }
+    syncTripBoundsFromStops(listEl);
   }
 
   function chainEditStopDates(listEl, fromIndex) {
@@ -438,33 +520,19 @@
     fromIndex = (typeof fromIndex === 'number' && fromIndex >= 1) ? fromIndex : 1;
 
     function parseDay(s) {
-      if (!s || String(s).length < 10) return null;
-      var p = String(s).slice(0, 10).split('-');
-      var y = parseInt(p[0], 10);
-      var m = parseInt(p[1], 10) - 1;
-      var d = parseInt(p[2], 10);
-      if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
-      var dt = new Date(Date.UTC(y, m, d));
-      return isNaN(dt.getTime()) ? null : dt;
+      return parseEditDay(s);
     }
 
     function fmt(dt) {
-      if (!dt) return '';
-      var mo = dt.getUTCMonth() + 1;
-      var day = dt.getUTCDate();
-      return dt.getUTCFullYear() + '-' + (mo < 10 ? '0' : '') + mo + '-' + (day < 10 ? '0' : '') + day;
+      return fmtEditDay(dt);
     }
 
     function addDaysUTC(dt, n) {
-      var x = new Date(dt.getTime());
-      x.setUTCDate(x.getUTCDate() + n);
-      return x;
+      return addEditDaysUTC(dt, n);
     }
 
     function dayDiff(a, b) {
-      if (!a || !b) return 0;
-      var ms = Math.round((b.getTime() - a.getTime()) / 86400000);
-      return ms >= 0 ? ms : 0;
+      return dayDiffNonNeg(a, b);
     }
 
     var states = [];
@@ -523,11 +591,14 @@
     syncTripBoundsFromStops(listEl);
   }
 
-  function buildEditStopRowEl(stop) {
+  function buildEditStopRowEl(stop, options) {
     stop = stop || {};
+    options = options || {};
+    var isReturnHome = !!options.isReturnHome;
     var row = document.createElement('div');
     row.className = 'trip-stop-card';
     if (stop.id != null) row.setAttribute('data-stop-id', String(stop.id));
+    if (isReturnHome) row.setAttribute('data-return-home', '1');
 
     var num = document.createElement('div');
     num.className = 'trip-stop-number';
@@ -588,10 +659,28 @@
       if (stop.country) countryInput.dataset.countryCode = String(stop.country).trim().toUpperCase();
       window.Countries.mountAutocomplete(countryInput);
     }
-    grid.appendChild(mkField(false, 'editFieldArrival', 'editFieldArrival', 'arrival_date', 'date', toDateInputValue(stop.arrival_date), false));
-    grid.appendChild(mkField(false, 'editFieldDeparture', 'editFieldDeparture', 'departure_date', 'date', toDateInputValue(stop.departure_date), false));
+    if (isReturnHome) {
+      var returnDateVal =
+        options.tripEndDate || stop.arrival_date || stop.departure_date || '';
+      grid.appendChild(
+        mkField(
+          false,
+          'editFieldReturnDate',
+          'editFieldReturnDate',
+          'return_date',
+          'date',
+          toDateInputValue(returnDateVal),
+          false
+        )
+      );
+    } else {
+      grid.appendChild(mkField(false, 'editFieldArrival', 'editFieldArrival', 'arrival_date', 'date', toDateInputValue(stop.arrival_date), false));
+      grid.appendChild(mkField(false, 'editFieldDeparture', 'editFieldDeparture', 'departure_date', 'date', toDateInputValue(stop.departure_date), false));
+    }
     grid.appendChild(mkField(true, 'editFieldTransport', 'editFieldTransport', 'transport_from_last', 'text', stop.transport_from_last, false));
-    grid.appendChild(mkField(true, 'editFieldActivities', 'editFieldActivities', 'activities', null, stop.activities, true));
+    if (!isReturnHome) {
+      grid.appendChild(mkField(true, 'editFieldActivities', 'editFieldActivities', 'activities', null, stop.activities, true));
+    }
 
     details.appendChild(actions);
     details.appendChild(grid);
@@ -609,7 +698,7 @@
     return row;
   }
 
-  function readStopRow(row, orderIndex) {
+  function readStopRow(row, orderIndex, tripEndDate) {
     var placeIn = row.querySelector('[data-field="place_name"]');
     var place = placeIn && placeIn.value.trim();
     var countryIn = row.querySelector('[data-field="country"]');
@@ -617,7 +706,12 @@
     var activitiesIn = row.querySelector('[data-field="activities"]');
     var arrIn = row.querySelector('[data-field="arrival_date"]');
     var depIn = row.querySelector('[data-field="departure_date"]');
+    var retIn = row.querySelector('[data-field="return_date"]');
     var sid = row.getAttribute('data-stop-id');
+    var isReturnHome = isReturnHomeEditRow(row);
+    var endIso = isReturnHome
+      ? fromDateInputVal(retIn && retIn.value) || fromDateInputVal(tripEndDate)
+      : fromDateInputVal(tripEndDate);
     return {
       id: sid ? parseInt(sid, 10) : null,
       stop_order: orderIndex,
@@ -626,10 +720,10 @@
         (window.Countries && window.Countries.getCode(countryIn)) ||
         (countryIn && countryIn.value)
       ),
-      arrival_date: fromDateInputVal(arrIn && arrIn.value),
-      departure_date: fromDateInputVal(depIn && depIn.value),
+      arrival_date: isReturnHome ? endIso : fromDateInputVal(arrIn && arrIn.value),
+      departure_date: isReturnHome ? endIso : fromDateInputVal(depIn && depIn.value),
       transport_from_last: trimOrNull(transportIn && transportIn.value),
-      activities: trimOrNull(activitiesIn && activitiesIn.value)
+      activities: isReturnHome ? null : trimOrNull(activitiesIn && activitiesIn.value)
     };
   }
 
@@ -644,6 +738,7 @@
 
     var listEl = modal.querySelector('#editStopsList');
     var rows = listEl ? listEl.querySelectorAll('.trip-stop-card') : [];
+    var endDateIn = modal.querySelector('#editTripEndDate');
 
     if (!rows.length) {
       showError(plannedTripsT('editStopsRequired', 'A trip must have at least one stop.'));
@@ -651,8 +746,17 @@
     }
 
     var collected = [];
+    var endPreview = fromDateInputVal(endDateIn && endDateIn.value);
+    var lastRow = rows[rows.length - 1];
+    if (isReturnHomeEditRow(lastRow)) {
+      var retField = lastRow.querySelector('[data-field="return_date"]');
+      if (retField && retField.value) {
+        endPreview = fromDateInputVal(retField.value);
+        if (endDateIn) endDateIn.value = retField.value;
+      }
+    }
     for (var i = 0; i < rows.length; i++) {
-      var data = readStopRow(rows[i], i + 1);
+      var data = readStopRow(rows[i], i + 1, endPreview);
       if (!data.place_name) {
         showError(plannedTripsT('editStopPlaceRequired', 'Each stop must have a place name.'));
         return false;
@@ -662,14 +766,22 @@
 
     var startCityIn = modal.querySelector('#editTripStartCity');
     var startDateIn = modal.querySelector('#editTripStartDate');
-    var endDateIn = modal.querySelector('#editTripEndDate');
 
     var tripBody = {
       title: title,
       start_city: trimOrNull(startCityIn && startCityIn.value),
       start_date: fromDateInputVal(startDateIn && startDateIn.value),
-      end_date: fromDateInputVal(endDateIn && endDateIn.value)
+      end_date: endPreview
     };
+
+    // Last stop matching start city is return-home: pin dates to trip end.
+    if (collected.length && tripBody.start_city && tripBody.end_date) {
+      var last = collected[collected.length - 1];
+      if (placeNamesMatch(last.place_name, tripBody.start_city)) {
+        last.arrival_date = tripBody.end_date;
+        last.departure_date = tripBody.end_date;
+      }
+    }
 
     if (saveBtn) saveBtn.disabled = true;
 
@@ -777,12 +889,28 @@
 
       if (listEl) {
         listEl.innerHTML = '';
-        stops.forEach(function (s) {
-          listEl.appendChild(buildEditStopRowEl(s));
+        stops.forEach(function (s, i) {
+          listEl.appendChild(
+            buildEditStopRowEl(s, {
+              isReturnHome: isReturnHomeEditStop(s, trip.start_city, i, stops.length),
+              tripEndDate: trip.end_date
+            })
+          );
         });
         renumberEditStops(listEl);
         function onEditStopsDateField(e) {
           var t = e.target;
+          if (t.matches('input[data-field="return_date"]')) {
+            var oldEnd = parseEditDay(prevTripEnd);
+            var newEnd = parseEditDay(t.value);
+            var retDelta = dayDiffSigned(oldEnd, newEnd);
+            if (endDateIn) endDateIn.value = t.value || '';
+            if (retDelta) shiftAllEditStopDates(listEl, retDelta);
+            else syncTripBoundsFromStops(listEl);
+            prevTripStart = startDateIn ? startDateIn.value : '';
+            prevTripEnd = endDateIn ? endDateIn.value : '';
+            return;
+          }
           if (!t.matches('input[data-field="arrival_date"], input[data-field="departure_date"]')) return;
           var row = t.closest('.trip-stop-card');
           var rows = Array.prototype.slice.call(listEl.querySelectorAll('.trip-stop-card'));
@@ -794,28 +922,49 @@
           // Cascade the edit forward onto later stops (chainEditStopDates also
           // syncs the trip start/end fields at the end, so no separate call needed).
           chainEditStopDates(listEl, idx + 1);
+          prevTripStart = startDateIn ? startDateIn.value : '';
+          prevTripEnd = endDateIn ? endDateIn.value : '';
         }
         listEl.addEventListener('change', onEditStopsDateField);
         listEl.addEventListener('input', onEditStopsDateField);
       }
 
-      /** Trip start/end inputs are the flip side of syncTripBoundsFromStops:
-       * editing them directly must push the change onto the first/last stop,
-       * or that stop's date silently goes stale. */
+      //Moving trip start/end slides every stop by the same delta so middle stops stay aligned (only updating first/last left them stale).
+      var prevTripStart = startDateIn ? startDateIn.value : '';
+      var prevTripEnd = endDateIn ? endDateIn.value : '';
       function onEditTripBoundsField(e) {
-        var rows = listEl ? listEl.querySelectorAll('.trip-stop-card') : [];
+        if (!listEl) return;
+        var rows = listEl.querySelectorAll('.trip-stop-card');
         if (!rows.length) return;
         if (e.target === startDateIn) {
-          var first = rows[0];
-          var firstField = first.querySelector('[data-field="arrival_date"]') ||
-            first.querySelector('[data-field="departure_date"]');
-          if (firstField) firstField.value = startDateIn.value;
+          var oldStart = parseEditDay(prevTripStart);
+          var newStart = parseEditDay(startDateIn.value);
+          var startDelta = dayDiffSigned(oldStart, newStart);
+          if (startDelta) shiftAllEditStopDates(listEl, startDelta);
+          else {
+            var first = rows[0];
+            var firstField = first.querySelector('[data-field="arrival_date"]') ||
+              first.querySelector('[data-field="departure_date"]');
+            if (firstField) firstField.value = startDateIn.value;
+            chainEditStopDates(listEl, 1);
+          }
         } else if (e.target === endDateIn) {
-          var last = rows[rows.length - 1];
-          var lastField = last.querySelector('[data-field="departure_date"]') ||
-            last.querySelector('[data-field="arrival_date"]');
-          if (lastField) lastField.value = endDateIn.value;
+          var oldEnd = parseEditDay(prevTripEnd);
+          var newEnd = parseEditDay(endDateIn.value);
+          var endDelta = dayDiffSigned(oldEnd, newEnd);
+          if (endDelta) {
+            shiftAllEditStopDates(listEl, endDelta);
+          } else {
+            var endRow = rows[rows.length - 1];
+            if (isReturnHomeEditRow(endRow) && rows.length >= 2) {
+              endRow = rows[rows.length - 2];
+            }
+            var pinDep = endRow.querySelector('[data-field="departure_date"]');
+            if (pinDep) pinDep.value = endDateIn.value;
+          }
         }
+        prevTripStart = startDateIn ? startDateIn.value : '';
+        prevTripEnd = endDateIn ? endDateIn.value : '';
       }
       if (startDateIn) startDateIn.addEventListener('change', onEditTripBoundsField);
       if (endDateIn) endDateIn.addEventListener('change', onEditTripBoundsField);
@@ -834,11 +983,18 @@
       var addBtn = modal.querySelector('#editAddStopBtn');
       if (addBtn && listEl) {
         addBtn.addEventListener('click', function () {
-          listEl.appendChild(buildEditStopRowEl(null));
+          var newRow = buildEditStopRowEl(null);
+          var existing = listEl.querySelectorAll('.trip-stop-card');
+          var last = existing.length ? existing[existing.length - 1] : null;
+          if (last && isReturnHomeEditRow(last)) {
+            listEl.insertBefore(newRow, last);
+          } else {
+            listEl.appendChild(newRow);
+          }
           renumberEditStops(listEl);
           syncTripBoundsFromStops(listEl);
           if (window.i18n && typeof window.i18n.applyToPage === 'function') {
-            window.i18n.applyToPage(listEl.lastChild);
+            window.i18n.applyToPage(newRow);
           }
         });
       }
@@ -881,7 +1037,7 @@
   }
 
   // Trip details modal
-  function buildStopCard(stop, people, isLastStop, isBooked) {
+  function buildStopCard(stop, people, isLastStop, isBooked, startCity) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
     var num = document.createElement('div');
@@ -893,15 +1049,33 @@
     h4.textContent = placeDisplay(stop.place_name, stop.country);
     var info = document.createElement('div');
     info.className = 'trip-stop-info';
-    if (stop.arrival_date) {
-      var pArr = document.createElement('p');
-      pArr.innerHTML = '<strong>' + window.i18n.t('plannedTrips.arrival') + ':</strong> ' + formatApiDate(stop.arrival_date);
-      info.appendChild(pArr);
-    }
-    if (stop.departure_date) {
-      var pDep = document.createElement('p');
-      pDep.innerHTML = '<strong>' + window.i18n.t('plannedTrips.departure') + ':</strong> ' + formatApiDate(stop.departure_date);
-      info.appendChild(pDep);
+    var isReturnHome = isLastStop && placeNamesMatch(stop.place_name, startCity);
+    if (isReturnHome) {
+      var pHome = document.createElement('p');
+      pHome.className = 'muted';
+      pHome.textContent = plannedTripsT('returnHomeStop', 'Return home');
+      info.appendChild(pHome);
+      var homeDate = stop.arrival_date || stop.departure_date;
+      if (homeDate) {
+        var pHomeDate = document.createElement('p');
+        pHomeDate.innerHTML =
+          '<strong>' +
+          escapeHtml(plannedTripsT('editFieldReturnDate', 'Return date')) +
+          ':</strong> ' +
+          formatApiDate(homeDate);
+        info.appendChild(pHomeDate);
+      }
+    } else {
+      if (stop.arrival_date) {
+        var pArr = document.createElement('p');
+        pArr.innerHTML = '<strong>' + window.i18n.t('plannedTrips.arrival') + ':</strong> ' + formatApiDate(stop.arrival_date);
+        info.appendChild(pArr);
+      }
+      if (stop.departure_date) {
+        var pDep = document.createElement('p');
+        pDep.innerHTML = '<strong>' + window.i18n.t('plannedTrips.departure') + ':</strong> ' + formatApiDate(stop.departure_date);
+        info.appendChild(pDep);
+      }
     }
     if (stop.transport_from_last) {
       var pTrans = document.createElement('p');
@@ -921,7 +1095,7 @@
           '</a>';
       }
       // No accommodation on return-home last stop; TripDisplayHelper uses stop coords when saved.
-      var accommodationUrl = !isLastStop && window.TripDisplayHelper
+      var accommodationUrl = !isReturnHome && window.TripDisplayHelper
         && typeof window.TripDisplayHelper.accommodationBookingUrlForStop === 'function'
         ? window.TripDisplayHelper.accommodationBookingUrlForStop(
           stop,
@@ -931,7 +1105,7 @@
           people
         )
         : accommodationBookingUrl(
-          isLastStop ? null : stop.place_name,
+          isReturnHome ? null : stop.place_name,
           countryDisplay(stop.country),
           stop.arrival_date,
           stop.departure_date,
@@ -946,7 +1120,7 @@
         info.appendChild(actions);
       }
     }
-    if (stop.activities) {
+    if (stop.activities && !isReturnHome) {
       var pAct = document.createElement('p');
       pAct.innerHTML = '<strong>' + window.i18n.t('plannedTrips.activities') + ':</strong> ' + escapeHtml(stop.activities);
       info.appendChild(pAct);
@@ -1016,7 +1190,7 @@
           stopsListEl.appendChild(empty);
         } else {
           stops.forEach(function (stop, index) {
-            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1, !!trip.is_booked));
+            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1, !!trip.is_booked, trip.start_city));
           });
         }
       }

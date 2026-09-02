@@ -82,6 +82,22 @@ def normalize_country_code(value: Optional[str]) -> Optional[str]:
     return None
 
 
+def resolve_country_code(value: Optional[str]) -> Optional[str]:
+    """ISO-2 from a code, English name, or known alias (HU / Hungary / Magyarország)."""
+    code = normalize_country_code(value)
+    if code:
+        return code
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    if not text:
+        return None
+    for row_code, name, aliases in _COUNTRY_ROWS:
+        if name.lower() == text or text in aliases:
+            return row_code
+    return None
+
+
 def country_display_name(value: Optional[str]) -> str:
     """Human-readable English name for an ISO-2 country code."""
     if value is None:

@@ -538,7 +538,7 @@ def _annotate_departure_home_transfer(
     home_city: str,
     home_transfer: Optional[Dict[str, Any]],
 ) -> None:
-    if not plan or not home_transfer:
+    if not plan or not home_transfer or not home_transfer.get("access_city"):
         return
     first = plan[0]
     if first.get("is_return_home"):
@@ -570,7 +570,8 @@ def _append_return_home(
     same_hub = bool(return_origin and home_hub and return_origin == home_hub)
     # Off-airport homes (e.g. Miskolc ↔ Kosice): prefer keeping the return as a
     # flight into the hub even when the reverse DirectRoute is missing/out of season.
-    prefer_soft_flight = bool(home_transfer) and not same_hub
+    has_ground_home_transfer = bool(home_transfer and home_transfer.get("access_city"))
+    prefer_soft_flight = has_ground_home_transfer and not same_hub
 
     if allowed_modes is None or "flight" in allowed_modes:
         return_flight_details = (
@@ -632,9 +633,30 @@ def _append_return_home(
         # Already at the starting place (e.g. last stop is home).
         return
 
+    from database import models
+    from utils.countries import resolve_country_code
+
+    resolved_country = resolve_country_code(home_country) or ""
+    if not resolved_country and home_transfer:
+        resolved_country = (
+            resolve_country_code(home_transfer.get("home_country"))
+            or ""
+        )
+    # Hub country is only safe when home is at/near that airport. Off-airport
+    # homes (ground transfer) may sit in a different country than the hub.
+    if not resolved_country and home_hub and not has_ground_home_transfer:
+        ap = (
+            db.query(models.Airport)
+            .filter(models.Airport.iata == home_hub)
+            .first()
+        )
+        raw_code = getattr(ap, "country_code", None) if ap is not None else None
+        if isinstance(raw_code, str):
+            resolved_country = resolve_country_code(raw_code) or raw_code.strip().upper()
+
     return_stop: Dict[str, Any] = {
         "city": home_label.title() if home_label else home_city,
-        "country": home_country or "",
+        "country": resolved_country or (home_country or ""),
         "iata": home_hub,
         "days": 0,
         "arrivalDate": end_date,
@@ -703,6 +725,9 @@ async def build_plan(
 ) -> Dict[str, Any]:
     """Main itinerary loop: hub → next stop → … → return home."""
     home_city, home_country = split_place_label(starting_point)
+    from utils.countries import resolve_country_code
+
+    home_country = resolve_country_code(home_country) or (home_country or "")
     requested_places = _merge_place_lists(visited_places, extra_places)
     visited_places = requested_places
     forbidden_places = forbidden_places or []
@@ -724,6 +749,8 @@ async def build_plan(
             preferred_transport=preferred_transport,
             language=language,
         )
+        if not home_country and home_transfer and home_transfer.get("home_country"):
+            home_country = str(home_transfer.get("home_country") or "").strip()
         for _ in range(max_legs):
             if remaining_days <= 0:
                 break

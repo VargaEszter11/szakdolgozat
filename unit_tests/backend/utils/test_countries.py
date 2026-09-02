@@ -3,6 +3,7 @@ from utils.countries import (
     country_display_name,
     geocode_country_label,
     normalize_country_code,
+    resolve_country_code,
 )
 
 
@@ -24,6 +25,15 @@ def test_normalize_country_code_rejects_names_and_unknown():
     assert normalize_country_code("Hungar") is None
     assert normalize_country_code("") is None
     assert normalize_country_code(None) is None
+
+
+def test_resolve_country_code_from_name_and_alias():
+    assert resolve_country_code("HU") == "HU"
+    assert resolve_country_code("Hungary") == "HU"
+    assert resolve_country_code("magyarország") == "HU"
+    assert resolve_country_code("Italy") == "IT"
+    assert resolve_country_code("unknown-land") is None
+    assert resolve_country_code("") is None
 
 
 def test_country_display_name_from_code():

@@ -362,7 +362,7 @@ def get_trip_stops(db: Session, trip_id: int) -> List[models.PlannedTripStop]:
 
 def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpdate) -> Optional[models.PlannedTripStop]:
     """Update a trip stop"""
-    from utils.countries import normalize_country_code
+    from utils.countries import resolve_country_code
 
     db_stop = get_trip_stop(db, stop_id)
     if not db_stop:
@@ -370,7 +370,7 @@ def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpd
     
     update_data = stop_update.model_dump(exclude_unset=True)
     if "country" in update_data and update_data["country"] is not None:
-        update_data["country"] = normalize_country_code(update_data["country"]) or update_data["country"]
+        update_data["country"] = resolve_country_code(update_data["country"]) or update_data["country"]
     for key, value in update_data.items():
         setattr(db_stop, key, value)
 
