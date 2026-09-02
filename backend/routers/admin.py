@@ -188,10 +188,35 @@ def admin_list_feedback(
                 email=str(user.email) if user and user.email else None,
                 message=str(row.message),
                 image_path=row.image_path,
+                solved=bool(getattr(row, "solved", False)),
                 created_at=row.created_at,
             )
         )
     return out
+
+
+@router.patch("/admin/feedback/{feedback_id}", response_model=schemas.FeedbackResponse)
+def admin_update_feedback(
+    feedback_id: int,
+    body: schemas.FeedbackSolvedUpdate,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin),
+):
+    row = crud.set_feedback_solved(db, feedback_id, solved=bool(body.solved))
+    if row is None:
+        raise HTTPException(status_code=404, detail="Feedback not found.")
+    row_any = cast(Any, row)
+    user = cast(Any, crud.get_user(db, int(row_any.user_id)))
+    return schemas.FeedbackResponse(
+        id=int(row_any.id),
+        user_id=int(row_any.user_id),
+        username=str(user.username) if user else f"user#{row_any.user_id}",
+        email=str(user.email) if user and user.email else None,
+        message=str(row_any.message),
+        image_path=row_any.image_path,
+        solved=bool(getattr(row_any, "solved", False)),
+        created_at=row_any.created_at,
+    )
 
 
 @router.delete("/admin/feedback/{feedback_id}")

@@ -256,6 +256,14 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE feedbacks
+                    ADD COLUMN IF NOT EXISTS solved BOOLEAN NOT NULL DEFAULT FALSE
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     CREATE TABLE IF NOT EXISTS password_reset_tokens (
                         id SERIAL PRIMARY KEY,
                         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

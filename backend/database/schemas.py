@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional, List, Union, Literal
+from typing import Optional, List, Union, Literal, Dict, Any
 import datetime as dt
 from decimal import Decimal
 
@@ -428,6 +428,25 @@ class FeedbackResponse(BaseModel):
     email: Optional[str] = None
     message: str
     image_path: Optional[str] = None
+    solved: bool = False
     created_at: dt.datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FeedbackSolvedUpdate(BaseModel):
+    solved: bool = True
+
+
+class NotificationItem(BaseModel):
+    id: str
+    type: str
+    title: str
+    body: Optional[str] = None
+    href: Optional[str] = None
+    created_at: Optional[dt.datetime] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
+
+
+class NotificationsResponse(BaseModel):
+    items: List[NotificationItem]

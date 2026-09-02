@@ -24,6 +24,8 @@ def test_expected_route_groups_exist():
     assert any("stops" in r or "trip_stops" in r for r in route_strings)
     assert any("places" in r or "visited" in r for r in route_strings)
     assert "/api/feedback" in openapi_paths
+    assert "/api/feedback/mine" in openapi_paths
+    assert "/api/notifications" in openapi_paths
     assert "/api/admin/feedback" in openapi_paths
     assert "/api/admin/feedback/{feedback_id}" in openapi_paths
 

@@ -44,6 +44,9 @@
       sessionStorage.removeItem(SESSION_KEY);
     } catch (err) { /* ignore */ }
     dismissToast();
+    if (global.HeaderNotifications && typeof global.HeaderNotifications.refresh === 'function') {
+      global.HeaderNotifications.refresh();
+    }
   }
 
   function t(key, fallback) {
@@ -83,6 +86,9 @@
   function clearReadyAttention() {
     dismissToast();
     save({ notifyPending: false });
+    if (global.HeaderNotifications && typeof global.HeaderNotifications.refresh === 'function') {
+      global.HeaderNotifications.refresh();
+    }
   }
 
   function showReadyToast() {
@@ -119,6 +125,7 @@
     dismissBtn.className = 'btn-add btn-add-outline';
     dismissBtn.textContent = t('planNewTrip.dismissNotification', 'Dismiss');
     dismissBtn.addEventListener('click', function () {
+      // Keep status=ready so the header notifications inbox still lists the plan.
       clearReadyAttention();
     });
 
@@ -127,6 +134,10 @@
     toast.appendChild(title);
     toast.appendChild(actions);
     document.body.appendChild(toast);
+
+    if (global.HeaderNotifications && typeof global.HeaderNotifications.refresh === 'function') {
+      global.HeaderNotifications.refresh();
+    }
   }
 
   async function resumeGenerationInBackground() {

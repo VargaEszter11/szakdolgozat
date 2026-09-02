@@ -1092,8 +1092,34 @@ def list_feedbacks(db: Session, skip: int = 0, limit: int = 200) -> List[models.
     )
 
 
+def list_feedbacks_for_user(
+    db: Session, user_id: int, skip: int = 0, limit: int = 100
+) -> List[models.Feedback]:
+    return (
+        db.query(models.Feedback)
+        .filter(models.Feedback.user_id == user_id)
+        .order_by(models.Feedback.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
 def get_feedback(db: Session, feedback_id: int) -> Optional[models.Feedback]:
     return db.query(models.Feedback).filter(models.Feedback.id == feedback_id).first()
+
+
+def set_feedback_solved(
+    db: Session, feedback_id: int, solved: bool = True
+) -> Optional[models.Feedback]:
+    row = get_feedback(db, feedback_id)
+    if row is None:
+        return None
+    row_any = cast(Any, row)
+    row_any.solved = bool(solved)
+    db.commit()
+    db.refresh(row)
+    return row
 
 
 def delete_feedback(db: Session, feedback_id: int) -> bool:

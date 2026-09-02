@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from database.database import engine, Base
-from routers import users, planned_trips, trip_stops, visited_places, auth, route_planner, trip_sharing, admin, feedback
+from routers import users, planned_trips, trip_stops, visited_places, auth, route_planner, trip_sharing, admin, feedback, notifications
 from middleware.request_logging import RequestLoggingMiddleware
 from utils.console_logging import attach_api_loggers_to_console
 
@@ -63,6 +63,7 @@ app.include_router(route_planner.router, tags=["planner"])
 app.include_router(trip_sharing.router, prefix="/api", tags=["sharing"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
+app.include_router(notifications.router, prefix="/api", tags=["notifications"])
 
 _uploads_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
 os.makedirs(_uploads_dir, exist_ok=True)

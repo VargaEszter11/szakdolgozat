@@ -4,6 +4,12 @@
         '<line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />' +
         '</svg>';
 
+    var BELL_ICON =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+        '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+        '</svg>';
+
     var HEADER_HTML =
         '<div class="app-header-start">' +
         '<button type="button" class="hamburger-btn" id="app-menu-toggle" aria-expanded="false" aria-controls="app-sidebar" aria-label="Menu">' +
@@ -13,12 +19,25 @@
         '<span class="nav-brand">Planventure</span>' +
         '</a>' +
         '</div>' +
+        '<div class="main-header-end">' +
+        '<div class="header-notifications" id="headerNotifications" hidden>' +
+        '<button type="button" class="header-notifications-btn" id="headerNotificationsBtn" aria-expanded="false" aria-haspopup="true" aria-controls="headerNotificationsPanel" data-i18n-title="notifications.title" title="Notifications">' +
+        BELL_ICON +
+        '<span class="header-notifications-badge" id="headerNotificationsBadge" hidden>0</span>' +
+        '</button>' +
+        '<div class="header-notifications-panel" id="headerNotificationsPanel" hidden role="menu">' +
+        '<div class="header-notifications-panel-head" data-i18n="notifications.title">Notifications</div>' +
+        '<p class="header-notifications-empty muted" id="headerNotificationsEmpty" data-i18n="notifications.empty">No new notifications</p>' +
+        '<ul class="header-notifications-list" id="headerNotificationsList"></ul>' +
+        '</div>' +
+        '</div>' +
         '<a href="/profile" class="main-header-profile" data-i18n-title="nav.profile" title="Profile">' +
         '<span class="main-header-profile-inner">' +
         '<img id="headerProfileAvatarImg" class="main-header-profile-img" alt="" width="28" height="28" decoding="async" />' +
         '<span id="headerProfileInitials" class="main-header-profile-initials" aria-hidden="true"></span>' +
         '</span>' +
-        '</a>';
+        '</a>' +
+        '</div>';
 
     var MAP_ICON = '<svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M5.25345 4.19584L4.02558 4.90813C3.03739 5.48137 2.54329 5.768 2.27164 6.24483C2 6.72165 2 7.30233 2 8.46368V16.6283C2 18.1542 2 18.9172 2.34226 19.3418C2.57001 19.6244 2.88916 19.8143 3.242 19.8773C3.77226 19.9719 4.42148 19.5953 5.71987 18.8421C6.60156 18.3306 7.45011 17.7994 8.50487 17.9435C8.98466 18.009 9.44231 18.2366 10.3576 18.6917L14.1715 20.588C14.9964 20.9982 15.004 21 15.9214 21H18C19.8856 21 20.8284 21 21.4142 20.4013C22 19.8026 22 18.8389 22 16.9117V10.1715C22 8.24423 22 7.2806 21.4142 6.68188C20.8284 6.08316 19.8856 6.08316 18 6.08316H15.9214C15.004 6.08316 14.9964 6.08139 14.1715 5.6712L10.8399 4.01463C9.44884 3.32297 8.75332 2.97714 8.01238 3.00117C7.27143 3.02521 6.59877 3.41542 5.25345 4.19584Z"/>' +
@@ -157,6 +176,27 @@
         if (!el) return;
         el.innerHTML = HEADER_HTML;
         refreshHeaderProfileAvatar();
+        loadHeaderNotifications();
+    }
+
+    function loadHeaderNotifications() {
+        function start() {
+            if (window.HeaderNotifications && typeof window.HeaderNotifications.init === 'function') {
+                window.HeaderNotifications.init();
+            }
+        }
+        if (window.HeaderNotifications) {
+            start();
+            return;
+        }
+        if (document.querySelector('script[data-header-notifications]')) {
+            return;
+        }
+        var s = document.createElement('script');
+        s.src = '/scripts/utils/notifications.js';
+        s.setAttribute('data-header-notifications', '1');
+        s.onload = start;
+        document.body.appendChild(s);
     }
 
     function injectSidebar() {

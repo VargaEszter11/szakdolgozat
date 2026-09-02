@@ -171,7 +171,28 @@ body.page-admin .admin-feedback-image {
 
 body.page-admin .admin-feedback-actions {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-start;
+    gap: 0.5rem;
+}
+
+body.page-admin .admin-feedback-status {
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 650;
+    background: rgba(222, 190, 86, 0.18);
+    color: var(--color-accent, #debe56);
+}
+
+body.page-admin .admin-feedback-status--solved {
+    background: rgba(90, 180, 120, 0.18);
+    color: #8fd6a8;
+}
+
+body.page-admin .admin-feedback-item--solved {
+    opacity: 0.9;
 }
 
 body.page-admin .admin-feedback-delete {

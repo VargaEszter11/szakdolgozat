@@ -312,6 +312,12 @@ class Feedback(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     message = Column(Text, nullable=False)
     image_path = Column(Text, nullable=True)
+    solved = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
     created_at = Column(DateTime, server_default=func.now())
 
     user = relationship("User", back_populates="feedbacks")

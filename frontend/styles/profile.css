@@ -156,3 +156,199 @@ body.page-profile .profile-feedback-form .form-textarea:focus {
 body.page-profile .profile-feedback-form .form-textarea::placeholder {
     color: var(--color-text-faint);
 }
+
+body.page-profile .profile-feedback-history {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-surface-border);
+}
+
+body.page-profile .profile-feedback-history-title {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+body.page-profile .profile-feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+body.page-profile .profile-feedback-item--collapsed:not(.profile-feedback-item--visible) {
+    display: none;
+}
+
+body.page-profile .profile-feedback-more {
+    align-self: center;
+    margin-top: 0.15rem;
+    padding: 0.35rem 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-accent, #debe56);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+body.page-profile .profile-feedback-more:hover,
+body.page-profile .profile-feedback-more:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
+body.page-profile .profile-feedback-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-surface-border);
+    background: rgba(255, 255, 255, 0.02);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+body.page-profile .profile-feedback-item:hover,
+body.page-profile .profile-feedback-item:focus-visible {
+    border-color: var(--color-accent, #debe56);
+    background: rgba(255, 255, 255, 0.05);
+    outline: none;
+}
+
+body.page-profile .profile-feedback-item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.8rem;
+}
+
+body.page-profile .profile-feedback-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 650;
+}
+
+body.page-profile .profile-feedback-status-pill--pending {
+    background: rgba(222, 190, 86, 0.18);
+    color: var(--color-accent, #debe56);
+}
+
+body.page-profile .profile-feedback-status-pill--solved {
+    background: rgba(90, 180, 120, 0.18);
+    color: #8fd6a8;
+}
+
+body.page-profile .profile-feedback-item-has-image {
+    font-size: 0.72rem;
+}
+
+body.page-profile .profile-feedback-item-message {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.page-profile .profile-feedback-detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+body.page-profile .profile-feedback-detail-panel {
+    width: min(32rem, 100%);
+    max-height: min(85vh, 40rem);
+    overflow: auto;
+    padding: 1rem 1.1rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid var(--color-surface-border);
+    background: var(--color-surface, #2f2e2e);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    color: #fff;
+}
+
+body.page-profile .profile-feedback-detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+body.page-profile .profile-feedback-detail-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+    color: #fff;
+}
+
+body.page-profile .profile-feedback-detail-close {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+body.page-profile .profile-feedback-detail-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+body.page-profile .profile-feedback-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.85rem;
+    font-size: 0.82rem;
+    color: #fff;
+}
+
+body.page-profile .profile-feedback-detail-message {
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    color: #fff;
+}
+
+body.page-profile .profile-feedback-detail-image-link {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+body.page-profile .profile-feedback-detail-image {
+    display: block;
+    width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+body.page-profile .profile-feedback-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+}
