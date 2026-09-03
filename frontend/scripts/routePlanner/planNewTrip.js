@@ -1,4 +1,11 @@
-import { displayResults, showError, planNewTripT, localizePlannerErrorDetail } from './tripRenderer.js';
+import {
+    displayResults,
+    showError,
+    planNewTripT,
+    localizePlannerErrorDetail,
+    createEmptyStopFeedback,
+    syncStopFeedbackFromCards
+} from './tripRenderer.js';
 
 const API_BASE_URL = window.API_BASE_URL || '';
 
@@ -450,7 +457,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!form || !generateBtn) return;
 
+    let submittingViaRetry = false;
+
     const retryGeneration = () => {
+        submittingViaRetry = true;
         if (typeof form.requestSubmit === 'function') {
             form.requestSubmit();
         } else {
@@ -458,13 +468,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    const resultOptions = () => ({
-        onRetry: retryGeneration,
-        onSaved: () => {
-            // Clear planner session before redirect to planned trips.
-            clearPlannerSession();
-        },
-    });
+    const resultOptions = () => {
+        const session = loadPlannerSession();
+        return {
+            onRetry: retryGeneration,
+            stopFeedback: (session && session.stopFeedback) || createEmptyStopFeedback(),
+            onFeedbackChange: () => {
+                const sessionNow = loadPlannerSession() || {};
+                const synced = syncStopFeedbackFromCards(
+                    sessionNow.stopFeedback || createEmptyStopFeedback(),
+                    tripResults
+                );
+                savePlannerSession({ stopFeedback: synced });
+            },
+            onSaved: () => {
+                // Clear planner session before redirect to planned trips.
+                clearPlannerSession();
+            },
+        };
+    };
 
     async function runGeneration(planType, body, meta) {
         if (generationInFlight || window.__plannerGenerationRunning) return;
@@ -719,6 +741,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const viaRetry = submittingViaRetry;
+        submittingViaRetry = false;
+
         const tripTitle = (document.getElementById('tripTitle')?.value || '').trim();
         const startingCity = document.getElementById('startingCity').value.trim();
         const preferredTransport = document.getElementById('preferredTransport').value.trim();
@@ -829,6 +854,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body.userId = parsed;
             }
         }
+
+        let stopFeedback = createEmptyStopFeedback();
+        if (viaRetry) {
+            const session = loadPlannerSession() || {};
+            stopFeedback = syncStopFeedbackFromCards(
+                session.stopFeedback || createEmptyStopFeedback(),
+                tripResults
+            );
+            savePlannerSession({ stopFeedback });
+        } else {
+            savePlannerSession({ stopFeedback: createEmptyStopFeedback() });
+        }
+        if (stopFeedback.likedPlaces.length) body.likedPlaces = stopFeedback.likedPlaces;
+        if (stopFeedback.dislikedPlaces.length) body.dislikedPlaces = stopFeedback.dislikedPlaces;
 
         await runGeneration(selectedPlan, body, { startDate, endDate, people, tripTitle });
     });

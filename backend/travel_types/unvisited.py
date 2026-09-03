@@ -35,6 +35,8 @@ class UnvisitedGenerationRequest(BaseModel):
     preferredTransport: str = "allModes"
     preferences: List[str] = []
     additionalExclusions: List[str] = []
+    likedPlaces: List[str] = []
+    dislikedPlaces: List[str] = []
     language: str = "en"
 
 
@@ -100,6 +102,8 @@ async def generate_travel_plan_unvisited(
     llm_provider: str = "deepseek",
     starting_airport_iata: Optional[str] = None,
     preferredTransport: str = "allModes",
+    extra_places: Optional[List[str]] = None,
+    keep_places: Optional[List[str]] = None,
 ) -> str:
     """Generate travel plan that avoids cities in ``forbidden_places`` (visited / excluded)."""
     start_date_value = start_date or ""
@@ -118,6 +122,8 @@ async def generate_travel_plan_unvisited(
             llm_provider=llm_provider,
             visited_places=None,
             forbidden_places=forbidden_places,
+            extra_places=extra_places,
+            keep_places=keep_places,
             preferred_transport=preferredTransport,
         )
 

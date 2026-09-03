@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from utils.countries import COUNTRY_CODE_TO_NAME, normalize_country_code
 
@@ -138,15 +138,21 @@ def filter_unvisited(dests: List[dict], forbidden_places: List[str]) -> List[dic
     return out
 
 
-def filter_random(dests: List[dict]) -> List[dict]:
+def filter_random(
+    dests: List[dict], forbidden_places: Optional[List[str]] = None
+) -> List[dict]:
+    forbidden = forbidden_places or []
     out: List[dict] = []
     seen: set[str] = set()
     for d in dests:
-        if d.get("city") and d.get("iata"):
-            iata = d["iata"]
-            if iata not in seen:
-                seen.add(iata)
-                out.append(d)
+        if not (d.get("city") and d.get("iata")):
+            continue
+        if any(place_matches_candidate(place, d) for place in forbidden):
+            continue
+        iata = d["iata"]
+        if iata not in seen:
+            seen.add(iata)
+            out.append(d)
     return out
 
 
@@ -160,4 +166,4 @@ def filter_strategy_candidates(
         return filter_visited(raw_dests, visited_places)
     if strategy == "unvisited":
         return filter_unvisited(raw_dests, forbidden_places)
-    return filter_random(raw_dests)
+    return filter_random(raw_dests, forbidden_places)

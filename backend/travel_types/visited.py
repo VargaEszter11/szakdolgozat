@@ -33,6 +33,8 @@ async def generate_travel_plan_visited(
     starting_airport_iata: Optional[str] = None,
     extra_places: Optional[List[str]] = None,
     preferredTransport: str = "allModes",
+    forbidden_places: Optional[List[str]] = None,
+    keep_places: Optional[List[str]] = None,
 ) -> str:
     """Generate a travel plan from requested visited places."""
     start_date_value = start_date or ""
@@ -50,8 +52,9 @@ async def generate_travel_plan_visited(
             language=language,
             llm_provider=llm_provider,
             visited_places=requested_places,
-            forbidden_places=None,
+            forbidden_places=forbidden_places,
             extra_places=extra_places,
+            keep_places=keep_places,
             preferred_transport=preferredTransport,
         )
 

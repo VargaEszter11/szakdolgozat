@@ -299,6 +299,61 @@ span.flatpickr-weekday {
     margin: 0 0 0.35rem;
 }
 
+.destination-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.destination-title-row .destination-city {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.stop-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+.stop-rating-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-embed-panel-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.stop-rating-btn:hover,
+.stop-rating-btn:focus-visible {
+    color: var(--color-text);
+    border-color: var(--color-accent, #debe56);
+    outline: none;
+}
+
+.stop-rating-btn--like.is-active {
+    color: #2f9e64;
+    border-color: rgba(47, 158, 100, 0.55);
+    background: rgba(47, 158, 100, 0.12);
+}
+
+.stop-rating-btn--dislike.is-active {
+    color: #d64545;
+    border-color: rgba(214, 69, 69, 0.55);
+    background: rgba(214, 69, 69, 0.12);
+}
+
 .destination-info {
     font-size: 0.85rem;
     color: var(--color-text-muted);

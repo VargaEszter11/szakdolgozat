@@ -69,9 +69,9 @@ def places_context_block(
 ) -> str:
     return (
         "User place constraints:\n"
-        f"- Places the user wants considered/included: {_list_line(requested_places)}\n"
+        f"- Places the user wants kept/included: {_list_line(requested_places)}\n"
         f"- Extra places typed in the form: {_list_line(extra_places)}\n"
-        f"- Places the user wants excluded: {_list_line(forbidden_places)}\n\n"
+        f"- Places the user wants excluded (do not keep): {_list_line(forbidden_places)}\n\n"
     )
 
 
@@ -211,8 +211,8 @@ def next_stop_prompt(
         "- Do not always pick the first candidate. Choose a destination that adds variety to the route.",
         "- If multiple candidates represent the same city/IATA/metro area, treat them as duplicates and pick only one.",
         '- The returned city must be a clean city name, not an airport name.',
-        "- If any requested/extra place appears in the candidate list, strongly prefer choosing it before unrelated places.",
-        "- Never choose a candidate that matches the excluded places list.",
+        "- If any kept/requested/extra place appears in the candidate list, you MUST choose one of those before unrelated places.",
+        "- Never choose a candidate that matches the excluded / do-not-keep places list.",
         "- Keep the route geographically logical: prefer nearby forward movement over zig-zags or backtracking.",
         "- Choose the candidate whose listed transport best fits the trip flow; do not force ground transport or flights.",
         "- For flight candidates, respect the listed seasonality/effective dates. Do not invent missing operating dates.",
@@ -290,6 +290,7 @@ async def run_db_planner(
     visited_places: List[str] | None = None,
     forbidden_places: List[str] | None = None,
     extra_places: List[str] | None = None,
+    keep_places: List[str] | None = None,
     preferred_transport: str = "allModes",
 ) -> str:
     from .plan_builder import build_plan
@@ -307,6 +308,7 @@ async def run_db_planner(
         visited_places=visited_places,
         forbidden_places=forbidden_places,
         extra_places=extra_places,
+        keep_places=keep_places,
         preferred_transport=preferred_transport,
     )
     return as_json(data)

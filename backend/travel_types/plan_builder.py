@@ -21,6 +21,7 @@ from .booking import (
 )
 from .llm_client import call_llm_api
 from .place_matching import (
+    extract_city,
     place_matches_candidate,
     place_used_in_plan,
     prioritize_requested_places,
@@ -314,6 +315,7 @@ async def _ranked_step_candidates(
     starting_airport_iata: str,
     plan: List[Dict[str, Any]],
     requested_places: List[str],
+    keep_places: List[str],
     forbidden_places: List[str],
     preferred_transport: str = "allModes",
     language: str = "en",
@@ -321,10 +323,12 @@ async def _ranked_step_candidates(
 ) -> tuple[List[dict], List[dict]]:
     """Candidates for the next leg from ``current_airport``.
 
-    Visited mode also geocodes unmatched typed places and may inject
-    via-airport + ground-transfer options (e.g. Trogir via SPU).
+    ``keep_places`` are hard include targets from regenerate feedback: prefer
+    them when reachable, otherwise allow new places so the trip can still fill.
+    ``requested_places`` are visited-mode required targets (typed / travel log).
     """
-    candidates = await build_candidates(        db,
+    candidates = await build_candidates(
+        db,
         strategy=strategy,
         current_airport=current_airport,
         hub_iata=starting_airport_iata,
@@ -335,10 +339,20 @@ async def _ranked_step_candidates(
     )
     candidates = annotate_distances(db, current_airport, candidates)
 
-    requested_matches = []
-    if strategy == "visited":
-        requested_matches = _requested_candidate_matches(candidates, requested_places, plan)
-        unmatched = remaining_unmatched_places(requested_places, plan, candidates)
+    keep_places = keep_places or []
+    remaining_keep = [
+        place for place in keep_places if not place_used_in_plan(place, plan)
+    ]
+    remaining_required = [
+        place for place in requested_places if not place_used_in_plan(place, plan)
+    ]
+    places_to_resolve = _merge_place_lists(remaining_required, remaining_keep)
+
+    keep_matches: List[dict] = []
+    required_matches: List[dict] = []
+    if places_to_resolve:
+        matched = _requested_candidate_matches(candidates, places_to_resolve, plan)
+        unmatched = remaining_unmatched_places(places_to_resolve, plan, candidates)
         resolutions = []
         for place in unmatched:
             resolution = await resolve_place_access(
@@ -363,7 +377,6 @@ async def _ranked_step_candidates(
             current_airport=current_airport,
         )
         if access_candidates:
-            # Prefer existing route metadata (airline etc.) when injecting via-airport hubs.
             enriched = []
             for access in access_candidates:
                 if access.get("off_airport"):
@@ -387,15 +400,32 @@ async def _ranked_step_candidates(
                             "ground_transfer": access.get("ground_transfer"),
                         }
                     )
-                    if (merged.get("transport") or "flight") == "flight" or not merged.get("transport"):
+                    if (merged.get("transport") or "flight") == "flight" or not merged.get(
+                        "transport"
+                    ):
                         merged["transport"] = base.get("transport") or "flight"
                     enriched.append(merged)
                 else:
                     enriched.append(access)
-            requested_matches = _merge_requested_with_ranked(requested_matches, enriched)
+            matched = _merge_requested_with_ranked(matched, enriched)
             candidates = _merge_requested_with_ranked(enriched, candidates)
 
-        if not requested_matches:
+        keep_matches = [
+            item
+            for item in matched
+            if remaining_keep
+            and any(place_matches_candidate(place, item) for place in remaining_keep)
+        ]
+        required_matches = [
+            item
+            for item in matched
+            if remaining_required
+            and any(place_matches_candidate(place, item) for place in remaining_required)
+        ]
+
+        # Visited mode still requires a travel-log/typed match when those remain.
+        # Keep-only regenerate must NOT abort — new places should fill the route.
+        if strategy == "visited" and remaining_required and not required_matches:
             return [], []
 
     previous_iata = plan[-1].get("direct_flights_queried_from") if plan else None
@@ -403,15 +433,22 @@ async def _ranked_step_candidates(
         candidates,
         previous_iata=(previous_iata or "").strip().upper() or None,
     )
-    candidates = _merge_requested_with_ranked(requested_matches, ranked)
 
-    if strategy == "visited":
-        candidates = prioritize_requested_places(candidates, requested_places, plan)
+    # Prefer keep matches this step when reachable; otherwise allow the full pool
+    # so new places can be added while a keep is still pending for a later leg.
+    force_matches = keep_matches if keep_matches else (
+        required_matches if (strategy == "visited" and required_matches) else []
+    )
+    candidates = _merge_requested_with_ranked(force_matches, ranked)
+
+    if keep_matches or (strategy == "visited" and required_matches):
+        prioritize_list = remaining_keep if keep_matches else remaining_required
+        candidates = prioritize_requested_places(candidates, prioritize_list, plan)
     else:
         previous_transport = plan[-1].get("transportFromPreviousCity") if plan else None
         candidates = _prefer_next_transport(candidates, previous_transport)
 
-    return candidates, requested_matches
+    return candidates, force_matches
 
 
 def _candidate_choices_for_date(
@@ -428,14 +465,18 @@ def _candidate_choices_for_date(
     available_flights = available_flight_candidates(
         db, current_airport, candidates, departure_date
     )
-    if requested_flights:
-        return requested_flights
     if requested_matches:
-        return [
+        if requested_flights:
+            return requested_flights
+        ground = [
             candidate
             for candidate in requested_matches
             if (candidate.get("transport") or "flight") != "flight"
         ]
+        if ground:
+            return ground
+        # Keep/requested places stay forced even when date filters drop flights.
+        return list(requested_matches)
     if available_flights:
         return available_flights
     return [
@@ -605,14 +646,13 @@ def _append_return_home(
         if ferry_transport:
             return_transport = ferry_transport
 
-    # Last resort for off-airport homes: still show a flight+transfer home instead of
-    # dropping the return leg when no dated reverse route and no ground option exist.
+    # Last resort: always keep a return-home stop when we know origin + home hub.
+    # Dated reverse routes are often missing after regenerate; soft/unverified is OK.
     if (
         return_transport is None
-        and prefer_soft_flight
-        and (allowed_modes is None or "flight" in allowed_modes)
         and return_origin
         and home_hub
+        and (allowed_modes is None or "flight" in allowed_modes)
     ):
         return_flight_details = return_flight_booking_details(
             db,
@@ -623,6 +663,14 @@ def _append_return_home(
         )
         if return_flight_details:
             return_transport = "flight"
+
+    if return_transport is None and return_origin and home_hub:
+        if allowed_modes is None or "flight" in allowed_modes:
+            return_transport = "flight"
+        elif allowed_modes & {"train", "bus"}:
+            return_transport = "bus" if "bus" in allowed_modes else "train"
+        elif "ferry" in allowed_modes:
+            return_transport = "ferry"
 
     if return_transport is None:
         return
@@ -699,12 +747,24 @@ def _missing_requested_places(
     strategy: str,
     requested_places: List[str],
     plan: List[Dict[str, Any]],
+    keep_places: Optional[List[str]] = None,
 ) -> List[str]:
+    # Only visited-mode typed/travel-log targets should surface this warning.
+    # Keep/don't-keep regenerate feedback must never appear here.
     if strategy != "visited" or not requested_places:
         return []
-    return [
-        place for place in requested_places if not place_used_in_plan(place, plan)
-    ]
+    keep_keys = {
+        extract_city(place)
+        for place in (keep_places or [])
+        if extract_city(place)
+    }
+    missing = []
+    for place in requested_places:
+        if extract_city(place) in keep_keys:
+            continue
+        if not place_used_in_plan(place, plan):
+            missing.append(place)
+    return missing
 
 
 async def build_plan(
@@ -721,6 +781,7 @@ async def build_plan(
     visited_places: Optional[List[str]] = None,
     forbidden_places: Optional[List[str]] = None,
     extra_places: Optional[List[str]] = None,
+    keep_places: Optional[List[str]] = None,
     preferred_transport: str = "allModes",
 ) -> Dict[str, Any]:
     """Main itinerary loop: hub → next stop → … → return home."""
@@ -728,8 +789,9 @@ async def build_plan(
     from utils.countries import resolve_country_code
 
     home_country = resolve_country_code(home_country) or (home_country or "")
+    keep_places = list(keep_places or [])
+    # Strategy targets (visited typed/log) stay separate from regenerate keep targets.
     requested_places = _merge_place_lists(visited_places, extra_places)
-    visited_places = requested_places
     forbidden_places = forbidden_places or []
     extra_places = extra_places or []
 
@@ -762,6 +824,7 @@ async def build_plan(
                 starting_airport_iata=starting_airport_iata,
                 plan=plan,
                 requested_places=requested_places,
+                keep_places=keep_places,
                 forbidden_places=forbidden_places,
                 preferred_transport=preferred_transport,
                 language=language,
@@ -793,28 +856,37 @@ async def build_plan(
                 if plan
                 else starting_point
             )
-            choice = await _ask_ai_to_pick_candidate(
-                candidates=choice_candidates,
-                strategy=strategy,
-                current_airport=current_airport,
-                current_city_label=current_city_label,
-                remaining_days=remaining_days,
-                preferences=preferences,
-                plan=plan,
-                requested_places=requested_places,
-                forbidden_places=forbidden_places,
-                extra_places=extra_places,
-                preferred_transport=preferred_transport,
-                language=language,
-                llm_provider=llm_provider,
-            )
-            if not choice:
+            # Reachable keep targets are mandatory; otherwise freely pick new places.
+            if requested_matches:
                 choice = _fallback_choice(
                     choice_candidates,
                     strategy=strategy,
                     remaining_days=remaining_days,
-                    has_requested_places=bool(requested_matches),
+                    has_requested_places=True,
                 )
+            else:
+                choice = await _ask_ai_to_pick_candidate(
+                    candidates=choice_candidates,
+                    strategy=strategy,
+                    current_airport=current_airport,
+                    current_city_label=current_city_label,
+                    remaining_days=remaining_days,
+                    preferences=preferences,
+                    plan=plan,
+                    requested_places=_merge_place_lists(requested_places, keep_places),
+                    forbidden_places=forbidden_places,
+                    extra_places=extra_places,
+                    preferred_transport=preferred_transport,
+                    language=language,
+                    llm_provider=llm_provider,
+                )
+                if not choice:
+                    choice = _fallback_choice(
+                        choice_candidates,
+                        strategy=strategy,
+                        remaining_days=remaining_days,
+                        has_requested_places=False,
+                    )
 
             stop = None
             if choice.get("ground_transfer"):
@@ -906,5 +978,6 @@ async def build_plan(
             strategy=strategy,
             requested_places=requested_places,
             plan=plan,
+            keep_places=keep_places,
         ),
     }

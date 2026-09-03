@@ -171,6 +171,8 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
     tripResults.innerHTML = html;
     resultsContainer.style.display = 'block';
 
+    bindStopRatings(tripResults, options.stopFeedback || null, options.onFeedbackChange);
+
     const saveTripBtn = tripResults.querySelector('#saveTripBtn');
     if (saveTripBtn) {
         saveTripBtn.addEventListener('click', async () => {
@@ -185,6 +187,143 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
         });
     }
     bindRetryButton(tripResults, options.onRetry);
+}
+
+function stopFeedbackKey(destination) {
+    const city = String(destination.city || destination.place_name || '').trim();
+    const country = String(destination.country || '').trim();
+    if (city && country) return city + ', ' + country;
+    return city || country;
+}
+
+function normalizeFeedbackList(list) {
+    const seen = new Set();
+    const out = [];
+    (list || []).forEach(function (item) {
+        const text = String(item || '').trim();
+        if (!text) return;
+        const key = text.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push(text);
+    });
+    return out;
+}
+
+function feedbackIndex(list) {
+    const map = new Map();
+    normalizeFeedbackList(list).forEach(function (item) {
+        map.set(item.toLowerCase(), item);
+    });
+    return map;
+}
+
+export function createEmptyStopFeedback() {
+    return { likedPlaces: [], dislikedPlaces: [] };
+}
+
+export function mergeStopFeedback(base, patch) {
+    const liked = feedbackIndex(base && base.likedPlaces);
+    const disliked = feedbackIndex(base && base.dislikedPlaces);
+
+    normalizeFeedbackList(patch && patch.likedPlaces).forEach(function (item) {
+        const key = item.toLowerCase();
+        disliked.delete(key);
+        liked.set(key, item);
+    });
+    normalizeFeedbackList(patch && patch.dislikedPlaces).forEach(function (item) {
+        const key = item.toLowerCase();
+        liked.delete(key);
+        disliked.set(key, item);
+    });
+
+    return {
+        likedPlaces: Array.from(liked.values()),
+        dislikedPlaces: Array.from(disliked.values())
+    };
+}
+
+export function collectStopFeedback(root) {
+    const feedback = createEmptyStopFeedback();
+    if (!root) return feedback;
+    root.querySelectorAll('.stop-rating').forEach(function (group) {
+        const place = (group.getAttribute('data-stop-key') || '').trim();
+        if (!place) return;
+        const likeBtn = group.querySelector('[data-stop-rating="like"]');
+        const dislikeBtn = group.querySelector('[data-stop-rating="dislike"]');
+        if (likeBtn && likeBtn.getAttribute('aria-pressed') === 'true') {
+            feedback.likedPlaces.push(place);
+        } else if (dislikeBtn && dislikeBtn.getAttribute('aria-pressed') === 'true') {
+            feedback.dislikedPlaces.push(place);
+        }
+    });
+    feedback.likedPlaces = normalizeFeedbackList(feedback.likedPlaces);
+    feedback.dislikedPlaces = normalizeFeedbackList(feedback.dislikedPlaces);
+    return feedback;
+}
+
+/** Update accumulated feedback for places shown on the current results; keep older ratings for other cities. */
+export function syncStopFeedbackFromCards(accumulated, root) {
+    const liked = feedbackIndex(accumulated && accumulated.likedPlaces);
+    const disliked = feedbackIndex(accumulated && accumulated.dislikedPlaces);
+    const current = collectStopFeedback(root);
+    const currentLiked = feedbackIndex(current.likedPlaces);
+    const currentDisliked = feedbackIndex(current.dislikedPlaces);
+
+    if (root) {
+        root.querySelectorAll('.stop-rating').forEach(function (group) {
+            const place = (group.getAttribute('data-stop-key') || '').trim();
+            if (!place) return;
+            const key = place.toLowerCase();
+            liked.delete(key);
+            disliked.delete(key);
+            if (currentLiked.has(key)) liked.set(key, currentLiked.get(key));
+            if (currentDisliked.has(key)) disliked.set(key, currentDisliked.get(key));
+        });
+    }
+
+    return {
+        likedPlaces: Array.from(liked.values()),
+        dislikedPlaces: Array.from(disliked.values())
+    };
+}
+
+function applyStopRatingState(group, value) {
+    const likeBtn = group.querySelector('[data-stop-rating="like"]');
+    const dislikeBtn = group.querySelector('[data-stop-rating="dislike"]');
+    if (likeBtn) {
+        likeBtn.classList.toggle('is-active', value === 'like');
+        likeBtn.setAttribute('aria-pressed', value === 'like' ? 'true' : 'false');
+    }
+    if (dislikeBtn) {
+        dislikeBtn.classList.toggle('is-active', value === 'dislike');
+        dislikeBtn.setAttribute('aria-pressed', value === 'dislike' ? 'true' : 'false');
+    }
+}
+
+function bindStopRatings(root, savedFeedback, onFeedbackChange) {
+    if (!root) return;
+    const liked = feedbackIndex(savedFeedback && savedFeedback.likedPlaces);
+    const disliked = feedbackIndex(savedFeedback && savedFeedback.dislikedPlaces);
+
+    root.querySelectorAll('.stop-rating').forEach(function (group) {
+        const place = (group.getAttribute('data-stop-key') || '').trim();
+        const key = place.toLowerCase();
+        if (liked.has(key)) applyStopRatingState(group, 'like');
+        else if (disliked.has(key)) applyStopRatingState(group, 'dislike');
+        else applyStopRatingState(group, null);
+
+        group.querySelectorAll('[data-stop-rating]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const rating = btn.getAttribute('data-stop-rating');
+                const pressed = btn.getAttribute('aria-pressed') === 'true';
+                applyStopRatingState(group, pressed ? null : rating);
+                if (typeof onFeedbackChange === 'function') {
+                    onFeedbackChange(collectStopFeedback(root));
+                }
+            });
+        });
+    });
 }
 
 export function renderTripDetails(trip, people = 1, tripTitle = '') {
@@ -215,6 +354,7 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
     if (trip.plan && Array.isArray(trip.plan)) {
         html += '<div class="trip-destinations">';
         trip.plan.forEach((destination, idx) => {
+            const isReturnHome = !!(destination.is_return_home || destination.isReturnHome);
             const countryLabel =
                 window.Countries && window.Countries.displayName
                     ? window.Countries.displayName(destination.country)
@@ -224,6 +364,7 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                 .filter(Boolean)
                 .map(escapeHtml)
                 .join(', ');
+            const placeKey = stopFeedbackKey(destination);
             const accommodationUrl = window.TripDisplayHelper
                 && typeof window.TripDisplayHelper.accommodationBookingUrlForStop === 'function'
                 ? window.TripDisplayHelper.accommodationBookingUrlForStop(
@@ -240,11 +381,32 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
                     destination.departureDate,
                     people
                 );
+            const ratingHtml = isReturnHome
+                ? ''
+                : `
+                    <div class="stop-rating" data-stop-key="${escapeHtml(placeKey)}" role="group" aria-label="${escapeHtml(planNewTripT('stopRatingLabel', 'Keep or remove this stop'))}">
+                        <button type="button" class="stop-rating-btn stop-rating-btn--like" data-stop-rating="like" aria-pressed="false" title="${escapeHtml(planNewTripT('stopLike', 'Keep'))}" aria-label="${escapeHtml(planNewTripT('stopLike', 'Keep'))}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                                <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="stop-rating-btn stop-rating-btn--dislike" data-stop-rating="dislike" aria-pressed="false" title="${escapeHtml(planNewTripT('stopDislike', "Don't keep"))}" aria-label="${escapeHtml(planNewTripT('stopDislike', "Don't keep"))}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+                                <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
             html += `
-                <div class="destination-card">
+                <div class="destination-card"${isReturnHome ? '' : ` data-stop-place="${escapeHtml(placeKey)}"`}>
                     <div class="destination-number">${idx + 1}</div>
                     <div class="destination-details">
-                        <h4 class="destination-city">${cityLine}</h4>
+                        <div class="destination-title-row">
+                            <h4 class="destination-city">${cityLine}</h4>
+                            ${ratingHtml}
+                        </div>
                         <p class="destination-info">
                             ${destination.arrivalDate && destination.departureDate
                     ? `<strong>${escapeHtml(plannedTripsLabel('dates', 'Dates'))}:</strong> ${formatDate(destination.arrivalDate)} → ${formatDate(destination.departureDate)}`

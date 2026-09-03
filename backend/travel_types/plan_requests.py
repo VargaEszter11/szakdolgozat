@@ -46,6 +46,8 @@ class GenerationRequest(BaseModel):
     people: int = 1
     preferredTransport: str = "allModes"
     preferences: List[str] = []
+    likedPlaces: List[str] = []
+    dislikedPlaces: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
     plannerUserId: Optional[int] = None
@@ -58,6 +60,8 @@ class RandomGenerationRequest(BaseModel):
     people: int = 1
     preferredTransport: str = "allModes"
     preferences: List[str] = []
+    likedPlaces: List[str] = []
+    dislikedPlaces: List[str] = []
     language: str = "en"
     userId: Optional[int] = None
     plannerUserId: Optional[int] = None
@@ -66,6 +70,42 @@ class RandomGenerationRequest(BaseModel):
 class GeocodeRequest(BaseModel):
     places: List[str]
     language: str = "en"
+
+
+def apply_stop_feedback(
+    preferences: List[str],
+    liked_places: Optional[List[str]] = None,
+    disliked_places: Optional[List[str]] = None,
+) -> tuple[List[str], List[str], List[str]]:
+    """Split keep / don't-keep feedback into place lists.
+
+    Liked cities are hard keep targets for regenerate (must be included when
+    reachable). Disliked cities are excluded from candidates.
+    """
+    liked = merge_exclusion_lists([], liked_places or [])
+    disliked = merge_exclusion_lists([], disliked_places or [])
+    disliked_keys = {p.lower() for p in disliked}
+    liked = [p for p in liked if p.lower() not in disliked_keys]
+    return list(preferences or []), liked, disliked
+
+
+def places_without_disliked(
+    places: List[str], disliked_places: List[str]
+) -> List[str]:
+    if not disliked_places:
+        return list(places or [])
+    return [
+        place
+        for place in (places or [])
+        if not any(
+            place.lower() == disliked.lower()
+            or place.lower().startswith(disliked.split(",")[0].strip().lower() + ",")
+            or disliked.lower().startswith(place.split(",")[0].strip().lower() + ",")
+            or place.split(",")[0].strip().lower()
+            == disliked.split(",")[0].strip().lower()
+            for disliked in disliked_places
+        )
+    ]
 
 
 async def geocode_places(request: GeocodeRequest) -> list:
@@ -84,12 +124,36 @@ async def geocode_places(request: GeocodeRequest) -> list:
 
 async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict:
     travel_length, llm_provider = planner_context(request, db)
+    preferences, liked_places, disliked_places = apply_stop_feedback(
+        request.preferences, request.likedPlaces, request.dislikedPlaces
+    )
+    # Regenerate with keep/don't-keep: only those two rules, then fill with new places.
+    if liked_places or disliked_places:
+        return await generate_plan_with_location(
+            generate_travel_plan_random,
+            request.startingPoint,
+            travel_length,
+            preferences,
+            starting_point=request.startingPoint,
+            start_date=request.startDate,
+            end_date=request.endDate,
+            travel_length=travel_length,
+            people=request.people,
+            preferredTransport=request.preferredTransport,
+            language=request.language,
+            llm_provider=llm_provider,
+            keep_places=liked_places,
+            forbidden_places=disliked_places,
+            db=db,
+        )
+
     visited_places = list(request.visitedPlaces)
     if request.userId is not None:
         visited_places = build_visited_places_from_db(
             db, request.userId, request.visitedPlaces
         )
-    if not merge_exclusion_lists(visited_places, request.extraPlaces):
+    extra_places = list(request.extraPlaces or [])
+    if not merge_exclusion_lists(visited_places, extra_places):
         raise HTTPException(
             status_code=400,
             detail=(
@@ -100,7 +164,7 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
         generate_travel_plan_visited,
         request.startingPoint,
         travel_length,
-        request.preferences,
+        preferences,
         visited_places,
         starting_point=request.startingPoint,
         start_date=request.startDate,
@@ -110,13 +174,36 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
         preferredTransport=request.preferredTransport,
         language=request.language,
         llm_provider=llm_provider,
-        extra_places=request.extraPlaces,
+        extra_places=extra_places,
         db=db,
     )
 
 
 async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Session) -> dict:
     travel_length, llm_provider = planner_context(request, db)
+    preferences, liked_places, disliked_places = apply_stop_feedback(
+        request.preferences, request.likedPlaces, request.dislikedPlaces
+    )
+    # Regenerate with keep/don't-keep: include keeps, exclude don't-keeps, add new places.
+    if liked_places or disliked_places:
+        return await generate_plan_with_location(
+            generate_travel_plan_random,
+            request.startingPoint,
+            travel_length,
+            preferences,
+            starting_point=request.startingPoint,
+            start_date=request.startDate,
+            end_date=request.endDate,
+            travel_length=travel_length,
+            people=request.people,
+            preferredTransport=request.preferredTransport,
+            language=request.language,
+            llm_provider=llm_provider,
+            keep_places=liked_places,
+            forbidden_places=disliked_places,
+            db=db,
+        )
+
     forbidden_places = (
         build_unvisited_forbidden_places(db, request.userId, request.additionalExclusions)
         if request.userId is not None
@@ -126,7 +213,7 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
         generate_travel_plan_unvisited,
         request.startingPoint,
         travel_length,
-        request.preferences,
+        preferences,
         forbidden_places,
         starting_point=request.startingPoint,
         start_date=request.startDate,
@@ -142,11 +229,14 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
 
 async def generate_random_plan(request: RandomGenerationRequest, db: Session) -> dict:
     travel_length, llm_provider = planner_context(request, db)
+    preferences, liked_places, disliked_places = apply_stop_feedback(
+        request.preferences, request.likedPlaces, request.dislikedPlaces
+    )
     return await generate_plan_with_location(
         generate_travel_plan_random,
         request.startingPoint,
         travel_length,
-        request.preferences,
+        preferences,
         starting_point=request.startingPoint,
         start_date=request.startDate,
         end_date=request.endDate,
@@ -155,6 +245,8 @@ async def generate_random_plan(request: RandomGenerationRequest, db: Session) ->
         preferredTransport=request.preferredTransport,
         language=request.language,
         llm_provider=llm_provider,
+        keep_places=liked_places,
+        forbidden_places=disliked_places,
         db=db,
     )
 

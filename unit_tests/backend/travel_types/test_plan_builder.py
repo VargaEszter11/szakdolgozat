@@ -172,7 +172,10 @@ def test_append_return_home(monkeypatch):
         home_country="Hungary",
         end_date="2026-07-10",
     )
-    assert len(short) == 1
+    assert len(short) == 2
+    assert short[-1]["is_return_home"] is True
+    assert short[-1]["transportFromPreviousCity"] == "flight"
+    assert short[-1]["city"] == "Budapest"
 
     def db_with_airport(country_code):
         db = MagicMock()
@@ -327,6 +330,12 @@ def test_missing_requested_places_lists_all_unused():
         requested_places=["Paris"],
         plan=plan,
     ) == []
+    assert plan_builder._missing_requested_places(
+        strategy="visited",
+        requested_places=["Paris", "Vienna, AT"],
+        plan=plan,
+        keep_places=["Vienna, AT"],
+    ) == []
 
 
 def test_candidate_choices_for_date(monkeypatch):
@@ -340,6 +349,20 @@ def test_candidate_choices_for_date(monkeypatch):
         departure_date="2026-07-01",
     )
     assert out == [{"transport": "train", "iata": "VIE"}]
+
+
+def test_candidate_choices_for_date_keeps_requested_when_no_flights(monkeypatch):
+    monkeypatch.setattr(plan_builder, "available_flight_candidates", lambda db, origin, cands, day: [])
+    requested = [{"transport": "flight", "iata": "FCO", "city": "Rome"}]
+    cands = requested + [{"transport": "train", "iata": "VIE", "city": "Vienna"}]
+    out = plan_builder._candidate_choices_for_date(
+        MagicMock(),
+        current_airport="BUD",
+        candidates=cands,
+        requested_matches=requested,
+        departure_date="2026-07-01",
+    )
+    assert out == requested
 
 
 @pytest.mark.asyncio

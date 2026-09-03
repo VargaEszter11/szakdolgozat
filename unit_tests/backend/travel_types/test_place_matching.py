@@ -223,6 +223,18 @@ def test_filter_random_removes_duplicate_iatas():
     assert {d["iata"] for d in result} == {"BUD", "FCO"}
 
 
+def test_filter_random_excludes_forbidden_places():
+    destinations = [
+        {"city": "Budapest", "country": "Hungary", "iata": "BUD"},
+        {"city": "Rome", "country": "Italy", "iata": "FCO"},
+    ]
+
+    result = filter_random(destinations, ["Rome, Italy"])
+
+    assert len(result) == 1
+    assert result[0]["iata"] == "BUD"
+
+
 def test_filter_strategy_candidates_visited():
     destinations = [
         {"city": "Budapest", "iata": "BUD"},

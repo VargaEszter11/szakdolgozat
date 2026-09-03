@@ -30,6 +30,9 @@ async def generate_travel_plan_random(
     llm_provider: str = "deepseek",
     starting_airport_iata: Optional[str] = None,
     preferredTransport: str = "allModes",
+    extra_places: Optional[List[str]] = None,
+    forbidden_places: Optional[List[str]] = None,
+    keep_places: Optional[List[str]] = None,
 ) -> str:
     """Generate random itineraries where each leg loads direct destinations from the current airport."""
     start_date_value = start_date or ""
@@ -47,7 +50,9 @@ async def generate_travel_plan_random(
             language=language,
             llm_provider=llm_provider,
             visited_places=None,
-            forbidden_places=None,
+            forbidden_places=forbidden_places,
+            extra_places=extra_places,
+            keep_places=keep_places,
             preferred_transport=preferredTransport,
         )
         return as_json({"trips": [from_json(trip_json)]})
