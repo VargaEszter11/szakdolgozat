@@ -8,14 +8,26 @@ from backend.travel_types import plan_requests as pg
 
 
 def test_travel_length_days_ok_and_invalid():
-    assert pg.travel_length_days("2026-07-01", "2026-07-08") == 7
+    from datetime import date, timedelta
+
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=7)
+    assert pg.travel_length_days(start.isoformat(), end.isoformat()) == 7
+
     with pytest.raises(HTTPException) as exc:
-        pg.travel_length_days("2026-07-08", "2026-07-01")
+        pg.travel_length_days(end.isoformat(), start.isoformat())
     assert exc.value.status_code == 400
+
     with pytest.raises(HTTPException) as exc_same:
-        pg.travel_length_days("2026-07-01", "2026-07-01")
+        pg.travel_length_days(start.isoformat(), start.isoformat())
     assert exc_same.value.status_code == 400
     assert "after" in str(exc_same.value.detail).lower()
+
+    past = date.today() - timedelta(days=1)
+    with pytest.raises(HTTPException) as exc_past:
+        pg.travel_length_days(past.isoformat(), (past + timedelta(days=3)).isoformat())
+    assert exc_past.value.status_code == 400
+    assert "before today" in str(exc_past.value.detail).lower()
 
 
 def test_parse_planner_json():

@@ -265,8 +265,13 @@ def planner_account_id(request) -> Optional[int]:
 
 def travel_length_days(start_date: str, end_date: str) -> int:
     """Number of days between start and end; end must be strictly after start."""
-    start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-    end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+    start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+    today = datetime.now().date()
+    if start_dt < today:
+        raise HTTPException(
+            status_code=400, detail="Start date cannot be before today."
+        )
     if end_dt <= start_dt:
         raise HTTPException(
             status_code=400, detail="End date must be after start date."

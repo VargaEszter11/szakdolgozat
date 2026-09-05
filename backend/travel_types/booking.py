@@ -103,6 +103,46 @@ def update_booking_url_date(url: Optional[str], new_departure_date: str) -> Opti
     return patched if count else url
 
 
+_PEOPLE_QUERY_KEYS = frozenset(
+    {
+        "adultsv2",
+        "adults",
+        "AdultCount",
+        "adultCount",
+        "ADT",
+        "passengers",
+        "travellers",
+        "travelers",
+    }
+)
+
+
+def update_booking_url_people(url: Optional[str], people: int) -> Optional[str]:
+    """Patch adult/traveller query params on an existing booking_url."""
+    if not url:
+        return url
+    people = _people_count(people)
+    parts = urlsplit(url)
+    query_pairs = parse_qsl(parts.query, keep_blank_values=True)
+    if not query_pairs:
+        return url
+
+    changed = False
+    new_pairs = []
+    for key, value in query_pairs:
+        if key in _PEOPLE_QUERY_KEYS:
+            new_pairs.append((key, str(people)))
+            changed = True
+        else:
+            new_pairs.append((key, value))
+
+    if not changed:
+        return url
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(new_pairs), parts.fragment)
+    )
+
+
 def direct_route_for_leg(db, origin: str, destination: str, airline_iata: Optional[str] = None):
     query = db.query(models.DirectRoute).filter(
         models.DirectRoute.origin_iata == (origin or "").strip().upper(),
@@ -302,3 +342,112 @@ def clear_booking_details(stop: Dict[str, Any]) -> None:
         "flight_availability_verified",
     ):
         stop.pop(key, None)
+
+
+def _transport_is_flight(transport: Optional[str]) -> bool:
+    return "flight" in (transport or "").strip().lower()
+
+
+def _iata_for_coords(db, lat: Any, lon: Any) -> Optional[str]:
+    from utils.nearest_airport import nearest_airport
+
+    if lat is None or lon is None:
+        return None
+    airport = nearest_airport(lat, lon, db=db)
+    if not airport:
+        return None
+    return ((airport.get("iata") or "").strip().upper() or None)
+
+
+def _iata_for_place_name(db, place_name: Optional[str]) -> Optional[str]:
+    label = (place_name or "").strip()
+    if not label:
+        return None
+
+    if len(label) == 3 and label.isalpha():
+        row = (
+            db.query(models.Airport)
+            .filter(models.Airport.iata == label.upper())
+            .first()
+        )
+        if row is not None:
+            return str(row.iata).upper()
+
+    row = (
+        db.query(models.Airport)
+        .filter(models.Airport.city.isnot(None))
+        .filter(models.Airport.city.ilike(label))
+        .first()
+    )
+    if row is not None:
+        return str(row.iata).upper()
+    return None
+
+
+def _iata_for_stop(db, stop: Any) -> Optional[str]:
+    iata = _iata_for_coords(db, getattr(stop, "latitude", None), getattr(stop, "longitude", None))
+    if iata:
+        return iata
+    return _iata_for_place_name(db, getattr(stop, "place_name", None))
+
+
+def refresh_planned_trip_booking_links(db, trip: Any) -> None:
+    """Rebuild flight booking_url on every stop from current trip state.
+
+    Used after trip/stop edits so new stops, reordered legs, date changes, and
+    traveller count changes all get fresh Skyscanner links. Soft/unverified
+    links are allowed so manually added stops still get a useful search URL.
+    """
+    if trip is None:
+        return
+
+    people = _people_count(getattr(trip, "people", 1))
+    stops = list(getattr(trip, "stops", None) or [])
+    if not stops and getattr(trip, "id", None) is not None:
+        stops = (
+            db.query(models.PlannedTripStop)
+            .filter(models.PlannedTripStop.trip_id == int(trip.id))
+            .all()
+        )
+    stops = sorted(
+        stops,
+        key=lambda s: (
+            getattr(s, "stop_order", None) is None,
+            getattr(s, "stop_order", None) or 0,
+            getattr(s, "id", None) or 0,
+        ),
+    )
+
+    previous_iata = _iata_for_coords(
+        db, getattr(trip, "start_latitude", None), getattr(trip, "start_longitude", None)
+    )
+    if not previous_iata:
+        previous_iata = _iata_for_place_name(db, getattr(trip, "start_city", None))
+
+    for stop in stops:
+        dest_iata = _iata_for_stop(db, stop)
+        travel_date = getattr(stop, "arrival_date", None)
+        is_flight = _transport_is_flight(getattr(stop, "transport_from_last", None))
+
+        stop.booking_url = None
+        stop.flight_availability_verified = None
+
+        if is_flight and previous_iata and dest_iata and travel_date:
+            details = return_flight_booking_details(
+                db,
+                previous_iata,
+                dest_iata,
+                str(travel_date),
+                None,
+                people,
+                # Edits may invent legs without a cached route; still offer a search link.
+                allow_unverified=True,
+            )
+            if details.get("booking_url"):
+                stop.booking_url = details["booking_url"]
+                stop.flight_availability_verified = details.get(
+                    "flight_availability_verified"
+                )
+
+        if dest_iata:
+            previous_iata = dest_iata

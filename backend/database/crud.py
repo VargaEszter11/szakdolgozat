@@ -307,15 +307,21 @@ def sync_completed_booked_trips_for_user(db: Session, user_id: int) -> None:
 
 
 def update_planned_trip(db: Session, trip_id: int, trip_update: schemas.PlannedTripUpdate) -> Optional[models.PlannedTrip]:
-    """Update a planned trip"""
+    """Update a planned trip and rebuild flight booking links from current stops."""
     db_trip = get_planned_trip(db, trip_id)
     if not db_trip:
         return None
-    
+
     update_data = trip_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_trip, key, value)
-    
+
+    if "people" in update_data:
+        setattr(db_trip, "people", max(1, int(update_data["people"] or 1)))
+
+    from travel_types.booking import refresh_planned_trip_booking_links
+
+    refresh_planned_trip_booking_links(db, db_trip)
     db.commit()
     db.refresh(db_trip)
     return db_trip
@@ -335,14 +341,18 @@ def delete_planned_trip(db: Session, trip_id: int) -> bool:
 # ============= Trip Stop CRUD Operations =============
 
 def create_trip_stop(db: Session, stop: schemas.TripStopCreate) -> models.PlannedTripStop:
-    """Create a new trip stop"""
+    """Create a new trip stop and refresh the trip's flight booking links."""
     from utils.countries import normalize_country_code
+    from travel_types.booking import refresh_planned_trip_booking_links
 
     data = stop.model_dump()
     if data.get("country") is not None:
         data["country"] = normalize_country_code(data["country"]) or data["country"]
     db_stop = models.PlannedTripStop(**data)
     db.add(db_stop)
+    db.flush()
+    trip = get_planned_trip(db, int(cast(Any, db_stop).trip_id))
+    refresh_planned_trip_booking_links(db, trip)
     db.commit()
     db.refresh(db_stop)
     return db_stop
@@ -361,8 +371,9 @@ def get_trip_stops(db: Session, trip_id: int) -> List[models.PlannedTripStop]:
 
 
 def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpdate) -> Optional[models.PlannedTripStop]:
-    """Update a trip stop"""
+    """Update a trip stop and rebuild flight booking links for the whole trip."""
     from utils.countries import resolve_country_code
+    from travel_types.booking import refresh_planned_trip_booking_links
 
     db_stop = get_trip_stop(db, stop_id)
     if not db_stop:
@@ -374,26 +385,26 @@ def update_trip_stop(db: Session, stop_id: int, stop_update: schemas.TripStopUpd
     for key, value in update_data.items():
         setattr(db_stop, key, value)
 
-    if "arrival_date" in update_data:
-        stop_row = cast(Any, db_stop)
-        new_arrival = update_data["arrival_date"]
-        if stop_row.booking_url and new_arrival:
-            from travel_types.booking import update_booking_url_date
-
-            stop_row.booking_url = update_booking_url_date(stop_row.booking_url, str(new_arrival))
-
+    trip = get_planned_trip(db, int(cast(Any, db_stop).trip_id))
+    refresh_planned_trip_booking_links(db, trip)
     db.commit()
     db.refresh(db_stop)
     return db_stop
 
 
 def delete_trip_stop(db: Session, stop_id: int) -> bool:
-    """Delete a trip stop"""
+    """Delete a trip stop and rebuild remaining flight booking links."""
+    from travel_types.booking import refresh_planned_trip_booking_links
+
     db_stop = get_trip_stop(db, stop_id)
     if not db_stop:
         return False
-    
+
+    trip_id = int(cast(Any, db_stop).trip_id)
     db.delete(db_stop)
+    db.flush()
+    trip = get_planned_trip(db, trip_id)
+    refresh_planned_trip_booking_links(db, trip)
     db.commit()
     return True
 

@@ -254,3 +254,140 @@ def test_update_booking_url_date_returns_url_unchanged_for_unrecognized_format()
     unknown_url = "https://example.com/flights?foo=bar"
 
     assert update_booking_url_date(unknown_url, "2026-07-15") == unknown_url
+def test_update_booking_url_people_skyscanner_and_ryanair():
+    from backend.travel_types.booking import update_booking_url_people
+
+    skyscanner = update_booking_url_people(SKYSCANNER_URL, 4)
+    assert skyscanner is not None
+    assert "adultsv2=4" in skyscanner
+    assert "adults=4" in skyscanner
+    assert "/tll/arn/260529/" in skyscanner
+
+    ryanair = update_booking_url_people(RYANAIR_URL, 2)
+    assert ryanair is not None
+    assert "adults=2" in ryanair
+    assert "dateOut=2026-06-21" in ryanair
+
+
+def test_update_booking_url_people_edge_cases():
+    from backend.travel_types.booking import update_booking_url_people
+
+    assert update_booking_url_people(None, 3) is None
+    assert update_booking_url_people("", 3) == ""
+    assert update_booking_url_people("https://example.com/book", 3) == "https://example.com/book"
+    clamped = update_booking_url_people(SKYSCANNER_URL, 0)
+    assert clamped is not None
+    assert "adultsv2=1" in clamped
+
+
+def test_refresh_planned_trip_booking_links_rebuilds_flight_urls(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    from backend.travel_types import booking as booking_mod
+
+    calls = []
+
+    def fake_return(db, origin, destination, departure_date, airline_iata, people, *, allow_unverified=False):
+        calls.append(
+            {
+                "origin": origin,
+                "destination": destination,
+                "departure_date": departure_date,
+                "people": people,
+                "allow_unverified": allow_unverified,
+            }
+        )
+        return {
+            "booking_url": f"https://example.com/{origin}/{destination}/{departure_date}?p={people}",
+            "flight_availability_verified": False,
+        }
+
+    monkeypatch.setattr(booking_mod, "_iata_for_coords", lambda db, lat, lon: "BUD" if lat == 47.5 else None)
+    monkeypatch.setattr(booking_mod, "_iata_for_place_name", lambda db, name: None)
+    monkeypatch.setattr(
+        booking_mod,
+        "_iata_for_stop",
+        lambda db, stop: {"Rome": "FCO", "Budapest": "BUD"}.get(stop.place_name),
+    )
+    monkeypatch.setattr(booking_mod, "return_flight_booking_details", fake_return)
+
+    trip = SimpleNamespace(
+        id=1,
+        people=3,
+        start_city="Budapest",
+        start_latitude=47.5,
+        start_longitude=19.0,
+        stops=[
+            SimpleNamespace(
+                id=1,
+                place_name="Rome",
+                arrival_date=date(2026, 8, 15),
+                transport_from_last="Flight",
+                stop_order=1,
+                booking_url="https://old.example/rome",
+                flight_availability_verified=True,
+            ),
+            SimpleNamespace(
+                id=2,
+                place_name="Budapest",
+                arrival_date=date(2026, 8, 20),
+                transport_from_last="flight",
+                stop_order=2,
+                booking_url="https://old.example/home",
+                flight_availability_verified=True,
+            ),
+        ],
+    )
+
+    booking_mod.refresh_planned_trip_booking_links(MagicMock(), trip)
+
+    assert len(calls) == 2
+    assert calls[0]["origin"] == "BUD"
+    assert calls[0]["destination"] == "FCO"
+    assert calls[0]["departure_date"] == "2026-08-15"
+    assert calls[0]["people"] == 3
+    assert calls[0]["allow_unverified"] is True
+    assert calls[1]["origin"] == "FCO"
+    assert calls[1]["destination"] == "BUD"
+    assert "FCO/BUD/2026-08-20" in trip.stops[1].booking_url
+    assert trip.stops[0].flight_availability_verified is False
+
+
+def test_refresh_planned_trip_booking_links_clears_non_flight(monkeypatch):
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    from backend.travel_types import booking as booking_mod
+
+    monkeypatch.setattr(booking_mod, "_iata_for_coords", lambda *a, **k: "BUD")
+    monkeypatch.setattr(booking_mod, "_iata_for_place_name", lambda *a, **k: None)
+    monkeypatch.setattr(booking_mod, "_iata_for_stop", lambda db, stop: "VIE")
+
+    def boom(*a, **k):
+        raise AssertionError("should not build flight link")
+
+    monkeypatch.setattr(booking_mod, "return_flight_booking_details", boom)
+
+    stop = SimpleNamespace(
+        id=1,
+        place_name="Vienna",
+        arrival_date=date(2026, 8, 15),
+        transport_from_last="Train",
+        stop_order=1,
+        booking_url="https://old.example/flight",
+        flight_availability_verified=True,
+    )
+    trip = SimpleNamespace(
+        id=1,
+        people=1,
+        start_city="Budapest",
+        start_latitude=47.5,
+        start_longitude=19.0,
+        stops=[stop],
+    )
+
+    booking_mod.refresh_planned_trip_booking_links(MagicMock(), trip)
+
+    assert stop.booking_url is None
+    assert stop.flight_availability_verified is None

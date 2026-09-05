@@ -1060,10 +1060,20 @@
     if (countEl) countEl.textContent = sorted.length;
 
     var tEmpty = window.i18n && window.i18n.t ? window.i18n.t.bind(window.i18n) : function (k) { return k; };
-    var emptyHtml = (tEmpty('visitedPlaces.emptyText') || 'No places yet.') + ' <a href="/places/new">' + (tEmpty('visitedPlaces.addFirstPlace') || 'Add your first place') + '</a>.';
     container.innerHTML = sorted.length
       ? sorted.map(renderCard).join('')
-      : '<p class="place-cards-empty">' + emptyHtml + '</p>';
+      : '<div class="place-cards-empty">' +
+        '<p>' + (tEmpty('visitedPlaces.emptyText') || 'No places yet.') + '</p>' +
+        '<a href="/places/new" class="btn-add">' +
+        '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" ' +
+        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<circle cx="12" cy="12" r="10" />' +
+        '<path d="M12 8v8" />' +
+        '<path d="M8 12h8" />' +
+        '</svg>' +
+        '<span>' + (tEmpty('visitedPlaces.addFirstPlace') || 'Add your first place') + '</span>' +
+        '</a>' +
+        '</div>';
     if (window.markAppReady) window.markAppReady();
   }
 

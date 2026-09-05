@@ -69,6 +69,9 @@
     if (/end date must be after/i.test(s)) {
       return t('planNewTrip.endDateAfterStart', 'End date must be after start date.');
     }
+    if (/start date cannot be before today/i.test(s)) {
+      return t('planNewTrip.startDateNotInPast', 'Start date cannot be before today.');
+    }
     return detail;
   }
 

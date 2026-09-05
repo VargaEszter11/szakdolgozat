@@ -48,11 +48,22 @@ export function renderRecentPlaces(places) {
 
   if (recent.length === 0) {
     container.innerHTML =
-      '<p class="travel-logs-empty muted">' +
+      '<div class="travel-logs-empty">' +
+      '<p class="muted">' +
       t('mainPage.noTravelsYet', 'No travels yet.') +
-      ' <a href="/places/new">' +
+      '</p>' +
+      '<a href="/places/new" class="btn-add">' +
+      '<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" ' +
+      'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<circle cx="12" cy="12" r="10" />' +
+      '<path d="M12 8v8" />' +
+      '<path d="M8 12h8" />' +
+      '</svg>' +
+      '<span>' +
       t('visitedPlaces.addFirstPlace', 'Add your first place') +
-      '</a>.</p>';
+      '</span>' +
+      '</a>' +
+      '</div>';
     return;
   }
 

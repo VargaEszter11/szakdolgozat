@@ -62,10 +62,14 @@ function resetPlannerFormFields() {
         transport.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    if (startDatePicker) startDatePicker.clear();
-    else setEmpty('startDate');
+    if (startDatePicker) {
+        startDatePicker.set('minDate', todayIso());
+        startDatePicker.clear();
+    } else {
+        setEmpty('startDate');
+    }
     if (endDatePicker) {
-        endDatePicker.set('minDate', null);
+        endDatePicker.set('minDate', dayAfterIso(todayIso()));
         endDatePicker.clear();
     } else {
         setEmpty('endDate');
@@ -296,82 +300,32 @@ function trackFilledInputs() {
 
 let startDatePicker = null;
 let endDatePicker = null;
+let linkedDates = null;
 
-function initDatePickers() {
-    if (typeof flatpickr === 'undefined') return;
-
-    const LOCALE_MAP = { hu: 'hu', de: 'de' };
-    const lang = localStorage.getItem('language') || 'en';
-    const fpLocale = LOCALE_MAP[lang] || 'default';
-
-    const opts = {
-        dateFormat: 'Y-m-d',
-        locale: fpLocale,
-        disableMobile: true,
-        onOpen: function (selectedDates, dateStr, instance) {
-            const jumpTo = dateStr || (instance.input && instance.input.value) || '';
-            if (jumpTo) instance.jumpToDate(jumpTo, false);
-        }
-    };
-
-    endDatePicker = flatpickr('#endDate', opts);
-    startDatePicker = flatpickr('#startDate', {
-        ...opts,
-        onChange: function (selectedDates, dateStr) {
-            if (!dateStr || !endDatePicker) return;
-            const minEnd = dayAfterIso(dateStr);
-            if (minEnd) endDatePicker.set('minDate', minEnd);
-            const endVal = endDatePicker.input.value || '';
-            if (!endVal || endVal <= dateStr) {
-                endDatePicker.setDate(minEnd, true);
-            }
-            endDatePicker.jumpToDate(minEnd || dateStr, true);
-        }
-    });
-
-    syncLinkedDatePickers(
-        startDatePicker && startDatePicker.input ? startDatePicker.input.value : '',
-        endDatePicker && endDatePicker.input ? endDatePicker.input.value : ''
-    );
+function todayIso() {
+    return window.DatePickers ? window.DatePickers.todayIso() : (() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
 }
 
 function dayAfterIso(isoDate) {
-    if (!isoDate) return null;
-    const d = new Date(String(isoDate).trim() + 'T12:00:00');
-    if (Number.isNaN(d.getTime())) return null;
-    d.setDate(d.getDate() + 1);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return window.DatePickers ? window.DatePickers.dayAfterIso(isoDate) : null;
+}
+
+function initDatePickers() {
+    if (!window.DatePickers) return;
+    linkedDates = window.DatePickers.initLinked('#startDate', '#endDate', {
+        forceFillEnd: true,
+        allowSameDay: false
+    });
+    startDatePicker = linkedDates.startPicker;
+    endDatePicker = linkedDates.endPicker;
 }
 
 function syncLinkedDatePickers(startValue, endValue) {
-    const start = (startValue || '').trim();
-    const end = (endValue || '').trim();
-    const minEnd = dayAfterIso(start);
-
-    if (startDatePicker) {
-        if (start) {
-            startDatePicker.setDate(start, false);
-            startDatePicker.jumpToDate(start, true);
-        } else {
-            startDatePicker.clear();
-        }
-    }
-
-    if (endDatePicker) {
-        if (minEnd) endDatePicker.set('minDate', minEnd);
-        else endDatePicker.set('minDate', null);
-
-        // End must be strictly after start (planner cannot do same-day trips).
-        const resolvedEnd = end && (!start || end > start) ? end : (minEnd || '');
-        if (resolvedEnd) {
-            endDatePicker.setDate(resolvedEnd, false);
-            endDatePicker.jumpToDate(resolvedEnd, true);
-        } else {
-            endDatePicker.clear();
-        }
+    if (linkedDates && typeof linkedDates.sync === 'function') {
+        linkedDates.sync(startValue, endValue);
     }
 }
 
@@ -760,6 +714,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (!startDate || !endDate) {
             showError(planNewTripT('datesRequired', 'Please select both start and end dates.'), '', tripResults, resultsContainer);
+            return;
+        }
+        if (startDate < todayIso()) {
+            showError(
+                planNewTripT('startDateNotInPast', 'Start date cannot be before today.'),
+                '',
+                tripResults,
+                resultsContainer
+            );
             return;
         }
         if (endDate <= startDate) {

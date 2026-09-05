@@ -56,6 +56,9 @@ export function localizePlannerErrorDetail(detail) {
     if (/end date must be after/i.test(s)) {
         return planNewTripT('endDateAfterStart', 'End date must be after start date.');
     }
+    if (/start date cannot be before today/i.test(s)) {
+        return planNewTripT('startDateNotInPast', 'Start date cannot be before today.');
+    }
     return detail;
 }
 
