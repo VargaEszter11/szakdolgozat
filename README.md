@@ -74,7 +74,7 @@ Copy `.env.example` → `.env` and fill what you need. Important groups:
 | Area | Variables |
 |------|-----------|
 | Database | `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `DB_NAME` |
-| Google login | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
+| Google login | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (add `{PUBLIC_BASE_URL}/login` as an Authorized redirect URI in Google Cloud Console) |
 | Trip LLM | `DEEPSEEK_API_KEY`, optional `DEEPSEEK_API_BASE`, `DEEPSEEK_MODEL` |
 | Geocoding | `NOMINATIM_USER_AGENT` (required by OSM policy) |
 | Password reset email | `SMTP_*`, optionally `PUBLIC_BASE_URL` |

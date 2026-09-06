@@ -262,6 +262,7 @@ def test_google_config(mock_client_id):
 
     assert response.status_code == 200
     assert response.json()["client_id"] == "abc123"
+    assert response.json()["redirect_uri"].endswith("/login")
 
 @patch("routers.auth.send_password_reset_email")
 @patch("routers.auth.crud.create_password_reset_token")

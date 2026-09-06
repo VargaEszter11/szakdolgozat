@@ -22,30 +22,35 @@ def get_google_client_secret() -> str:
     return os.getenv("GOOGLE_CLIENT_SECRET", "")
 
 
-def _exchange_google_code(code: str, client_id: str, client_secret: str) -> dict:
-    """Exchange an OAuth 2.0 authorization code (from the JS popup code client) for tokens."""
+def _public_base_url(request: Request) -> str:
+    override = os.getenv("PUBLIC_BASE_URL", "").strip()
+    if override:
+        return override.rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
+def _google_redirect_uri(request: Request) -> str:
+    """Canonical OAuth redirect target (same-tab return to the login page)."""
+    return f"{_public_base_url(request)}/login"
+
+
+def _exchange_google_code(
+    code: str, client_id: str, client_secret: str, redirect_uri: str
+) -> dict:
+    """Exchange an OAuth 2.0 authorization code (same-tab redirect flow) for tokens."""
     response = requests.post(
         GOOGLE_TOKEN_ENDPOINT,
         data={
             "code": code,
             "client_id": client_id,
             "client_secret": client_secret,
-            # The JS SDK's popup-mode code client relays the code via postMessage
-            # rather than a real redirect, so Google expects this literal value here.
-            "redirect_uri": "postmessage",
+            "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
         },
         timeout=10,
     )
     response.raise_for_status()
     return response.json()
-
-
-def _public_base_url(request: Request) -> str:
-    override = os.getenv("PUBLIC_BASE_URL", "").strip()
-    if override:
-        return override.rstrip("/")
-    return str(request.base_url).rstrip("/")
 
 
 # Register
@@ -134,7 +139,11 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
 # Google Sign-In
 
 @router.post("/google-login", response_model=schemas.LoginResponse)
-def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_db)):
+def google_login(
+    request: schemas.GoogleLoginRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+):
     """Auth code → tokens → verify ID token; login or create Google user."""
     google_client_id = get_google_client_id()
     google_client_secret = get_google_client_secret()
@@ -147,7 +156,10 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
 
     try:
         token_response = _exchange_google_code(
-            request.code, google_client_id, google_client_secret
+            request.code,
+            google_client_id,
+            google_client_secret,
+            _google_redirect_uri(http_request),
         )
     except Exception:
         raise HTTPException(
@@ -215,10 +227,11 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
 
 
 @router.get("/google-config")
-def google_config():
-    """Public client_id for the frontend Google Identity script."""
+def google_config(http_request: Request):
+    """Public client_id + redirect_uri for the frontend Google Identity script."""
     return {
-        "client_id": get_google_client_id()
+        "client_id": get_google_client_id(),
+        "redirect_uri": _google_redirect_uri(http_request),
     }
 
 

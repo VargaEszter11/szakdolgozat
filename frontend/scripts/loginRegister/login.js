@@ -202,8 +202,81 @@ async function handleGoogleAuthCode(code) {
     return data;
 }
 
+function clearGoogleOAuthParamsFromUrl() {
+    try {
+        var url = new URL(window.location.href);
+        if (!url.searchParams.has("code") && !url.searchParams.has("error") && !url.searchParams.has("state")) {
+            return;
+        }
+        ["code", "error", "state", "scope", "authuser", "prompt", "hd"].forEach(function (key) {
+            url.searchParams.delete(key);
+        });
+        var cleaned = url.pathname + (url.searchParams.toString() ? "?" + url.searchParams.toString() : "");
+        window.history.replaceState({}, document.title, cleaned);
+    } catch (e) {
+        /* ignore */
+    }
+}
+
+function createGoogleOAuthState() {
+    var bytes = new Uint8Array(16);
+    if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+        window.crypto.getRandomValues(bytes);
+    } else {
+        for (var i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.prototype.map.call(bytes, function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+    }).join("");
+}
+
+async function consumeGoogleRedirectResult() {
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get("code");
+    var error = params.get("error");
+    var state = params.get("state");
+    if (!code && !error) return false;
+
+    clearGoogleOAuthParamsFromUrl();
+
+    var expectedState = sessionStorage.getItem("google_oauth_state");
+    sessionStorage.removeItem("google_oauth_state");
+
+    if (error) {
+        if (error !== "access_denied") {
+            showError(loginT("login.googleFailed", "Google login failed"));
+        }
+        return true;
+    }
+
+    if (!expectedState || !state || state !== expectedState) {
+        showError(loginT("login.googleFailed", "Google login failed"));
+        return true;
+    }
+
+    var btn = document.getElementById("googleSignInBtn");
+    if (btn) btn.disabled = true;
+
+    try {
+        const data = await handleGoogleAuthCode(code);
+        saveSessionAndRedirect(data);
+    } catch (err) {
+        console.error(err);
+        showError(
+            (err && err.message) ||
+            loginT("login.googleFailed", "Google login failed")
+        );
+        if (btn) btn.disabled = false;
+    }
+    return true;
+}
+
 async function initGoogleLogin() {
     try {
+        if (await consumeGoogleRedirectResult()) {
+            // Still set up the button if login failed, so the user can retry.
+        }
+
         const configResponse = await fetch("/api/google-config");
         if (!configResponse.ok) {
             showGoogleUnavailable("unavailable");
@@ -211,7 +284,7 @@ async function initGoogleLogin() {
         }
 
         const config = await configResponse.json();
-        if (!config.client_id) {
+        if (!config.client_id || !config.redirect_uri) {
             showGoogleUnavailable("not_configured");
             return;
         }
@@ -222,35 +295,20 @@ async function initGoogleLogin() {
         }
 
         var btn = document.getElementById("googleSignInBtn");
+        var oauthState = createGoogleOAuthState();
 
         var codeClient = window.google.accounts.oauth2.initCodeClient({
             client_id: config.client_id,
             scope: "openid email profile",
-            ux_mode: "popup",
-            callback: async function (response) {
-                if (!response || !response.code) {
-                    if (response && response.error && response.error !== "popup_closed") {
-                        console.error(response.error);
-                        showError(loginT("login.googleFailed", "Google login failed"));
-                    }
-                    return;
-                }
-                try {
-                    const data = await handleGoogleAuthCode(response.code);
-                    saveSessionAndRedirect(data);
-                } catch (error) {
-                    console.error(error);
-                    showError(
-                        (error && error.message) ||
-                        loginT("login.googleFailed", "Google login failed")
-                    );
-                }
-            }
+            ux_mode: "redirect",
+            redirect_uri: config.redirect_uri,
+            state: oauthState
         });
 
         if (btn) {
             btn.disabled = false;
             btn.addEventListener("click", function () {
+                sessionStorage.setItem("google_oauth_state", oauthState);
                 codeClient.requestCode();
             });
         }

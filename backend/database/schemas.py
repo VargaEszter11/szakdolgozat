@@ -58,7 +58,7 @@ class LoginRequest(BaseModel):
 
 
 class GoogleLoginRequest(BaseModel):
-    code: str  # OAuth authorization code from Google Identity (popup code client)
+    code: str  # OAuth authorization code from Google Identity (redirect code client)
 
 
 class LoginResponse(BaseModel):
