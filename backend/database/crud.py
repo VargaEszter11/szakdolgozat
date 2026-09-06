@@ -31,12 +31,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ============= User CRUD Operations =============
 
 def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    """Create a new user with a bcrypt-hashed password."""
+    """Create a new user with a bcrypt-hashed password (email not verified yet)."""
     hashed_password = hash_password(user.password)
     db_user = models.User(
         username=user.username,
         email=user.email,
-        password=hashed_password
+        password=hashed_password,
+        email_verified=False,
     )
     db.add(db_user)
     db.commit()
@@ -64,6 +65,7 @@ def create_google_user(db: Session, email: str, display_name: Optional[str] = No
         username=username,
         email=email,
         password=hash_password(random_password),
+        email_verified=True,
     )
     db.add(db_user)
     db.commit()
@@ -204,6 +206,70 @@ def consume_password_reset_token(db: Session, token_row: models.PasswordResetTok
     row = cast(Any, token_row)
     row.used_at = _utcnow_naive()
     db.commit()
+
+
+# ============= Email Verification Token CRUD =============
+
+EMAIL_VERIFICATION_TOKEN_TTL_MINUTES = 24 * 60
+
+
+def create_email_verification_token(db: Session, user_id: int) -> str:
+    """Issue a single-use email verification token; returns the raw token to email."""
+    db.query(models.EmailVerificationToken).filter(
+        models.EmailVerificationToken.user_id == user_id,
+        models.EmailVerificationToken.used_at.is_(None),
+    ).delete()
+
+    raw_token = secrets.token_urlsafe(32)
+    db_token = models.EmailVerificationToken(
+        user_id=user_id,
+        token_hash=_hash_reset_token(raw_token),
+        expires_at=_utcnow_naive() + timedelta(minutes=EMAIL_VERIFICATION_TOKEN_TTL_MINUTES),
+    )
+    db.add(db_token)
+    db.commit()
+    return raw_token
+
+
+def get_valid_email_verification_token(
+    db: Session, raw_token: str
+) -> Optional[models.EmailVerificationToken]:
+    token_row = (
+        db.query(models.EmailVerificationToken)
+        .filter(models.EmailVerificationToken.token_hash == _hash_reset_token(raw_token))
+        .first()
+    )
+    if not token_row:
+        return None
+    row = cast(Any, token_row)
+    if row.used_at is not None or row.expires_at < _utcnow_naive():
+        return None
+    return token_row
+
+
+def consume_email_verification_token(
+    db: Session, token_row: models.EmailVerificationToken
+) -> Optional[models.User]:
+    """Mark the user's email verified and consume the token."""
+    row = cast(Any, token_row)
+    db_user = get_user(db, int(row.user_id))
+    if db_user is None:
+        return None
+    cast(Any, db_user).email_verified = True
+    row.used_at = _utcnow_naive()
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def mark_user_email_verified(db: Session, user_id: int) -> Optional[models.User]:
+    db_user = get_user(db, user_id)
+    if db_user is None:
+        return None
+    cast(Any, db_user).email_verified = True
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 
 # ============= Planned Trip CRUD Operations =============

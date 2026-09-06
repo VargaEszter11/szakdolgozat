@@ -31,8 +31,8 @@ function getResetTokenFromUrl() {
             return;
         }
 
-        if (passwordInput.value.length < 6) {
-            showError(resetPasswordT('resetPassword.passwordTooShort', 'Password must be at least 6 characters.'));
+        if (!window.PasswordPolicy || !window.PasswordPolicy.isStrong(passwordInput.value)) {
+            showError(window.PasswordPolicy.message('resetPassword.passwordTooShort'));
             return;
         }
 

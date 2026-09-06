@@ -37,7 +37,7 @@ def seed_sample_data():
         sample_user = schemas.UserCreate(
             username="testuser",
             email="test@example.com",
-            password="password123"
+            password="Password123!"
         )
         user = crud.create_user(db, sample_user)
         print(f"[SUCCESS] Created sample user: {user.username}")

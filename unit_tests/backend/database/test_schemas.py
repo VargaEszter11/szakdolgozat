@@ -8,7 +8,7 @@ def test_user_create_valid():
     user = schemas.UserCreate(
         username="john_doe",
         email="john@example.com",
-        password="secret123",
+        password="Secret123!",
     )
 
     assert user.username == "john_doe"
@@ -20,6 +20,24 @@ def test_user_create_password_too_short():
             username="john_doe",
             email="john@example.com",
             password="123",  # too short
+        )
+
+
+def test_user_create_password_missing_special():
+    with pytest.raises(ValidationError):
+        schemas.UserCreate(
+            username="john_doe",
+            email="john@example.com",
+            password="Secret123",
+        )
+
+
+def test_user_create_password_missing_upper():
+    with pytest.raises(ValidationError):
+        schemas.UserCreate(
+            username="john_doe",
+            email="john@example.com",
+            password="secret123!",
         )
 
 

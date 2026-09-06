@@ -36,7 +36,7 @@
 
     function isPublicPath(path) {
         path = (path || '/').replace(/\/+$/, '') || '/';
-        return /^\/(login|register|share|reset-password|admin|admin\/feedback)$/.test(path);
+        return /^\/(login|register|share|reset-password|verify-email|admin|admin\/feedback)$/.test(path);
     }
 
     var _fetch = window.fetch;

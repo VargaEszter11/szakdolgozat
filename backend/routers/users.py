@@ -81,7 +81,7 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Update user information (self only)."""
+    """Update user information (self only). Password changes use forgot-password email flow."""
     require_self(user_id, current_user)
     if user.username:
         existing_user = crud.get_user_by_username(db, username=user.username)
@@ -99,7 +99,9 @@ def update_user(
                 detail="Email already registered",
             )
 
-    db_user = crud.update_user(db, user_id=user_id, user_update=user)
+    # Profile password changes go through /api/forgot-password/* — never apply here.
+    profile_update = user.model_copy(update={"password": None})
+    db_user = crud.update_user(db, user_id=user_id, user_update=profile_update)
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -32,7 +32,7 @@ class TestLogin:
             "/api/login",
             json={
                 "username": "nonexistent",
-                "password": "SomePassword123"
+                "password": "SomePassword123!"
             }
         )
 
@@ -45,7 +45,7 @@ class TestLogin:
             "/api/login",
             json={
                 "username": test_user["username"],
-                "password": "WrongPassword123"
+                "password": "WrongPassword123!"
             }
         )
 
@@ -56,7 +56,7 @@ class TestLogin:
         """Test login request with missing username."""
         response = client.post(
             "/api/login",
-            json={"password": "SomePassword123"}
+            json={"password": "SomePassword123!"}
         )
 
         assert response.status_code == 422  # Validation error

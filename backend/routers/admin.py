@@ -19,6 +19,7 @@ router = APIRouter()
 _EXPORT_MODELS = [
     ("users", models.User),
     ("password_reset_tokens", models.PasswordResetToken),
+    ("email_verification_tokens", models.EmailVerificationToken),
     ("airlines", models.Airline),
     ("airports", models.Airport),
     ("direct_routes", models.DirectRoute),

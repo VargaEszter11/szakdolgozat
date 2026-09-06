@@ -54,6 +54,28 @@ def apply_startup_schema_patches() -> None:
             conn.execute(
                 text(
                     """
+                    ALTER TABLE users
+                    ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT TRUE
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        token_hash TEXT NOT NULL UNIQUE,
+                        expires_at TIMESTAMP NOT NULL,
+                        used_at TIMESTAMP NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                    """
+                )
+            )
+            conn.execute(
+                text(
+                    """
                     ALTER TABLE direct_routes
                     ADD COLUMN IF NOT EXISTS is_seasonal BOOLEAN NULL,
                     ADD COLUMN IF NOT EXISTS effective_from DATE NULL,

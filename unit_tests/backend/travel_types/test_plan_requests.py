@@ -54,7 +54,16 @@ def test_planner_account_id():
 
 
 def test_planner_context(monkeypatch):
-    req = SimpleNamespace(startDate="2026-07-01", endDate="2026-07-04", plannerUserId=1, userId=1)
+    from datetime import date, timedelta
+
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=3)
+    req = SimpleNamespace(
+        startDate=start.isoformat(),
+        endDate=end.isoformat(),
+        plannerUserId=1,
+        userId=1,
+    )
     length, _ = pg.planner_context(req, MagicMock())
     assert length == 3
 
@@ -190,6 +199,8 @@ async def test_geocode_places(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_generate_plan_with_location(monkeypatch):
+    from datetime import date, timedelta
+
     async def coords(name):
         return 47.5, 19.0
 
@@ -207,18 +218,20 @@ async def test_generate_plan_with_location(monkeypatch):
     monkeypatch.setattr(pg, "get_direct_destinations_cached", cache)
     monkeypatch.setattr(pg, "normalize_planner_response", lambda plan: plan)
 
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=4)
     result = await pg.generate_plan_with_location(
         draft,
         starting_point="Budapest",
-        start_date="2026-07-01",
-        end_date="2026-07-05",
+        start_date=start.isoformat(),
+        end_date=end.isoformat(),
         people=2,
         travel_length=4,
         db=MagicMock(),
         preferredTransport="allModes",
     )
     assert result["nearest_airport"]["iata"] == "BUD"
-    assert result["draft_plan"]["startDate"] == "2026-07-01"
+    assert result["draft_plan"]["startDate"] == start.isoformat()
     assert result["starting_point_coords"] == {"lat": 47.5, "lon": 19.0}
 
 

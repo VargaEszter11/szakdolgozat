@@ -4,16 +4,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var usernameInput = document.getElementById('profileUsername');
     var emailInput = document.getElementById('profileEmail');
     var homeCityInput = document.getElementById('profileHomeCity');
-    var newPasswordInput = document.getElementById('profileNewPassword');
-    var confirmPasswordInput = document.getElementById('profileConfirmPassword');
     var errorEl = document.getElementById('editProfileError');
     var successEl = document.getElementById('editProfileSuccess');
     var saveBtn = document.getElementById('saveProfileBtn');
+    var resetBtn = document.getElementById('sendPasswordResetBtn');
     var successTimer = null;
 
     function t(key, fallback) {
         if (window.i18n && typeof window.i18n.t === 'function') {
-            return window.i18n.t(key);
+            var v = window.i18n.t(key);
+            if (v && v !== key) return v;
         }
         return fallback;
     }
@@ -32,14 +32,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function showSuccess() {
+    function showSuccess(message) {
         hideMessages();
         if (!successEl) return;
-        successEl.textContent = t('editProfile.savedMessage', 'Profile updated successfully.');
+        successEl.textContent =
+            message || t('editProfile.savedMessage', 'Profile updated successfully.');
         successEl.hidden = false;
         successTimer = setTimeout(function () {
             if (successEl) successEl.hidden = true;
-        }, 4000);
+        }, 6000);
     }
 
     function formatApiDetail(detail) {
@@ -67,6 +68,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (/user not found/i.test(text)) {
             return t('editProfile.userNotFound', 'User not found.');
         }
+        if (/could not send email|email sending is not configured/i.test(text)) {
+            return t(
+                'editProfile.passwordEmailFailed',
+                'Could not send the password reset email. Check email settings or try again later.'
+            );
+        }
         return t('editProfile.errorSave', 'Could not save changes.');
     }
 
@@ -92,41 +99,71 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.markAppReady) window.markAppReady();
         });
 
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            hideMessages();
+            var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
+            if (!email) {
+                showError(t('editProfile.passwordResetNeedsEmail', 'Save a valid email on your profile first.'));
+                return;
+            }
+
+            resetBtn.disabled = true;
+            fetch('/api/forgot-password/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            })
+                .then(function (res) {
+                    return res.json().then(
+                        function (body) {
+                            return { ok: res.ok, body: body };
+                        },
+                        function () {
+                            return { ok: res.ok, body: {} };
+                        }
+                    );
+                })
+                .then(function (result) {
+                    if (result.ok && result.body && result.body.success) {
+                        showSuccess(
+                            t(
+                                'editProfile.passwordEmailSent',
+                                'If an account exists for this email, we sent a password reset link. Check your inbox.'
+                            )
+                        );
+                        return;
+                    }
+                    showError(mapApiError(result.body && result.body.detail));
+                })
+                .catch(function () {
+                    showError(
+                        t(
+                            'editProfile.passwordEmailFailed',
+                            'Could not send the password reset email. Check email settings or try again later.'
+                        )
+                    );
+                })
+                .finally(function () {
+                    resetBtn.disabled = false;
+                });
+        });
+    }
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         hideMessages();
 
         var username = (usernameInput && usernameInput.value) ? usernameInput.value.trim() : '';
         var email = (emailInput && emailInput.value) ? emailInput.value.trim() : '';
-        var newPw = (newPasswordInput && newPasswordInput.value) ? newPasswordInput.value : '';
-        var confirmPw = (confirmPasswordInput && confirmPasswordInput.value) ? confirmPasswordInput.value : '';
 
         if (!username || !email) {
             showError(t('editProfile.validationRequired', 'Username and email are required.'));
             return;
         }
 
-        if (newPw || confirmPw) {
-            if (!newPw || !confirmPw) {
-                showError(t('editProfile.passwordBoth', 'Enter and confirm your new password.'));
-                return;
-            }
-            if (newPw.length < 6) {
-                showError(t('editProfile.passwordTooShort', 'Password must be at least 6 characters.'));
-                return;
-            }
-            if (newPw !== confirmPw) {
-                showError(t('editProfile.passwordMismatch', 'New passwords do not match.'));
-                return;
-            }
-        }
-
         var homeCity = (homeCityInput && homeCityInput.value) ? homeCityInput.value.trim() : '';
-
         var payload = { username: username, email: email, home_city: homeCity };
-        if (newPw) {
-            payload.password = newPw;
-        }
 
         if (saveBtn) saveBtn.disabled = true;
 
@@ -148,8 +185,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (result) {
                 if (result.ok) {
                     localStorage.setItem('username', result.body.username || username);
-                    if (newPasswordInput) newPasswordInput.value = '';
-                    if (confirmPasswordInput) confirmPasswordInput.value = '';
                     if (window.appShell && typeof window.appShell.refreshHeaderProfileAvatar === 'function') {
                         window.appShell.refreshHeaderProfileAvatar();
                     }

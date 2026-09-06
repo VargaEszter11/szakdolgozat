@@ -7,25 +7,30 @@ import main  # your FastAPI app
 
 client = TestClient(main.app)
 
+@patch("routers.auth.send_email_verification_email")
+@patch("routers.auth.crud.create_email_verification_token", return_value="verify-token")
 @patch("routers.auth.crud.get_user_by_username")
 @patch("routers.auth.crud.get_user_by_email")
 @patch("routers.auth.crud.create_user")
-def test_register_success(mock_create, mock_get_email, mock_get_username):
+def test_register_success(mock_create, mock_get_email, mock_get_username, mock_token, mock_email):
     mock_get_username.return_value = None
     mock_get_email.return_value = None
+    mock_create.return_value = MagicMock(id=1, email="test@example.com")
 
     response = client.post(
         "/api/register",
         json={
             "username": "testuser",
             "email": "test@example.com",
-            "password": "secret123"
+            "password": "Secret123!"
         }
     )
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-    assert "registered" in response.json()["message"].lower()
+    assert "email" in response.json()["message"].lower()
+    mock_token.assert_called_once()
+    mock_email.assert_called_once()
 
 
 @patch("routers.auth.crud.get_user_by_username")
@@ -37,7 +42,7 @@ def test_register_username_exists(mock_get_username):
         json={
             "username": "testuser",
             "email": "test@example.com",
-            "password": "secret123"
+            "password": "Secret123!"
         }
     )
 
@@ -55,7 +60,7 @@ def test_register_email_exists(mock_get_email, mock_get_username):
         json={
             "username": "testuser",
             "email": "test@example.com",
-            "password": "secret123"
+            "password": "Secret123!"
         }
     )
 
@@ -64,7 +69,9 @@ def test_register_email_exists(mock_get_email, mock_get_username):
 @patch("routers.auth.crud.get_user_by_username")
 @patch("routers.auth.crud.verify_password")
 def test_login_success(mock_verify, mock_get_user):
-    mock_get_user.return_value = MagicMock(id=1, username="testuser", password="hashed")
+    mock_get_user.return_value = MagicMock(
+        id=1, username="testuser", password="hashed", email_verified=True
+    )
     mock_verify.return_value = True
 
     response = client.post(
@@ -80,6 +87,26 @@ def test_login_success(mock_verify, mock_get_user):
     assert response.json()["username"] == "testuser"
     assert response.json().get("access_token")
     assert response.json().get("token_type") == "bearer"
+
+
+@patch("routers.auth.crud.get_user_by_username")
+@patch("routers.auth.crud.verify_password")
+def test_login_email_not_verified(mock_verify, mock_get_user):
+    mock_get_user.return_value = MagicMock(
+        id=1, username="testuser", password="hashed", email_verified=False
+    )
+    mock_verify.return_value = True
+
+    response = client.post(
+        "/api/login",
+        json={
+            "username": "testuser",
+            "password": "secret123"
+        }
+    )
+
+    assert response.status_code == 403
+    assert "email" in response.json()["detail"].lower()
 
 
 @patch("routers.auth.crud.get_user_by_username")
@@ -100,7 +127,9 @@ def test_login_user_not_found(mock_get_user):
 @patch("routers.auth.crud.get_user_by_username")
 @patch("routers.auth.crud.verify_password")
 def test_login_wrong_password(mock_verify, mock_get_user):
-    mock_get_user.return_value = MagicMock(id=1, username="testuser", password="hashed")
+    mock_get_user.return_value = MagicMock(
+        id=1, username="testuser", password="hashed", email_verified=True
+    )
     mock_verify.return_value = False
 
     response = client.post(
@@ -282,7 +311,7 @@ def test_forgot_password_reset_success(mock_get_token, mock_update, mock_consume
         "/api/forgot-password/reset",
         json={
             "token": "valid-token",
-            "new_password": "newsecret"
+            "new_password": "NewSecret1!"
         }
     )
 
@@ -299,8 +328,74 @@ def test_forgot_password_reset_invalid_token(mock_get_token):
         "/api/forgot-password/reset",
         json={
             "token": "bad-token",
-            "new_password": "newsecret"
+            "new_password": "NewSecret1!"
         }
     )
 
     assert response.status_code == 400
+
+
+@patch("routers.auth.crud.consume_email_verification_token")
+@patch("routers.auth.crud.get_valid_email_verification_token")
+def test_verify_email_confirm_success(mock_get_token, mock_consume):
+    mock_get_token.return_value = MagicMock(user_id=1)
+    mock_consume.return_value = MagicMock(id=1)
+
+    response = client.post(
+        "/api/verify-email/confirm",
+        json={"token": "valid-verify-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    mock_consume.assert_called_once()
+
+
+@patch("routers.auth.crud.get_valid_email_verification_token")
+def test_verify_email_confirm_invalid_token(mock_get_token):
+    mock_get_token.return_value = None
+
+    response = client.post(
+        "/api/verify-email/confirm",
+        json={"token": "bad-token"},
+    )
+
+    assert response.status_code == 400
+
+
+@patch("routers.auth.send_email_verification_email")
+@patch("routers.auth.crud.create_email_verification_token", return_value="new-token")
+@patch("routers.auth.crud.get_user_by_email")
+def test_verify_email_resend_sends_when_unverified(mock_get_email, mock_token, mock_send):
+    mock_get_email.return_value = MagicMock(
+        id=1, email="test@example.com", email_verified=False
+    )
+
+    response = client.post(
+        "/api/verify-email/resend",
+        json={"email": "test@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    mock_token.assert_called_once()
+    mock_send.assert_called_once()
+
+
+@patch("routers.auth.send_email_verification_email")
+@patch("routers.auth.crud.create_email_verification_token")
+@patch("routers.auth.crud.get_user_by_email")
+def test_verify_email_resend_skips_when_verified(mock_get_email, mock_token, mock_send):
+    mock_get_email.return_value = MagicMock(
+        id=1, email="test@example.com", email_verified=True
+    )
+
+    response = client.post(
+        "/api/verify-email/resend",
+        json={"email": "test@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+    mock_token.assert_not_called()
+    mock_send.assert_not_called()

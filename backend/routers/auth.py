@@ -4,7 +4,7 @@ from database import crud, schemas, get_db
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from typing import Any, cast
-from utils.email import send_password_reset_email
+from utils.email import send_password_reset_email, send_email_verification_email
 from utils.auth_deps import create_access_token
 import os
 import requests
@@ -51,35 +51,49 @@ def _public_base_url(request: Request) -> str:
 # Register
 
 @router.post("/register", response_model=schemas.RegisterResponse)
-def register(request: schemas.RegisterRequest, db: Session = Depends(get_db)):
-    """Register a new user (username + email unique; password hashed in create_user)."""
+def register(
+    request: schemas.RegisterRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+):
+    """Register a new user and email a confirmation link (Google sign-up skips this)."""
     existing_user = crud.get_user_by_username(db, username=request.username)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
+            detail="Username already registered",
         )
 
     existing_email = crud.get_user_by_email(db, email=request.email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Email already registered",
         )
 
     user_data = schemas.UserCreate(
         username=request.username,
         email=request.email,
-        password=request.password
+        password=request.password,
     )
-    crud.create_user(db=db, user=user_data)
+    user = crud.create_user(db=db, user=user_data)
+    user_row = cast(Any, user)
+
+    raw_token = crud.create_email_verification_token(db, user_id=int(user_row.id))
+    verify_url = f"{_public_base_url(http_request)}/verify-email?token={raw_token}"
+    send_email_verification_email(
+        user_row.email,
+        verify_url,
+        crud.EMAIL_VERIFICATION_TOKEN_TTL_MINUTES,
+    )
 
     return schemas.RegisterResponse(
         success=True,
-        message="User registered successfully"
+        message="Registration successful. Please check your email to confirm your account.",
     )
 
-#Login
+
+# Login
 
 @router.post("/login", response_model=schemas.LoginResponse)
 def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
@@ -89,14 +103,20 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
+            detail="Invalid username or password",
         )
     user_row = cast(Any, user)
 
     if not crud.verify_password(request.password, user_row.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
+            detail="Invalid username or password",
+        )
+
+    if not bool(getattr(user_row, "email_verified", False)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please confirm your email before logging in. Check your inbox for the verification link.",
         )
 
     return schemas.LoginResponse(
@@ -174,6 +194,11 @@ def google_login(request: schemas.GoogleLoginRequest, db: Session = Depends(get_
             email=email,
             display_name=id_info.get("name"),
         )
+    else:
+        # Google emails are verified by Google; ensure local flag matches.
+        if not bool(getattr(user, "email_verified", False)):
+            crud.mark_user_email_verified(db, int(cast(Any, user).id))
+            user = crud.get_user(db, int(cast(Any, user).id)) or user
     user_row = cast(Any, user)
 
     return schemas.LoginResponse(
@@ -250,3 +275,55 @@ def forgot_password_reset(request: schemas.ForgotPasswordResetRequest, db: Sessi
     crud.consume_password_reset_token(db, token_row)
 
     return schemas.ForgotPasswordResetResponse(success=True, message="Password reset successfully")
+
+
+_VERIFY_EMAIL_RESEND_MESSAGE = (
+    "If an account with that email needs verification, we've sent a confirmation link."
+)
+
+
+@router.post("/verify-email/confirm", response_model=schemas.VerifyEmailConfirmResponse)
+def verify_email_confirm(request: schemas.VerifyEmailConfirmRequest, db: Session = Depends(get_db)):
+    """Confirm a registration email using the token from the verification link."""
+    token_row = crud.get_valid_email_verification_token(db, raw_token=request.token)
+    if not token_row:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email confirmation link is invalid or has expired.",
+        )
+
+    updated_user = crud.consume_email_verification_token(db, token_row)
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return schemas.VerifyEmailConfirmResponse(
+        success=True,
+        message="Email confirmed successfully. You can now log in.",
+    )
+
+
+@router.post("/verify-email/resend", response_model=schemas.VerifyEmailResendResponse)
+def verify_email_resend(
+    request: schemas.VerifyEmailResendRequest,
+    http_request: Request,
+    db: Session = Depends(get_db),
+):
+    """Resend a confirmation email if the account exists and is still unverified."""
+    user = crud.get_user_by_email(db, email=request.email)
+    if user and not bool(getattr(user, "email_verified", False)):
+        user_row = cast(Any, user)
+        raw_token = crud.create_email_verification_token(db, user_id=int(user_row.id))
+        verify_url = f"{_public_base_url(http_request)}/verify-email?token={raw_token}"
+        send_email_verification_email(
+            user_row.email,
+            verify_url,
+            crud.EMAIL_VERIFICATION_TOKEN_TTL_MINUTES,
+        )
+
+    return schemas.VerifyEmailResendResponse(
+        success=True,
+        message=_VERIFY_EMAIL_RESEND_MESSAGE,
+    )

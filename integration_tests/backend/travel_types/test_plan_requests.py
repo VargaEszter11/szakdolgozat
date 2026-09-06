@@ -22,9 +22,13 @@ class TestPlanRequestsHelpersWithDatabase:
         assert plan["plan"][0]["city"] == "Rome"
 
     def test_planner_context_uses_request_dates(self, db, test_user):
+        from datetime import date, timedelta
+
+        start = date.today() + timedelta(days=10)
+        end = start + timedelta(days=7)
         request = SimpleNamespace(
-            startDate="2026-07-01",
-            endDate="2026-07-08",
+            startDate=start.isoformat(),
+            endDate=end.isoformat(),
             plannerUserId=test_user["id"],
             userId=test_user["id"],
         )
@@ -62,11 +66,15 @@ class TestPlanRequestsGeneration:
         monkeypatch.setattr(pr, "generate_travel_plan_visited", fake_visited)
         monkeypatch.setattr(pr, "normalize_planner_response", lambda plan: plan)
 
+        from datetime import date, timedelta
+
+        start = date.today() + timedelta(days=10)
+        end = start + timedelta(days=4)
         request = pr.GenerationRequest(
             visitedPlaces=["Rome"],
             startingPoint="Budapest",
-            startDate="2026-07-01",
-            endDate="2026-07-05",
+            startDate=start.isoformat(),
+            endDate=end.isoformat(),
             userId=test_user["id"],
             people=2,
         )
@@ -74,7 +82,7 @@ class TestPlanRequestsGeneration:
         result = await pr.generate_visited_plan(request, db)
 
         assert result["nearest_airport"]["iata"] == "BUD"
-        assert result["draft_plan"]["startDate"] == "2026-07-01"
+        assert result["draft_plan"]["startDate"] == start.isoformat()
         assert result["draft_plan"]["tripLengthDays"] == 4
         assert result["starting_point_coords"] == {"lat": 47.5, "lon": 19.0}
 

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 
 import routers.users as users_router
+from database import schemas
 from .auth_test_utils import fake_user
 
 
@@ -68,7 +69,7 @@ def test_list_users(db):
 
 
 def test_update_user_username_taken(db):
-    user_update = MagicMock(username="newname", email=None)
+    user_update = schemas.UserUpdate(username="newname")
 
     with patch("routers.users.crud.get_user_by_username", return_value=SimpleNamespace(id=99)):
         with pytest.raises(HTTPException):
@@ -76,7 +77,7 @@ def test_update_user_username_taken(db):
 
 
 def test_update_user_email_taken(db):
-    user_update = MagicMock(username=None, email="x@test.com")
+    user_update = schemas.UserUpdate(email="x@test.com")
 
     with patch("routers.users.crud.get_user_by_username", return_value=None), \
          patch("routers.users.crud.get_user_by_email", return_value=SimpleNamespace(id=99)):
@@ -86,7 +87,7 @@ def test_update_user_email_taken(db):
 
 
 def test_update_user_not_found(db):
-    user_update = MagicMock(username=None, email=None)
+    user_update = schemas.UserUpdate()
 
     with patch("routers.users.crud.get_user_by_username", return_value=None), \
          patch("routers.users.crud.get_user_by_email", return_value=None), \
@@ -97,15 +98,31 @@ def test_update_user_not_found(db):
 
 
 def test_update_user_success(db):
-    user_update = MagicMock(username=None, email=None)
+    user_update = schemas.UserUpdate(username="alice")
+    updated = SimpleNamespace(id=1, username="alice")
 
     with patch("routers.users.crud.get_user_by_username", return_value=None), \
          patch("routers.users.crud.get_user_by_email", return_value=None), \
-         patch("routers.users.crud.update_user", return_value={"id": 1}):
+         patch("routers.users.crud.update_user", return_value=updated) as mock_update:
 
         result = users_router.update_user(1, user_update, db, fake_user(1))
 
-    assert result == {"id": 1}
+    assert result is updated
+    # Password must never be applied via profile update (forgot-password flow instead).
+    assert mock_update.call_args.kwargs["user_update"].password is None
+
+
+def test_update_user_strips_password(db):
+    user_update = schemas.UserUpdate(password="Secret123!")
+    updated = SimpleNamespace(id=1, username="alice")
+
+    with patch("routers.users.crud.get_user_by_username", return_value=None), \
+         patch("routers.users.crud.get_user_by_email", return_value=None), \
+         patch("routers.users.crud.update_user", return_value=updated) as mock_update:
+
+        users_router.update_user(1, user_update, db, fake_user(1))
+
+    assert mock_update.call_args.kwargs["user_update"].password is None
 
 
 def test_delete_user_not_found(db):

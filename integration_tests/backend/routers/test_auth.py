@@ -7,20 +7,28 @@ from unittest.mock import patch
 class TestRegister:
     """Integration tests for user registration."""
 
-    def test_register_success(self, client):
+    @patch("routers.auth.send_email_verification_email")
+    def test_register_success(self, mock_send_email, client):
         response = client.post(
             "/api/register",
             json={
                 "username": "newuser",
                 "email": "newuser@example.com",
-                "password": "SecurePass123",
+                "password": "SecurePass123!",
             },
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "registered" in data["message"].lower()
+        assert "email" in data["message"].lower()
+        mock_send_email.assert_called_once()
+
+        login = client.post(
+            "/api/login",
+            json={"username": "newuser", "password": "SecurePass123!"},
+        )
+        assert login.status_code == 403
 
     def test_register_duplicate_username(self, client, test_user):
         response = client.post(
@@ -28,7 +36,7 @@ class TestRegister:
             json={
                 "username": test_user["username"],
                 "email": "other@example.com",
-                "password": "SecurePass123",
+                "password": "SecurePass123!",
             },
         )
 
@@ -41,7 +49,7 @@ class TestRegister:
             json={
                 "username": "anotheruser",
                 "email": test_user["email"],
-                "password": "SecurePass123",
+                "password": "SecurePass123!",
             },
         )
 
@@ -198,7 +206,7 @@ class TestForgotPassword:
             "/api/forgot-password/reset",
             json={
                 "token": token,
-                "new_password": "NewPassword789",
+                "new_password": "NewPassword789!",
             },
         )
 
@@ -209,7 +217,7 @@ class TestForgotPassword:
             "/api/login",
             json={
                 "username": test_user["username"],
-                "password": "NewPassword789",
+                "password": "NewPassword789!",
             },
         )
         assert login_response.status_code == 200
@@ -221,13 +229,13 @@ class TestForgotPassword:
 
         first = client.post(
             "/api/forgot-password/reset",
-            json={"token": token, "new_password": "NewPassword789"},
+            json={"token": token, "new_password": "NewPassword789!"},
         )
         assert first.status_code == 200
 
         second = client.post(
             "/api/forgot-password/reset",
-            json={"token": token, "new_password": "AnotherPassword123"},
+            json={"token": token, "new_password": "AnotherPassword123!"},
         )
         assert second.status_code == 400
 
@@ -236,7 +244,7 @@ class TestForgotPassword:
             "/api/forgot-password/reset",
             json={
                 "token": "not-a-real-token",
-                "new_password": "NewPassword789",
+                "new_password": "NewPassword789!",
             },
         )
 

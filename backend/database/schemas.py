@@ -1,7 +1,9 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
 from typing import Optional, List, Union, Literal, Dict, Any
 import datetime as dt
 from decimal import Decimal
+
+from utils.password_policy import validate_password_strength
 
 
 # ============= User Schemas =============
@@ -12,16 +14,28 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def _password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
-    password: Optional[str] = Field(default=None, min_length=6)
+    password: Optional[str] = Field(default=None, min_length=8)
     preferred_llm_provider: Optional[Literal["deepseek"]] = None
     home_city: Optional[str] = Field(default=None, max_length=255)
     tutorial_completed: Optional[bool] = None
+
+    @field_validator("password")
+    @classmethod
+    def _password_strength(cls, value: Optional[str]) -> Optional[str]:
+        if value is None or value == "":
+            return None
+        return validate_password_strength(value)
 
 
 class UserResponse(UserBase):
@@ -30,6 +44,7 @@ class UserResponse(UserBase):
     preferred_llm_provider: str = "deepseek"
     home_city: Optional[str] = None
     tutorial_completed: bool = False
+    email_verified: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -59,7 +74,12 @@ class LoginResponse(BaseModel):
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=8)
+
+    @field_validator("password")
+    @classmethod
+    def _password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class RegisterResponse(BaseModel):
@@ -78,10 +98,33 @@ class ForgotPasswordRequestResponse(BaseModel):
 
 class ForgotPasswordResetRequest(BaseModel):
     token: str
-    new_password: str = Field(..., min_length=6)
+    new_password: str = Field(..., min_length=8)
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
 
 
 class ForgotPasswordResetResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class VerifyEmailConfirmRequest(BaseModel):
+    token: str
+
+
+class VerifyEmailConfirmResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class VerifyEmailResendRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyEmailResendResponse(BaseModel):
     success: bool
     message: str
 

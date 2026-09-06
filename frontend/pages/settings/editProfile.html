@@ -71,28 +71,13 @@
                             <h2 class="main-page-panel-title" data-i18n="editProfile.passwordSection">Change password
                             </h2>
                             <p class="form-hint" data-i18n="editProfile.passwordHint">
-                                Leave blank to keep your current password.
+                                We’ll email you a reset link (same as “Forgot password”). Open the link to choose a new
+                                password.
                             </p>
-
-                            <div class="form-group">
-                                <label for="profileNewPassword" class="form-label" data-i18n="editProfile.newPassword">
-                                    New password
-                                </label>
-                                <input type="password" id="profileNewPassword" name="newPassword" minlength="6"
-                                    autocomplete="new-password" class="form-input"
-                                    data-i18n-placeholder="register.passwordPlaceholder"
-                                    placeholder="Choose a password">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="profileConfirmPassword" class="form-label"
-                                    data-i18n="editProfile.confirmPassword">
-                                    Confirm new password
-                                </label>
-                                <input type="password" id="profileConfirmPassword" name="confirmPassword" minlength="6"
-                                    autocomplete="new-password" class="form-input"
-                                    data-i18n-placeholder="register.confirmPasswordPlaceholder"
-                                    placeholder="Confirm your password">
+                            <div class="form-actions" style="margin-bottom: 1.25rem;">
+                                <button type="button" id="sendPasswordResetBtn" class="btn-add btn-add-outline">
+                                    <span data-i18n="editProfile.sendPasswordReset">Send password reset email</span>
+                                </button>
                             </div>
 
                             <p id="editProfileSuccess" class="edit-profile-message edit-profile-message--success"

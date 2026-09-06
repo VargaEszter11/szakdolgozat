@@ -55,3 +55,15 @@ def send_password_reset_email(to_address: str, reset_url: str, ttl_minutes: int)
         "If you didn't request this, you can safely ignore this email."
     )
     send_email(to_address, subject, body)
+
+
+def send_email_verification_email(to_address: str, verify_url: str, ttl_minutes: int) -> None:
+    subject = "Confirm your Planventure email"
+    hours = max(1, ttl_minutes // 60)
+    body = (
+        "Thanks for registering with Planventure.\n\n"
+        f"Click the link below to confirm your email address (expires in {hours} hours):\n"
+        f"{verify_url}\n\n"
+        "If you didn't create an account, you can safely ignore this email."
+    )
+    send_email(to_address, subject, body)

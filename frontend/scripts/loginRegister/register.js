@@ -15,14 +15,13 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
     const confirmPassword = document.getElementById("confirmPassword").value;
     const submitBtn = e.target.querySelector('[type="submit"]');
 
-    // Checks before hitting the API
     if (password !== confirmPassword) {
         showError(registerT("register.passwordMismatch", "Passwords do not match."));
         return;
     }
 
-    if (password.length < 6) {
-        showError(registerT("register.passwordTooShort", "Password must be at least 6 characters."));
+    if (!window.PasswordPolicy || !window.PasswordPolicy.isStrong(password)) {
+        showError(window.PasswordPolicy.message("register.passwordTooShort"));
         return;
     }
 
@@ -44,8 +43,8 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         const data = await response.json();
 
         if (data.success) {
-            window.location.href = "/login";
-
+            window.location.href =
+                "/login?registered=1&email=" + encodeURIComponent(email);
             return;
         }
         showError(

@@ -91,14 +91,15 @@ def test_user(db):
     user_data = schemas.UserCreate(
         username="testuser",
         email="testuser@example.com",
-        password="TestPassword123"
+        password="TestPassword123!"
     )
     user = crud.create_user(db=db, user=user_data)
+    crud.mark_user_email_verified(db, int(user.id))
     db.commit()
     return {
         "username": "testuser",
         "email": "testuser@example.com",
-        "password": "TestPassword123",
+        "password": "TestPassword123!",
         "id": user.id
     }
 
@@ -109,14 +110,15 @@ def test_user_2(db):
     user_data = schemas.UserCreate(
         username="testuser2",
         email="testuser2@example.com",
-        password="TestPassword456"
+        password="TestPassword456!"
     )
     user = crud.create_user(db=db, user=user_data)
+    crud.mark_user_email_verified(db, int(user.id))
     db.commit()
     return {
         "username": "testuser2",
         "email": "testuser2@example.com",
-        "password": "TestPassword456",
+        "password": "TestPassword456!",
         "id": user.id
     }
 

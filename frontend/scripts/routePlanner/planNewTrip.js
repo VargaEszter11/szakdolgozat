@@ -78,6 +78,19 @@ function resetPlannerFormFields() {
     document.querySelectorAll('.add-place-form .form-input').forEach((input) => {
         input.classList.toggle('has-value', !!String(input.value || '').trim());
     });
+
+    if (homeCity) {
+        const starting = document.getElementById('startingCity');
+        if (starting) {
+            starting.value = homeCity;
+            starting.classList.add('has-value');
+            starting.dispatchEvent(new Event('input', { bubbles: true }));
+            starting.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    if (typeof refreshHomeCityButtons === 'function') {
+        refreshHomeCityButtons();
+    }
 }
 
 function resetPlannerUi() {
@@ -130,21 +143,60 @@ function refreshPlannerDbHints() {
 
 let homeCity = '';
 
-function homeCityButtonLabel() {
-    const t = window.i18n ? window.i18n.t.bind(window.i18n) : (k, f) => f;
-    const key = homeCity ? 'planNewTrip.useHomeCity' : 'planNewTrip.setHomeCity';
-    const fallback = homeCity ? 'Use my home city' : 'Set as my home city';
-    return { key, text: t(key, fallback) };
+function citiesMatch(a, b) {
+    return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
-function refreshHomeCityButton() {
-    const btn = document.getElementById('useHomeCityBtn');
-    if (!btn) return;
-    const label = btn.querySelector('span');
-    if (!label) return;
-    const { key, text } = homeCityButtonLabel();
-    label.setAttribute('data-i18n', key);
-    label.textContent = text;
+function refreshHomeCityStatus(message, isSuccess) {
+    const status = document.getElementById('homeCityStatus');
+    if (!status) return;
+    if (!message) {
+        if (homeCity) {
+            status.textContent = planNewTripT('homeCityCurrent', 'Saved home city: {{city}}', {
+                city: homeCity
+            });
+            status.hidden = false;
+            status.classList.toggle('is-success', !!isSuccess);
+            return;
+        }
+        status.textContent = '';
+        status.hidden = true;
+        status.classList.remove('is-success');
+        return;
+    }
+    status.textContent = message;
+    status.hidden = false;
+    status.classList.toggle('is-success', !!isSuccess);
+}
+
+function refreshHomeCityButtons() {
+    const useBtn = document.getElementById('useHomeCityBtn');
+    const saveBtn = document.getElementById('saveHomeCityBtn');
+    const input = document.getElementById('startingCity');
+    if (!useBtn || !saveBtn) return;
+
+    const typed = input ? input.value.trim() : '';
+    const hasHome = !!homeCity;
+    const canSave = !!typed && !citiesMatch(typed, homeCity);
+
+    useBtn.hidden = !hasHome;
+    saveBtn.hidden = !canSave;
+
+    const useLabel = useBtn.querySelector('span');
+    if (useLabel) {
+        useLabel.setAttribute('data-i18n', 'planNewTrip.useHomeCity');
+        useLabel.textContent = planNewTripT('useHomeCity', 'Use my home city');
+    }
+
+    const saveLabel = saveBtn.querySelector('span');
+    if (saveLabel) {
+        const key = hasHome ? 'updateHomeCity' : 'setHomeCity';
+        const fallback = hasHome ? 'Update home city' : 'Set as my home city';
+        saveLabel.setAttribute('data-i18n', 'planNewTrip.' + key);
+        saveLabel.textContent = planNewTripT(key, fallback);
+    }
+
+    refreshHomeCityStatus();
 }
 
 async function userHasSavedVisitedPlaces(userId) {
@@ -169,10 +221,22 @@ async function saveHomeCity(userId, city) {
     return res.json();
 }
 
+function showHomeCityFormError(message, detail) {
+    const tripResults = document.getElementById('tripResults');
+    const resultsContainer = document.getElementById('resultsContainer');
+    if (tripResults && resultsContainer) {
+        showError(message, detail || '', tripResults, resultsContainer);
+    } else if (typeof window.showError === 'function') {
+        window.showError(message);
+    }
+}
+
 async function loadHomeCity() {
     const userId = localStorage.getItem('user_id');
-    const btn = document.getElementById('useHomeCityBtn');
-    if (!userId || !btn) return;
+    const useBtn = document.getElementById('useHomeCityBtn');
+    const saveBtn = document.getElementById('saveHomeCityBtn');
+    const input = document.getElementById('startingCity');
+    if (!userId || !useBtn || !saveBtn) return;
 
     try {
         const res = await fetch(`${API_BASE_URL}/api/users/${userId}`);
@@ -184,58 +248,71 @@ async function loadHomeCity() {
         console.warn('Could not load home city:', err);
     }
 
-    btn.hidden = false;
-    refreshHomeCityButton();
+    // Prefill starting city when empty so home city is one less step.
+    if (homeCity && input && !input.value.trim()) {
+        input.value = homeCity;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
-    btn.addEventListener('click', async () => {
-        const input = document.getElementById('startingCity');
-        if (!input) return;
+    refreshHomeCityButtons();
 
-        // Already have a home city saved: one click fills the field.
-        if (homeCity) {
+    if (input && !input.dataset.homeCityBound) {
+        input.dataset.homeCityBound = '1';
+        input.addEventListener('input', refreshHomeCityButtons);
+        input.addEventListener('change', refreshHomeCityButtons);
+    }
+
+    if (!useBtn.dataset.homeCityBound) {
+        useBtn.dataset.homeCityBound = '1';
+        useBtn.addEventListener('click', () => {
+            if (!homeCity || !input) return;
             input.value = homeCity;
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
-            return;
-        }
+            refreshHomeCityButtons();
+        });
+    }
 
-        // No home city yet: save whatever is currently typed as Starting
-        // City, then immediately use it — same click both sets and uses it.
-        const cityToSave = input.value.trim();
-        if (!cityToSave) {
-            input.focus();
-            const tripResults = document.getElementById('tripResults');
-            const resultsContainer = document.getElementById('resultsContainer');
-            if (tripResults && resultsContainer) {
-                showError(
-                    planNewTripT('homeCityRequired', 'Type a starting city first, then click again to save it as your home city.'),
-                    '',
-                    tripResults,
-                    resultsContainer
+    if (!saveBtn.dataset.homeCityBound) {
+        saveBtn.dataset.homeCityBound = '1';
+        saveBtn.addEventListener('click', async () => {
+            if (!input) return;
+            const cityToSave = input.value.trim();
+            if (!cityToSave) {
+                input.focus();
+                showHomeCityFormError(
+                    planNewTripT(
+                        'homeCityRequired',
+                        'Type a starting city first, then save it as your home city.'
+                    )
                 );
+                return;
             }
-            return;
-        }
+            if (citiesMatch(cityToSave, homeCity)) {
+                refreshHomeCityButtons();
+                return;
+            }
 
-        btn.disabled = true;
-        try {
-            const updated = await saveHomeCity(userId, cityToSave);
-            homeCity = (updated.home_city || '').trim();
-            refreshHomeCityButton();
-        } catch (err) {
-            console.warn('Could not save home city:', err);
-            const tripResults = document.getElementById('tripResults');
-            const resultsContainer = document.getElementById('resultsContainer');
-            const msg = planNewTripT('homeCitySaveFailed', 'Could not save home city. Please try again.');
-            if (tripResults && resultsContainer) {
-                showError(msg, (err && err.message) || '', tripResults, resultsContainer);
-            } else if (typeof window.showError === 'function') {
-                window.showError(msg);
+            saveBtn.disabled = true;
+            try {
+                const updated = await saveHomeCity(userId, cityToSave);
+                homeCity = (updated.home_city || cityToSave).trim();
+                refreshHomeCityButtons();
+                refreshHomeCityStatus(planNewTripT('homeCitySaved', 'Home city updated.'), true);
+            } catch (err) {
+                console.warn('Could not save home city:', err);
+                showHomeCityFormError(
+                    planNewTripT('homeCitySaveFailed', 'Could not save home city. Please try again.'),
+                    (err && err.message) || ''
+                );
+            } finally {
+                saveBtn.disabled = false;
             }
-        } finally {
-            btn.disabled = false;
-        }
-    });
+        });
+    }
+
+    window.addEventListener('app:languagechange', refreshHomeCityButtons);
 }
 
 function patchStalePlannerSession(session) {

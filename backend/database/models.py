@@ -43,6 +43,12 @@ class User(Base):
         default=False,
         server_default=text("false"),
     )
+    email_verified = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=text("false"),
+    )
 
     # Relationships
     planned_trips = relationship(
@@ -60,6 +66,23 @@ class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
     __table_args__ = (
         Index("idx_password_reset_tokens_token_hash", "token_hash", unique=True),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(Text, nullable=False, unique=True)
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User", foreign_keys=[user_id])
+
+
+class EmailVerificationToken(Base):
+    """Single-use token emailed after registration to confirm the account email."""
+    __tablename__ = "email_verification_tokens"
+    __table_args__ = (
+        Index("idx_email_verification_tokens_token_hash", "token_hash", unique=True),
     )
 
     id = Column(Integer, primary_key=True, index=True)

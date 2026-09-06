@@ -81,9 +81,17 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             saveSessionAndRedirect(data);
             return;
         }
-        showError(
-            apiErrorDetail(data, loginT("login.failed", "Login failed"))
-        );
+        var detail = apiErrorDetail(data, loginT("login.failed", "Login failed"));
+        if (response.status === 403 || /confirm your email/i.test(detail)) {
+            showError(
+                loginT(
+                    "login.emailNotVerified",
+                    "Please confirm your email before logging in. Check your inbox for the verification link."
+                )
+            );
+            return;
+        }
+        showError(detail);
     } catch (error) {
         console.error(error);
         showError(loginT("login.serverError", "Server error. Please try again later."));
@@ -253,3 +261,18 @@ async function initGoogleLogin() {
 }
 
 initGoogleLogin();
+
+(function showRegistrationNotice() {
+    try {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get("registered") !== "1") return;
+        showSuccess(
+            loginT(
+                "login.checkEmailAfterRegister",
+                "Account created. Please confirm your email, then log in."
+            )
+        );
+    } catch (e) {
+        /* ignore */
+    }
+})();

@@ -13,7 +13,7 @@ class TestCreateUser:
             json={
                 "username": "apiuser",
                 "email": "apiuser@example.com",
-                "password": "ApiPass123",
+                "password": "ApiPass123!",
             },
         )
 
@@ -29,7 +29,7 @@ class TestCreateUser:
             json={
                 "username": test_user["username"],
                 "email": "unique@example.com",
-                "password": "ApiPass123",
+                "password": "ApiPass123!",
             },
         )
 
@@ -185,7 +185,7 @@ class TestDeleteUser:
             user=schemas.UserCreate(
                 username="deleteme",
                 email="deleteme@example.com",
-                password="DeleteMe123",
+                password="DeleteMe123!",
             ),
         )
         db.commit()
