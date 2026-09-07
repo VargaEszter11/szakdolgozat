@@ -85,9 +85,12 @@ function showModal(options) {
 
 // Shorthand functions
 function showSuccess(message, onClose) {
-    if (typeof onClose === 'function') {
-        onClose();
-    }
+    showModal({
+        title: 'Success',
+        message,
+        type: 'success',
+        onClose
+    });
 }
 
 /** Normalize FastAPI error bodies (string or validation array) for display. */

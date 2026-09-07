@@ -38,7 +38,7 @@
         title: t('tutorial.homeLogTitle', 'Your travel log'),
         body: t(
           'tutorial.homeLogBody',
-          'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as photo cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in gold (with a small diagram summary beside it). It updates as you add more places.'
+          'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in yellow (with a small diagram summary beside it). It updates as you add more places.'
         ),
         page: /^\/$|^\/home$/,
         goto: '/',
@@ -143,7 +143,7 @@
         title: t('tutorial.profileTitle', 'Profile & settings'),
         body: t(
           'tutorial.profileBody',
-          'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, change the interface language (English, Hungarian, or German), and choose which AI assistant should generate your trip plans.'
+          'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, and change the interface language (English, Hungarian, or German).'
         ),
         page: /.*/,
         selectors: ['.main-header-profile', '[data-sidebar-id="settings"]'],
@@ -153,7 +153,7 @@
         title: t('tutorial.doneTitle', 'You are ready'),
         body: t(
           'tutorial.doneBody',
-          'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the Europe chart become much more useful with your own history. Happy travels!'
+          'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the chart become much more useful with your own travels. Happy travels!'
         ),
         page: /.*/,
         selectors: [],

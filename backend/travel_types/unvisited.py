@@ -144,7 +144,7 @@ async def generate_travel_plan_unvisited(
     prompt = (
         f"{system_travel_planner(lang_name)}"
         f"{user_trip_header(startingPoint, start_date_value, end_date_value, travelLength, preferences)}"
-        f"{places_context_block(forbidden_places=forbidden_places, extra_places=forbidden_places)}"
+        f"{places_context_block(forbidden_places=forbidden_places)}"
         "ALREADY VISITED (FORBIDDEN — do NOT include any of these cities):\n"
         f"{excluded_names}\n\n"
         "ALLOWED destinations (these are the ONLY cities you may use):\n"

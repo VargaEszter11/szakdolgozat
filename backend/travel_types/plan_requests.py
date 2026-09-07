@@ -184,7 +184,13 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
     preferences, liked_places, disliked_places = apply_stop_feedback(
         request.preferences, request.likedPlaces, request.dislikedPlaces
     )
+    forbidden_places = (
+        build_unvisited_forbidden_places(db, request.userId, request.additionalExclusions)
+        if request.userId is not None
+        else merge_exclusion_lists([], request.additionalExclusions)
+    )
     # Regenerate with keep/don't-keep: include keeps, exclude don't-keeps, add new places.
+    # Visited places must stay excluded even during regenerate.
     if liked_places or disliked_places:
         return await generate_plan_with_location(
             generate_travel_plan_random,
@@ -200,15 +206,10 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
             language=request.language,
             llm_provider=llm_provider,
             keep_places=liked_places,
-            forbidden_places=disliked_places,
+            forbidden_places=merge_exclusion_lists(forbidden_places, disliked_places),
             db=db,
         )
 
-    forbidden_places = (
-        build_unvisited_forbidden_places(db, request.userId, request.additionalExclusions)
-        if request.userId is not None
-        else merge_exclusion_lists([], request.additionalExclusions)
-    )
     return await generate_plan_with_location(
         generate_travel_plan_unvisited,
         request.startingPoint,

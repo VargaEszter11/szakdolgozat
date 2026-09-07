@@ -4,8 +4,6 @@ window.I18N_TRANSLATIONS = {
       cancel: 'Cancel',
       confirm: 'Confirm',
       areYouSure: 'Are you sure?',
-      ok: 'OK',
-      error: 'Error',
     },
     nav: {
       home: 'Home',
@@ -44,7 +42,6 @@ window.I18N_TRANSLATIONS = {
       europeCountriesCount: '{{visited}} of {{total}} European countries',
       europeChartVisited: 'Visited',
       europeChartNotVisited: 'Not visited yet',
-      europeChartVisits: '{{count}} places',
       homeCountryTooltip: 'Home · {{country}}',
       statCities: 'Cities visited',
       statTrips: 'Planned trips',
@@ -52,25 +49,16 @@ window.I18N_TRANSLATIONS = {
       statDaysAbroad: 'Days abroad',
       mapUnavailable: 'Map could not be loaded.',
       noNotes: 'No notes.',
-      myTravelLog: 'My Travel Log',
-      addTrip: 'Add Trip',
       loading: 'Loading…',
       noTravelsYet: 'No travels yet.',
       loginRequired: 'Please <a href="{{href}}">log in</a> to see your travel log.',
-      loadFailed: 'Failed to load travel log. Please try again later.',
-      startYourJourney: 'Start Your Journey',
-      documentYourAdventures: 'Document your adventures, share your experiences, and inspire others to explore the world.',
-      whetherItsAGetawayOrACrossContinentalExpedition: 'Whether it\'s a weekend getaway or a cross-continental expedition, keep all your travel memories in one place.',
-      places: '200+ new places',
-      planTrips: 'Plan Trips',
-      stories: 'Share Stories'
+      loadFailed: 'Failed to load travel log. Please try again later.'
     },
     tutorial: {
       skip: 'Skip tour',
       next: 'Next',
       finish: 'Get started',
       hintClick: 'Click the highlighted control to continue.',
-      hintFallback: 'Use the button below to continue.',
       hintNext: 'Press Next when you are ready.',
       chooseLanguageTitle: 'Choose your language',
       chooseLanguageBody:
@@ -81,7 +69,7 @@ window.I18N_TRANSLATIONS = {
         'Planventure is your personal travel diary and trip planner for Europe. Add the places you\'ve visited, pick a few preferences, and the app puts together a trip for you — no manual stop-by-stop planning needed.\n\nHere\'s a quick tour of the main screens. Feel free to skip if you\'d rather dive in yourself.',
       homeLogTitle: 'Your travel log',
       homeLogBody:
-        'Home is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as photo cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in gold (with a small diagram summary beside it). It updates as you add more places.',
+        'The Homepage is your dashboard. At the top, quick stats show cities, trips, countries, and days abroad. Recent visits appear as cards so you can reopen notes quickly.\n\nFurther down, a Europe map highlights countries you have visited in yellow (with a small diagram summary beside it). It updates as you add more places.',
       addPlaceTitle: 'Add a visited place',
       addPlaceBody:
         'Start by logging places you have already been to. Each saved place feeds your visited list, the chart, the map, and the trip planner.\n\nClick the highlighted Add button to open the form and create your first entry.',
@@ -108,10 +96,10 @@ window.I18N_TRANSLATIONS = {
         'Saved itineraries live under Planned Trips. Open a trip to review stops, adjust details, follow booking links, and keep track of what you have arranged.\n\nYou can share a trip with a public link or invite another Planventure user. Incoming invitations appear in the share inbox on this page.',
       profileTitle: 'Profile & settings',
       profileBody:
-        'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, change the interface language (English, Hungarian, or German), and choose which AI assistant should generate your trip plans.',
+        'Your profile menu is in the top bar for account-related actions.\n\nIn Settings you can switch light, dark, or auto theme, and change the interface language (English, Hungarian, or German).',
       doneTitle: 'You are ready',
       doneBody:
-        'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the chart become much more useful with your own history. Happy travels!'
+        'That is the core loop: log places you visit → browse them on the list and map → let the app plan a trip for you → save and share the result.\n\nAdd a few real places when you can — automatic planning and the chart become much more useful with your own travels. Happy travels!'
     },
     visitedPlaces: {
       title: 'Visited Places',
@@ -128,12 +116,10 @@ window.I18N_TRANSLATIONS = {
       editTitle: 'Edit place',
       saveChanges: 'Save changes',
       saving: 'Saving…',
-      editSuccess: 'Place updated.',
       editFailed: 'Could not save changes. Please try again.',
       editInvalid: 'Cannot edit this place.',
       placeNameRequired: 'Please enter a place name.',
       removePhoto: 'Remove photo',
-      replacePhotoHint: 'Upload a new photo (PNG or JPG, max 10 MB)',
       addPhotosHint:
         'Add photos (PNG or JPG, max 10 MB each). You can select several at once or add more in another step.',
       clearNewPhoto: 'Remove new photo',
@@ -177,7 +163,7 @@ window.I18N_TRANSLATIONS = {
       photos: 'Photos',
       placeNamePlaceholder: 'e.g., Paris',
       countryPlaceholder: 'Start typing, e.g. Hungary',
-      descriptionPlaceholder: 'Brief highlight of your visit',
+      descriptionPlaceholder: 'Brief description of your visit',
       photosPlaceholder: 'Click to upload photos',
       photosHint: 'PNG or JPG, max 10 MB each; you can add several',
       add: 'Add Place',
@@ -228,7 +214,7 @@ window.I18N_TRANSLATIONS = {
       generating: 'Generating...',
       retryPlan: 'Retry',
       saveTrip: 'Save Trip',
-      stopRatingLabel: 'Keep or remove this stop',
+      stopRatingLabel: "Keep or don't keep this stop",
       stopLike: 'Keep',
       stopDislike: "Don't keep",
       savedMessage: 'Trip saved successfully. You can find it under Planned Trips.',
@@ -332,7 +318,6 @@ window.I18N_TRANSLATIONS = {
       editFieldTransport: 'Transport from previous stop',
       editFieldActivities: 'Activities',
       editFieldReturnDate: 'Return date',
-      editReturnHomeDateNote: 'Return home — date follows the trip end date (no separate stay).',
       returnHomeStop: 'Return home',
       editAddStop: 'Add stop',
       editRemoveStop: 'Remove',
@@ -383,8 +368,7 @@ window.I18N_TRANSLATIONS = {
     travelPlanner: {
       useDbTravelLog: 'Use travel log from database',
       useDbTravelLogHint:
-        'When enabled, your saved visited places are included in "visited" trip plans and excluded when you plan trips to unvisited places.',
-      saveFailed: 'Could not save this setting. Please try again.'
+        'When enabled, your saved visited places are included in "visited" trip plans and excluded when you plan trips to unvisited places.'
     },
     profile: {
       editProfile: 'Edit Profile',
@@ -431,6 +415,8 @@ window.I18N_TRANSLATIONS = {
       dismiss: 'Dismiss',
       shareTitle: 'Shared trip invitation',
       shareBody: '{{user}} shared “{{trip}}” with you.',
+      shareAcceptedTitle: 'Shared trip accepted',
+      shareAcceptedBody: '{{user}} accepted your shared trip “{{trip}}”.',
       feedbackSolvedTitle: 'Feedback marked as solved',
       tripCompletedTitle: 'Trip completed',
       tripCompletedBody: '“{{trip}}” ended on {{date}}.',
@@ -448,8 +434,6 @@ window.I18N_TRANSLATIONS = {
       homeCityPlaceholder: 'e.g. Budapest',
       homeCityHint: 'Used to fill in the starting city with one click when planning a new trip.',
       passwordSection: 'Change password',
-      newPassword: 'New password',
-      confirmPassword: 'Confirm new password',
       passwordHint: 'We’ll email you a reset link. Open the link to choose a new password.',
       sendPasswordReset: 'Send password reset email',
       save: 'Save changes',
@@ -463,9 +447,6 @@ window.I18N_TRANSLATIONS = {
       usernameTaken: 'Username already taken.',
       emailTaken: 'Email already registered.',
       userNotFound: 'User not found.',
-      passwordMismatch: 'New passwords do not match.',
-      passwordTooShort: 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.',
-      passwordBoth: 'Enter and confirm your new password.',
       validationRequired: 'Username and email are required.'
     },
     login: {
@@ -487,7 +468,7 @@ window.I18N_TRANSLATIONS = {
       failed: 'Login failed',
       serverError: 'Server error. Please try again later.',
       emailNotVerified: 'Please confirm your email before logging in. Check your inbox for the verification link.',
-      checkEmailAfterRegister: 'Account created. Please confirm your email, then log in.',
+      checkEmailAfterRegister: 'Registration successful. A confirmation email was sent to your email address.',
       forgotPasswordLink: 'Forgot your password?',
       showPassword: 'Show password',
       hidePassword: 'Hide password',
@@ -550,8 +531,7 @@ window.I18N_TRANSLATIONS = {
       passwordMismatch: 'Passwords do not match.',
       passwordTooShort: 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number, and a special character.',
       resetFailed: 'Reset failed.',
-      serverError: 'Server error. Please try again later.',
-      successMessage: 'Your password has been reset. You can now log in.'
+      serverError: 'Server error. Please try again later.'
     },
     admin: {
       title: 'Admin: data export / import',
@@ -581,7 +561,6 @@ window.I18N_TRANSLATIONS = {
       invalidFile: 'Selected file is not valid JSON.',
       invalidSecret: 'Invalid admin secret.',
       serverError: 'Server error. Please try again later.',
-      feedbackSection: 'Feedback',
       feedbackLoading: 'Loading…',
       feedbackEmpty: 'No feedback yet.',
       feedbackDelete: 'Delete',
@@ -607,8 +586,6 @@ window.I18N_TRANSLATIONS = {
       cancel: 'Mégse',
       confirm: 'Megerősítés',
       areYouSure: 'Biztos vagy benne?',
-      ok: 'OK',
-      error: 'Hiba',
     },
     nav: {
       home: 'Főoldal',
@@ -625,7 +602,7 @@ window.I18N_TRANSLATIONS = {
     settings: {
       title: 'Beállítások',
       pageTitle: 'Beállítások – Planventure',
-      subtitle: 'Személyre szabhatod a Planventure élményt',
+      subtitle: 'Személyre szabhatod a Planventure élményedet',
       theme: 'Téma',
       themeLight: 'Világos',
       themeDark: 'Sötét',
@@ -633,7 +610,7 @@ window.I18N_TRANSLATIONS = {
       language: 'Nyelv',
       saveSettings: 'Beállítások mentése',
       cancel: 'Mégse',
-      savedMessage: 'Beállítások sikeresen mentve!',
+      savedMessage: 'Beállítások sikeresen elmentve!',
       langOptionEn: 'Angol',
       langOptionHu: 'Magyar',
       langOptionDe: 'Német'
@@ -647,7 +624,6 @@ window.I18N_TRANSLATIONS = {
       europeCountriesCount: '{{visited}} / {{total}} európai ország',
       europeChartVisited: 'Meglátogatva',
       europeChartNotVisited: 'Még nem látogatott',
-      europeChartVisits: '{{count}} hely',
       homeCountryTooltip: 'Otthon · {{country}}',
       statCities: 'Meglátogatott város',
       statTrips: 'Megtervezett út',
@@ -655,25 +631,16 @@ window.I18N_TRANSLATIONS = {
       statDaysAbroad: 'Külföldi nap',
       mapUnavailable: 'A térkép nem tölthető be.',
       noNotes: 'Nincs jegyzet.',
-      myTravelLog: 'Utazási naplóm',
-      addTrip: 'Utazás hozzáadása',
       loading: 'Betöltés…',
       noTravelsYet: 'Még nincsenek utazásaid.',
       loginRequired: 'A napló megtekintéséhez <a href="{{href}}">jelentkezz be</a>.',
-      loadFailed: 'Nem sikerült betölteni az utazási naplót. Próbáld meg később újra.',
-      startYourJourney: 'Kezdd el az utazásod',
-      documentYourAdventures: 'Örökítsd meg kalandjaidat, oszd meg élményeidet, és inspirálj másokat a világ felfedezésére.',
-      whetherItsAGetawayOrACrossContinentalExpedition: 'Legyen szó egy hétvégi kiruccanásról vagy egy kontinenseken átívelő expedícióról, tartsd meg minden utazási emléked egy helyen.',
-      places: '200+ új hely',
-      planTrips: 'Utazások tervezése',
-      stories: 'Történetek megosztása'
+      loadFailed: 'Nem sikerült betölteni az utazási naplót. Próbáld meg később újra.'
     },
     tutorial: {
       skip: 'Kihagyás',
       next: 'Tovább',
       finish: 'Kezdjük',
       hintClick: 'Kattints a kiemelt gombra a folytatáshoz.',
-      hintFallback: 'A folytatáshoz használd az alábbi gombot.',
       hintNext: 'Ha kész vagy, nyomd meg a Tovább gombot.',
       chooseLanguageTitle: 'Válaszd ki a nyelvet',
       chooseLanguageBody:
@@ -684,59 +651,57 @@ window.I18N_TRANSLATIONS = {
         'A Planventure a személyes utazási naplód és automatikus európai utazás terveződ. Rögzítsd a már meglátogatott helyeidet, adj meg néhány preferenciát és hagyd, hogy az alkalmazás megtervezze neked a következő utazásodat, nem neked kell manuálisan megállóról megállóra összerakni.\n\nEz a bemutató lépésről lépésre végigvezet a fő képernyőkön. Bármikor kihagyhatod, ha inkább egyedül szeretnél felfedezni.',
       homeLogTitle: 'Az utazási naplód',
       homeLogBody:
-        'A főoldal a vezérlőpultod. Felül gyors statisztikák mutatják a városokat, utakat, országokat és a külföldi napokat. A legutóbbi látogatások fotós kártyákként jelennek meg.\n\nAlább egy Európa-térkép arannyal jelöli a meglátogatott országokat (mellett egy kis diagram összefoglalóval). Ahogy új helyeket adsz hozzá, frissül.',
+        'A főoldal a vezérlőpultod. Felül gyors statisztikák mutatják a városokat, utakat, országokat és a külföldi napokat. A legutóbbi látogatások kártyákként jelennek meg.\n\nLejjebb egy Európa-térkép sárgával jelöli a meglátogatott országokat (mellette egy kis diagram összefoglalóval). Ahogy új helyeket adsz hozzá, frissül.',
       addPlaceTitle: 'Adj hozzá meglátogatott helyet',
       addPlaceBody:
-        'Kezdd azokkal a városokkal és településekkel, ahol már jártál. Minden mentett hely táplálja a listádat, a diagramot, a térképet és az útitervezőt.\n\nKattints a kiemelt Hozzáadás gombra, hogy megnyíljon az űrlap, és rögzítsd az első bejegyzést.',
+        'Kezdd azokkal a városokkal és településekkel, ahol már jártál. Minden mentett hely frissíti a listádat, a diagramot, a térképet és az útitervezőt.\n\nKattints a kiemelt Hozzáadás gombra, hogy megnyíljon az űrlap, és rögzítsd az első bejegyzést.',
       addFormTitle: 'Töltsd ki a hely adatait',
       addFormBody:
         'Add meg a hely nevét, és válaszd ki az országot a javaslatok közül, hogy az elnevezések egységesek maradjanak. Állíts be kezdő dátumot, és opcionálisan befejező dátumot többnapos tartózkodáshoz.\n\nCsillagokkal értékelheted a látogatást, írhatsz rövid leírást, és feltölthetsz fotókat. Mentés után a hely megjelenik a főoldalon, a Meglátogatott helyek listán és a térképen.',
       visitedTitle: 'Böngészd a meglátogatott helyeket',
       visitedBody:
-        'A Meglátogatott helyek az összes rögzített helyed teljes listája, a legújabbal kezdve.\n\nNyiss meg egy kártyát a részletekhez, jegyzetekhez és fotókhoz. A ceruza ikonnal szerkesztheted a nevet, országot, dátumokat, értékelést, leírást vagy fotókat — vagy törölhetsz egy már nem kellő helyet.',
+        'A Meglátogatott helyek az összes rögzített helyed teljes listája, a legújabbal kezdve.\n\nNyiss meg egy kártyát a részletekhez, jegyzetekhez és fotókhoz. A ceruza ikonnal szerkesztheted a nevet, országot, dátumokat, értékelést, leírást vagy fotókat, vagy törölhetsz egy már nem kellő helyet.',
       mapTitle: 'Térkép nézet',
       mapBody:
         'A Térkép nézet minden rögzített megállót földrajzilag megjelenít, így egy pillantással látod, hogy mely környékeket fedezted már fel jobban és melyeket kevésbé.\n\nHasznos, ha a következő úticélod szeretnéd kiválasztani, vagy egy már ismert régiót szeretnél újra felfedezni.',
       planTitle: 'Tervezz új utat',
       planBody:
-        'Ha új útitervet szeretnél, nyisd meg az Új utazás tervezése menüpontot az oldalsávból (vagy egy olyan Hozzáadás gombot, ami a tervezőhöz vezet).\n\nFontos: az alkalmazás helyetted tervezi meg az utat. Te választod a módot és a preferenciákat; ő generálja a teljes, napokra bontott útvonalat közlekedéssel és programokkal — nem együtt szerkesztitek az útitervet.',
+        'Ha új útitervet szeretnél, nyisd meg az Új utazás tervezése menüpontot az oldalsávból (vagy egy olyan Hozzáadás gombot, ami a tervezőhöz vezet).\n\nFontos: az alkalmazás helyetted tervezi meg az utat. Te választod a módot és a preferenciákat; ő generálja a teljes, napokra bontott útvonalat közlekedéssel és programokkal, nem együtt szerkesztitek az útitervet.',
       modesTitle: 'Válassz tervezési módot',
       modesBody:
         'Először válaszd ki, hogyan kerüljenek be a célpontok:\n\n• Meglátogatott — olyan helyek köré épít utat, amelyeket már rögzítettél.\n• Meg nem látogatott — új városokat fedez fel, elkerülve a már meglátogatottakat.\n• Véletlenszerű — az app meglep egy útitervvel.\n\nVálaszd a célodnak megfelelő módot, majd folytasd az űrlappal.',
       formTitle: 'Állítsd be az út részleteit',
       formBody:
-        'Add meg a kiindulási várost, az út dátumait, az utasok számát és a preferált közlekedést (például szárazföldi közlekedés, vagy repülővel bővített opciók). Az opcionális megjegyzések segítenek finomhangolni az eredményt.\n\nEzután generáld az utat: az alkalmazás elkészíti a teljes tervet helyetted. Nézd át, mentsd a Tervezett utak közé, és később szükség szerint módosítsd.',
+        'Add meg a kiindulási várost, az út dátumait, az utasok számát és a preferált közlekedést (például szárazföldi közlekedés, vagy repülő). Az opcionális megjegyzések segítenek finomhangolni az eredményt.\n\nEzután generáltasd le az utat: az alkalmazás elkészíti a teljes tervet helyetted. Nézd át, mentsd a Tervezett utak közé, és később szükség szerint módosítsd.',
       plannedTitle: 'Tervezett utak és megosztás',
       plannedBody:
-        'A mentett útitervek a Tervezett utak alatt találhatók. Nyiss meg egy utat a megállók áttekintéséhez, részletek módosításához, foglalási linkek követéséhez, és ahhoz, hogy nyomon kövesd, hogy állsz a szervezéssel.\n\nMegoszthatsz egy utat nyilvános linkkel, vagy meghívhatsz egy másik Planventure-felhasználót. A bejövő meghívók ezen az oldalon, a megosztási értesítéseknél jelennek meg.',
+        'A mentett útitervek a Tervezett utak alatt találhatók. Nyiss meg egy utat a megállók áttekintéséhez, részletek módosításához, foglalási linkek követéséhez, és ahhoz, hogy nyomon kövesd, hogy állsz a szervezéssel.\n\nMegoszthatsz egy utat nyilvános linkkel, vagy meghívhatsz egy másik Planventure felhasználót. A bejövő meghívók ezen az oldalon, a megosztási értesítéseknél jelennek meg.',
       profileTitle: 'Profil és beállítások',
       profileBody:
-        'A profilmenüd a felső sávban van a fiókkal kapcsolatos műveletekhez.\n\nA Beállításokban válthatsz világos, sötét vagy automatikus témát, módosíthatod a felület nyelvét (angol, magyar vagy német), és kiválaszthatod, melyik MI asszisztens generálja az útiterveidet.',
+        'A profilod a felső sávban van a fiókkal kapcsolatos műveletekhez.\n\nA Beállításokban válthatsz világos, sötét vagy automatikus témát vagy módosíthatod a felület nyelvét (angol, magyar vagy német).',
       doneTitle: 'Kész vagy',
       doneBody:
-        'Ez a lényeg: naplózd a meglátogatott helyeket → böngészd őket listán és térképen → hagyd, hogy az app megtervezze az utat helyetted → mentsd és oszd meg az eredményt.\n\nAmikor tudsz, adj hozzá néhány valódi helyet — az automatikus tervezés és az Európa-diagram sokkal hasznosabb a saját történeteddel. Jó felfedezést!'
+        'Ez a lényeg: jegyezd fel a meglátogatott helyeket → böngészd őket listán és térképen → hagyd, hogy az app megtervezze az utat helyetted → mentsd el és oszd meg az eredményt.\n\nAmikor tudsz, adj hozzá néhány valódi helyet, az automatikus tervezés és az diagram sokkal hasznosabb a saját utazásaiddal. Jó felfedezést!'
     },
     visitedPlaces: {
       title: 'Meglátogatott helyek',
       pageTitle: 'Meglátogatott helyek – Planventure',
       mapPageTitle: 'Térkép nézet – Planventure',
       subtitle: 'Utazási emlékeid és élményeid',
-      placesCountSuffix: 'meglátogatott hely. Fedezz fel még!',
+      placesCountSuffix: 'meglátogatott hely. Fedezz fel újakat!',
       mapView: 'Térkép nézet',
       emptyText: 'Még nincsenek helyek.',
       addFirstPlace: 'Add hozzá az első helyedet',
       mapViewTitle: 'Térkép nézet',
-      mapViewSubtitle: 'Lásd az összes meglátogatott helyedet a térképen',
+      mapViewSubtitle: 'Nézd meg az összes meglátogatott helyedet a térképen',
       editPlace: 'Hely szerkesztése',
       editTitle: 'Hely szerkesztése',
       saveChanges: 'Módosítások mentése',
       saving: 'Mentés…',
-      editSuccess: 'Hely frissítve.',
       editFailed: 'A mentés sikertelen. Próbáld újra.',
       editInvalid: 'Ez a hely nem szerkeszthető.',
       placeNameRequired: 'Add meg a hely nevét.',
       removePhoto: 'Fénykép eltávolítása',
-      replacePhotoHint: 'Új fénykép feltöltése (PNG vagy JPG, max. 10 MB)',
       addPhotosHint:
         'Fényképek hozzáadása (PNG vagy JPG, max. 10 MB darabonként). Egyszerre többet is kiválaszthatsz, vagy később újabbakat adhatsz hozzá.',
       clearNewPhoto: 'Új fénykép törlése',
@@ -780,7 +745,7 @@ window.I18N_TRANSLATIONS = {
       photos: 'Fényképek',
       placeNamePlaceholder: 'pl. Párizs',
       countryPlaceholder: 'Kezdj el gépelni, pl. Magyarország',
-      descriptionPlaceholder: 'Rövid kiemelés a látogatásról',
+      descriptionPlaceholder: 'Rövid leírás a látogatásról',
       photosPlaceholder: 'Kattints fényképek feltöltéséhez',
       photosHint: 'PNG vagy JPG, legfeljebb 10 MB darabonként; több fájl is választható',
       add: 'Hely hozzáadása',
@@ -831,9 +796,9 @@ window.I18N_TRANSLATIONS = {
       generating: 'Generálás...',
       retryPlan: 'Újrapróbálás',
       saveTrip: 'Utazás mentése',
-      stopRatingLabel: 'Tartsd meg vagy vedd ki',
+      stopRatingLabel: 'Tartsd meg vagy ne tartsd meg',
       stopLike: 'Megtart',
-      stopDislike: 'Ne tartsd',
+      stopDislike: 'Nem tart meg',
       savedMessage: 'Az utazás sikeresen mentve. A Tervezett utak között találod.',
       yourTrip: 'Az utazásod',
       readyNotification: 'Az útiterved elkészült',
@@ -865,7 +830,7 @@ window.I18N_TRANSLATIONS = {
       createTripFailed: 'Az utazás létrehozása sikertelen',
       saveStopFailed: 'A {{n}}. megálló mentése sikertelen (HTTP {{status}})',
       orphanTripHint:
-        'Egy üres utazás maradhat a Tervezett utak között — töröld kézzel.',
+        'Egy üres utazás maradhatott a Tervezett utak között — töröld kézzel.',
       errorLabel: 'Hiba:',
       datesRequired: 'Válaszd ki a kezdő és záró dátumot is.',
       endDateAfterStart: 'A záró dátumnak a kezdő dátum után kell lennie.',
@@ -907,8 +872,8 @@ window.I18N_TRANSLATIONS = {
       shareSendError: 'Az utazás megosztása sikertelen.',
       sharedTripTitle: 'Megosztott útiterv',
       sharedTripReadOnly: 'Csak olvasható megosztott utazás',
-      sharedTripMissingToken: 'Hiányzó megosztó link token.',
-      sharedTripNotFound: 'Érvénytelen vagy lejárt megosztó link.',
+      sharedTripMissingToken: 'Hiányzó megosztási link token.',
+      sharedTripNotFound: 'Érvénytelen vagy lejárt megosztási link.',
       sharedTripLoadError: 'A megosztott utazás betöltése sikertelen.',
       shareFromUser: 'Feladó: {{user}}',
       sharedByLabel: 'Megosztotta',
@@ -935,7 +900,6 @@ window.I18N_TRANSLATIONS = {
       editFieldTransport: 'Közlekedés az előző megállótól',
       editFieldActivities: 'Programok',
       editFieldReturnDate: 'Hazatérés dátuma',
-      editReturnHomeDateNote: 'Hazatérés — a dátum az utazás záró dátumát követi (nincs külön tartózkodás).',
       returnHomeStop: 'Hazatérés',
       editAddStop: 'Megálló hozzáadása',
       editRemoveStop: 'Eltávolítás',
@@ -950,7 +914,7 @@ window.I18N_TRANSLATIONS = {
       loadDetailsFailed: 'Nem sikerült betölteni az utazás részleteit',
       editTitleRequired: 'Az utazás címe kötelező.',
       editStopsRequired: 'Az utazásnak legalább egy megállója kell legyen.',
-      editStopPlaceRequired: 'Minden megállónak kell helyneve.',
+      editStopPlaceRequired: 'Minden megállónak kell helynév.',
       editSaveError: 'A mentés sikertelen.',
       editLoadError: 'Az utazás betöltése szerkesztéshez sikertelen.',
       suggestedActivities: 'Ajánlott programok',
@@ -986,8 +950,7 @@ window.I18N_TRANSLATIONS = {
     travelPlanner: {
       useDbTravelLog: 'Utazási napló használata az adatbázisból',
       useDbTravelLogHint:
-        'Bekapcsolva a mentett meglátogatott helyek bekerülnek a „már látott” tervekbe, és kizárásra kerülnek a „még nem látott” terveknél.',
-      saveFailed: 'A beállítás mentése sikertelen. Próbáld újra.'
+        'Bekapcsolva a mentett meglátogatott helyek bekerülnek a „már látott” tervekbe, és kizárásra kerülnek a „még nem látott” terveknél.'
     },
     profile: {
       editProfile: 'Profil szerkesztése',
@@ -1026,7 +989,7 @@ window.I18N_TRANSLATIONS = {
       feedbackStatusSolved: 'Megoldva',
       feedbackDetailTitle: 'Visszajelzés részletei',
       feedbackDetailClose: 'Bezárás',
-      feedbackHasImage: 'Van kép',
+      feedbackHasImage: 'Képet tartalmaz',
     },
     notifications: {
       title: 'Értesítések',
@@ -1034,6 +997,8 @@ window.I18N_TRANSLATIONS = {
       dismiss: 'Elvetés',
       shareTitle: 'Megosztott utazás',
       shareBody: '{{user}} megosztotta veled: „{{trip}}”.',
+      shareAcceptedTitle: 'Megosztott utazás elfogadva',
+      shareAcceptedBody: '{{user}} elfogadta a megosztott utazásod: „{{trip}}”.',
       feedbackSolvedTitle: 'Visszajelzés megoldva',
       tripCompletedTitle: 'Utazás lezárult',
       tripCompletedBody: '„{{trip}}” vége: {{date}}.',
@@ -1051,8 +1016,6 @@ window.I18N_TRANSLATIONS = {
       homeCityPlaceholder: 'pl. Budapest',
       homeCityHint: 'Ezzel egy kattintással kitöltheted a kiindulási várost új út tervezésekor.',
       passwordSection: 'Jelszó módosítása',
-      newPassword: 'Új jelszó',
-      confirmPassword: 'Új jelszó megerősítése',
       passwordHint: 'E-mailben küldünk visszaállító linket. A linken tudsz új jelszót megadni.',
       sendPasswordReset: 'Jelszó-visszaállító e-mail küldése',
       save: 'Változások mentése',
@@ -1066,9 +1029,6 @@ window.I18N_TRANSLATIONS = {
       usernameTaken: 'Ez a felhasználónév már foglalt.',
       emailTaken: 'Ez az e-mail cím már regisztrálva van.',
       userNotFound: 'A felhasználó nem található.',
-      passwordMismatch: 'Az új jelszavak nem egyeznek.',
-      passwordTooShort: 'A jelszónak legalább 8 karakterből kell állnia, tartalmaznia kell nagy- és kisbetűt, számot és speciális karaktert.',
-      passwordBoth: 'Add meg és erősítsd meg az új jelszót.',
       validationRequired: 'A felhasználónév és az e-mail kötelező.'
     },
     login: {
@@ -1090,7 +1050,7 @@ window.I18N_TRANSLATIONS = {
       failed: 'Bejelentkezés sikertelen',
       serverError: 'Szerverhiba. Próbáld újra később.',
       emailNotVerified: 'A bejelentkezés előtt erősítsd meg az e-mail címed. Nézd meg a postafiókod a megerősítő linkért.',
-      checkEmailAfterRegister: 'A fiók létrejött. Erősítsd meg az e-mailed, majd jelentkezz be.',
+      checkEmailAfterRegister: 'Sikeres regisztráció. Megerősítő e-mailt küldtünk az e-mail címedre.',
       forgotPasswordLink: 'Elfelejtetted a jelszavad?',
       showPassword: 'Jelszó megjelenítése',
       hidePassword: 'Jelszó elrejtése',
@@ -1153,8 +1113,7 @@ window.I18N_TRANSLATIONS = {
       passwordMismatch: 'A jelszavak nem egyeznek.',
       passwordTooShort: 'A jelszónak legalább 8 karakterből kell állnia, tartalmaznia kell nagy- és kisbetűt, számot és speciális karaktert.',
       resetFailed: 'A visszaállítás sikertelen.',
-      serverError: 'Szerverhiba történt. Kérjük, próbáld újra később.',
-      successMessage: 'A jelszavad sikeresen megváltozott. Most már bejelentkezhetsz.'
+      serverError: 'Szerverhiba történt. Kérjük, próbáld újra később.'
     },
     admin: {
       title: 'Admin: adat export / import',
@@ -1184,7 +1143,6 @@ window.I18N_TRANSLATIONS = {
       invalidFile: 'A kiválasztott fájl nem érvényes JSON.',
       invalidSecret: 'Érvénytelen admin jelszó.',
       serverError: 'Szerverhiba történt. Kérjük, próbáld újra később.',
-      feedbackSection: 'Visszajelzések',
       feedbackLoading: 'Betöltés…',
       feedbackEmpty: 'Még nincs visszajelzés.',
       feedbackDelete: 'Törlés',
@@ -1210,8 +1168,6 @@ window.I18N_TRANSLATIONS = {
       cancel: 'Abbrechen',
       confirm: 'Bestätigen',
       areYouSure: 'Bist du sicher?',
-      ok: 'OK',
-      error: 'Fehler',
     },
     nav: {
       home: 'Startseite',
@@ -1250,7 +1206,6 @@ window.I18N_TRANSLATIONS = {
       europeCountriesCount: '{{visited}} von {{total}} europäischen Ländern',
       europeChartVisited: 'Besucht',
       europeChartNotVisited: 'Noch nicht besucht',
-      europeChartVisits: '{{count}} Orte',
       homeCountryTooltip: 'Zuhause · {{country}}',
       statCities: 'Städte besucht',
       statTrips: 'Geplante Reisen',
@@ -1258,25 +1213,16 @@ window.I18N_TRANSLATIONS = {
       statDaysAbroad: 'Tage im Ausland',
       mapUnavailable: 'Karte konnte nicht geladen werden.',
       noNotes: 'Keine Notizen.',
-      myTravelLog: 'Mein Reisetagebuch',
-      addTrip: 'Reise hinzufügen',
       loading: 'Lädt…',
       noTravelsYet: 'Noch keine Reisen.',
       loginRequired: 'Bitte <a href="{{href}}">melde dich an</a>, um dein Reisetagebuch zu sehen.',
-      loadFailed: 'Reisetagebuch konnte nicht geladen werden. Bitte versuche es später erneut.',
-      startYourJourney: 'Starte deine Reise',
-      documentYourAdventures: 'Halte deine Abenteuer fest, teile deine Erfahrungen und inspiriere andere.',
-      whetherItsAGetawayOrACrossContinentalExpedition: 'Ob Wochenendausflug oder Expedition – bewahre alle Reiseerinnerungen an einem Ort.',
-      places: '200+ neue Orte',
-      planTrips: 'Reisen planen',
-      stories: 'Geschichten teilen'
+      loadFailed: 'Reisetagebuch konnte nicht geladen werden. Bitte versuche es später erneut.'
     },
     tutorial: {
       skip: 'Tour überspringen',
       next: 'Weiter',
       finish: 'Loslegen',
       hintClick: 'Klicke auf das hervorgehobene Element, um fortzufahren.',
-      hintFallback: 'Nutze die Schaltfläche unten, um fortzufahren.',
       hintNext: 'Drücke Weiter, wenn du bereit bist.',
       chooseLanguageTitle: 'Sprache wählen',
       chooseLanguageBody:
@@ -1287,7 +1233,7 @@ window.I18N_TRANSLATIONS = {
         'Planventure ist dein persönliches Reisetagebuch und automatischer Reiseplaner für Europa. Du trägst Orte ein, die du bereits besucht hast, legst ein paar Vorlieben fest — und die App plant die Reise für dich (du planst hier nicht selbst Station für Station).\n\nDiese kurze Tour zeigt dir die wichtigsten Bildschirme. Du kannst jederzeit überspringen, wenn du lieber selbst erkunden möchtest.',
       homeLogTitle: 'Dein Reisetagebuch',
       homeLogBody:
-        'Die Startseite ist dein Dashboard. Oben zeigen Schnellstatistiken Städte, Reisen, Länder und Tage unterwegs. Kürzlich besuchte Orte erscheinen als Fotokarten.\n\nDarunter hebt eine Europakarte besuchte Länder in Gold hervor (daneben eine kleine Diagramm-Zusammenfassung). Sie aktualisiert sich, wenn du weitere Orte hinzufügst.',
+        'Die Startseite ist dein Dashboard. Oben zeigen Schnellstatistiken Städte, Reisen, Länder und Tage unterwegs. Kürzlich besuchte Orte erscheinen als Karten.\n\nDarunter hebt eine Europakarte besuchte Länder in Gelb hervor (daneben eine kleine Diagramm-Zusammenfassung). Sie aktualisiert sich, wenn du weitere Orte hinzufügst.',
       addPlaceTitle: 'Besuchten Ort hinzufügen',
       addPlaceBody:
         'Beginne mit Städten und Orten, an denen du schon warst. Jeder gespeicherte Ort speist deine Liste, das Europa-Diagramm, die Karte und den Reiseplaner.\n\nKlicke auf den hervorgehobenen Hinzufügen-Button, um das Formular zu öffnen und deinen ersten Eintrag anzulegen.',
@@ -1314,10 +1260,10 @@ window.I18N_TRANSLATIONS = {
         'Gespeicherte Routen findest du unter Geplante Reisen. Öffne eine Reise, um Stopps zu prüfen, Details anzupassen, Buchungslinks zu folgen und im Blick zu behalten, was du schon organisiert hast.\n\nDu kannst eine Reise per öffentlichem Link teilen oder einen anderen Planventure-Nutzer einladen. Eingehende Einladungen erscheinen im Teilen-Posteingang auf dieser Seite.',
       profileTitle: 'Profil & Einstellungen',
       profileBody:
-        'Dein Profilmenü liegt in der oberen Leiste für kontobezogene Aktionen.\n\nIn den Einstellungen wechselst du Hell-, Dunkel- oder Auto-Theme, änderst die Sprache der Oberfläche (Englisch, Ungarisch oder Deutsch) und wählst, welcher KI-Assistent deine Reisepläne erzeugen soll.',
+        'Dein Profilmenü liegt in der oberen Leiste für kontobezogene Aktionen.\n\nIn den Einstellungen wechselst du Hell-, Dunkel- oder Auto-Theme und änderst die Sprache der Oberfläche (Englisch, Ungarisch oder Deutsch).',
       doneTitle: 'Du bist startklar',
       doneBody:
-        'Das ist der Kernablauf: Orte erfassen → auf Liste und Karte durchstöbern → die App die Reise für dich planen lassen → Ergebnis speichern und teilen.\n\nFüge nach Möglichkeit ein paar echte Orte hinzu — automatische Planung und Europa-Diagramm werden mit deiner eigenen Geschichte deutlich nützlicher. Viel Spaß beim Entdecken!'
+        'Das ist der Kernablauf: Orte erfassen → auf Liste und Karte durchstöbern → die App die Reise für dich planen lassen → Ergebnis speichern und teilen.\n\nFüge nach Möglichkeit ein paar echte Orte hinzu — automatische Planung und das Diagramm werden mit deinen eigenen Reisen deutlich nützlicher. Viel Spaß beim Entdecken!'
     },
     visitedPlaces: {
       title: 'Besuchte Orte',
@@ -1334,12 +1280,10 @@ window.I18N_TRANSLATIONS = {
       editTitle: 'Ort bearbeiten',
       saveChanges: 'Änderungen speichern',
       saving: 'Wird gespeichert…',
-      editSuccess: 'Ort aktualisiert.',
       editFailed: 'Speichern fehlgeschlagen. Bitte erneut versuchen.',
       editInvalid: 'Dieser Ort kann nicht bearbeitet werden.',
       placeNameRequired: 'Bitte gib einen Ort ein.',
       removePhoto: 'Foto entfernen',
-      replacePhotoHint: 'Neues Foto hochladen (PNG oder JPG, max. 10 MB)',
       addPhotosHint:
         'Fotos hinzufügen (PNG oder JPG, max. 10 MB pro Datei). Mehrere Dateien auf einmal oder später weitere auswählen.',
       clearNewPhoto: 'Neues Foto entfernen',
@@ -1383,7 +1327,7 @@ window.I18N_TRANSLATIONS = {
       photos: 'Fotos',
       placeNamePlaceholder: 'z. B. Paris',
       countryPlaceholder: 'Tippen Sie, z. B. Ungarn',
-      descriptionPlaceholder: 'Kurze Highlights deines Besuchs',
+      descriptionPlaceholder: 'Kurze Beschreibung deines Besuchs',
       photosPlaceholder: 'Klicken, um Fotos hochzuladen',
       photosHint: 'PNG oder JPG, max. 10 MB pro Datei; mehrere Dateien möglich',
       add: 'Ort hinzufügen',
@@ -1434,7 +1378,7 @@ window.I18N_TRANSLATIONS = {
       generating: 'Wird generiert...',
       retryPlan: 'Erneut versuchen',
       saveTrip: 'Reise speichern',
-      stopRatingLabel: 'Stop behalten oder entfernen',
+      stopRatingLabel: 'Behalten oder nicht behalten',
       stopLike: 'Behalten',
       stopDislike: 'Nicht behalten',
       savedMessage: 'Reise erfolgreich gespeichert. Du findest sie unter Geplante Reisen.',
@@ -1538,7 +1482,6 @@ window.I18N_TRANSLATIONS = {
       editFieldTransport: 'Transport vom vorherigen Stopp',
       editFieldActivities: 'Aktivitäten',
       editFieldReturnDate: 'Heimkehrdatum',
-      editReturnHomeDateNote: 'Heimkehr — das Datum folgt dem Reiseende (kein eigener Aufenthalt).',
       returnHomeStop: 'Heimkehr',
       editAddStop: 'Stopp hinzufügen',
       editRemoveStop: 'Entfernen',
@@ -1589,8 +1532,7 @@ window.I18N_TRANSLATIONS = {
     travelPlanner: {
       useDbTravelLog: 'Reisetagebuch aus der Datenbank nutzen',
       useDbTravelLogHint:
-        'Wenn aktiviert, werden gespeicherte besuchte Orte in „besuchte“ Reisepläne einbezogen und bei „unbesuchten“ Plänen ausgeschlossen.',
-      saveFailed: 'Einstellung konnte nicht gespeichert werden. Bitte erneut versuchen.'
+        'Wenn aktiviert, werden gespeicherte besuchte Orte in „besuchte“ Reisepläne einbezogen und bei „unbesuchten“ Plänen ausgeschlossen.'
     },
     profile: {
       editProfile: 'Profil bearbeiten',
@@ -1637,6 +1579,8 @@ window.I18N_TRANSLATIONS = {
       dismiss: 'Verwerfen',
       shareTitle: 'Geteilte Reise',
       shareBody: '{{user}} hat „{{trip}}” mit dir geteilt.',
+      shareAcceptedTitle: 'Geteilte Reise angenommen',
+      shareAcceptedBody: '{{user}} hat deine geteilte Reise „{{trip}}” angenommen.',
       feedbackSolvedTitle: 'Feedback als erledigt markiert',
       tripCompletedTitle: 'Reise abgeschlossen',
       tripCompletedBody: '„{{trip}}” endete am {{date}}.',
@@ -1654,8 +1598,6 @@ window.I18N_TRANSLATIONS = {
       homeCityPlaceholder: 'z. B. Budapest',
       homeCityHint: 'Damit kannst du die Startstadt bei der Planung einer neuen Reise mit einem Klick ausfüllen.',
       passwordSection: 'Passwort ändern',
-      newPassword: 'Neues Passwort',
-      confirmPassword: 'Neues Passwort bestätigen',
       passwordHint: 'Wir senden dir einen Reset-Link per E-Mail. Über den Link wählst du ein neues Passwort.',
       sendPasswordReset: 'E-Mail zum Zurücksetzen senden',
       save: 'Änderungen speichern',
@@ -1669,9 +1611,6 @@ window.I18N_TRANSLATIONS = {
       usernameTaken: 'Benutzername bereits vergeben.',
       emailTaken: 'E-Mail bereits registriert.',
       userNotFound: 'Benutzer nicht gefunden.',
-      passwordMismatch: 'Die neuen Passwörter stimmen nicht überein.',
-      passwordTooShort: 'Das Passwort muss mindestens 8 Zeichen haben und Groß-/Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
-      passwordBoth: 'Neues Passwort eingeben und bestätigen.',
       validationRequired: 'Benutzername und E-Mail sind erforderlich.'
     },
     login: {
@@ -1693,7 +1632,7 @@ window.I18N_TRANSLATIONS = {
       failed: 'Anmeldung fehlgeschlagen',
       serverError: 'Serverfehler. Bitte versuche es später erneut.',
       emailNotVerified: 'Bitte bestätige deine E-Mail, bevor du dich anmeldest. Prüfe deinen Posteingang auf den Bestätigungslink.',
-      checkEmailAfterRegister: 'Konto erstellt. Bitte bestätige deine E-Mail und melde dich dann an.',
+      checkEmailAfterRegister: 'Registrierung erfolgreich. Eine Bestätigungs-E-Mail wurde an deine E-Mail-Adresse gesendet.',
       forgotPasswordLink: 'Passwort vergessen?',
       showPassword: 'Passwort anzeigen',
       hidePassword: 'Passwort verbergen',
@@ -1756,8 +1695,7 @@ window.I18N_TRANSLATIONS = {
       passwordMismatch: 'Die Passwörter stimmen nicht überein.',
       passwordTooShort: 'Das Passwort muss mindestens 8 Zeichen haben und Groß-/Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.',
       resetFailed: 'Zurücksetzen fehlgeschlagen.',
-      serverError: 'Serverfehler. Bitte versuche es später erneut.',
-      successMessage: 'Dein Passwort wurde zurückgesetzt. Du kannst dich jetzt anmelden.'
+      serverError: 'Serverfehler. Bitte versuche es später erneut.'
     },
     admin: {
       title: 'Admin: Datenexport / -import',
@@ -1787,7 +1725,6 @@ window.I18N_TRANSLATIONS = {
       invalidFile: 'Die ausgewählte Datei ist kein gültiges JSON.',
       invalidSecret: 'Ungültiges Admin-Geheimnis.',
       serverError: 'Serverfehler. Bitte versuche es später erneut.',
-      feedbackSection: 'Feedback',
       feedbackLoading: 'Laden…',
       feedbackEmpty: 'Noch kein Feedback.',
       feedbackDelete: 'Löschen',

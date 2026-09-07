@@ -61,6 +61,15 @@
         })
       };
     }
+    if (type === 'share_accepted') {
+      return {
+        title: t('notifications.shareAcceptedTitle', 'Shared trip accepted'),
+        body: t('notifications.shareAcceptedBody', '{{user}} accepted your shared trip “{{trip}}”.', {
+          user: meta.to_username || 'Someone',
+          trip: meta.trip_title || 'Trip'
+        })
+      };
+    }
     if (type === 'feedback_solved') {
       return {
         title: t('notifications.feedbackSolvedTitle', 'Feedback marked as solved'),

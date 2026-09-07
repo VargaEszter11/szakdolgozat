@@ -71,6 +71,42 @@ def list_notifications(
             )
         )
 
+    today = date.today()
+    accepted_cutoff = today - timedelta(days=90)
+    accepted_invitations = crud.list_trip_share_invitations_from_user(db, user_id, status="accepted")
+    for inv in accepted_invitations:
+        inv_any = cast(Any, inv)
+        responded_at = _iso_dt(inv_any.responded_at)
+        if responded_at is not None and responded_at.date() < accepted_cutoff:
+            continue
+        trip = crud.get_planned_trip(db, int(inv_any.source_trip_id))
+        to_user = crud.get_user(db, int(inv_any.to_user_id))
+        trip_title = (
+            str(cast(Any, trip).title)
+            if trip is not None and getattr(trip, "title", None)
+            else "Trip"
+        )
+        to_name = (
+            str(cast(Any, to_user).username)
+            if to_user is not None
+            else f"user#{inv_any.to_user_id}"
+        )
+        items.append(
+            schemas.NotificationItem(
+                id=f"share_accepted:{int(inv_any.id)}",
+                type="share_accepted",
+                title="Shared trip accepted",
+                body=f"{to_name} accepted your shared trip “{trip_title}”.",
+                href="/trips",
+                created_at=responded_at,
+                meta={
+                    "invitation_id": int(inv_any.id),
+                    "trip_title": trip_title,
+                    "to_username": to_name,
+                },
+            )
+        )
+
     feedback_rows = crud.list_feedbacks_for_user(db, user_id, limit=50)
     for row in feedback_rows:
         fb = cast(Any, row)
@@ -91,7 +127,6 @@ def list_notifications(
             )
         )
 
-    today = date.today()
     # Keep completed-trip alerts relevant (last 90 days).
     oldest = today - timedelta(days=90)
     trips = crud.get_user_planned_trips(db, user_id)

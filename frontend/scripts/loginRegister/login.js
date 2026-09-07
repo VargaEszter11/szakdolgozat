@@ -322,12 +322,12 @@ initGoogleLogin();
 
 (function showRegistrationNotice() {
     try {
-        var params = new URLSearchParams(window.location.search);
-        if (params.get("registered") !== "1") return;
+        if (sessionStorage.getItem("justRegistered") !== "1") return;
+        sessionStorage.removeItem("justRegistered");
         showSuccess(
             loginT(
                 "login.checkEmailAfterRegister",
-                "Account created. Please confirm your email, then log in."
+                "Registration successful. A confirmation email was sent to your email address."
             )
         );
     } catch (e) {

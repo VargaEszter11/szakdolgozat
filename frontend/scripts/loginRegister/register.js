@@ -43,8 +43,12 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
         const data = await response.json();
 
         if (data.success) {
-            window.location.href =
-                "/login?registered=1&email=" + encodeURIComponent(email);
+            try {
+                sessionStorage.setItem("justRegistered", "1");
+            } catch (e) {
+                /* ignore */
+            }
+            window.location.href = "/login";
             return;
         }
         showError(

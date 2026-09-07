@@ -1093,6 +1093,18 @@ def list_trip_share_invitations_for_user(
     return query.order_by(models.TripShareInvitation.created_at.desc()).all()
 
 
+def list_trip_share_invitations_from_user(
+    db: Session, user_id: int, status: str = "accepted"
+) -> List[models.TripShareInvitation]:
+    """Invitations sent by this user (used to notify the sender when accepted)."""
+    query = db.query(models.TripShareInvitation).filter(
+        models.TripShareInvitation.from_user_id == user_id
+    )
+    if status:
+        query = query.filter(models.TripShareInvitation.status == status)
+    return query.order_by(models.TripShareInvitation.created_at.desc()).all()
+
+
 def accept_trip_share_invitation(
     db: Session, invitation_id: int, user_id: int
 ) -> models.TripShareInvitation:
