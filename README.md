@@ -1,6 +1,6 @@
-# Thesis: Travel Tracking and Planning Web Application
+# Planventure: Travel Tracking and Planning Web Application
 
-BSc in Computer Science Engineering
+Thesis for BSc in Computer Science Engineering
 
 ## What it is
 
@@ -12,9 +12,10 @@ A web app for frequent travellers to keep **visited places** and **planned trips
 - **Plan new trip** — routes from visited places, unvisited destinations, or random suggestions; LLM via DeepSeek
 - **Planned trips** — saved plans with detail/edit modals, booking status, stop management, and date consistency when editing first/last stops
 - **Trip sharing** — public read-only link (`/share`) and in-app invitations to other users
-- **Auth** — register/login, Google OAuth (optional), password reset by email
+- **Auth** — register/login, Google OAuth (optional), email verification, password reset by email
 - **Profile & settings** — profile editing, travel stats, theme (light/dark/auto), language (EN / HU / DE)
-- **Admin** — protected data export/import between environments (optional `ADMIN_SECRET`)
+- **Feedback & notifications** — in-app user feedback (with images) and notifications
+- **Admin** — protected data export/import between environments, feedback review (optional `ADMIN_SECRET`)
 
 ## Stack
 
@@ -25,7 +26,7 @@ A web app for frequent travellers to keep **visited places** and **planned trips
 | Database | PostgreSQL |
 | Deploy   | Docker Compose (`db` + `backend` + `frontend`) |
 
-Optional integrations (see `.env.example`): Nominatim geocoding, DeepSeek, Google OAuth, AirLabs, SMTP.
+Optional integrations (see `.env.example`): Nominatim geocoding, DeepSeek, Google OAuth, SMTP.
 
 ## Quick start (Docker)
 
@@ -36,11 +37,9 @@ copy .env.example .env
 docker compose up --build -d
 ```
 
-Open **http://localhost** (frontend on port 80; API proxied to the backend).
+The `frontend` service only `expose`s port 80 to other containers (it's meant to sit behind a reverse proxy in production, see `PUBLIC_BASE_URL`). For local access, either put a reverse proxy in front of it or add a `ports: ["80:80"]` mapping to the `frontend` service (e.g. via a `docker-compose.override.yaml`), then open **http://localhost**.
 
-Pretty URLs (via nginx): `/`, `/places`, `/places/map`, `/places/new`, `/trips`, `/trips/new`, `/share`, `/settings`, `/settings/profile`, `/profile`, `/login`, `/register`, `/reset-password`, `/admin`, `/admin/feedback`.
-
-Local Compose overrides (`docker-compose.override.yaml`) also publish Postgres on host port **5433**.
+Pretty URLs (via nginx): `/`, `/places`, `/places/map`, `/places/new`, `/trips`, `/trips/new`, `/share`, `/settings`, `/settings/profile`, `/profile`, `/login`, `/register`, `/reset-password`, `/verify-email`, `/admin`, `/admin/feedback`.
 
 Stop:
 
@@ -79,6 +78,7 @@ Copy `.env.example` → `.env` and fill what you need. Important groups:
 | Geocoding | `NOMINATIM_USER_AGENT` (required by OSM policy) |
 | Password reset email | `SMTP_*`, optionally `PUBLIC_BASE_URL` |
 | Admin tools | `ADMIN_SECRET` |
+| Auth tokens | `JWT_SECRET` (falls back to an insecure dev default if unset) |
 
 ## Tests
 
@@ -96,7 +96,7 @@ frontend/          Static pages, scripts, styles
 docker/            nginx config for the frontend container
 unit_tests/        Backend unit tests
 integration_tests/ Backend workflow tests
-uploads/           User uploads (place images; volume in Docker)
+uploads/           User uploads (place & feedback images; volume in Docker)
 docker-compose.yaml
 .env.example
 requirements.txt
@@ -104,4 +104,4 @@ requirements.txt
 
 ## API overview
 
-Routers are mounted under `/api` (auth, users, places, trips, stops, sharing, admin). Trip generation also uses `/generate_travel_plans/…`. Interactive docs when the backend is up: `/docs`.
+Routers are mounted under `/api` (auth, users, places, trips, stops, sharing, admin, feedback, notifications). Trip generation also uses `/generate_travel_plans/…`. Interactive docs when the backend is up: `/docs`.
