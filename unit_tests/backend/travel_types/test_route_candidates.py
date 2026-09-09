@@ -762,7 +762,58 @@ async def test_build_candidates_skips_direct_routes_for_train_bus_ferry(monkeypa
 
 
 @pytest.mark.asyncio
-async def test_build_candidates_uses_random_filter_when_strategy_is_visited(monkeypatch):
+async def test_build_candidates_visited_strategy_excludes_unvisited_cities(monkeypatch):
+    """Once a leg has no reachable *visited* destination, it must not offer new cities."""
+    async def fake_get_direct_destinations_cached(db, current_airport):
+        return [
+            {"iata": "FCO", "city": "Rome", "country": "IT"},
+            {"iata": "JFK", "city": "New York", "country": "US"},
+        ]
+
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.get_direct_destinations_cached",
+        fake_get_direct_destinations_cached,
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ground_candidates_from_airport",
+        lambda *args, **kwargs: [
+            {"iata": "VIE", "city": "Vienna", "country": "AT", "transport": "bus", "distance_km": 220}
+        ],
+    )
+    monkeypatch.setattr(
+        "backend.travel_types.route_candidates.ferry_candidates_from_airport",
+        lambda *args, **kwargs: [],
+    )
+
+    # Rome is reachable and on the visited list -> only Rome should come back.
+    result = await build_candidates(
+        db=None,
+        strategy="visited",
+        current_airport="BUD",
+        hub_iata="HUB",
+        used_iatas=set(),
+        visited_places=["Rome, Italy"],
+        forbidden_places=[],
+    )
+    assert [c["iata"] for c in result] == ["FCO"]
+
+    # Nothing reachable matches the visited list -> no candidates at all, not a
+    # random unvisited city (Vienna/New York must not appear).
+    result_none_left = await build_candidates(
+        db=None,
+        strategy="visited",
+        current_airport="BUD",
+        hub_iata="HUB",
+        used_iatas=set(),
+        visited_places=["Prague, Czechia"],
+        forbidden_places=[],
+    )
+    assert result_none_left == []
+
+
+@pytest.mark.asyncio
+async def test_build_candidates_keeps_visited_filter_for_visited_strategy(monkeypatch):
+    """Visited mode must never fall back to unrestricted (random) candidates."""
     captured = {}
 
     async def fake_get_direct_destinations_cached(db, current_airport):
@@ -799,4 +850,4 @@ async def test_build_candidates_uses_random_filter_when_strategy_is_visited(monk
         forbidden_places=[],
     )
 
-    assert captured["strategies"] == ["random", "random", "random"]
+    assert captured["strategies"] == ["visited", "visited", "visited"]

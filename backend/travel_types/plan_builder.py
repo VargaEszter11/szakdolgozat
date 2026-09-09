@@ -170,6 +170,28 @@ def _merge_place_lists(*groups: Optional[List[str]]) -> List[str]:
     return out
 
 
+def _drop_forbidden_places(places: List[str], forbidden_places: List[str]) -> List[str]:
+    """A forbidden (e.g. already-visited) place can never be a keep/required target.
+
+    Without this, a liked stop from an earlier regenerate round — or a typed
+    "visit" place that also happens to be on the exclusion list — would still
+    get force-included via the place-access fallback, which doesn't check
+    ``forbidden_places`` itself.
+    """
+    if not forbidden_places:
+        return places
+    forbidden_cities = {extract_city(p) for p in forbidden_places if extract_city(p)}
+    if not forbidden_cities:
+        return places
+    out = []
+    for place in places:
+        city = extract_city(place)
+        if city and any(city in fc or fc in city for fc in forbidden_cities):
+            continue
+        out.append(place)
+    return out
+
+
 def _merge_requested_with_ranked(requested_matches: List[dict], ranked: List[dict]) -> List[dict]:
     out = []
     seen: set[str] = set()
@@ -789,11 +811,15 @@ async def build_plan(
     from utils.countries import resolve_country_code
 
     home_country = resolve_country_code(home_country) or (home_country or "")
-    keep_places = list(keep_places or [])
-    # Strategy targets (visited typed/log) stay separate from regenerate keep targets.
-    requested_places = _merge_place_lists(visited_places, extra_places)
     forbidden_places = forbidden_places or []
     extra_places = extra_places or []
+    # A forbidden place (already visited / disliked) must never be forced into the
+    # plan, even as a "keep" or "required" target.
+    keep_places = _drop_forbidden_places(list(keep_places or []), forbidden_places)
+    # Strategy targets (visited typed/log) stay separate from regenerate keep targets.
+    requested_places = _drop_forbidden_places(
+        _merge_place_lists(visited_places, extra_places), forbidden_places
+    )
 
     plan: List[Dict[str, Any]] = []
     current_airport = starting_airport_iata

@@ -77,6 +77,17 @@ def test_merge_helpers_and_format_parse():
     assert plan_builder._parse_json_object("nope") is None
 
 
+def test_drop_forbidden_places_strips_matches():
+    """A forbidden (already-visited) place must never survive as a keep/required target."""
+    assert plan_builder._drop_forbidden_places(
+        ["Rome, Italy", "Vienna, Austria"], ["Rome, Italy"]
+    ) == ["Vienna, Austria"]
+    # No forbidden places -> untouched.
+    assert plan_builder._drop_forbidden_places(["Rome, Italy"], []) == ["Rome, Italy"]
+    # City-only matching, case-insensitive.
+    assert plan_builder._drop_forbidden_places(["rome"], ["Rome, Italy"]) == []
+
+
 def test_clamp_and_minimum_days():
     assert plan_builder._minimum_stop_days(5) == 2
     assert plan_builder._minimum_stop_days(1) == 1
@@ -487,3 +498,47 @@ async def test_build_plan_happy_path(monkeypatch):
     assert result["startingPoint"] == "Budapest, Hungary"
     assert result["plan"][0]["city"] == "Vienna"
     assert len(sessions) >= 2
+
+
+@pytest.mark.asyncio
+async def test_build_plan_never_forces_a_forbidden_keep_or_required_place(monkeypatch):
+    """A liked/typed place that is also forbidden (e.g. already visited) must be
+    dropped before it ever reaches candidate resolution — it must not be forced
+    into the trip via the place-access fallback."""
+
+    class FakeSession:
+        def close(self):
+            return None
+
+    monkeypatch.setattr(plan_builder, "SessionLocal", lambda: FakeSession())
+    monkeypatch.setattr(plan_builder, "split_place_label", lambda p: ("Budapest", "Hungary"))
+    monkeypatch.setattr(plan_builder, "resolve_home_hub_transfer", AsyncMock(return_value=None))
+    monkeypatch.setattr(plan_builder, "_append_return_home", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "refresh_booking_details", lambda *a, **k: None)
+
+    captured = {}
+
+    async def fake_ranked_step_candidates(db, **kwargs):
+        captured["requested_places"] = kwargs["requested_places"]
+        captured["keep_places"] = kwargs["keep_places"]
+        return [], []
+
+    monkeypatch.setattr(plan_builder, "_ranked_step_candidates", fake_ranked_step_candidates)
+
+    await plan_builder.build_plan(
+        strategy="unvisited",
+        starting_point="Budapest, Hungary",
+        starting_airport_iata="BUD",
+        travel_length=5,
+        preferences=[],
+        start_date="2026-07-01",
+        end_date="2026-07-06",
+        language="en",
+        llm_provider="deepseek",
+        extra_places=["Rome, Italy"],
+        keep_places=["Rome, Italy", "Vienna, Austria"],
+        forbidden_places=["Rome, Italy"],
+    )
+
+    assert captured["requested_places"] == []
+    assert captured["keep_places"] == ["Vienna, Austria"]

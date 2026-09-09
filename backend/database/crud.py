@@ -119,10 +119,12 @@ def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate) -> O
         return None
     
     update_data = user_update.model_dump(exclude_unset=True)
-    
-    # Hash password if it's being updated
-    if "password" in update_data:
+
+    # Hash password if it's being updated; a null/blank value means "no change".
+    if update_data.get("password"):
         update_data["password"] = hash_password(update_data["password"])
+    else:
+        update_data.pop("password", None)
     
     for key, value in update_data.items():
         setattr(db_user, key, value)

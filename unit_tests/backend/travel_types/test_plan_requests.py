@@ -298,3 +298,43 @@ async def test_generate_plan_wrappers_delegate(monkeypatch):
         endDate="2026-07-06",
     )
     assert (await pg.generate_random_plan(random_req, MagicMock()))["func"] == "generate_travel_plan_random"
+
+
+@pytest.mark.asyncio
+async def test_regenerate_with_stop_feedback_keeps_original_planning_mode(monkeypatch):
+    """Keep/don't-keep on stops must not fall back to the random strategy."""
+
+    async def fake_with_location(func, *args, **kwargs):
+        return {"func": func.__name__, "args": args, "kwargs": kwargs}
+
+    monkeypatch.setattr(pg, "generate_plan_with_location", fake_with_location)
+    monkeypatch.setattr(pg, "planner_context", lambda request, db: (5, "deepseek"))
+    monkeypatch.setattr(pg, "build_unvisited_forbidden_places", lambda db, user_id, extras: ["Prague"])
+    monkeypatch.setattr(pg, "merge_exclusion_lists", lambda *groups: [p for g in groups for p in (g or [])])
+
+    visited_req = pg.GenerationRequest(
+        visitedPlaces=["Vienna"],
+        startingPoint="Budapest",
+        startDate="2026-07-01",
+        endDate="2026-07-06",
+        likedPlaces=["Rome, Italy"],
+        dislikedPlaces=["Milan, Italy"],
+    )
+    out = await pg.generate_visited_plan(visited_req, MagicMock())
+    assert out["func"] == "generate_travel_plan_visited"
+    assert out["kwargs"]["keep_places"] == ["Rome, Italy"]
+    assert out["kwargs"]["forbidden_places"] == ["Milan, Italy"]
+
+    unvisited_req = pg.UnvisitedGenerationRequest(
+        startingPoint="Budapest",
+        startDate="2026-07-01",
+        endDate="2026-07-06",
+        userId=1,
+        likedPlaces=["Rome, Italy"],
+        dislikedPlaces=["Milan, Italy"],
+    )
+    out2 = await pg.generate_unvisited_plan(unvisited_req, MagicMock())
+    assert out2["func"] == "generate_travel_plan_unvisited"
+    assert out2["kwargs"]["keep_places"] == ["Rome, Italy"]
+    # Positional forbidden_places arg merges the DB/manual exclusions with the disliked stop.
+    assert out2["args"][3] == ["Prague", "Milan, Italy"]

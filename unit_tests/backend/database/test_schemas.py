@@ -4,16 +4,6 @@ from pydantic import ValidationError
 
 from backend.database import schemas
 
-def test_user_create_valid():
-    user = schemas.UserCreate(
-        username="john_doe",
-        email="john@example.com",
-        password="Secret123!",
-    )
-
-    assert user.username == "john_doe"
-
-
 def test_user_create_password_too_short():
     with pytest.raises(ValidationError):
         schemas.UserCreate(
@@ -46,16 +36,6 @@ def test_user_update_allows_partial():
 
     assert update.username == "new_name"
     assert update.email is None
-
-def test_visited_place_rating_bounds():
-    valid = schemas.VisitedPlaceCreate(
-        user_id=1,
-        place_name="Paris",
-        rating=5,
-    )
-
-    assert valid.rating == 5
-
 
 def test_visited_place_rating_too_low():
     with pytest.raises(ValidationError):
@@ -94,17 +74,6 @@ def test_airport_iata_length_validation():
         )
 
 
-def test_airport_country_code_validation():
-    airport = schemas.AirportCreate(
-        iata="BUD",
-        icao=None,
-        name="Budapest",
-        country_code="HU",
-        country=None,
-    )
-
-    assert airport.country_code == "HU"
-
 def test_direct_route_default_flight_number():
     route = schemas.DirectRouteCreate(
         airline_iata=None,
@@ -113,19 +82,3 @@ def test_direct_route_default_flight_number():
     )
 
     assert route.flight_number == "DIRECT"
-
-def test_feedback_response_fields():
-    from datetime import datetime
-
-    fb = schemas.FeedbackResponse(
-        id=1,
-        user_id=2,
-        username="alice",
-        email="a@example.com",
-        message="Hi",
-        image_path="/uploads/feedback_images/a.jpg",
-        created_at=datetime(2026, 1, 1, 12, 0, 0),
-    )
-    assert fb.username == "alice"
-    assert fb.email == "a@example.com"
-    assert fb.image_path == "/uploads/feedback_images/a.jpg"

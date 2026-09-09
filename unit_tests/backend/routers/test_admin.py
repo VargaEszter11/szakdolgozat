@@ -120,6 +120,7 @@ def test_admin_export(monkeypatch, client, db_mock, tmp_path):
     table_rows = {
         "users": [{"id": 1}],
         "password_reset_tokens": [],
+        "email_verification_tokens": [],
         "airlines": [],
         "airports": [],
         "direct_routes": [],

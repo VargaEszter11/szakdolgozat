@@ -127,13 +127,23 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
     preferences, liked_places, disliked_places = apply_stop_feedback(
         request.preferences, request.likedPlaces, request.dislikedPlaces
     )
-    # Regenerate with keep/don't-keep: only those two rules, then fill with new places.
+
+    visited_places = list(request.visitedPlaces)
+    if request.userId is not None:
+        visited_places = build_visited_places_from_db(
+            db, request.userId, request.visitedPlaces
+        )
+    extra_places = list(request.extraPlaces or [])
+
+    # Regenerate with keep/don't-keep: apply those two rules on top of the same
+    # visited-places pool. Stay in "visited" mode — never fill with unvisited cities.
     if liked_places or disliked_places:
         return await generate_plan_with_location(
-            generate_travel_plan_random,
+            generate_travel_plan_visited,
             request.startingPoint,
             travel_length,
             preferences,
+            visited_places,
             starting_point=request.startingPoint,
             start_date=request.startDate,
             end_date=request.endDate,
@@ -142,17 +152,12 @@ async def generate_visited_plan(request: GenerationRequest, db: Session) -> dict
             preferredTransport=request.preferredTransport,
             language=request.language,
             llm_provider=llm_provider,
+            extra_places=extra_places,
             keep_places=liked_places,
             forbidden_places=disliked_places,
             db=db,
         )
 
-    visited_places = list(request.visitedPlaces)
-    if request.userId is not None:
-        visited_places = build_visited_places_from_db(
-            db, request.userId, request.visitedPlaces
-        )
-    extra_places = list(request.extraPlaces or [])
     if not merge_exclusion_lists(visited_places, extra_places):
         raise HTTPException(
             status_code=400,
@@ -190,13 +195,15 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
         else merge_exclusion_lists([], request.additionalExclusions)
     )
     # Regenerate with keep/don't-keep: include keeps, exclude don't-keeps, add new places.
-    # Visited places must stay excluded even during regenerate.
+    # Visited places must stay excluded even during regenerate, and the trip stays in
+    # "unvisited" mode — don't fall back to random.
     if liked_places or disliked_places:
         return await generate_plan_with_location(
-            generate_travel_plan_random,
+            generate_travel_plan_unvisited,
             request.startingPoint,
             travel_length,
             preferences,
+            merge_exclusion_lists(forbidden_places, disliked_places),
             starting_point=request.startingPoint,
             start_date=request.startDate,
             end_date=request.endDate,
@@ -206,7 +213,6 @@ async def generate_unvisited_plan(request: UnvisitedGenerationRequest, db: Sessi
             language=request.language,
             llm_provider=llm_provider,
             keep_places=liked_places,
-            forbidden_places=merge_exclusion_lists(forbidden_places, disliked_places),
             db=db,
         )
 

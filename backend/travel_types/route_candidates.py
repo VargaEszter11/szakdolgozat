@@ -341,13 +341,12 @@ async def build_candidates(
     forbidden_places: List[str],
     preferred_transport: str = "allModes",
 ) -> List[dict]:
-    candidate_strategy = "random" if strategy == "visited" else strategy
     include_flights = preferred_transport not in {"trainBus", "trainBusFerry"}
     flight_candidates = []
     if include_flights:
         flight_candidates = with_transport(
             filter_strategy_candidates(
-                candidate_strategy,
+                strategy,
                 europe_candidates(await get_direct_destinations_cached(db, current_airport)),
                 visited_places,
                 forbidden_places,
@@ -356,7 +355,7 @@ async def build_candidates(
         )
 
     ground_candidates = filter_strategy_candidates(
-        candidate_strategy,
+        strategy,
         ground_candidates_from_airport(
             db,
             current_airport,
@@ -366,7 +365,7 @@ async def build_candidates(
         forbidden_places,
     )
     ferry_candidates = filter_strategy_candidates(
-        candidate_strategy,
+        strategy,
         ferry_candidates_from_airport(
             db,
             current_airport,
