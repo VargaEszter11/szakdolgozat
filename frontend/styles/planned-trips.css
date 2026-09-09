@@ -449,6 +449,46 @@
     font-size: 0.9rem;
 }
 
+.planned-trips-trip-popup .trip-stop-drag-handle {
+    flex-shrink: 0;
+    align-self: stretch;
+    width: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--pt-popup-muted);
+    cursor: grab;
+    touch-action: none;
+}
+
+.planned-trips-trip-popup .trip-stop-drag-handle:hover {
+    color: var(--pt-popup-text);
+}
+
+.planned-trips-trip-popup .trip-stop-drag-handle:active {
+    cursor: grabbing;
+}
+
+.planned-trips-trip-popup .trip-stop-drag-handle--spacer {
+    visibility: hidden;
+}
+
+.planned-trips-trip-popup #editStopsList .trip-stop-card--dragging {
+    position: fixed;
+    z-index: 1000;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+}
+
+.planned-trips-trip-popup #editStopsList .trip-stop-card--placeholder {
+    background: transparent;
+    border: 2px dashed var(--pt-popup-accent);
+    padding: 0;
+}
+
 .planned-trips-trip-popup .trip-stop-details h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1.05rem;
