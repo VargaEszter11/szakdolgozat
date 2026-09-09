@@ -16,6 +16,12 @@
     border-color: var(--color-accent);
 }
 
+.upload-zone--dragover {
+    background: var(--color-upload-hover-bg);
+    border-color: var(--color-accent);
+    border-style: solid;
+}
+
 .upload-text,
 .upload-hint {
     color: var(--color-upload-text);

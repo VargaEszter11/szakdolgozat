@@ -1,7 +1,3 @@
-/**
- * Shared image picker: validate PNG/JPEG, preview grid, optional multi-select.
- * Exposes window.ImageUpload for classic scripts and ES modules.
- */
 (function (root) {
   var MAX_BYTES = 10 * 1024 * 1024;
 
@@ -134,12 +130,7 @@
       showErrors([]);
     }
 
-    function onChange() {
-      var picked = Array.from((input && input.files) || []);
-      // Clear so the same file can be chosen again. Do NOT write files back to the
-      // input — that can re-fire "change" and break the picker in some browsers.
-      clearInputValue();
-
+    function handleFiles(picked) {
       var batchErrors = [];
       var prevKeys = {};
       selectedFiles.forEach(function (f) {
@@ -170,8 +161,54 @@
       showErrors(batchErrors);
     }
 
+    function onChange() {
+      var picked = Array.from((input && input.files) || []);
+      // Clear so the same file can be chosen again. Do NOT write files back to the
+      // input — that can re-fire "change" and break the picker in some browsers.
+      clearInputValue();
+      handleFiles(picked);
+    }
+
     if (input) {
       input.addEventListener('change', onChange);
+    }
+
+    // Drag & drop onto the surrounding drop zone (defaults to the <label> the
+    // file input lives in, e.g. <label class="upload-zone" for="photos">).
+    var dropZone = opts.dropZone || (input && input.closest('.upload-zone')) || null;
+    if (dropZone) {
+      var dragDepth = 0;
+
+      var setDragOver = function (on) {
+        dropZone.classList.toggle('upload-zone--dragover', on);
+      };
+
+      dropZone.addEventListener('dragenter', function (e) {
+        if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') === -1) return;
+        e.preventDefault();
+        dragDepth++;
+        setDragOver(true);
+      });
+
+      dropZone.addEventListener('dragover', function (e) {
+        if (!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') === -1) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      });
+
+      dropZone.addEventListener('dragleave', function () {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) setDragOver(false);
+      });
+
+      dropZone.addEventListener('drop', function (e) {
+        if (!e.dataTransfer) return;
+        e.preventDefault();
+        dragDepth = 0;
+        setDragOver(false);
+        var dropped = Array.from(e.dataTransfer.files || []);
+        if (dropped.length) handleFiles(dropped);
+      });
     }
 
     return {

@@ -634,7 +634,7 @@
       '<polyline points="17 8 12 3 7 8"/>' +
       '<line x1="12" x2="12" y1="3" y2="15"/>' +
       '</svg>' +
-      '<p class="upload-text">' + escapeHtml(t('visitedPlaces.addPhotosHint', 'Add photos (PNG or JPG, max 10 MB each). You can select several at once or add more in another step.')) + '</p>' +
+      '<p class="upload-text">' + escapeHtml(t('visitedPlaces.addPhotosHint', 'Add photos by clicking or dragging and dropping (PNG or JPG, max 10 MB each). You can select several at once or add more in another step.')) + '</p>' +
       '<p class="upload-hint">' + escapeHtml(t('addNewPlace.photosHint', 'PNG or JPG, max 10 MB each')) + '</p>';
 
     var photosInput = document.createElement('input');
