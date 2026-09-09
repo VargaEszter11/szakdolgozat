@@ -47,6 +47,7 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
         "inserted": 0,
         "updated": 0,
         "skipped": 0,
+        "deactivated": 0,
     }
 
     try:
@@ -138,6 +139,24 @@ def save_routes(routes, *, db=None, default_airline_iata=None, airline_names=Non
                     )
                 )
                 stats["inserted"] += 1
+
+        # Routes this airline used to fly but that no longer appear in the current
+        # scrape (discontinued/rerouted) would otherwise stay marked active forever.
+        for airline_iata in airline_iatas:
+            current_pairs = {
+                (route["origin_iata"], route["destination_iata"])
+                for route in normalized_routes
+                if route["airline_iata"] == airline_iata
+            }
+            stale_query = db.query(models.DirectRoute).filter(
+                models.DirectRoute.airline_iata == airline_iata,
+                models.DirectRoute.is_active.is_(True),
+            )
+            for stale_route in stale_query.all():
+                pair = (stale_route.origin_iata, stale_route.destination_iata)
+                if pair not in current_pairs:
+                    stale_route.is_active = False
+                    stats["deactivated"] += 1
 
         db.commit()
         return stats

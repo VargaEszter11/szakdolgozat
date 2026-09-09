@@ -13,8 +13,19 @@ from sqlalchemy.orm import Session
 from database import models, schemas, get_db, crud
 from utils.place_image_upload import PLACE_IMAGES_DIR, ensure_place_images_dir
 from utils.feedback_image_upload import FEEDBACK_IMAGES_DIR, ensure_feedback_images_dir
+from scrapers.ryanair import save_ryanair_routes
+from scrapers.lufthansa import save_lufthansa_routes
+from scrapers.klm import save_klm_routes
+from scrapers.wizzair import save_wizzair_routes
 
 router = APIRouter()
+
+_AIRLINE_SCRAPERS = [
+    ("ryanair", save_ryanair_routes),
+    ("lufthansa", save_lufthansa_routes),
+    ("klm", save_klm_routes),
+    ("wizzair", save_wizzair_routes),
+]
 
 _EXPORT_MODELS = [
     ("users", models.User),
@@ -169,6 +180,21 @@ def admin_import(
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=f"Import failed: {exc}") from exc
+
+
+@router.post("/admin/scrape-airlines")
+def admin_scrape_airlines(
+    db: Session = Depends(get_db),
+    _: None = Depends(require_admin),
+):
+    results: dict[str, Any] = {}
+    for airline_key, scrape_fn in _AIRLINE_SCRAPERS:
+        try:
+            results[airline_key] = {"success": True, **scrape_fn(db=db)}
+        except Exception as exc:
+            db.rollback()
+            results[airline_key] = {"success": False, "error": str(exc)}
+    return {"results": results}
 
 
 @router.get("/admin/feedback", response_model=list[schemas.FeedbackResponse])

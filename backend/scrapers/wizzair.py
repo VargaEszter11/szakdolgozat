@@ -1,19 +1,42 @@
+import re
+
 import requests
 
 from scrapers.base import save_routes
 
+# Fallback versions if the site's current API version can't be discovered live.
+# Wizz Air bumps this fairly often, so _discover_api_version() is tried first.
 WIZZAIR_API_VERSIONS = (
+    "29.15.1",
+    "29.15.0",
+    "29.14.0",
     "28.10.0",
-    "28.9.0",
-    "28.8.0",
-    "28.7.0",
 )
+
+WIZZAIR_SITE_URL = "https://wizzair.com/en-gb"
+WIZZAIR_VERSION_PATTERN = re.compile(r"be\.wizzair\.com/(\d+\.\d+\.\d+)")
 
 
 HEADERS = {
     "Accept": "application/json",
     "User-Agent": "Mozilla/5.0",
 }
+
+SITE_HEADERS = {
+    "Accept": "text/html",
+    "User-Agent": "Mozilla/5.0",
+}
+
+
+def _discover_api_version():
+    try:
+        response = requests.get(WIZZAIR_SITE_URL, headers=SITE_HEADERS, timeout=20)
+        response.raise_for_status()
+    except requests.RequestException:
+        return None
+
+    match = WIZZAIR_VERSION_PATTERN.search(response.text)
+    return match.group(1) if match else None
 
 def _iata(value):
     if isinstance(value, str):
@@ -37,9 +60,16 @@ def normalize_wizzair_route(origin, connection):
     }
 
 def get_wizzair_routes():
+    discovered_version = _discover_api_version()
+    versions = (
+        (discovered_version,) + WIZZAIR_API_VERSIONS
+        if discovered_version
+        else WIZZAIR_API_VERSIONS
+    )
+
     response = None
     last_error = None
-    for version in WIZZAIR_API_VERSIONS:
+    for version in versions:
         try:
             response = requests.get(
                 f"https://be.wizzair.com/{version}/Api/asset/map",

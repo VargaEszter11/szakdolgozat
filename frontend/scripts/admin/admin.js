@@ -8,6 +8,7 @@
   var importFileText = document.getElementById('adminImportFileText');
   var importConfirm = document.getElementById('adminImportConfirm');
   var importBtn = document.getElementById('adminImportBtn');
+  var scrapeBtn = document.getElementById('adminScrapeBtn');
   var statusEl = document.getElementById('adminStatus');
 
   var auth = window.AdminAuth.bindAdminAuth({
@@ -135,5 +136,60 @@
         }
       }
     );
+  });
+
+  scrapeBtn.addEventListener('click', async function () {
+    var scrapeBtnLabel = scrapeBtn.querySelector('span');
+    var scrapeBtnDefaultText = scrapeBtnLabel ? scrapeBtnLabel.textContent : '';
+    scrapeBtn.disabled = true;
+    if (scrapeBtnLabel) {
+      scrapeBtnLabel.textContent = adminT('admin.scrapeRunning', 'Running scrapers…');
+    }
+    setStatus(
+      adminT('admin.scrapeStarted', 'Airline scrapers started. This can take a minute…'),
+      'success'
+    );
+    try {
+      var response = await fetch('/api/admin/scrape-airlines', {
+        method: 'POST',
+        headers: { 'X-Admin-Secret': getStoredSecret() }
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) {
+        throw new Error(adminT('admin.scrapeFailed', 'Could not run airline scrapers.'));
+      }
+
+      var lines = [];
+      var anyFailure = false;
+      Object.keys(data.results || {}).forEach(function (airline) {
+        var result = data.results[airline];
+        if (result.success) {
+          lines.push(
+            airline + ': ' + result.inserted + ' new, ' + result.updated + ' updated, ' +
+            result.deactivated + ' deactivated (of ' + result.fetched + ' fetched)'
+          );
+        } else {
+          anyFailure = true;
+          lines.push(airline + ': ' + adminT('admin.scrapeAirlineFailed', 'failed') + ' — ' + result.error);
+        }
+      });
+
+      setStatus(
+        (anyFailure
+          ? adminT('admin.scrapeCompleteWithErrors', 'Airline scrape finished with errors:')
+          : adminT('admin.scrapeComplete', 'Airline scrape complete:')) + '\n' + lines.join('\n'),
+        anyFailure ? 'error' : 'success'
+      );
+    } catch (err) {
+      setStatus(
+        (err && err.message) || adminT('admin.scrapeFailed', 'Could not run airline scrapers.'),
+        'error'
+      );
+    } finally {
+      scrapeBtn.disabled = false;
+      if (scrapeBtnLabel) {
+        scrapeBtnLabel.textContent = scrapeBtnDefaultText;
+      }
+    }
   });
 })();
