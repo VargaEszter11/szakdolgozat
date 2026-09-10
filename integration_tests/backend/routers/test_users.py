@@ -1,6 +1,8 @@
 """
 Integration tests for user management endpoints.
 """
+from typing import Any, cast
+
 from utils.auth_deps import create_access_token
 
 
@@ -190,13 +192,14 @@ class TestDeleteUser:
         )
         db.commit()
 
+        user_id = int(cast(Any, user).id)
         headers = {
-            "Authorization": f"Bearer {create_access_token(user_id=int(user.id), username='deleteme')}"
+            "Authorization": f"Bearer {create_access_token(user_id=user_id, username='deleteme')}"
         }
-        response = client.delete(f"/api/users/{user.id}", headers=headers)
+        response = client.delete(f"/api/users/{user_id}", headers=headers)
 
         assert response.status_code == 204
-        assert client.get(f"/api/users/{user.id}", headers=headers).status_code == 401
+        assert client.get(f"/api/users/{user_id}", headers=headers).status_code == 401
 
     def test_delete_user_forbidden_other_user(self, client, auth_headers):
         response = client.delete("/api/users/9999", headers=auth_headers)
@@ -206,22 +209,6 @@ class TestDeleteUser:
 
 class TestUserRelations:
     """Integration tests for user nested resource endpoints."""
-
-    def test_get_user_visited_places(self, client, test_user, visited_place, auth_headers):
-        response = client.get(
-            f"/api/users/{test_user['id']}/visited-places",
-            headers=auth_headers,
-        )
-
-        assert response.status_code == 200
-        places = response.json()
-        assert len(places) == 1
-        assert places[0]["place_name"] == visited_place["place_name"]
-
-    def test_get_user_visited_places_forbidden(self, client, auth_headers):
-        response = client.get("/api/users/9999/visited-places", headers=auth_headers)
-
-        assert response.status_code == 403
 
     def test_get_user_planned_trips(self, client, test_user, planned_trip, auth_headers):
         response = client.get(

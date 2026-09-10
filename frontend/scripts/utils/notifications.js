@@ -70,6 +70,15 @@
         })
       };
     }
+    if (type === 'share_declined') {
+      return {
+        title: t('notifications.shareDeclinedTitle', 'Shared trip declined'),
+        body: t('notifications.shareDeclinedBody', '{{user}} declined your shared trip “{{trip}}”.', {
+          user: meta.to_username || 'Someone',
+          trip: meta.trip_title || 'Trip'
+        })
+      };
+    }
     if (type === 'feedback_solved') {
       return {
         title: t('notifications.feedbackSolvedTitle', 'Feedback marked as solved'),
@@ -271,10 +280,19 @@
     }
   }
 
+  var POLL_INTERVAL_MS = 60000;
+  var pollTimer = null;
+
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(refresh, POLL_INTERVAL_MS);
+  }
+
   window.HeaderNotifications = {
     init: function () {
       bind();
       refresh();
+      startPolling();
     },
     refresh: refresh
   };

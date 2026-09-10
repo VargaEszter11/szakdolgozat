@@ -1,12 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import Any, List, cast
+from typing import Any, List, Optional, cast
 from database import crud, schemas, get_db, models
 from utils.coordinates import geocode_place
 from utils.place_image_upload import save_place_image
 from utils.auth_deps import current_user_id, get_current_user
 
 router = APIRouter()
+
+
+def _cover_image_url(place: models.VisitedPlace) -> Optional[str]:
+    """First uploaded gallery image for cards, else legacy photo_path."""
+    imgs = getattr(place, "images", None) or []
+    if imgs:
+        first = sorted(imgs, key=lambda im: im.id)[0]
+        return first.image_path
+    return cast(str | None, place.photo_path)
 
 
 def _require_place_owner(place, user_id: int) -> None:
@@ -84,7 +93,13 @@ def list_visited_places(
     del skip, limit
     uid = current_user_id(current_user)
     crud.sync_completed_booked_trips_for_user(db, uid)
-    return crud.get_user_visited_places(db, user_id=uid)
+    places = crud.get_user_visited_places(db, user_id=uid)
+    return [
+        schemas.VisitedPlaceResponse.model_validate(p).model_copy(
+            update={"image": _cover_image_url(p)}
+        )
+        for p in places
+    ]
 
 
 @router.put("/visited-places/{place_id}", response_model=schemas.VisitedPlaceResponse)

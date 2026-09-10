@@ -74,10 +74,12 @@ def test_get_visited_place_success(db):
 
 
 def test_list_visited_places(db):
-    with patch("routers.visited_places.crud.get_user_visited_places", return_value=[1, 2]):
+    place = owned_place(photo_path="legacy.jpg", images=[])
+    with patch("routers.visited_places.crud.get_user_visited_places", return_value=[place]):
         result = vp.list_visited_places(skip=0, limit=10, db=db, current_user=fake_user(1))
 
-    assert result == [1, 2]
+    assert len(result) == 1
+    assert result[0].image == "legacy.jpg"
 
 
 def test_update_visited_place_not_found(db):

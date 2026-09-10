@@ -199,9 +199,9 @@ function refreshHomeCityButtons() {
     refreshHomeCityStatus();
 }
 
-async function userHasSavedVisitedPlaces(userId) {
+async function userHasSavedVisitedPlaces() {
     try {
-        const res = await fetch(`${API_BASE_URL}/api/users/${userId}/visited-places`);
+        const res = await fetch(`${API_BASE_URL}/api/visited-places`);
         if (!res.ok) return null;
         const places = await res.json();
         return Array.isArray(places) && places.length > 0;
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 body.userId = parsed;
                 if (!manualPlaces.length) {
-                    const hasSavedPlaces = await userHasSavedVisitedPlaces(uid);
+                    const hasSavedPlaces = await userHasSavedVisitedPlaces();
                     if (hasSavedPlaces === false) {
                         showError(
                             planNewTripT('manualPlacesRequired', 'Add at least one place in the field above, or turn on using your travel log from the database.'),

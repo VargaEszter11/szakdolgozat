@@ -51,7 +51,7 @@ function loadTravelLog() {
 
   var uid = encodeURIComponent(userId);
   Promise.all([
-    fetchJson('/api/users/' + uid + '/visited-places'),
+    fetchJson('/api/visited-places'),
     fetchJson('/api/planned-trips').catch(function () {
       return [];
     }),

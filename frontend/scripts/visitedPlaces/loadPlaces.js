@@ -157,7 +157,7 @@
       return Promise.resolve();
     }
 
-    var apiUrl = '/api/users/' + userId + '/visited-places';
+    var apiUrl = '/api/visited-places';
     return fetch(apiUrl)
       .then(function (res) {
         if (!res.ok) {

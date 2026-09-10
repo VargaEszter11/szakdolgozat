@@ -127,6 +127,17 @@ def test_share_pending_item_falls_back_when_trip_and_user_missing(client, auth_h
     assert item["created_at"] is None
 
 
+def _from_user_by_status(accepted=None, declined=None):
+    """crud.list_trip_share_invitations_from_user is called once per status
+    (accepted, then declined); return the right fixture list for each call."""
+    def side_effect(*_args, **kwargs):
+        if kwargs.get("status") == "declined":
+            return declined or []
+        return accepted or []
+
+    return MagicMock(side_effect=side_effect)
+
+
 def test_share_accepted_item_recent_is_included(client, auth_headers, auth_user):
     install_auth_override(app, auth_user)
     recent = datetime.combine(date.today() - timedelta(days=1), datetime.min.time())
@@ -142,7 +153,7 @@ def test_share_accepted_item_recent_is_included(client, auth_headers, auth_user)
     with patch.multiple(
         "routers.notifications.crud",
         list_trip_share_invitations_for_user=MagicMock(return_value=[]),
-        list_trip_share_invitations_from_user=MagicMock(return_value=[invitation]),
+        list_trip_share_invitations_from_user=_from_user_by_status(accepted=[invitation]),
         list_feedbacks_for_user=MagicMock(return_value=[]),
         get_user_planned_trips=MagicMock(return_value=[]),
         get_planned_trip=MagicMock(return_value=trip),
@@ -176,7 +187,67 @@ def test_share_accepted_item_older_than_90_days_is_excluded(client, auth_headers
     with patch.multiple(
         "routers.notifications.crud",
         list_trip_share_invitations_for_user=MagicMock(return_value=[]),
-        list_trip_share_invitations_from_user=MagicMock(return_value=[invitation]),
+        list_trip_share_invitations_from_user=_from_user_by_status(accepted=[invitation]),
+        list_feedbacks_for_user=MagicMock(return_value=[]),
+        get_user_planned_trips=MagicMock(return_value=[]),
+        get_planned_trip=MagicMock(return_value=None),
+        get_user=MagicMock(return_value=None),
+    ):
+        res = client.get("/api/notifications", headers=auth_headers)
+
+    assert res.json()["items"] == []
+
+
+def test_share_declined_item_recent_is_included(client, auth_headers, auth_user):
+    install_auth_override(app, auth_user)
+    recent = datetime.combine(date.today() - timedelta(days=1), datetime.min.time())
+    invitation = SimpleNamespace(
+        id=31,
+        source_trip_id=8,
+        to_user_id=4,
+        responded_at=recent,
+    )
+    trip = SimpleNamespace(id=8, title="Lisbon Trip")
+    to_user = SimpleNamespace(id=4, username="carol")
+
+    with patch.multiple(
+        "routers.notifications.crud",
+        list_trip_share_invitations_for_user=MagicMock(return_value=[]),
+        list_trip_share_invitations_from_user=_from_user_by_status(declined=[invitation]),
+        list_feedbacks_for_user=MagicMock(return_value=[]),
+        get_user_planned_trips=MagicMock(return_value=[]),
+        get_planned_trip=MagicMock(return_value=trip),
+        get_user=MagicMock(return_value=to_user),
+    ):
+        res = client.get("/api/notifications", headers=auth_headers)
+
+    items = res.json()["items"]
+    assert len(items) == 1
+    item = items[0]
+    assert item["id"] == "share_declined:31"
+    assert item["type"] == "share_declined"
+    assert item["body"] == "carol declined your shared trip “Lisbon Trip”."
+    assert item["meta"] == {
+        "invitation_id": 31,
+        "trip_title": "Lisbon Trip",
+        "to_username": "carol",
+    }
+
+
+def test_share_declined_item_older_than_90_days_is_excluded(client, auth_headers, auth_user):
+    install_auth_override(app, auth_user)
+    stale = datetime.combine(date.today() - timedelta(days=91), datetime.min.time())
+    invitation = SimpleNamespace(
+        id=32,
+        source_trip_id=8,
+        to_user_id=4,
+        responded_at=stale,
+    )
+
+    with patch.multiple(
+        "routers.notifications.crud",
+        list_trip_share_invitations_for_user=MagicMock(return_value=[]),
+        list_trip_share_invitations_from_user=_from_user_by_status(declined=[invitation]),
         list_feedbacks_for_user=MagicMock(return_value=[]),
         get_user_planned_trips=MagicMock(return_value=[]),
         get_planned_trip=MagicMock(return_value=None),

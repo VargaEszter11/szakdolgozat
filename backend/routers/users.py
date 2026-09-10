@@ -8,15 +8,6 @@ from utils.auth_deps import current_user_id, get_current_user, require_self
 router = APIRouter()
 
 
-def _cover_image_url(place: models.VisitedPlace) -> Optional[str]:
-    """First uploaded gallery image for cards, else legacy photo_path."""
-    imgs = getattr(place, "images", None) or []
-    if imgs:
-        first = sorted(imgs, key=lambda im: im.id)[0]
-        return first.image_path
-    return cast(str | None, place.photo_path)
-
-
 @router.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """Register a new user (public; preferred path is /api/register)."""
@@ -125,31 +116,6 @@ def delete_user(
             detail="User not found",
         )
     return None
-
-
-@router.get("/users/{user_id}/visited-places", response_model=List[schemas.VisitedPlaceResponse])
-def get_user_visited_places(
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-):
-    """Get all visited places for a user (self only)."""
-    require_self(user_id, current_user)
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    crud.sync_completed_booked_trips_for_user(db, user_id)
-    places = crud.get_user_visited_places(db, user_id=user_id)
-    return [
-        schemas.VisitedPlaceResponse.model_validate(p).model_copy(
-            update={"image": _cover_image_url(p)}
-        )
-        for p in places
-    ]
 
 
 @router.get("/users/{user_id}/planned-trips", response_model=List[schemas.PlannedTripResponse])

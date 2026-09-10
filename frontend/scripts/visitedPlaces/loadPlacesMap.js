@@ -171,7 +171,7 @@
 
     var places = [];
     try {
-      var apiUrl = '/api/users/' + userId + '/visited-places';
+      var apiUrl = '/api/visited-places';
       var response = await fetch(apiUrl);
       if (response.ok) {
         var data = await response.json();

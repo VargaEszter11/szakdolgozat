@@ -138,30 +138,6 @@ def test_delete_user_success(db):
     assert result is None
 
 
-def test_get_user_visited_places(db):
-    place = SimpleNamespace(
-        id=1,
-        user_id=1,
-        place_name="Paris",
-        country="FR",
-        date=None,
-        rating=None,
-        description=None,
-        photo_path="legacy.jpg",
-        latitude=None,
-        longitude=None,
-        images=[],
-    )
-
-    with patch("routers.users.crud.get_user", return_value=True), \
-         patch("routers.users.crud.get_user_visited_places", return_value=[place]):
-
-        result = users_router.get_user_visited_places(1, db, fake_user(1))
-
-    assert isinstance(result, list)
-    assert len(result) == 1
-
-
 def test_get_user_planned_trips(db):
     trip = SimpleNamespace(
         id=1,
