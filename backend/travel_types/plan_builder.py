@@ -6,11 +6,15 @@ then move the cursor airport forward. Ends with an optional return-home leg.
 """
 from __future__ import annotations
 import json
+import logging
 import random
+import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from database.database import SessionLocal
+
+logger = logging.getLogger("planner.build")
 
 from .booking import (
     available_flight_candidates,
@@ -27,7 +31,7 @@ from .place_matching import (
     prioritize_requested_places,
     split_place_label,
 )
-from .common import language_name, next_stop_prompt, preferences_line
+from .common import activities_only_prompt, language_name, next_stop_prompt, preferences_line
 from .place_access import (
     candidates_for_unmatched_places,
     remaining_unmatched_places,
@@ -508,17 +512,63 @@ def _candidate_choices_for_date(
     ]
 
 
-def _fallback_choice(
+async def _ask_ai_for_activities(
+    *,
+    city: str,
+    country: str,
+    preferences: List[str],
+    language: str,
+    llm_provider: str,
+) -> Optional[List[str]]:
+    """Activity suggestions for an already-decided destination (forced/kept stop).
+
+    The destination itself is fixed before this is called, so unlike
+    ``_ask_ai_to_pick_candidate`` there is no risk of the model hallucinating a
+    place - it can only fill in what to do there. A failed/invalid response
+    just means the caller falls back to a generic activities placeholder,
+    same as before this existed; it never aborts the trip.
+    """
+    prompt = activities_only_prompt(
+        city=city,
+        country=country,
+        lang_name=language_name(language),
+        preferences=preferences_line(preferences),
+    )
+    try:
+        raw = await call_llm_api(prompt, llm_provider)
+    except Exception:
+        return None
+    data = _parse_json_object(raw)
+    if not data:
+        return None
+    activities = data.get("activities")
+    if not isinstance(activities, list):
+        return None
+    cleaned = [str(item).strip() for item in activities if str(item).strip()]
+    return cleaned or None
+
+
+async def _fallback_choice(
     candidates: List[dict],
     *,
     strategy: str,
     remaining_days: int,
     has_requested_places: bool,
+    preferences: List[str],
+    language: str,
+    llm_provider: str,
 ) -> Dict[str, Any]:
     candidate = _pick_candidate(
         candidates,
         strategy,
         has_requested_places=has_requested_places,
+    )
+    activities = await _ask_ai_for_activities(
+        city=candidate["city"],
+        country=candidate.get("country") or "",
+        preferences=preferences,
+        language=language,
+        llm_provider=llm_provider,
     )
     return {
         "city": candidate["city"],
@@ -526,7 +576,7 @@ def _fallback_choice(
         "iata": candidate["iata"],
         "days": _clamp_days(max(2, remaining_days // 2 or 1), remaining_days),
         "transportFromPreviousCity": candidate.get("transport") or "flight",
-        "activities": ["City walk", "Local sights"],
+        "activities": activities or ["City walk", "Local sights"],
         "airline_iata": candidate.get("airline_iata"),
         "airline_name": candidate.get("airline_name"),
         "is_seasonal_route": candidate.get("is_seasonal"),
@@ -764,31 +814,6 @@ def _append_return_home(
     plan.append(return_stop)
 
 
-def _missing_requested_places(
-    *,
-    strategy: str,
-    requested_places: List[str],
-    plan: List[Dict[str, Any]],
-    keep_places: Optional[List[str]] = None,
-) -> List[str]:
-    # Only visited-mode typed/travel-log targets should surface this warning.
-    # Keep/don't-keep regenerate feedback must never appear here.
-    if strategy != "visited" or not requested_places:
-        return []
-    keep_keys = {
-        extract_city(place)
-        for place in (keep_places or [])
-        if extract_city(place)
-    }
-    missing = []
-    for place in requested_places:
-        if extract_city(place) in keep_keys:
-            continue
-        if not place_used_in_plan(place, plan):
-            missing.append(place)
-    return missing
-
-
 async def build_plan(
     *,
     strategy: str,
@@ -827,6 +852,8 @@ async def build_plan(
     remaining_days = int(travel_length)
     max_legs = min(24, max(1, remaining_days) + 8)
     place_access_cache: Dict[str, Any] = {}
+    # Set at whichever point the build loop first comes up empty, so an empty plan can be explained to the user instead of just failing silently.
+    no_plan_reason: Optional[str] = None
 
     db = SessionLocal()
     try:
@@ -839,9 +866,10 @@ async def build_plan(
         )
         if not home_country and home_transfer and home_transfer.get("home_country"):
             home_country = str(home_transfer.get("home_country") or "").strip()
-        for _ in range(max_legs):
+        for leg_number in range(1, max_legs + 1):
             if remaining_days <= 0:
                 break
+            leg_started = time.monotonic()
 
             candidates, requested_matches = await _ranked_step_candidates(
                 db,
@@ -857,6 +885,13 @@ async def build_plan(
                 place_access_cache=place_access_cache,
             )
             if not candidates:
+                if not plan:
+                    no_plan_reason = (
+                        "visited_no_match"
+                        if strategy == "visited" and requested_places
+                        else "no_reachable_destinations"
+                    )
+                logger.info("Leg %d: no candidates from %s, stopping", leg_number, current_airport)
                 break
             candidates = _filter_by_preferred_transport(candidates, preferred_transport)
             requested_matches = _filter_by_preferred_transport(
@@ -864,6 +899,9 @@ async def build_plan(
                 preferred_transport,
             )
             if not candidates:
+                if not plan:
+                    no_plan_reason = "transport_mode_too_restrictive"
+                logger.info("Leg %d: no candidates after transport filter, stopping", leg_number)
                 break
 
             departure_date = cursor.strftime("%Y-%m-%d")
@@ -875,6 +913,9 @@ async def build_plan(
                 departure_date=departure_date,
             )
             if not choice_candidates:
+                if not plan:
+                    no_plan_reason = "no_availability_for_date"
+                logger.info("Leg %d: no date-matched candidates, stopping", leg_number)
                 break
 
             current_city_label = (
@@ -884,11 +925,14 @@ async def build_plan(
             )
             # Reachable keep targets are mandatory; otherwise freely pick new places.
             if requested_matches:
-                choice = _fallback_choice(
+                choice = await _fallback_choice(
                     choice_candidates,
                     strategy=strategy,
                     remaining_days=remaining_days,
                     has_requested_places=True,
+                    preferences=preferences,
+                    language=language,
+                    llm_provider=llm_provider,
                 )
             else:
                 choice = await _ask_ai_to_pick_candidate(
@@ -907,11 +951,14 @@ async def build_plan(
                     llm_provider=llm_provider,
                 )
                 if not choice:
-                    choice = _fallback_choice(
+                    choice = await _fallback_choice(
                         choice_candidates,
                         strategy=strategy,
                         remaining_days=remaining_days,
                         has_requested_places=False,
+                        preferences=preferences,
+                        language=language,
+                        llm_provider=llm_provider,
                     )
 
             stop = None
@@ -954,12 +1001,23 @@ async def build_plan(
                     remaining_days=remaining_days,
                 )
             if not stop:
+                if not plan:
+                    no_plan_reason = "booking_failed"
                 break
 
             plan.append(stop)
             remaining_days -= int(stop["days"])
             cursor = datetime.strptime(stop["departureDate"], "%Y-%m-%d")
             current_airport = str(stop["iata"])
+            logger.info(
+                "Leg %d done in %.1fs: %s (%s), %d day(s), %d remaining",
+                leg_number,
+                time.monotonic() - leg_started,
+                stop.get("city"),
+                stop.get("iata"),
+                int(stop["days"]),
+                remaining_days,
+            )
 
         if remaining_days > 0 and plan:
             for item in reversed(plan):
@@ -993,17 +1051,14 @@ async def build_plan(
     finally:
         db.close()
 
-    return {
+    result = {
         "startingPoint": starting_point,
         "startDate": start_date,
         "endDate": end_date,
         "tripLengthDays": travel_length,
         "strategy": strategy,
         "plan": plan,
-        "requestedPlacesMissing": _missing_requested_places(
-            strategy=strategy,
-            requested_places=requested_places,
-            plan=plan,
-            keep_places=keep_places,
-        ),
     }
+    if not plan and no_plan_reason:
+        result["noPlanReason"] = no_plan_reason
+    return result

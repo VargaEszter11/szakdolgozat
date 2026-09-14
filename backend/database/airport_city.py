@@ -28,6 +28,7 @@ CITY_OVERRIDES_BY_IATA = {
     "HEM": "Helsinki",
     "HEL": "Helsinki",
     "HKV": "Haskovo",
+    "KEF": "Reykjavik",
     "KIV": "Chisinau",
     "KRK": "Krakow",
     "LYS": "Lyon",

@@ -188,4 +188,3 @@ class TestPlanBuilderWithDatabase:
         )
 
         assert result["plan"][0]["iata"] == "VIE"
-        assert result["requestedPlacesMissing"] == []

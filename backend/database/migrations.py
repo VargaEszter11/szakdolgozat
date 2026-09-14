@@ -322,5 +322,13 @@ def apply_startup_schema_patches() -> None:
                     """
                 )
             )
+            conn.execute(
+                text(
+                    """
+                    ALTER TABLE planned_trip_stops
+                    ADD COLUMN IF NOT EXISTS synced_to_visited BOOLEAN NOT NULL DEFAULT FALSE
+                    """
+                )
+            )
     except SQLAlchemyError as exc:
         logger.warning("Could not apply startup schema patch: %s", exc)

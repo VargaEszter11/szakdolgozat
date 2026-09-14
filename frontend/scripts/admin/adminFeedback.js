@@ -15,6 +15,21 @@
 
   var setStatus;
 
+  async function responseDetail(res) {
+    var j = await res.json().catch(function () { return null; });
+    if (!j) return 'HTTP ' + res.status;
+    var d = j.detail;
+    if (typeof d === 'string') return d;
+    if (Array.isArray(d)) {
+      return d.map(function (e) {
+        if (typeof e === 'string') return e;
+        return (e.msg || '') + (e.loc ? ' (' + e.loc.join('.') + ')' : '');
+      }).filter(Boolean).join('; ') || ('HTTP ' + res.status);
+    }
+    if (d != null && typeof d === 'object') return JSON.stringify(d);
+    return res.statusText || ('HTTP ' + res.status);
+  }
+
   async function loadFeedback() {
     if (!feedbackListEl) return;
     setStatus(null);
@@ -24,7 +39,7 @@
       var response = await fetch('/api/admin/feedback', {
         headers: { 'X-Admin-Secret': getStoredSecret() }
       });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
+      if (!response.ok) throw new Error(await responseDetail(response));
       var items = await response.json();
       if (!items.length) {
         feedbackListEl.innerHTML = '<p class="muted">' +
@@ -83,7 +98,7 @@
               },
               body: JSON.stringify({ solved: !currentlySolved })
             });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
+            if (!res.ok) throw new Error(await responseDetail(res));
             await loadFeedback();
             setStatus(
               currentlySolved
@@ -92,7 +107,8 @@
               'ok'
             );
           } catch (err) {
-            setStatus(adminT('admin.feedbackSolveFailed', 'Could not update feedback.'), 'error');
+            var solveBase = adminT('admin.feedbackSolveFailed', 'Could not update feedback.');
+            setStatus(err && err.message ? solveBase + ' (' + err.message + ')' : solveBase, 'error');
           }
         });
       });
@@ -110,16 +126,18 @@
               method: 'DELETE',
               headers: { 'X-Admin-Secret': getStoredSecret() }
             });
-            if (!res.ok) throw new Error('HTTP ' + res.status);
+            if (!res.ok) throw new Error(await responseDetail(res));
             await loadFeedback();
           } catch (err) {
-            setStatus(adminT('admin.feedbackDeleteFailed', 'Could not delete feedback.'), 'error');
+            var deleteBase = adminT('admin.feedbackDeleteFailed', 'Could not delete feedback.');
+            setStatus(err && err.message ? deleteBase + ' (' + err.message + ')' : deleteBase, 'error');
           }
         });
       });
     } catch (err) {
+      var loadBase = adminT('admin.feedbackLoadFailed', 'Could not load feedback.');
       feedbackListEl.innerHTML = '<p class="muted">' +
-        escapeHtml(adminT('admin.feedbackLoadFailed', 'Could not load feedback.')) + '</p>';
+        escapeHtml(err && err.message ? loadBase + ' (' + err.message + ')' : loadBase) + '</p>';
     }
   }
 

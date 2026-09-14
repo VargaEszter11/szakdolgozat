@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.orm import Session
 from typing import Any, cast
 
-from backend.utils.nearest_airport import calculate_distance_km, nearest_airport
+from backend.utils.nearest_airport import calculate_distance_km, nearest_airport, nearest_airports
 
 
 class FakeAirport:
@@ -189,3 +189,41 @@ def test_distance_km_limit_does_not_prevent_returning_airport():
     assert result is not None
     assert result["iata"] == "VIE"
     assert result["distance_km"] > 1
+
+
+def test_nearest_airports_returns_closest_first_up_to_limit():
+    budapest_airport = FakeAirport(iata="BUD", latitude=47.439, longitude=19.261)
+    vienna_airport = FakeAirport(iata="VIE", latitude=48.1103, longitude=16.5697)
+    bratislava_airport = FakeAirport(iata="BTS", latitude=48.1702, longitude=17.2127)
+    prague_airport = FakeAirport(iata="PRG", latitude=50.1008, longitude=14.26)
+
+    db = fake_session([prague_airport, vienna_airport, bratislava_airport, budapest_airport])
+
+    result = nearest_airports(47.4979, 19.0402, db=db, limit=3)
+
+    assert [r["iata"] for r in result] == ["BUD", "BTS", "VIE"]
+    assert result[0]["distance_km"] < result[1]["distance_km"] < result[2]["distance_km"]
+
+
+def test_nearest_airports_returns_empty_list_without_db():
+    assert nearest_airports(47.4979, 19.0402, db=None, limit=3) == []
+
+
+def test_nearest_airports_returns_fewer_than_limit_when_not_enough_airports():
+    db = fake_session([FakeAirport(iata="BUD")])
+
+    result = nearest_airports(47.4979, 19.0402, db=db, limit=3)
+
+    assert len(result) == 1
+    assert result[0]["iata"] == "BUD"
+
+
+def test_nearest_airport_still_returns_single_dict_not_a_list():
+    db = fake_session([FakeAirport(iata="BUD")])
+
+    result = nearest_airport(47.4979, 19.0402, db=db)
+
+    assert isinstance(result, dict)
+    assert result["iata"] == "BUD"
+
+

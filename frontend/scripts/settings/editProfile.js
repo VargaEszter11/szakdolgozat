@@ -84,7 +84,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     fetch('/api/users/' + encodeURIComponent(userId))
         .then(function (res) {
-            if (!res.ok) throw new Error('load');
+            if (!res.ok) {
+                return res.json().catch(function () { return {}; }).then(function (body) {
+                    throw new Error(formatApiDetail(body && body.detail) || ('HTTP ' + res.status));
+                });
+            }
             return res.json();
         })
         .then(function (data) {
@@ -92,8 +96,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (emailInput) emailInput.value = data.email || '';
             if (homeCityInput) homeCityInput.value = data.home_city || '';
         })
-        .catch(function () {
-            showError(t('editProfile.errorLoad', 'Could not load your profile.'));
+        .catch(function (err) {
+            var loadBase = t('editProfile.errorLoad', 'Could not load your profile.');
+            showError(err && err.message ? loadBase + ' (' + err.message + ')' : loadBase);
         })
         .finally(function () {
             if (window.markAppReady) window.markAppReady();
@@ -136,13 +141,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     showError(mapApiError(result.body && result.body.detail));
                 })
-                .catch(function () {
-                    showError(
-                        t(
-                            'editProfile.passwordEmailFailed',
-                            'Could not send the password reset email. Check email settings or try again later.'
-                        )
+                .catch(function (err) {
+                    var resetBase = t(
+                        'editProfile.passwordEmailFailed',
+                        'Could not send the password reset email. Check email settings or try again later.'
                     );
+                    showError(err && err.message ? resetBase + ' (' + err.message + ')' : resetBase);
                 })
                 .finally(function () {
                     resetBtn.disabled = false;
@@ -193,8 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 showError(mapApiError(result.body && result.body.detail));
             })
-            .catch(function () {
-                showError(t('editProfile.errorSave', 'Could not save changes.'));
+            .catch(function (err) {
+                var saveBase = t('editProfile.errorSave', 'Could not save changes.');
+                showError(err && err.message ? saveBase + ' (' + err.message + ')' : saveBase);
             })
             .finally(function () {
                 if (saveBtn) saveBtn.disabled = false;

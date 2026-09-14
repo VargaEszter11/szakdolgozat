@@ -30,6 +30,9 @@
         localStorage.removeItem('user_id');
         localStorage.removeItem('username');
         localStorage.removeItem('google_avatar_url');
+        // Remove session data for previous user
+        sessionStorage.removeItem('planner_generation_session_v1');
+        sessionStorage.removeItem('add_new_place_draft_v1');
     }
 
     window.clearAuthSession = clearSession;

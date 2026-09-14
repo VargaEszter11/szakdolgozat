@@ -321,7 +321,15 @@ def _place_key(place_name: Optional[str], country: Optional[str]) -> tuple[str, 
 def sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
     """
     When a booked trip's end_date is before today, copy each stop into visited_places
-    (skipping a final “return home” stop that matches start_city). Idempotent per place key.
+    (skipping a final “return home” stop that matches start_city).
+
+    Each stop is only ever synced once: ``PlannedTripStop.synced_to_visited`` is set
+    the first time it's copied over, regardless of whether the resulting visited
+    place still exists afterwards. Without this, a user deleting a visited place
+    that came from a booked trip would see it silently reappear the next time this
+    sync runs (e.g. on every visited-places list load), since re-deriving purely
+    from "is there already a visited place with this name/country" can't tell "never
+    synced" apart from "synced, then the user deliberately deleted it".
     """
     from datetime import date
 
@@ -333,8 +341,9 @@ def sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
         for place in get_user_visited_places(db, trip.user_id)
     }
     stops = sorted(trip.stops or [], key=lambda stop: stop.stop_order or 0)
+    stops_changed = False
     for index, stop in enumerate(stops):
-        if not stop.place_name:
+        if not stop.place_name or getattr(stop, "synced_to_visited", False):
             continue
         # Last stop that names the start city is treated as return-home, not a visit.
         is_return_home = index == len(stops) - 1 and trip.start_city and (
@@ -345,6 +354,8 @@ def sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
 
         key = _place_key(stop.place_name, stop.country)
         if key in existing:
+            cast(Any, stop).synced_to_visited = True
+            stops_changed = True
             continue
 
         create_visited_place(
@@ -362,6 +373,11 @@ def sync_completed_booked_trip_to_visited(db: Session, trip) -> None:
             ),
         )
         existing.add(key)
+        cast(Any, stop).synced_to_visited = True
+        stops_changed = True
+
+    if stops_changed:
+        db.commit()
 
 
 def sync_completed_booked_trips_to_visited(db: Session, trips) -> None:

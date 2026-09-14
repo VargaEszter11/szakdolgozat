@@ -43,6 +43,70 @@ export function planNewTripT(key, fallback, vars) {
     return text;
 }
 
+// Explain why the backend came back with zero stops (plan_builder.py sets
+// noPlanReason on the response whenever its build loop ends up empty).
+export function describeNoPlanReason(reason) {
+    if (reason === 'visited_no_match') {
+        return planNewTripT(
+            'noPlanReasonVisitedNoMatch',
+            'None of the requested places could be reached with a direct route or booked flight from your starting city.'
+        );
+    }
+    if (reason === 'no_reachable_destinations') {
+        return planNewTripT(
+            'noPlanReasonNoDestinations',
+            'No direct routes are available from your starting city with the current filters.'
+        );
+    }
+    if (reason === 'transport_mode_too_restrictive') {
+        return planNewTripT(
+            'noPlanReasonTransportRestrictive',
+            'No destinations match the selected transport mode from your starting city. Try allowing more transport modes.'
+        );
+    }
+    if (reason === 'no_availability_for_date') {
+        return planNewTripT(
+            'noPlanReasonNoAvailability',
+            'No bookable flights or ground routes were found for the selected start date.'
+        );
+    }
+    if (reason === 'booking_failed') {
+        return planNewTripT(
+            'noPlanReasonBookingFailed',
+            'A route was found, but booking details could not be confirmed for it.'
+        );
+    }
+    return null;
+}
+
+// Turn a bare HTTP failure (no usable JSON body/detail from the server, e.g. a
+// proxy/gateway error) into a message that at least explains what kind of
+// failure it likely was, instead of just showing the raw status code.
+export function describeHttpStatus(status) {
+    if (status === 502 || status === 503 || status === 504) {
+        return planNewTripT(
+            'errorServiceUnavailable',
+            'The trip-planning service is temporarily unavailable or took too long to respond. Please try again in a few minutes.'
+        ) + ' (HTTP ' + status + ')';
+    }
+    if (status === 429) {
+        return planNewTripT(
+            'errorRateLimited',
+            'Too many requests right now. Please wait a moment and try again.'
+        ) + ' (HTTP ' + status + ')';
+    }
+    if (status >= 500) {
+        return planNewTripT(
+            'errorServerGeneric',
+            'An unexpected server error occurred while generating the plan.'
+        ) + ' (HTTP ' + status + ')';
+    }
+    return planNewTripT(
+        'errorGeneric',
+        'The server responded with an unexpected error.'
+    ) + ' (HTTP ' + status + ')';
+}
+
 // Map known English API error details to localized planner strings
 export function localizePlannerErrorDetail(detail) {
     if (detail == null || detail === '') return detail;
@@ -165,7 +229,13 @@ export function displayResults(data, tripResults, resultsContainer, options = {}
         return;
     }
     if (!hasPlanStops(data.draft_plan)) {
-        showError(planNewTripT('planNoStops', 'This plan has no stops. Please try again.'), null, tripResults, resultsContainer, options);
+        showError(
+            planNewTripT('planNoStops', 'This plan has no stops. Please try again.'),
+            describeNoPlanReason(data.draft_plan.noPlanReason),
+            tripResults,
+            resultsContainer,
+            options
+        );
         return;
     }
 
@@ -343,15 +413,6 @@ export function renderTripDetails(trip, people = 1, tripTitle = '') {
             <span class="trip-length">${dateRange}</span>
         </div>
     `;
-
-    if (Array.isArray(trip.requestedPlacesMissing) && trip.requestedPlacesMissing.length) {
-        html += `
-            <p class="error-message">
-                ${escapeHtml(planNewTripT('requestedPlacesMissing', 'Could not include these requested places with the current route data:'))}
-                ${trip.requestedPlacesMissing.map(p => escapeHtml(p)).join(', ')}
-            </p>
-        `;
-    }
 
     // Destinations
     if (trip.plan && Array.isArray(trip.plan)) {

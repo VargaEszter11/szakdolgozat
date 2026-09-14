@@ -235,6 +235,30 @@ def next_stop_prompt(
     )
 
 
+def activities_only_prompt(
+    *,
+    city: str,
+    country: str,
+    lang_name: str,
+    preferences: str,
+) -> str:
+    """Prompt for a forced/kept stop: the destination is already fixed, so the
+    model only fills in activity suggestions - it cannot hallucinate a place."""
+    return _block(
+        "SYSTEM:",
+        "You suggest realistic, specific travel activities for a single, already-decided destination.",
+        f"Write activities in {lang_name}.",
+        *GENERAL_OUTPUT_RULES,
+        "USER:",
+        f"Destination: {city}, {country}",
+        f"Preferences: {preferences}",
+        ACTIVITY_SUGGESTION_RULE,
+        "Do not suggest a different destination or city; only describe activities at this one.",
+        "",
+        'Return JSON only: {"activities": ["", ""]}',
+    )
+
+
 def as_json(data: dict) -> str:
     return json.dumps(data, ensure_ascii=False)
 

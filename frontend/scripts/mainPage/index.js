@@ -72,9 +72,8 @@ function loadTravelLog() {
     })
     .catch(function (err) {
       console.error('Failed to load travel log:', err);
-      showMessageInBoth(
-        t('mainPage.loadFailed', 'Failed to load travel log. Please try again later.')
-      );
+      var base = t('mainPage.loadFailed', 'Failed to load travel log. Please try again later.');
+      showMessageInBoth(err && err.message ? base + ' (' + err.message + ')' : base);
     });
 }
 

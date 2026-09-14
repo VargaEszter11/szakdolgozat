@@ -54,7 +54,10 @@ export function fetchJson(url) {
   return fetch(url).then(function (res) {
     if (!res.ok) {
       if (res.status === 404) return [];
-      throw new Error('HTTP ' + res.status);
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        var detail = typeof body.detail === 'string' ? body.detail : '';
+        throw new Error(detail || ('HTTP ' + res.status));
+      });
     }
     return res.json();
   });

@@ -22,22 +22,41 @@ def calculate_distance_km(lat1: float, lng1: float, lat2: float, lng2: float) ->
     return earth_radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-def nearest_airport(
+def _airport_to_dict(airport: Any, distance_km: float) -> dict[str, Any]:
+    row = cast(Any, airport)
+    return {
+        "name": row.name,
+        "iata": row.iata,
+        "icao": row.icao,
+        "city": row.city,
+        "country": row.country_code,
+        "distance_km": round(distance_km, 2),
+    }
+
+
+def nearest_airports(
     lat,
     lng,
     db: Optional[Session] = None,
-    distance_km: Optional[float] = None,
-) -> Optional[dict[str, Any]]:
-    """Return the nearest airport to given coordinates using cached DB airport coordinates."""
+    limit: int = 1,
+) -> list[dict[str, Any]]:
+    """Return up to ``limit`` airports closest to given coordinates, nearest first.
+
+    Only airports with at least one active outbound direct route are considered,
+    same as ``nearest_airport``. Used so the planner can retry with the next-
+    nearest airport when the closest one's route network doesn't actually
+    produce a usable trip (e.g. wrong transport mode, no reachable destinations).
+    Purely distance-ordered - closest first, no other ranking.
+    """
     if db is None:
         logger.warning("Database session missing; nearest airport lookup skipped")
-        return None
+        return []
     try:
         origin_lat = float(lat)
         origin_lng = float(lng)
     except (TypeError, ValueError):
         logger.warning("Invalid coordinates for nearest airport lookup: %s, %s", lat, lng)
-        return None
+        return []
 
     airports = (
         db.query(models.Airport)
@@ -55,10 +74,9 @@ def nearest_airport(
     )
     if not airports:
         logger.warning("No cached route origins with coordinates available for nearest airport lookup")
-        return None
+        return []
 
-    closest = None
-    closest_distance = None
+    ranked: list[tuple[float, Any]] = []
     for airport in airports:
         airport_row = cast(Any, airport)
         try:
@@ -70,38 +88,34 @@ def nearest_airport(
             )
         except (TypeError, ValueError):
             continue
-        if closest_distance is None or distance < closest_distance:
-            closest = airport
-            closest_distance = distance
+        ranked.append((distance, airport))
 
-    if closest is None or closest_distance is None:
-        return None
+    ranked.sort(key=lambda item: item[0])
+    top = ranked[: max(1, limit)]
 
-    if distance_km is not None and closest_distance > float(distance_km):
+    if top:
+        distance, closest = top[0]
         logger.info(
-            "Nearest cached airport %s is %.1f km away, outside %.1f km preferred radius; using it anyway",
-            closest.iata,
-            closest_distance,
-            float(distance_km),
+            "Closest airport found: %s (%s, %s) %.2f km from %.6f, %.6f",
+            cast(Any, closest).iata,
+            cast(Any, closest).city or "unknown city",
+            cast(Any, closest).country_code or "unknown country",
+            distance,
+            origin_lat,
+            origin_lng,
         )
 
-    logger.info(
-        "Closest airport found: %s (%s, %s) %.2f km from %.6f, %.6f",
-        cast(Any, closest).iata,
-        cast(Any, closest).city or "unknown city",
-        cast(Any, closest).country_code or "unknown country",
-        closest_distance,
-        origin_lat,
-        origin_lng,
-    )
+    return [_airport_to_dict(airport, distance) for distance, airport in top]
 
-    closest_row = cast(Any, closest)
-    return {
-        "name": closest_row.name,
-        "iata": closest_row.iata,
-        "icao": closest_row.icao,
-        "city": closest_row.city,
-        "country": closest_row.country_code,
-        "distance_km": round(closest_distance, 2),
-    }
+
+def nearest_airport(
+    lat,
+    lng,
+    db: Optional[Session] = None,
+    distance_km: Optional[float] = None,
+) -> Optional[dict[str, Any]]:
+    """Return the single nearest airport to given coordinates. See ``nearest_airports``."""
+    del distance_km
+    results = nearest_airports(lat, lng, db=db, limit=1)
+    return results[0] if results else None
 

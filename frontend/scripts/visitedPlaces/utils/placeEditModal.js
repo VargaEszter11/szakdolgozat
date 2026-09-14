@@ -26,11 +26,17 @@
   function deletePlace(id) {
     fetch('/api/visited-places/' + id, { method: 'DELETE' })
       .then(function (res) {
-        if (!res.ok) throw new Error('Failed to delete: ' + res.status);
+        if (!res.ok) {
+          return responseDetail(res).then(function (detail) {
+            throw new Error(detail);
+          });
+        }
         deps.refreshList();
       })
       .catch(function (err) {
-        showError(t('visitedPlaces.deleteFailed', 'Failed to delete place. Please try again.'));
+        var base = t('visitedPlaces.deleteFailed', 'Failed to delete place. Please try again.');
+        var detail = err && err.message;
+        showError(detail ? base + ' (' + detail + ')' : base);
       });
   }
 

@@ -46,8 +46,8 @@ class TestPlanRequestsGeneration:
         async def fake_coords(name):
             return 47.5, 19.0
 
-        def fake_nearest(lat, lon, db=None):
-            return {"iata": "BUD", "name": "Budapest"}
+        def fake_nearest(lat, lon, db=None, limit=1):
+            return [{"iata": "BUD", "name": "Budapest"}]
 
         async def fake_cache(database, iata):
             return [{"iata": "FCO", "city": "Rome", "country": "IT"}]
@@ -61,7 +61,7 @@ class TestPlanRequestsGeneration:
             )
 
         monkeypatch.setattr(pr, "get_coordinates", fake_coords)
-        monkeypatch.setattr(pr, "nearest_airport", fake_nearest)
+        monkeypatch.setattr(pr, "nearest_airports", fake_nearest)
         monkeypatch.setattr(pr, "get_direct_destinations_cached", fake_cache)
         monkeypatch.setattr(pr, "generate_travel_plan_visited", fake_visited)
         monkeypatch.setattr(pr, "normalize_planner_response", lambda plan: plan)

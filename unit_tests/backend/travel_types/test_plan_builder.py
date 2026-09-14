@@ -101,16 +101,22 @@ def test_used_iatas():
     assert plan_builder._used_iatas([{"iata": "bud"}, {"city": "x"}, {"iata": "VIE"}]) == {"BUD", "VIE"}
 
 
-def test_fallback_and_stop_from_choice(monkeypatch):
+@pytest.mark.asyncio
+async def test_fallback_and_stop_from_choice(monkeypatch):
     monkeypatch.setattr(plan_builder.random, "choice", lambda seq: seq[0])
-    choice = plan_builder._fallback_choice(
+    monkeypatch.setattr(plan_builder, "_ask_ai_for_activities", AsyncMock(return_value=None))
+    choice = await plan_builder._fallback_choice(
         [{"city": "Vienna", "country": "AT", "iata": "VIE", "transport": "flight", "airline_iata": "OS"}],
         strategy="random",
         remaining_days=6,
         has_requested_places=False,
+        preferences=[],
+        language="en",
+        llm_provider="deepseek",
     )
     assert choice["city"] == "Vienna"
     assert choice["days"] >= 1
+    assert choice["activities"] == ["City walk", "Local sights"]
 
     monkeypatch.setattr(
         plan_builder,
@@ -312,41 +318,54 @@ def test_append_return_home(monkeypatch):
     assert first[0]["departure_from_city"] == "Miskolc"
 
 
-def test_missing_requested_places_lists_all_unused():
-    """Visited strategy must report every unused requested place, not stop at the first hit."""
-    plan = [{"city": "Paris", "country": "France"}]
+@pytest.mark.asyncio
+async def test_ask_ai_for_activities_returns_cleaned_list(monkeypatch):
+    monkeypatch.setattr(
+        plan_builder, "call_llm_api", AsyncMock(return_value='{"activities": [" Museum visit ", "", "Old town walk"]}')
+    )
+    result = await plan_builder._ask_ai_for_activities(
+        city="Vienna", country="AT", preferences=["art"], language="en", llm_provider="deepseek"
+    )
+    assert result == ["Museum visit", "Old town walk"]
 
-    assert plan_builder._missing_requested_places(
-        strategy="random",
-        requested_places=["Paris", "Rome"],
-        plan=plan,
-    ) == []
-    assert plan_builder._missing_requested_places(
+
+@pytest.mark.asyncio
+async def test_ask_ai_for_activities_returns_none_on_invalid_json(monkeypatch):
+    monkeypatch.setattr(plan_builder, "call_llm_api", AsyncMock(return_value="not json"))
+    result = await plan_builder._ask_ai_for_activities(
+        city="Vienna", country="AT", preferences=[], language="en", llm_provider="deepseek"
+    )
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_ask_ai_for_activities_returns_none_when_api_raises(monkeypatch):
+    async def boom(*a, **k):
+        raise RuntimeError("DeepSeek unavailable")
+
+    monkeypatch.setattr(plan_builder, "call_llm_api", boom)
+    result = await plan_builder._ask_ai_for_activities(
+        city="Vienna", country="AT", preferences=[], language="en", llm_provider="deepseek"
+    )
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_fallback_choice_uses_ai_activities_when_available(monkeypatch):
+    monkeypatch.setattr(plan_builder.random, "choice", lambda seq: seq[0])
+    monkeypatch.setattr(
+        plan_builder, "_ask_ai_for_activities", AsyncMock(return_value=["Danube river cruise"])
+    )
+    choice = await plan_builder._fallback_choice(
+        [{"city": "Vienna", "country": "AT", "iata": "VIE", "transport": "flight"}],
         strategy="visited",
-        requested_places=[],
-        plan=plan,
-    ) == []
-    assert plan_builder._missing_requested_places(
-        strategy="visited",
-        requested_places=["Paris", "Rome", "Vienna"],
-        plan=[],
-    ) == ["Paris", "Rome", "Vienna"]
-    assert plan_builder._missing_requested_places(
-        strategy="visited",
-        requested_places=["Paris", "Rome", "Vienna"],
-        plan=plan,
-    ) == ["Rome", "Vienna"]
-    assert plan_builder._missing_requested_places(
-        strategy="visited",
-        requested_places=["Paris"],
-        plan=plan,
-    ) == []
-    assert plan_builder._missing_requested_places(
-        strategy="visited",
-        requested_places=["Paris", "Vienna, AT"],
-        plan=plan,
-        keep_places=["Vienna, AT"],
-    ) == []
+        remaining_days=4,
+        has_requested_places=True,
+        preferences=[],
+        language="en",
+        llm_provider="deepseek",
+    )
+    assert choice["activities"] == ["Danube river cruise"]
 
 
 def test_candidate_choices_for_date(monkeypatch):
@@ -542,3 +561,135 @@ async def test_build_plan_never_forces_a_forbidden_keep_or_required_place(monkey
 
     assert captured["requested_places"] == []
     assert captured["keep_places"] == ["Vienna, Austria"]
+
+
+@pytest.mark.asyncio
+async def test_build_plan_sets_no_plan_reason_no_candidates(monkeypatch):
+    class FakeSession:
+        def close(self):
+            return None
+
+    monkeypatch.setattr(plan_builder, "SessionLocal", lambda: FakeSession())
+    monkeypatch.setattr(plan_builder, "split_place_label", lambda p: ("Budapest", "Hungary"))
+    monkeypatch.setattr(plan_builder, "resolve_home_hub_transfer", AsyncMock(return_value=None))
+    monkeypatch.setattr(plan_builder, "_append_return_home", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "refresh_booking_details", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "_ranked_step_candidates", AsyncMock(return_value=([], [])))
+
+    result = await plan_builder.build_plan(
+        strategy="random",
+        starting_point="Budapest, Hungary",
+        starting_airport_iata="BUD",
+        travel_length=5,
+        preferences=[],
+        start_date="2026-07-01",
+        end_date="2026-07-06",
+        language="en",
+        llm_provider="deepseek",
+    )
+
+    assert result["plan"] == []
+    assert result["noPlanReason"] == "no_reachable_destinations"
+
+
+@pytest.mark.asyncio
+async def test_build_plan_sets_no_plan_reason_visited_no_match(monkeypatch):
+    class FakeSession:
+        def close(self):
+            return None
+
+    monkeypatch.setattr(plan_builder, "SessionLocal", lambda: FakeSession())
+    monkeypatch.setattr(plan_builder, "split_place_label", lambda p: ("Budapest", "Hungary"))
+    monkeypatch.setattr(plan_builder, "resolve_home_hub_transfer", AsyncMock(return_value=None))
+    monkeypatch.setattr(plan_builder, "_append_return_home", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "refresh_booking_details", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "_ranked_step_candidates", AsyncMock(return_value=([], [])))
+
+    result = await plan_builder.build_plan(
+        strategy="visited",
+        starting_point="Budapest, Hungary",
+        starting_airport_iata="BUD",
+        travel_length=5,
+        preferences=[],
+        start_date="2026-07-01",
+        end_date="2026-07-06",
+        language="en",
+        llm_provider="deepseek",
+        visited_places=["Tokyo, Japan"],
+    )
+
+    assert result["plan"] == []
+    assert result["noPlanReason"] == "visited_no_match"
+
+
+@pytest.mark.asyncio
+async def test_build_plan_omits_no_plan_reason_when_plan_is_non_empty(monkeypatch):
+    """noPlanReason must not appear at all once a plan was actually built."""
+
+    class FakeSession:
+        def close(self):
+            return None
+
+    monkeypatch.setattr(plan_builder, "SessionLocal", lambda: FakeSession())
+    monkeypatch.setattr(plan_builder, "split_place_label", lambda p: ("Budapest", "Hungary"))
+    monkeypatch.setattr(plan_builder, "resolve_home_hub_transfer", AsyncMock(return_value=None))
+    monkeypatch.setattr(plan_builder, "_append_return_home", lambda *a, **k: None)
+    monkeypatch.setattr(plan_builder, "refresh_booking_details", lambda *a, **k: None)
+    monkeypatch.setattr(
+        plan_builder,
+        "_ranked_step_candidates",
+        AsyncMock(
+            return_value=(
+                [{"city": "Vienna", "country": "AT", "iata": "VIE", "transport": "flight"}],
+                [],
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        plan_builder,
+        "_candidate_choices_for_date",
+        lambda *a, **k: [{"city": "Vienna", "country": "AT", "iata": "VIE", "transport": "flight"}],
+    )
+    monkeypatch.setattr(
+        plan_builder,
+        "_ask_ai_to_pick_candidate",
+        AsyncMock(
+            return_value={
+                "city": "Vienna",
+                "country": "AT",
+                "iata": "VIE",
+                "days": 5,
+                "transportFromPreviousCity": "flight",
+                "activities": ["walk"],
+            }
+        ),
+    )
+    monkeypatch.setattr(
+        plan_builder,
+        "_stop_from_choice",
+        lambda db, choice, current_airport, cursor, remaining_days: {
+            "city": choice["city"],
+            "country": choice["country"],
+            "iata": choice["iata"],
+            "days": choice["days"],
+            "arrivalDate": "2026-07-01",
+            "departureDate": "2026-07-06",
+            "transportFromPreviousCity": "flight",
+            "activities": choice["activities"],
+        },
+    )
+
+    result = await plan_builder.build_plan(
+        strategy="random",
+        starting_point="Budapest, Hungary",
+        starting_airport_iata="BUD",
+        travel_length=5,
+        preferences=[],
+        start_date="2026-07-01",
+        end_date="2026-07-06",
+        language="en",
+        llm_provider="deepseek",
+    )
+
+    assert result["plan"]
+    assert "noPlanReason" not in result

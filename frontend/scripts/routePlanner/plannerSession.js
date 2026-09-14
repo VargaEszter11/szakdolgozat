@@ -75,6 +75,34 @@
     return detail;
   }
 
+  // Mirrors tripRenderer.js's describeHttpStatus() - kept as a separate copy
+  // here because this file is a plain script (not an ES module) and runs
+  // outside the planner page, so it can't import from tripRenderer.js.
+  function describeHttpStatus(status) {
+    if (status === 502 || status === 503 || status === 504) {
+      return t(
+        'planNewTrip.errorServiceUnavailable',
+        'The trip-planning service is temporarily unavailable or took too long to respond. Please try again in a few minutes.'
+      ) + ' (HTTP ' + status + ')';
+    }
+    if (status === 429) {
+      return t(
+        'planNewTrip.errorRateLimited',
+        'Too many requests right now. Please wait a moment and try again.'
+      ) + ' (HTTP ' + status + ')';
+    }
+    if (status >= 500) {
+      return t(
+        'planNewTrip.errorServerGeneric',
+        'An unexpected server error occurred while generating the plan.'
+      ) + ' (HTTP ' + status + ')';
+    }
+    return t(
+      'planNewTrip.errorGeneric',
+      'The server responded with an unexpected error.'
+    ) + ' (HTTP ' + status + ')';
+  }
+
   function isActiveGenerationSession(session, expectedId) {
     if (!session || session.status !== 'generating') return false;
     if (session.generationId != null && session.generationId !== expectedId) return false;
@@ -180,7 +208,7 @@
       if (!isActiveGenerationSession(load(), generationId)) return;
 
       if (!response.ok) {
-        var detail = 'HTTP ' + response.status;
+        var detail = describeHttpStatus(response.status);
         try {
           var errBody = await response.json();
           if (errBody && errBody.detail) {

@@ -29,6 +29,10 @@ function migrateLegacyTutorialCompleted(userId) {
 
 // Save session and redirect
 function saveSessionAndRedirect(data) {
+    // Remove session data for previous user
+    sessionStorage.removeItem("planner_generation_session_v1");
+    sessionStorage.removeItem("add_new_place_draft_v1");
+
     localStorage.setItem("user_id", data.user_id);
     localStorage.setItem("username", data.username);
     if (data.access_token) {

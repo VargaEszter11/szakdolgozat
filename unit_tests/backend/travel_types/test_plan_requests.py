@@ -204,8 +204,8 @@ async def test_generate_plan_with_location(monkeypatch):
     async def coords(name):
         return 47.5, 19.0
 
-    def nearest(lat, lon, db=None):
-        return {"iata": "BUD"}
+    def nearest(lat, lon, db=None, limit=1):
+        return [{"iata": "BUD"}]
 
     async def cache(db, iata):
         return [{"iata": "VIE"}]
@@ -214,7 +214,7 @@ async def test_generate_plan_with_location(monkeypatch):
         return '{"plan":[{"city":"Vienna"}]}'
 
     monkeypatch.setattr(pg, "get_coordinates", coords)
-    monkeypatch.setattr(pg, "nearest_airport", nearest)
+    monkeypatch.setattr(pg, "nearest_airports", nearest)
     monkeypatch.setattr(pg, "get_direct_destinations_cached", cache)
     monkeypatch.setattr(pg, "normalize_planner_response", lambda plan: plan)
 
@@ -233,6 +233,92 @@ async def test_generate_plan_with_location(monkeypatch):
     assert result["nearest_airport"]["iata"] == "BUD"
     assert result["draft_plan"]["startDate"] == start.isoformat()
     assert result["starting_point_coords"] == {"lat": 47.5, "lon": 19.0}
+
+
+@pytest.mark.asyncio
+async def test_generate_plan_with_location_retries_next_nearest_airport(monkeypatch):
+    """If the closest airport's network produces no stops, retry with the next-nearest."""
+    from datetime import date, timedelta
+
+    async def coords(name):
+        return 47.5, 19.0
+
+    def nearest(lat, lon, db=None, limit=1):
+        return [{"iata": "BUD"}, {"iata": "VIE"}, {"iata": "PRG"}]
+
+    async def cache(db, iata):
+        return [{"iata": "XXX"}]
+
+    attempts = []
+
+    async def draft(*args, **kwargs):
+        attempts.append(kwargs.get("starting_airport_iata"))
+        if kwargs.get("starting_airport_iata") == "BUD":
+            return '{"plan":[],"noPlanReason":"no_reachable_destinations"}'
+        return '{"plan":[{"city":"Vienna"}]}'
+
+    monkeypatch.setattr(pg, "get_coordinates", coords)
+    monkeypatch.setattr(pg, "nearest_airports", nearest)
+    monkeypatch.setattr(pg, "get_direct_destinations_cached", cache)
+    monkeypatch.setattr(pg, "normalize_planner_response", lambda plan: plan)
+
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=4)
+    result = await pg.generate_plan_with_location(
+        draft,
+        starting_point="Budapest",
+        start_date=start.isoformat(),
+        end_date=end.isoformat(),
+        people=2,
+        travel_length=4,
+        db=MagicMock(),
+        preferredTransport="allModes",
+    )
+
+    assert attempts == ["BUD", "VIE"]
+    assert result["nearest_airport"]["iata"] == "VIE"
+    assert len(result["draft_plan"]["plan"]) == 1
+    assert result["draft_plan"]["plan"][0]["city"] == "Vienna"
+
+
+@pytest.mark.asyncio
+async def test_generate_plan_with_location_keeps_last_reason_when_all_airports_fail(monkeypatch):
+    """All candidates empty: give up after the last one, keeping its noPlanReason."""
+    from datetime import date, timedelta
+
+    async def coords(name):
+        return 47.5, 19.0
+
+    def nearest(lat, lon, db=None, limit=1):
+        return [{"iata": "BUD"}, {"iata": "VIE"}]
+
+    async def cache(db, iata):
+        return []
+
+    async def draft(*args, **kwargs):
+        return '{"plan":[],"noPlanReason":"no_reachable_destinations"}'
+
+    monkeypatch.setattr(pg, "get_coordinates", coords)
+    monkeypatch.setattr(pg, "nearest_airports", nearest)
+    monkeypatch.setattr(pg, "get_direct_destinations_cached", cache)
+    monkeypatch.setattr(pg, "normalize_planner_response", lambda plan: plan)
+
+    start = date.today() + timedelta(days=10)
+    end = start + timedelta(days=4)
+    result = await pg.generate_plan_with_location(
+        draft,
+        starting_point="Budapest",
+        start_date=start.isoformat(),
+        end_date=end.isoformat(),
+        people=2,
+        travel_length=4,
+        db=MagicMock(),
+        preferredTransport="allModes",
+    )
+
+    assert result["nearest_airport"]["iata"] == "VIE"
+    assert result["draft_plan"]["plan"] == []
+    assert result["draft_plan"]["noPlanReason"] == "no_reachable_destinations"
 
 
 @pytest.mark.asyncio

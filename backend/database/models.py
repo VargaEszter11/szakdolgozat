@@ -138,6 +138,10 @@ class PlannedTripStop(Base):
     longitude = Column(Float, nullable=True)
     booking_url = Column(Text, nullable=True)
     flight_availability_verified = Column(Boolean, nullable=True)
+    # Set once this stop has been copied into visited_places by the completed-
+    # booked-trip sync, so a user deleting that visited place doesn't cause it
+    # to silently reappear the next time the sync runs.
+    synced_to_visited = Column(Boolean, nullable=False, default=False)
 
     # Relationships
     trip = relationship("PlannedTrip", back_populates="stops")

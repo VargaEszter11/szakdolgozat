@@ -8,6 +8,7 @@ from database.airport_city import airport_name_as_city
     [
         ("BUD", "Budapest"),
         ("bud", "Budapest"),
+        ("KEF", "Reykjavik"),
         ("PRG", "Prague"),
         ("TXL", "Berlin"),
         ("WMI", "Warsaw"),

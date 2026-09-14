@@ -25,6 +25,21 @@
     }
   }
 
+  async function responseDetail(res) {
+    var j = await res.json().catch(function () { return null; });
+    if (!j) return 'HTTP ' + res.status;
+    var d = j.detail;
+    if (typeof d === 'string') return d;
+    if (Array.isArray(d)) {
+      return d.map(function (e) {
+        if (typeof e === 'string') return e;
+        return (e.msg || '') + (e.loc ? ' (' + e.loc.join('.') + ')' : '');
+      }).filter(Boolean).join('; ') || ('HTTP ' + res.status);
+    }
+    if (d != null && typeof d === 'object') return JSON.stringify(d);
+    return res.statusText || ('HTTP ' + res.status);
+  }
+
   function absoluteShareUrl(relativePath) {
     if (!relativePath) return '';
     if (/^https?:\/\//i.test(relativePath)) return relativePath;
@@ -42,7 +57,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: parseInt(userId, 10) })
     });
-    if (!response.ok) throw new Error('share-link ' + response.status);
+    if (!response.ok) throw new Error(await responseDetail(response));
     return response.json();
   }
 
@@ -57,7 +72,7 @@
         to_user_id: parseInt(toUserId, 10)
       })
     });
-    if (!response.ok) throw new Error('share ' + response.status);
+    if (!response.ok) throw new Error(await responseDetail(response));
     return true;
   }
 
@@ -103,7 +118,8 @@
         }
       } catch (e) {
         console.error(e);
-        showError(plannedTripsT('shareLinkError', 'Could not create share link.'));
+        var linkBase = plannedTripsT('shareLinkError', 'Could not create share link.');
+        showError(e && e.message ? linkBase + ' (' + e.message + ')' : linkBase);
       }
 
       function removeModal() {
@@ -185,7 +201,8 @@
             removeModal();
           } catch (e) {
             console.error(e);
-            showError(plannedTripsT('shareSendError', 'Could not send trip share.'));
+            var sendBase = plannedTripsT('shareSendError', 'Could not send trip share.');
+            showError(e && e.message ? sendBase + ' (' + e.message + ')' : sendBase);
             sendBtn.disabled = false;
           }
         });
@@ -202,7 +219,8 @@
       document.addEventListener('keydown', handleEsc);
     } catch (err) {
       console.error('openShareModal', err);
-      showError(plannedTripsT('shareLinkError', 'Could not create share link.'));
+      var openBase = plannedTripsT('shareLinkError', 'Could not create share link.');
+      showError(err && err.message ? openBase + ' (' + err.message + ')' : openBase);
     }
   }
 
@@ -214,7 +232,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: parseInt(userId, 10) })
     });
-    if (!response.ok) throw new Error(action + ' ' + response.status);
+    if (!response.ok) throw new Error(await responseDetail(response));
   }
 
   async function loadShareInbox() {
@@ -282,7 +300,10 @@
         })
         .catch(function (err) {
           console.error(err);
-          showError(plannedTripsT('shareSendError', 'Could not send trip share.'));
+          var base = action === 'accept'
+            ? plannedTripsT('shareAcceptError', 'Could not accept the invitation.')
+            : plannedTripsT('shareDeclineError', 'Could not decline the invitation.');
+          showError(err && err.message ? base + ' (' + err.message + ')' : base);
         });
     });
   }

@@ -122,7 +122,11 @@
       feedbackItemsById = {};
       try {
         var res = await fetch('/api/feedback/mine');
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!res.ok) {
+          var loadErrBody = await res.json().catch(function () { return {}; });
+          var loadDetail = typeof loadErrBody.detail === 'string' ? loadErrBody.detail : '';
+          throw new Error(loadDetail || ('HTTP ' + res.status));
+        }
         var items = await res.json();
         if (!items.length) {
           feedbackListEl.innerHTML =
@@ -186,9 +190,10 @@
         feedbackListEl.innerHTML = html;
         feedbackListEl.dataset.feedbackExpanded = '0';
       } catch (e) {
+        var histBase = tFeedback('profile.feedbackHistoryFailed', 'Could not load your feedback.');
         feedbackListEl.innerHTML =
           '<p class="muted">' +
-          escapeHtml(tFeedback('profile.feedbackHistoryFailed', 'Could not load your feedback.')) +
+          escapeHtml(e && e.message ? histBase + ' (' + e.message + ')' : histBase) +
           '</p>';
       }
     }

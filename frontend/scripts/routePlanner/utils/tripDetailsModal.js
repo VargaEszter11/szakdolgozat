@@ -238,7 +238,11 @@
       destroyPopups();
 
       var response = await fetch('/api/planned-trips/' + tripId);
-      if (!response.ok) throw new Error(plannedTripsT('loadDetailsFailed', 'Failed to load trip details'));
+      if (!response.ok) {
+        var errBody = await response.json().catch(function () { return {}; });
+        var detail = typeof errBody.detail === 'string' ? errBody.detail : '';
+        throw new Error(detail || ('HTTP ' + response.status));
+      }
       var trip = await response.json();
 
       var template = document.getElementById('tripDetailsModalTemplate');

@@ -11,7 +11,7 @@ Pipeline (``generate_plan_with_location``):
 import asyncio
 import json
 from datetime import datetime
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, Sequence, cast
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -32,7 +32,7 @@ from travel_types.booking import booking_url
 from utils.coordinates import geocode_city_center, geocode_place
 from utils.countries import geocode_country_label
 from utils.direct_destinations_cache import get_direct_destinations_cached
-from utils.nearest_airport import nearest_airport
+from utils.nearest_airport import nearest_airports
 from utils.plan_enrichment import normalize_planner_response
 
 
@@ -311,33 +311,53 @@ async def generate_plan_with_location(
     db: Optional[Session] = None,
     **kwargs,
 ):
-    """Shared entry for all three planner modes after the form is validated."""
+    """Shared entry for all three planner modes after the form is validated.
+
+    Tries up to the 5 nearest airports, closest first: if one airport's route
+    network doesn't produce any usable stops (e.g. wrong transport mode, no
+    reachable destinations - see plan_builder.build_plan's noPlanReason),
+    retries with the next-nearest airport before giving up.
+    """
     lat, lon = await get_coordinates(starting_point)
-    airport = nearest_airport(lat, lon, db=db)
+    airport_candidates = nearest_airports(lat, lon, db=db, limit=5)
     preferred_transport = kwargs.get("preferredTransport") or "allModes"
     # Ground-only modes skip flight route loading entirely.
     should_load_direct_destinations = preferred_transport not in {"trainBus", "trainBusFerry"}
-    direct_destinations = (
-        await get_direct_destinations_cached(db, airport["iata"])
-        if should_load_direct_destinations and airport and airport.get("iata")
-        else []
+
+    # No cached airport at all: single LLM-only-fallback attempt, no retry target.
+    candidates: Sequence[Optional[dict[str, Any]]] = (
+        airport_candidates if airport_candidates else [None]
     )
 
-    draft_plan_raw = await draft_plan_func(
-        *args,
-        direct_destinations=direct_destinations,
-        starting_airport_iata=(airport or {}).get("iata"),
-        start_date=start_date,
-        end_date=end_date,
-        **kwargs,
-    )
+    airport: Optional[dict[str, Any]] = None
+    draft_plan: dict = {}
+    for candidate in candidates:
+        direct_destinations = (
+            await get_direct_destinations_cached(db, candidate["iata"])
+            if candidate and should_load_direct_destinations
+            else []
+        )
 
-    draft_plan = set_requested_dates(
-        parse_planner_json(draft_plan_raw),
-        start_date=start_date,
-        end_date=end_date,
-        travel_length=travel_length,
-    )
+        draft_plan_raw = await draft_plan_func(
+            *args,
+            direct_destinations=direct_destinations,
+            starting_airport_iata=candidate["iata"] if candidate else None,
+            start_date=start_date,
+            end_date=end_date,
+            **kwargs,
+        )
+
+        draft_plan = set_requested_dates(
+            parse_planner_json(draft_plan_raw),
+            start_date=start_date,
+            end_date=end_date,
+            travel_length=travel_length,
+        )
+        airport = candidate
+        if draft_plan.get("plan") or draft_plan.get("trips"):
+            break
+        # Empty plan from this airport - fall through and try the next-nearest one.
+
     if db is not None:
         clean_plan_city_names(draft_plan, db)
         await attach_lodging_coordinates(draft_plan)

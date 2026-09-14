@@ -3,6 +3,7 @@ import {
     showError,
     planNewTripT,
     localizePlannerErrorDetail,
+    describeHttpStatus,
     createEmptyStopFeedback,
     syncStopFeedbackFromCards
 } from './tripRenderer.js';
@@ -564,7 +565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch(`${API_BASE_URL}${ENDPOINTS[planType]}`, fetchOpts);
 
             if (!response.ok) {
-                let detail = `HTTP ${response.status}`;
+                let detail = describeHttpStatus(response.status);
                 try {
                     const errBody = await response.json();
                     if (errBody.detail) {
