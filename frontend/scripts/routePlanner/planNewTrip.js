@@ -56,12 +56,7 @@ function resetPlannerFormFields() {
         people.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    const transport = document.getElementById('preferredTransport');
-    if (transport) {
-        transport.value = 'allModes';
-        transport.classList.add('has-value');
-        transport.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    setTransportValue('allModes');
 
     if (startDatePicker) {
         startDatePicker.set('minDate', todayIso());
@@ -122,6 +117,27 @@ const ENDPOINTS = {
 let selectedPlan = 'random';
 let generationInFlight = false;
 let activeGenerationAbort = null;
+let transportWidget = null;
+
+function mountTransportDropdown() {
+    if (transportWidget || !window.Dropdown) return;
+    const wrap = document.getElementById('preferredTransport')?.closest('.app-dropdown');
+    if (!wrap) return;
+    transportWidget = window.Dropdown.mountSelect(wrap, {});
+    if (transportWidget) transportWidget.setValue('allModes');
+    window.addEventListener('app:languagechange', () => {
+        if (transportWidget) transportWidget.refreshLabel();
+    });
+}
+
+function setTransportValue(value) {
+    if (transportWidget) {
+        transportWidget.setValue(value);
+    } else {
+        const el = document.getElementById('preferredTransport');
+        if (el) el.value = value;
+    }
+}
 
 function useTravelLogFromDb() {
     const el = document.getElementById('useTravelLogInPlanner');
@@ -342,13 +358,17 @@ function patchStalePlannerSession(session) {
 
 function updatePlacesField() {
     const placesGroup = document.getElementById('placesGroup');
-    if (!placesGroup) return;
+    const dbToggleWrap = document.querySelector('.planner-db-toggle-wrap');
 
     if (selectedPlan === 'random') {
-        placesGroup.style.display = 'none';
+        if (dbToggleWrap) dbToggleWrap.style.display = 'none';
+        if (placesGroup) placesGroup.style.display = 'none';
         return;
     }
 
+    if (dbToggleWrap) dbToggleWrap.style.display = '';
+
+    if (!placesGroup) return;
     placesGroup.style.display = '';
 
     const t = window.i18n ? window.i18n.t.bind(window.i18n) : (k) => k;
@@ -433,7 +453,7 @@ function applyFormSnapshot(form) {
     setVal('tripTitle', form.tripTitle);
     setVal('startingCity', form.startingCity);
     setVal('people', form.people);
-    setVal('preferredTransport', form.preferredTransport);
+    if (form.preferredTransport != null) setTransportValue(form.preferredTransport);
     setVal('preferences', form.preferences);
     setVal('placesList', form.placesList);
     syncLinkedDatePickers(form.startDate, form.endDate);
@@ -480,6 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('tripPlanForm');
     trackFilledInputs();
     initDatePickers();
+    mountTransportDropdown();
     refreshPlannerDbHints();
     const loadingState = document.getElementById('loadingState');
     const resultsContainer = document.getElementById('resultsContainer');

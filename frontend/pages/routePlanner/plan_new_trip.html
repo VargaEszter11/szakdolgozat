@@ -133,15 +133,39 @@
                                     class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="preferredTransport" class="form-label"
-                                    data-i18n="planNewTrip.preferredTransport">Preferred Transport</label>
-                                <select id="preferredTransport" name="preferredTransport" required class="form-input">
-                                    <option value="allModes" data-i18n="planNewTrip.allModes">All modes</option>
-                                    <option value="flight" data-i18n="planNewTrip.flight">Flight</option>
-                                    <option value="trainBus" data-i18n="planNewTrip.trainBus">Train/Bus</option>
-                                    <option value="trainBusFerry" data-i18n="planNewTrip.trainBusFerry">Train/Bus/Ferry
-                                    </option>
-                                </select>
+                                <span class="form-label" id="preferredTransportLabel"
+                                    data-i18n="planNewTrip.preferredTransport">Preferred Transport</span>
+                                <div class="app-dropdown">
+                                    <button type="button" class="form-input app-dropdown-trigger"
+                                        id="preferredTransportTrigger" aria-haspopup="listbox" aria-expanded="false"
+                                        aria-labelledby="preferredTransportLabel">
+                                        <span class="app-dropdown-label"></span>
+                                    </button>
+                                    <ul class="app-dropdown-list" id="preferredTransportList" role="listbox"
+                                        aria-labelledby="preferredTransportLabel" hidden>
+                                        <li class="app-dropdown-option" role="option" data-value="allModes"
+                                            tabindex="-1">
+                                            <span class="app-dropdown-name" data-i18n="planNewTrip.allModes">All
+                                                modes</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="flight"
+                                            tabindex="-1">
+                                            <span class="app-dropdown-name" data-i18n="planNewTrip.flight">Flight</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="trainBus"
+                                            tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="planNewTrip.trainBus">Train/Bus</span>
+                                        </li>
+                                        <li class="app-dropdown-option" role="option" data-value="trainBusFerry"
+                                            tabindex="-1">
+                                            <span class="app-dropdown-name"
+                                                data-i18n="planNewTrip.trainBusFerry">Train/Bus/Ferry</span>
+                                        </li>
+                                    </ul>
+                                    <input type="hidden" id="preferredTransport" name="preferredTransport"
+                                        value="allModes">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="preferences" class="form-label"

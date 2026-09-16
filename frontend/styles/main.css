@@ -1771,4 +1771,14 @@ body.tutorial-tour-active {
         width: auto;
         max-width: none;
     }
+
+    .header-notifications-panel {
+        position: fixed;
+        top: var(--nav-drawer-offset-top, 4.5rem);
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        max-width: none;
+        max-height: min(70vh, 26rem);
+    }
 }
