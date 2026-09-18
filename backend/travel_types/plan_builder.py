@@ -271,6 +271,13 @@ async def _ask_ai_to_pick_candidate(
     language: str,
     llm_provider: str,
 ) -> Optional[Dict[str, Any]]:
+    min_stop_days = _minimum_stop_days(remaining_days)
+    
+    max_days = (
+        remaining_days - min_stop_days
+        if remaining_days > min_stop_days * 2
+        else remaining_days
+    )
     prompt = next_stop_prompt(
         strategy=strategy,
         lang_name=language_name(language),
@@ -278,7 +285,8 @@ async def _ask_ai_to_pick_candidate(
         current_city_label=current_city_label,
         prefs=preferences_line(preferences),
         remaining_days=remaining_days,
-        min_stop_days=_minimum_stop_days(remaining_days),
+        min_stop_days=min_stop_days,
+        max_days=max_days,
         cand_block=_format_candidates(candidates),
         avoid=", ".join(str(stop.get("city") or "") for stop in plan) or "none",
         requested_places=requested_places,

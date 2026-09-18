@@ -180,6 +180,7 @@ def next_stop_prompt(
     remaining_days: int,
     min_stop_days: int,
     cand_block: str,
+    max_days: int | None = None,
     avoid: str,
     requested_places: list | None = None,
     forbidden_places: list | None = None,
@@ -218,9 +219,12 @@ def next_stop_prompt(
         "- For flight candidates, respect the listed seasonality/effective dates. Do not invent missing operating dates.",
         "- Unknown seasonality means the route is reachable but date details are not verified by the source.",
         "- Avoid choosing another airport/city in the exact same metro area unless it is genuinely the intended destination.",
-        f'- "days": integer from {min_stop_days} to {remaining_days} (days spent at the chosen city before moving on).',
+        f'- "days": integer from {min_stop_days} to {max_days if max_days is not None else remaining_days} (days spent at the chosen city before moving on).',
         "- Prefer fewer well-paced stops over many rushed stops; do not leave a single leftover day for another city.",
-        f'- If all remaining days should be spent at this city (last stop before return home), set "days" to {remaining_days}.',
+        (
+            f'- Only set "days" to all {remaining_days} remaining days if there are too few days left to '
+            "justify a second stop; otherwise leave enough days for at least one more stop before returning home."
+        ),
         '- "transportFromPreviousCity": use the transport listed on the chosen candidate row.',
         f'- "preferences": choose from the preferences listed in {prefs} when selecting the activities, but not only from them.',
         (
