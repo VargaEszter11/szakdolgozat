@@ -63,22 +63,3 @@ def test_trip_stop_decimal_price():
 
     assert stop.estimated_price == Decimal("199.99")
 
-def test_airport_iata_length_validation():
-    with pytest.raises(ValidationError):
-        schemas.AirportCreate(
-            iata="BU",  # too short
-            icao=None,
-            name="Budapest",
-            country_code=None,
-            country=None,
-        )
-
-
-def test_direct_route_default_flight_number():
-    route = schemas.DirectRouteCreate(
-        airline_iata=None,
-        origin_iata="BUD",
-        destination_iata="LHR",
-    )
-
-    assert route.flight_number == "DIRECT"

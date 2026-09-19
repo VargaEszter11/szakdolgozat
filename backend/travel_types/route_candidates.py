@@ -7,7 +7,7 @@ import re
 from typing import List, Optional
 
 from database import crud, models
-from database.airport_regions import EUROPE_COUNTRY_CODES, is_europe_country
+from database.airport_regions import is_europe_country
 from utils.direct_destinations_cache import get_direct_destinations_cached
 
 from .place_matching import filter_strategy_candidates

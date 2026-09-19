@@ -33,19 +33,6 @@ def _country_tokens(value: str) -> set[str]:
     return tokens
 
 
-def is_forbidden(city_name: str, country_name: str, visited_cities: set, visited_full: list) -> bool:
-    city_lower = city_name.lower()
-    if city_lower in visited_cities:
-        return True
-    full_str = f"{city_lower}, {country_name.lower()}" if country_name else city_lower
-    for visited in visited_full:
-        if city_lower in visited or visited in city_lower:
-            return True
-        if visited in full_str or full_str in visited:
-            return True
-    return False
-
-
 def place_matches_candidate(place: str, candidate: dict) -> bool:
     """True when a user-typed place matches a route or off-airport candidate."""
     place_city = extract_city(place)

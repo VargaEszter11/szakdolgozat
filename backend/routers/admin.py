@@ -4,7 +4,7 @@ import secrets
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import inspect, text

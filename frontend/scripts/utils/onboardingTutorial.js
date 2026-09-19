@@ -840,28 +840,6 @@
     }
   }
 
-  window.resetTravelTutorial = function () {
-    clearLegacyTutorialLocalStorage();
-    persistTutorialCompleted(false);
-    sessionStorage.setItem(PENDING_KEY, '1');
-    sessionStorage.setItem(STEP_KEY, '1');
-    sessionStorage.removeItem(LANG_READY_KEY);
-    if (tour) destroyTour(tour);
-    destroyLanguagePrompt();
-    var orphanRoot = document.querySelector('.tutorial-tour-root');
-    if (orphanRoot) orphanRoot.remove();
-    var orphanTip = document.querySelector('.tutorial-tour-tip');
-    if (orphanTip) orphanTip.remove();
-    document.body.classList.remove('tutorial-tour-active');
-    clearElevate();
-    var homePath = (location.pathname || '/').replace(/\/+$/, '') || '/';
-    if (homePath !== '/' && homePath !== '/home') {
-      window.location.href = '/?tutorial=1';
-      return;
-    }
-    beginTutorialFlow();
-  };
-
   window.startTravelTutorial = beginTutorialFlow;
 
   if (document.readyState === 'loading') {

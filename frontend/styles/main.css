@@ -38,10 +38,6 @@ body {
     border-bottom: 1px solid var(--color-header-border);
 }
 
-.main-page-home-header .main-nav {
-    display: none;
-}
-
 .main-header-profile {
     display: flex;
     align-items: center;
@@ -461,10 +457,7 @@ body {
 
 .btn-add,
 a.btn-add,
-button.btn-add,
-.btn-submit,
-a.btn-submit,
-button.btn-submit {
+button.btn-add {
     background: var(--color-accent);
     color: var(--color-on-accent);
     border: none;
@@ -484,17 +477,13 @@ button.btn-submit {
 
 .btn-add:hover,
 a.btn-add:hover,
-button.btn-add:hover,
-.btn-submit:hover,
-a.btn-submit:hover,
-button.btn-submit:hover {
+button.btn-add:hover {
     background: var(--color-accent-hover);
     color: var(--color-on-accent);
     filter: none;
 }
 
-.btn-add .icon,
-.btn-submit .icon {
+.btn-add .icon {
     flex-shrink: 0;
 }
 
@@ -769,16 +758,6 @@ button.btn-cancel:hover {
     justify-content: center;
     gap: 0.85rem;
     min-width: 9.5rem;
-}
-
-.main-page-home .main-europe-chart-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    width: 100%;
-    padding: 0.25rem 0;
 }
 
 .main-page-home .main-europe-chart-pie-outer {
@@ -1247,9 +1226,6 @@ body.page-profile .main-page-home-content-inner>section.card {
     .form-actions .btn-cancel,
     .form-actions a.btn-cancel,
     .form-actions button.btn-cancel,
-    .form-actions .btn-submit,
-    .form-actions a.btn-submit,
-    .form-actions button.btn-submit,
     .main-page-home .btn-add.btn-add-outline,
     .main-page-home .profile-actions-row .btn-add,
     .main-page-home .add-place-form .btn-add,

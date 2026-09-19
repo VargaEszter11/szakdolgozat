@@ -17,7 +17,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from database import crud, models
+from database import models
 from database.airport_city import airport_name_as_city
 from travel_types import (
     UnvisitedGenerationRequest,
@@ -87,25 +87,6 @@ def apply_stop_feedback(
     disliked_keys = {p.lower() for p in disliked}
     liked = [p for p in liked if p.lower() not in disliked_keys]
     return list(preferences or []), liked, disliked
-
-
-def places_without_disliked(
-    places: List[str], disliked_places: List[str]
-) -> List[str]:
-    if not disliked_places:
-        return list(places or [])
-    return [
-        place
-        for place in (places or [])
-        if not any(
-            place.lower() == disliked.lower()
-            or place.lower().startswith(disliked.split(",")[0].strip().lower() + ",")
-            or disliked.lower().startswith(place.split(",")[0].strip().lower() + ",")
-            or place.split(",")[0].strip().lower()
-            == disliked.split(",")[0].strip().lower()
-            for disliked in disliked_places
-        )
-    ]
 
 
 async def geocode_places(request: GeocodeRequest) -> list:

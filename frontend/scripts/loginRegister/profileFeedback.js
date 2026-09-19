@@ -345,10 +345,6 @@
     }
   }
 
-  window.ProfileFeedback = {
-    init: initProfileFeedback
-  };
-
   document.addEventListener('DOMContentLoaded', function () {
     if (!localStorage.getItem('user_id') || !localStorage.getItem('username')) return;
     initProfileFeedback();

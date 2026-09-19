@@ -1,5 +1,4 @@
 /** App ISO codes match GeoJSON / flagcdn (KZ for Kazakhstan). */
-export var ISO_TO_GEO = {};
 export var GEO_TO_APP = {};
 
 export function getEuropeIsoList() {
@@ -29,19 +28,6 @@ export function resolveEuropeIso(country) {
   var raw = String(country || '').trim().toUpperCase();
   if (raw === 'UK') raw = 'GB';
   if (raw.length === 2 && europe[raw]) return raw;
-  return null;
-}
-
-export function resolveAnyIso(country) {
-  var eu = resolveEuropeIso(country);
-  if (eu) return eu;
-  if (window.Countries && window.Countries.normalizeCode) {
-    var n = window.Countries.normalizeCode(country);
-    if (n && n.length === 2) return n.toUpperCase();
-  }
-  var raw = String(country || '').trim().toUpperCase();
-  if (raw === 'UK') return 'GB';
-  if (raw.length === 2 && /^[A-Z]{2}$/.test(raw)) return raw;
   return null;
 }
 
@@ -93,11 +79,6 @@ export function appIsoFromGeo(geoIso) {
   if (!geoIso) return null;
   if (GEO_TO_APP[geoIso]) return GEO_TO_APP[geoIso];
   return geoIso;
-}
-
-export function geoIsoFromApp(appIso) {
-  if (!appIso) return null;
-  return ISO_TO_GEO[appIso] || appIso;
 }
 
 export function isEuropeFeature(feature) {

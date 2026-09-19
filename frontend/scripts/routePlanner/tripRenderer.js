@@ -295,27 +295,6 @@ export function createEmptyStopFeedback() {
     return { likedPlaces: [], dislikedPlaces: [] };
 }
 
-export function mergeStopFeedback(base, patch) {
-    const liked = feedbackIndex(base && base.likedPlaces);
-    const disliked = feedbackIndex(base && base.dislikedPlaces);
-
-    normalizeFeedbackList(patch && patch.likedPlaces).forEach(function (item) {
-        const key = item.toLowerCase();
-        disliked.delete(key);
-        liked.set(key, item);
-    });
-    normalizeFeedbackList(patch && patch.dislikedPlaces).forEach(function (item) {
-        const key = item.toLowerCase();
-        liked.delete(key);
-        disliked.set(key, item);
-    });
-
-    return {
-        likedPlaces: Array.from(liked.values()),
-        dislikedPlaces: Array.from(disliked.values())
-    };
-}
-
 export function collectStopFeedback(root) {
     const feedback = createEmptyStopFeedback();
     if (!root) return feedback;

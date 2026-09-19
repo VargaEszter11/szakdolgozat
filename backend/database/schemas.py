@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
-from typing import Optional, List, Union, Literal, Dict, Any
+from typing import Optional, List, Literal, Dict, Any
 import datetime as dt
 from decimal import Decimal
 
@@ -313,14 +313,6 @@ class SharedTripPublicResponse(BaseModel):
     stops: List[TripStopResponse] = []
 
 
-# ============= Extended User Response with Relations =============
-
-class UserWithRelationsResponse(UserResponse):
-    planned_trips: List[PlannedTripResponse] = []
-    visited_places: List[VisitedPlaceResponse] = []
-
-    model_config = ConfigDict(from_attributes=True)
-
 # ============= Image Schemas =============
 
 class ImageBase(BaseModel):
@@ -348,119 +340,6 @@ class ImageResponse(ImageBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-
-# ============= Airline Schemas =============
-
-class AirlineBase(BaseModel):
-    iata: str = Field(..., min_length=2, max_length=2)
-    icao: Optional[str] = Field(None, min_length=3, max_length=3)
-    name: str
-    website: Optional[str] = None
-
-
-class AirlineCreate(AirlineBase):
-    pass
-
-
-class AirlineUpdate(BaseModel):
-    icao: Optional[str] = Field(None, min_length=3, max_length=3)
-    name: Optional[str] = None
-    website: Optional[str] = None
-
-
-class AirlineResponse(AirlineBase):
-    created_at: dt.datetime
-    updated_at: dt.datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ============= Airport Schemas =============
-
-class AirportBase(BaseModel):
-    iata: str = Field(..., min_length=3, max_length=3)
-    icao: Optional[str] = Field(None, min_length=4, max_length=4)
-    name: str
-    city: Optional[str] = None
-    country_code: Optional[str] = Field(None, min_length=2, max_length=2)
-    # Compatibility with older cache callers that still submit/read `country`.
-    country: Optional[str] = Field(None, min_length=2, max_length=2)
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    timezone: Optional[str] = None
-
-
-class AirportCreate(BaseModel):
-    # Cache callers may only know the IATA code; CRUD fills name with the code.
-    iata: str = Field(..., min_length=3, max_length=3)
-    icao: Optional[str] = Field(None, min_length=4, max_length=4)
-    name: Optional[str] = None
-    city: Optional[str] = None
-    country_code: Optional[str] = Field(None, min_length=2, max_length=2)
-    country: Optional[str] = Field(None, min_length=2, max_length=2)
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    timezone: Optional[str] = None
-
-
-class AirportUpdate(BaseModel):
-    icao: Optional[str] = Field(None, min_length=4, max_length=4)
-    name: Optional[str] = None
-    city: Optional[str] = None
-    country_code: Optional[str] = Field(None, min_length=2, max_length=2)
-    country: Optional[str] = Field(None, min_length=2, max_length=2)
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    timezone: Optional[str] = None
-
-
-class AirportResponse(AirportBase):
-    created_at: dt.datetime
-    updated_at: dt.datetime
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ============= Direct Route Schemas =============
-
-class DirectRouteBase(BaseModel):
-    airline_iata: Optional[str] = Field(None, min_length=2, max_length=2)
-    airline_name: Optional[str] = None
-    flight_number: str = "DIRECT"
-    origin_iata: str = Field(..., min_length=3, max_length=3)
-    destination_iata: str = Field(..., min_length=3, max_length=3)
-    dep_time: Optional[dt.time] = None
-    arr_time: Optional[dt.time] = None
-    aircraft: Optional[str] = None
-    effective_from: Optional[dt.date] = None
-    effective_to: Optional[dt.date] = None
-    is_active: bool = True
-
-
-class DirectRouteCreate(DirectRouteBase):
-    pass
-
-
-class DirectRouteUpdate(BaseModel):
-    airline_iata: Optional[str] = Field(None, min_length=2, max_length=2)
-    airline_name: Optional[str] = None
-    flight_number: Optional[str] = None
-    origin_iata: Optional[str] = Field(None, min_length=3, max_length=3)
-    destination_iata: Optional[str] = Field(None, min_length=3, max_length=3)
-    dep_time: Optional[dt.time] = None
-    arr_time: Optional[dt.time] = None
-    aircraft: Optional[str] = None
-    effective_from: Optional[dt.date] = None
-    effective_to: Optional[dt.date] = None
-    is_active: Optional[bool] = None
-
-
-class DirectRouteResponse(DirectRouteBase):
-    id: int
-    created_at: dt.datetime
-    updated_at: dt.datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 # ============= Feedback Schemas =============
 
