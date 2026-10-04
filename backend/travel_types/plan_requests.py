@@ -8,7 +8,6 @@ Pipeline (``generate_plan_with_location``):
 ``userId`` on requests is opt-in: the frontend sends it only when the
 "use travel log from database" toggle is on.
 """
-import asyncio
 import json
 from datetime import datetime
 from typing import Any, List, Optional, Sequence, cast
@@ -409,11 +408,10 @@ async def attach_lodging_coordinates(plan: dict) -> None:
 
     Booking.com text search often resolves to the airport; lat/lon anchors the
     map on the municipality. Reuses off-airport coords when already present.
-    Sleeps between Nominatim calls to respect the 1 req/s usage policy.
     """
     for trip in plan.get("trips", [plan]):
         stops = trip.get("plan", [])
-        for index, stop in enumerate(stops):
+        for stop in stops:
             if not isinstance(stop, dict):
                 continue
             if stop.get("lodging_latitude") is not None and stop.get("lodging_longitude") is not None:
@@ -429,8 +427,6 @@ async def attach_lodging_coordinates(plan: dict) -> None:
                 continue
             country_label = geocode_country_label(stop.get("country") or "")
             try:
-                if index > 0:
-                    await asyncio.sleep(1.1)
                 lat, lon = await geocode_city_center(city, country_label)
                 stop["lodging_latitude"] = lat
                 stop["lodging_longitude"] = lon

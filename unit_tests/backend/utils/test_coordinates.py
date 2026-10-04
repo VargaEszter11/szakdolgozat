@@ -2,7 +2,18 @@ import httpx
 import pytest
 from fastapi import HTTPException
 
+from backend.utils import coordinates
 from backend.utils.coordinates import geocode_place
+
+
+@pytest.fixture(autouse=True)
+def _reset_nominatim_rate_gate():
+    """The real rate gate is shared module state across calls; reset it per
+    test so tests don't inherit real sleep delays from whichever test ran
+    before them (and stay independent of execution order)."""
+    coordinates._nominatim_next_allowed_at = 0.0
+    yield
+    coordinates._nominatim_next_allowed_at = 0.0
 
 
 class MockResponse:
@@ -173,3 +184,44 @@ async def test_geocode_place_passes_language(monkeypatch):
     await geocode_place("Budapest", language="hu")
 
     assert captured["params"]["accept-language"] == "hu"
+
+
+@pytest.mark.asyncio
+async def test_concurrent_geocode_calls_are_serialized_one_per_second(monkeypatch):
+    """Two concurrent calls through _nominatim_search must be spaced by the
+    shared rate gate, regardless of caller - this is what keeps the app
+    within Nominatim's 1 req/s policy under real concurrent traffic."""
+    import asyncio
+    import time
+
+    monkeypatch.setattr(coordinates, "_NOMINATIM_MIN_INTERVAL_SECONDS", 0.2)
+
+    call_times = []
+
+    class Client:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            pass
+
+        async def get(self, *args, **kwargs):
+            call_times.append(time.monotonic())
+            return MockResponse([{"lat": "47.4979", "lon": "19.0402"}])
+
+    monkeypatch.setattr(
+        "backend.utils.coordinates.httpx.AsyncClient",
+        lambda **kwargs: Client(),
+    )
+
+    await asyncio.gather(
+        geocode_place("Budapest"),
+        geocode_place("Vienna"),
+        geocode_place("Prague"),
+    )
+
+    assert len(call_times) == 3
+    call_times.sort()
+    gaps = [call_times[i + 1] - call_times[i] for i in range(len(call_times) - 1)]
+    for gap in gaps:
+        assert gap >= 0.19  # allow tiny scheduling jitter below the 0.2s floor
