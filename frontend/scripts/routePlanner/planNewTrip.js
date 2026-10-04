@@ -839,7 +839,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             endDate: endDate,
             people: people,
             preferences: preferences,
-            language: localStorage.getItem('language') || 'en'
+            language: localStorage.getItem('language') || 'hu'
         };
 
         if (preferredTransport) {

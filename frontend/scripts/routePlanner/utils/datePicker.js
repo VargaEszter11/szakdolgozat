@@ -40,7 +40,7 @@
 
   function flatpickrLocaleKey() {
     var map = { hu: 'hu', de: 'de' };
-    var lang = localStorage.getItem('language') || 'en';
+    var lang = localStorage.getItem('language') || 'hu';
     return map[lang] || 'default';
   }
 

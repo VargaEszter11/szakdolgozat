@@ -6,7 +6,7 @@ import re
 import secrets
 from typing import Any, Dict, List, Optional, cast
 from . import models, schemas
-from .airport_city import airport_name_as_city
+from .airport_city import airport_name_as_city, resolve_display_city
 from utils.place_image_upload import delete_file_for_public_path
 
 
@@ -659,7 +659,7 @@ def list_active_destinations_from_origin(db: Session, origin_iata: str) -> List[
     return [
         {
             "iata": airport.iata,
-            "city": airport.city or _airport_name_as_city(airport.name, airport.iata),
+            "city": resolve_display_city(airport.name, airport.iata, airport.city),
             "country": airport.country_code,
             "airline_iata": route.airline_iata,
             "airline_name": route.airline_name,

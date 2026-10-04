@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // Linked date picker, max date today
   if (typeof flatpickr === 'function') {
     var LOCALE_MAP = { hu: 'hu', de: 'de' };
-    var lang = localStorage.getItem('language') || 'en';
+    var lang = localStorage.getItem('language') || 'hu';
     var fpLocale = LOCALE_MAP[lang] || 'default';
 
     var fpOpts = {

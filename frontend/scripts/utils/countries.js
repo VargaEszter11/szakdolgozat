@@ -76,12 +76,12 @@
 
   function appLang() {
     if (window.i18n && typeof window.i18n.getLanguage === 'function') {
-      return window.i18n.getLanguage() || 'en';
+      return window.i18n.getLanguage() || 'hu';
     }
     try {
-      return localStorage.getItem('language') || 'en';
+      return localStorage.getItem('language') || 'hu';
     } catch (e) {
-      return 'en';
+      return 'hu';
     }
   }
 

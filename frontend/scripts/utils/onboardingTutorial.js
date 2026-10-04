@@ -216,7 +216,7 @@
     if (window.i18n && typeof window.i18n.getLanguage === 'function') {
       return window.i18n.getLanguage();
     }
-    return localStorage.getItem('language') || 'en';
+    return localStorage.getItem('language') || 'hu';
   }
 
   function applyLanguage(locale) {

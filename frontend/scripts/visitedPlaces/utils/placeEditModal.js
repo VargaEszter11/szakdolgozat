@@ -201,7 +201,7 @@
     var lastAutoEnd = '';
     if (typeof flatpickr === 'function') {
       var FP_LOCALE = { hu: 'hu', de: 'de' };
-      var fpLang = localStorage.getItem('language') || 'en';
+      var fpLang = localStorage.getItem('language') || 'hu';
       var fpLocale = FP_LOCALE[fpLang] || 'default';
       var fpOpts = {
         dateFormat: 'Y-m-d',

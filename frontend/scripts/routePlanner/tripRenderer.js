@@ -3,7 +3,7 @@ var LOCALE_MAP = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
 function formatDate(dateStr) {
     if (!dateStr) return '—';
     try {
-        var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
+        var locale = LOCALE_MAP[localStorage.getItem('language')] || 'hu-HU';
         return new Date(dateStr).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
     } catch (e) {
         return dateStr;

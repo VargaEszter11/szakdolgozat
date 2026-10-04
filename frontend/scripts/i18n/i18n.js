@@ -1,6 +1,7 @@
 (function () {
   var STORAGE_KEY = 'language';
-  var DEFAULT_LANG = 'en';
+  var DEFAULT_LANG = 'en'; // fallback source for translation keys missing in the active language
+  var INITIAL_LANG = 'hu'; // default language shown before the user picks one
   var FULL_LOCALE = { en: 'en-GB', hu: 'hu-HU', de: 'de-DE' };
 
   function getTranslations() {
@@ -8,7 +9,7 @@
   }
 
   function getLanguage() {
-    return localStorage.getItem(STORAGE_KEY) || DEFAULT_LANG;
+    return localStorage.getItem(STORAGE_KEY) || INITIAL_LANG;
   }
 
   function setLanguage(locale) {

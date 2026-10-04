@@ -10,7 +10,7 @@
         : 'light';
   document.documentElement.setAttribute('data-theme', resolved);
 
-  var lang = localStorage.getItem('language') || 'en';
+  var lang = localStorage.getItem('language') || 'hu';
   var full = lang === 'hu' ? 'hu-HU' : lang === 'de' ? 'de-DE' : 'en-GB';
   document.documentElement.setAttribute('lang', full);
 

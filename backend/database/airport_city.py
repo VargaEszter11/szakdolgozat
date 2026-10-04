@@ -13,37 +13,109 @@ from typing import Optional
 
 CITY_OVERRIDES_BY_IATA = {
     # Airport names where the leading words are a person/brand/area instead of the city.
+    "AHO": "Alghero",
+    "ALC": "Alicante",
+    "AOI": "Ancona",
+    "ATH": "Athens",
     "BBF": "Benidorm",
+    "BBU": "Bucharest",
     "BCM": "Bacau",
+    "BEG": "Belgrade",
+    "BGY": "Milan",
     "BHD": "Belfast",
     "BLQ": "Bologna",
+    "BRI": "Bari",
+    "BRQ": "Brno",
     "BUD": "Budapest",
     "BVA": "Paris",
+    "BZG": "Bydgoszcz",
+    "BZY": "Balti",
+    "CAG": "Cagliari",
+    "CDT": "Castellon",
+    "CGN": "Cologne",
+    "CIA": "Rome",
     "CND": "Constanta",
-    "FMM": "Memmingen",
+    "CTA": "Catania",
     "FCO": "Rome",
+    "FLR": "Florence",
+    "FMM": "Memmingen",
+    "FMO": "Munster",
     "FRU": "Bishkek",
     "GDN": "Gdansk",
+    "GHV": "Brasov",
+    "GOA": "Genoa",
+    "GOT": "Gothenburg",
+    "GRO": "Girona",
     "GRX": "Granada",
-    "HEM": "Helsinki",
+    "GVA": "Geneva",
+    "HAJ": "Hannover",
     "HEL": "Helsinki",
+    "HEM": "Helsinki",
+    "HHN": "Frankfurt",
     "HKV": "Haskovo",
+    "INI": "Nis",
+    "JMK": "Mykonos",
     "KEF": "Reykjavik",
     "KIV": "Chisinau",
     "KRK": "Krakow",
+    "LBA": "Leeds",
+    "LCJ": "Lodz",
+    "LDY": "Derry",
+    "LEJ": "Leipzig",
+    "LIS": "Lisbon",
+    "LJU": "Ljubljana",
+    "LMP": "Lampedusa",
+    "LPI": "Linkoping",
+    "LTN": "London",
+    "LUX": "Luxembourg",
     "LYS": "Lyon",
     "MHG": "Mannheim",
+    "MME": "Durham",
+    "MST": "Maastricht",
+    "NOC": "Knock",
+    "NQY": "Newquay",
+    "NRN": "Weeze",
+    "NYO": "Stockholm",
+    "OPO": "Porto",
+    "OSR": "Ostrava",
     "OTP": "Bucharest",
+    "PAD": "Paderborn",
+    "PEG": "Perugia",
     "PMO": "Palermo",
-    "PVK": "Preveza",
+    "POZ": "Poznan",
     "PRG": "Prague",
+    "PVK": "Preveza",
+    "QSR": "Salerno",
+    "RDO": "Radom",
+    "RLG": "Rostock",
     "RMI": "Rimini",
+    "RMU": "Murcia",
+    "RTM": "Rotterdam",
+    "RZE": "Rzeszow",
+    "SVQ": "Seville",
+    "SZY": "Olsztyn",
+    "SZZ": "Szczecin",
+    "TAT": "Poprad",
+    "TFN": "Tenerife",
+    "TFS": "Tenerife",
+    "TGM": "Targu Mures",
     "TGV": "Targovishte",
+    "TPS": "Trapani",
     "TRF": "Oslo",
+    "TRN": "Turin",
     "TSE": "Astana",
     "TSF": "Venice",
+    "TSR": "Timisoara",
     "TXL": "Berlin",
+    "VCE": "Venice",
+    "VOL": "Volos",
+    "VRN": "Verona",
+    "VST": "Stockholm",
+    "VXO": "Vaxjo",
+    "WAW": "Warsaw",
     "WMI": "Warsaw",
+    "WRO": "Wroclaw",
+    "ZAG": "Zagreb",
 }
 
 
@@ -115,3 +187,21 @@ def airport_name_as_city(name: Optional[str], iata: Optional[str]) -> str:
     label = _first_place_part(label)
 
     return label or code
+
+
+def resolve_display_city(
+    name: Optional[str], iata: Optional[str], db_city: Optional[str] = None
+) -> str:
+    """City label for display, with the code-level override always winning.
+
+    Precedence: ``CITY_OVERRIDES_BY_IATA`` first (so corrections live only in
+    code, never need a DB write), then the cached ``db_city`` value, then a
+    best-effort label derived from the airport's facility ``name``.
+    """
+    code = (iata or "").strip().upper()
+    if code and code in CITY_OVERRIDES_BY_IATA:
+        return CITY_OVERRIDES_BY_IATA[code]
+    db_city = (db_city or "").strip()
+    if db_city:
+        return db_city
+    return airport_name_as_city(name, iata)

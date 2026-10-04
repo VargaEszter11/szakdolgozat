@@ -35,7 +35,7 @@ export function formatDate(value) {
   if (!value) return '—';
   var d = new Date(value);
   if (isNaN(d.getTime())) return String(value);
-  var lang = localStorage.getItem('language') || 'en';
+  var lang = localStorage.getItem('language') || 'hu';
   var locale = lang === 'hu' ? 'hu-HU' : lang === 'de' ? 'de-DE' : 'en-GB';
   return d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
 }

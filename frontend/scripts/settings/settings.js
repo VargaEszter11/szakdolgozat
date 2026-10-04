@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var savedTheme = localStorage.getItem('theme') || 'dark';
-    var savedLanguage = localStorage.getItem('language') || 'en';
+    var savedLanguage = localStorage.getItem('language') || 'hu';
     var autoListenerBound = false;
 
     function applyTheme(theme) {

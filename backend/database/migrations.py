@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from database.airport_city import CITY_OVERRIDES_BY_IATA, airport_name_as_city
+from database.airport_city import airport_name_as_city
 from database.airport_regions import EUROPE_COUNTRY_CODES
 from database.database import engine
 
@@ -168,20 +168,6 @@ def apply_startup_schema_patches() -> None:
                         ),
                         {"city": city, "iata": airport["iata"]},
                     )
-
-            for iata, city in CITY_OVERRIDES_BY_IATA.items():
-                conn.execute(
-                    text(
-                        """
-                        UPDATE airports
-                        SET city = :city,
-                            updated_at = NOW()
-                        WHERE iata = :iata
-                          AND city IS DISTINCT FROM :city
-                        """
-                    ),
-                    {"city": city, "iata": iata},
-                )
 
             def non_europe_airport_condition(alias: str) -> str:
                 return (

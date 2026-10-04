@@ -23,7 +23,7 @@
     if (!value) return '—';
     var d = new Date(value);
     if (isNaN(d.getTime())) return value;
-    var locale = LOCALE_MAP[localStorage.getItem('language')] || 'en-GB';
+    var locale = LOCALE_MAP[localStorage.getItem('language')] || 'hu-HU';
     return d.toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
   }
 

@@ -177,7 +177,7 @@ def ground_candidates_from_airport(
             or not can_use_ground_transport(origin, airport)
         ):
             continue
-        city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
+        city = crud.resolve_display_city(airport.name, airport.iata, airport.city)
         if not is_plannable_place_label(city):
             continue
         distance = calculate_distance_km(
@@ -236,7 +236,7 @@ def ferry_candidates_from_airport(
             or not can_use_ferry_transport(origin, airport)
         ):
             continue
-        city = airport.city or crud._airport_name_as_city(airport.name, airport.iata)
+        city = crud.resolve_display_city(airport.name, airport.iata, airport.city)
         if not is_plannable_place_label(city):
             continue
         distance = calculate_distance_km(
