@@ -82,18 +82,58 @@ def test_list_visited_places(db):
     assert result[0].image == "legacy.jpg"
 
 
-def test_update_visited_place_not_found(db):
+@pytest.mark.asyncio
+async def test_update_visited_place_not_found(db):
     with patch("routers.visited_places.crud.get_visited_place", return_value=None):
         with pytest.raises(HTTPException) as exc:
-            vp.update_visited_place(1, MagicMock(), db, fake_user(1))
+            await vp.update_visited_place(1, MagicMock(), db, fake_user(1))
 
     assert exc.value.status_code == 404
 
 
-def test_update_visited_place_success(db):
+@pytest.mark.asyncio
+async def test_update_visited_place_success_no_regeocode_when_unchanged(db):
+    """Same place_name/country as the stored record: no geocode call needed."""
+    place = MagicMock()
+    place.model_dump.return_value = {"place_name": "Budapest", "country": "HU", "rating": 5}
+
     with patch("routers.visited_places.crud.get_visited_place", return_value=owned_place()), \
-         patch("routers.visited_places.crud.update_visited_place", return_value={"id": 1}):
-        result = vp.update_visited_place(1, MagicMock(), db, fake_user(1))
+         patch("routers.visited_places.crud.update_visited_place", return_value={"id": 1}), \
+         patch("routers.visited_places.geocode_place") as geocode_mock:
+        result = await vp.update_visited_place(1, place, db, fake_user(1))
+
+    assert result == {"id": 1}
+    geocode_mock.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_update_visited_place_regeocodes_when_name_changed(db):
+    """place_name differs from the stored record: marker must be re-geocoded."""
+    place = MagicMock()
+    place.model_dump.return_value = {"place_name": "Vienna", "country": "AT"}
+
+    with patch("routers.visited_places.crud.get_visited_place", return_value=owned_place()), \
+         patch("routers.visited_places.crud.update_visited_place", return_value={"id": 1}) as update_mock, \
+         patch("routers.visited_places.geocode_place", return_value=(48.2, 16.4)) as geocode_mock:
+        result = await vp.update_visited_place(1, place, db, fake_user(1))
+
+    assert result == {"id": 1}
+    geocode_mock.assert_called_once()
+    saved_update = update_mock.call_args.kwargs["place_update"]
+    assert saved_update.latitude == 48.2
+    assert saved_update.longitude == 16.4
+
+
+@pytest.mark.asyncio
+async def test_update_visited_place_regeocode_failure_still_saves(db):
+    """Geocoding failing on edit must not block saving the other field changes."""
+    place = MagicMock()
+    place.model_dump.return_value = {"place_name": "Nowhere Special"}
+
+    with patch("routers.visited_places.crud.get_visited_place", return_value=owned_place()), \
+         patch("routers.visited_places.crud.update_visited_place", return_value={"id": 1}), \
+         patch("routers.visited_places.geocode_place", side_effect=Exception("fail")):
+        result = await vp.update_visited_place(1, place, db, fake_user(1))
 
     assert result == {"id": 1}
 

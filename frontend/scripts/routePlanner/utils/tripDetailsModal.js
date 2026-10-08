@@ -138,7 +138,12 @@
       });
   }
 
-  function buildStopCard(stop, people, isLastStop, isBooked, startCity) {
+  function isPastTrip(trip) {
+    if (!trip || !trip.end_date || !DU || typeof DU.todayIsoLocal !== 'function') return false;
+    return String(trip.end_date).slice(0, 10) < DU.todayIsoLocal();
+  }
+
+  function buildStopCard(stop, people, isLastStop, isBooked, isPast, startCity) {
     var card = document.createElement('div');
     card.className = 'trip-stop-card';
     var num = document.createElement('div');
@@ -183,7 +188,7 @@
       pTrans.innerHTML = '<strong>' + escapeHtml(plannedTripsT('transport', 'Transport')) + ':</strong> ' + escapeHtml(transportLabel(stop.transport_from_last));
       info.appendChild(pTrans);
     }
-    if (!isBooked) {
+    if (!isBooked && !isPast) {
       var actions = document.createElement('div');
       actions.className = 'trip-stop-actions';
       var flightUrl = stop.booking_url || null;
@@ -285,6 +290,7 @@
       }
 
       var stops = (trip.stops || []).slice().sort(function (a, b) { return (a.stop_order || 0) - (b.stop_order || 0); });
+      var tripIsPast = isPastTrip(trip);
       if (stopsCountEl) stopsCountEl.textContent = String(stops.length);
       if (stopsListEl) {
         stopsListEl.innerHTML = '';
@@ -295,7 +301,7 @@
           stopsListEl.appendChild(empty);
         } else {
           stops.forEach(function (stop, index) {
-            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1, !!trip.is_booked, trip.start_city));
+            stopsListEl.appendChild(buildStopCard(stop, trip.people || 1, index === stops.length - 1, !!trip.is_booked, tripIsPast, trip.start_city));
           });
         }
       }

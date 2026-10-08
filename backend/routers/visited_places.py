@@ -103,15 +103,37 @@ def list_visited_places(
 
 
 @router.put("/visited-places/{place_id}", response_model=schemas.VisitedPlaceResponse)
-def update_visited_place(
+async def update_visited_place(
     place_id: int,
     place: schemas.VisitedPlaceUpdate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Update a visited place"""
+    """Update a visited place. Re-geocodes when the name/country actually
+    changed, so the map marker moves instead of staying at the old place."""
+    from utils.countries import geocode_country_label, normalize_country_code
+
     existing = crud.get_visited_place(db, place_id=place_id)
     _require_place_owner(existing, current_user_id(current_user))
+
+    update_data = place.model_dump(exclude_unset=True)
+    new_name = update_data.get("place_name", existing.place_name)
+    new_country = update_data.get("country", existing.country)
+    if new_country:
+        new_country = normalize_country_code(new_country) or new_country
+    name_changed = new_name != existing.place_name
+    country_changed = new_country != existing.country
+    if (name_changed or country_changed) and "latitude" not in update_data and "longitude" not in update_data:
+        try:
+            country_label = geocode_country_label(new_country) if new_country else ""
+            place_query = f"{new_name}, {country_label}" if country_label else new_name
+            lat, lon = await geocode_place(place_query)
+            update_data["latitude"] = lat
+            update_data["longitude"] = lon
+        except Exception as e:
+            print(f"Geocoding failed for {new_name}: {e}")
+        place = schemas.VisitedPlaceUpdate(**update_data)
+
     db_place = crud.update_visited_place(db, place_id=place_id, place_update=place)
     if db_place is None:
         raise HTTPException(
