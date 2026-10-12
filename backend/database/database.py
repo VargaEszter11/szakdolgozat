@@ -19,10 +19,12 @@ DB_NAME = os.getenv("DB_NAME", "szakdolgozat")
 DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Create SQLAlchemy engine
+# pool_size/max_overflow sized for a single backend replica against Postgres's
+# default max_connections=100, leaving headroom for admin/psql sessions.
 engine = create_engine(
     DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=30,
+    max_overflow=40,
     pool_pre_ping=True,  # Verify connections before using them
     echo=False  # Set to True for SQL query logging
 )

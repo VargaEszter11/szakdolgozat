@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from database import crud, schemas, get_db
@@ -101,7 +103,7 @@ def register(
 # Login
 
 @router.post("/login", response_model=schemas.LoginResponse)
-def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
+async def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
     """Authenticate with username/password; return JWT + tutorial_completed flag."""
     # Same message for unknown user and bad password (no username enumeration)
     user = crud.get_user_by_username(db, username=request.username)
@@ -112,7 +114,12 @@ def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
         )
     user_row = cast(Any, user)
 
-    if not crud.verify_password(request.password, user_row.password):
+    # bcrypt is CPU-bound (~200-250ms); run off the event loop so a burst of
+    # logins doesn't tie up Starlette's sync-route thread pool for that long.
+    password_ok = await asyncio.to_thread(
+        crud.verify_password, request.password, user_row.password
+    )
+    if not password_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
